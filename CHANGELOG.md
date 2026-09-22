@@ -5,6 +5,67 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.6] — chat and the learning surface coexist
+
+No new features. This release fixes the one thing that made the loop awkward:
+the learning surface and the conversation could not be on screen together.
+
+### Changed
+
+- **The learning surface is now a docked tab in the right sidebar**
+  (`sidebarRightTabs.register` + the `sidebar.right.pane.tab` seat), not only a
+  full-page panel. The full panel fills the main column — *the same column the
+  conversation lives in* — so with only that panel, answering a check meant
+  leaving the lesson. The right sidebar is a separate column, so the map, the
+  chat and the lesson are visible at once and the composer never disappears.
+- Both surfaces run on one shared `useLearning` state, so they cannot disagree
+  about what is focused or what the tutor wrote. The full panel is now the
+  "focus mode" view; the tab is the everyday one.
+- The tab docks on demand and retries briefly. The right sidebar hosts
+  **session-scoped** tabs, so it can only accept one while a session surface is
+  mounted — and while the full panel occupies the main column there is none.
+  The useful moment is just after returning to the conversation.
+
+### Fixed
+
+- **`ctx.sidebarRight` was read as a property while only `sidebarRightTabs` was
+  injected.** Reading a service that was never injected throws, and the
+  surrounding `catch` swallowed it, so the tab silently never opened. It is now
+  resolved with `ctx.get`, and the failure path is no longer silent.
+- The docked tab accepts an `initialOverview`, so a static render shows real
+  content instead of a loading state.
+
+### Math
+
+Researched and **deliberately not done**. DSH ships no math renderer to reuse
+(no KaTeX, MathJax or Temml anywhere in the installed tree, and no mermaid
+either), and adding KaTeX would break the client bundle's contract: the module
+table serves one JavaScript file per plugin, so the CSS and web fonts KaTeX
+needs have nowhere to live. The styled-but-untypeset fallback from v0.0.5
+stays, and this is recorded rather than hidden.
+
+### Tests
+
+186 across seventeen files. New: the tab's own suite — it renders node, map and
+lesson in one column; it selects a node on arrival; clicking another switches
+the shown node; starting learning surfaces the tutor's lesson; blocks written
+afterwards arrive by polling; it leaves no DOM residue; and its layout is a
+single column with no fixed widths, so there is no width at which it breaks.
+
+### Verified against DSH 0.1.6-alpha.2 with the real skill
+
+One real session, chat and surface on screen together:
+
+```
+before the answer   evidence 1   state blocked    blocks text, diagram, text, check
+after the answer    evidence 2   state explained  blocks unchanged
+```
+
+The new evidence is a real tutor entry (`explanation · more-practice`), and the
+answer was typed into the chat **while the lesson stayed docked** — no
+switching. Screenshot: `preview/dsh-ui-coexist.png`.
+
+
 ## [0.0.5] — the learning loop
 
 The runtime now teaches. Pressing **Start learning** wakes the tutor, the tutor

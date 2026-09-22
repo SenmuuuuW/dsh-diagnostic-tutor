@@ -7,10 +7,10 @@ it works out where you are stuck, decides the next best teaching step, and turns
 the whole process into a living learning map you can click through.
 
 > [!IMPORTANT]
-> **Status: `v0.0.5` — the learning loop runs.**
-> Press **Start learning** on a node and the tutor is woken, teaches into the
-> panel, and records what it observed; the map and the evidence follow live.
-> Still no quiz engine, no RAG, no flashcards. See [Roadmap](#roadmap).
+> **Status: `v0.0.6` — chat and the learning surface coexist.**
+> The learning surface docks in the right sidebar, so the map, the conversation
+> and the lesson are on screen at once and answering a check never means leaving
+> the lesson. Still no quiz engine, no RAG, no flashcards.
 
 ---
 
@@ -49,7 +49,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.0.5` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.0.6` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -174,9 +174,24 @@ context: `agent.inject()` would add model-visible context without waking an idle
 agent, so nothing would happen until the learner typed. Opening a turn is what
 the button means.
 
-The panel occupies the main column, which is also where the conversation lives,
-so the learning surface offers **Answer in the chat** to switch back. That is a
-real constraint of the layout, not a decoration.
+### Two surfaces, one state
+
+| Surface | Where | For |
+| --- | --- | --- |
+| **Learning tab** | right sidebar, beside the chat | everyday work — map, node and lesson while you talk |
+| **Learning panel** | the main column (`main`) | focus mode — the whole runtime at once |
+
+The tab is the reason the loop is usable: the full panel fills the main column,
+which is also where the conversation lives, so with only that panel answering a
+check meant leaving the lesson. The right sidebar is a separate column.
+
+Both run on one shared `useLearning` state, so they cannot disagree about what
+is focused or what the tutor wrote. The panel's **Answer in the chat** button
+returns to the conversation and docks the tab in the same step.
+
+The right sidebar hosts session-scoped tabs, so it can only accept one while a
+session surface is mounted — which is why docking happens on the way back to the
+conversation rather than at load.
 
 ### Teaching-brain detection
 
@@ -307,8 +322,9 @@ shows a loader row exists.
 | `v0.0.2` | `udt` storage domain, learner round-trip, `udt_status` tool |
 | `v0.0.3` | teaching-brain detection, `udt_goal_create`, the diagnosis map (`udt_map_get` / `udt_map_update`), runtime adapter |
 | `v0.0.4` | the client half: slot-mounted panel, clickable map, node detail, Learning Blocks, browser API |
-| `v0.0.5` | **current** — the loop: learning focus, tutor-written lessons, check → evidence → state, live panel |
-| `v0.0.6` | state export/reset, settings, i18n, math typesetting |
+| `v0.0.5` | the loop: learning focus, tutor-written lessons, check → evidence → state, live panel |
+| `v0.0.6` | **current** — the learning surface docks beside the chat; both surfaces share one state |
+| `v0.0.7` | state export/reset, settings, i18n, math typesetting |
 | `v0.1.0` | **first playable MVP** — Goal → Map → Lesson → Check → Progress → Next |
 
 ## Trust

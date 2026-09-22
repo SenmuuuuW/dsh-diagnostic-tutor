@@ -190,6 +190,34 @@ const CSS = `
   font-size: 10px; letter-spacing: .07em; text-transform: uppercase;
   color: var(--dt-accent); margin-bottom: 4px;
 }
+/* ---- docked tab -------------------------------------------------------- */
+/* Narrow-first: the right column is often a few hundred pixels, so this is one
+   scrolling stack rather than columns. */
+.dt-tab { padding: 12px 12px 28px; font-size: 12.5px; color: var(--dt-text, #1c1f23); text-align: left; }
+.dt-tab-head { display: flex; align-items: baseline; gap: 8px; justify-content: space-between; }
+.dt-tab-title { font-size: 15px; font-weight: 620; margin: 0; }
+.dt-tab-meta { color: var(--dt-muted, #6b7280); font-size: 11px; margin: 4px 0 8px; }
+.dt-tab-action { margin-top: 10px; }
+.dt-tab-section {
+  display: flex; align-items: baseline; gap: 8px;
+  font-size: 10px; letter-spacing: .07em; text-transform: uppercase;
+  color: var(--dt-muted, #6b7280);
+  margin: 18px 0 6px; padding-top: 12px;
+  border-top: 1px solid var(--dt-border, #e3e6ea);
+}
+.dt-tab-section span { text-transform: none; letter-spacing: 0; }
+.dt-tab-node {
+  display: grid; grid-template-columns: auto 1fr auto;
+  align-items: baseline; gap: 6px; width: 100%;
+  padding: 5px 6px; margin: 1px 0; border-radius: 6px;
+  border: 1px solid transparent; background: transparent;
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.dt-tab-node:hover { background: var(--dt-surface, #f7f8fa); }
+.dt-tab-node[aria-current="true"] { background: var(--dt-surface, #f7f8fa); border-color: var(--dt-accent, #4f46e5); }
+.dt-tab-node-title { min-width: 0; overflow-wrap: anywhere; }
+.dt-tab-lesson-title { font-weight: 600; }
+
 .dt-block-unknown {
   border: 1px dashed var(--dt-border); border-radius: 8px;
   padding: 10px 12px; color: var(--dt-muted);

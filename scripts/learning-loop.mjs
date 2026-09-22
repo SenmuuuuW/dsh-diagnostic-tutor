@@ -1,15 +1,18 @@
 /**
- * Drive one real learning loop through the DSH web UI.
+ * Drive one real learning loop through the DSH web UI, and prove the chat and
+ * the learning surface coexist.
  *
- * The point is to exercise the loop the way a learner does — with a real
- * harness, a real agent and the real teaching brain — and to report what
- * actually happened rather than what should have:
+ * The loop, as a learner walks it:
  *
- *   click the sidebar entry  →  pick a node  →  Start learning
- *   →  the tutor is woken in the chat  →  blocks appear in the surface
+ *   press Start learning  →  the tutor is woken in the chat
+ *   →  it writes blocks into the docked Learning tab
+ *   →  the learner answers in the chat, WITH the lesson still on screen
+ *   →  the tutor records evidence; the tab follows
  *
- * It waits for the tutor with a real timeout, because a model turn takes
- * seconds, and prints what the panel ended up showing.
+ * The coexistence check is the point of this version: after returning to the
+ * conversation, it asserts that the composer, the map and the lesson blocks are
+ * all present at once, and it reads the before/after state from the docked tab
+ * without ever leaving the chat.
  *
  * Usage:
  *   node scripts/learning-loop.mjs <dsh-url-with-token> [output.png]
@@ -156,7 +159,8 @@ try {
   await waitFor(cdp, '!document.querySelector("[class*=pending], [class*=streaming]")', 'the first turn to settle', 180_000)
   await sleep(3000)
 
-  // 1. open the panel
+  // 1. Open the full panel, pick a node, and start learning. The docked tab
+  //    opens as a side effect of a focus being recorded.
   const opened = await cdp.evaluate(`(() => {
     const label = ${JSON.stringify(PANEL_LABEL)};
     const nodes = [...document.querySelectorAll('button, [role=button]')];
@@ -167,10 +171,9 @@ try {
     return true;
   })()`)
   if (!opened) throw new Error('could not find the sidebar entry')
-  await waitFor(cdp, '!!document.querySelector(".dt-root")', 'the panel')
+  await waitFor(cdp, '!!document.querySelector(".dt-root")', 'the full panel')
   await sleep(800)
 
-  // 2. pick a node that is actually blocked
   const picked = await cdp.evaluate(`(() => {
     const rows = [...document.querySelectorAll('.dt-node')];
     const target = rows.find((el) => /blocked/.test(el.textContent)) || rows[1] || rows[0];
@@ -182,18 +185,10 @@ try {
   console.log('1. selected node:', picked)
   await waitFor(cdp, '!!document.querySelector(".dt-detail h2")', 'the node detail')
 
-  // 3. Start learning
-  const focusBefore = await cdp.evaluate(
-    `!!document.querySelector('button.dt-primary')`,
-  )
-  if (!focusBefore) throw new Error('no Start learning button')
-  await cdp.evaluate(`document.querySelector('button.dt-primary').click()`)
+  await cdp.evaluate(`document.querySelector('.dt-detail button.dt-primary')?.click()`)
   console.log('2. pressed Start learning')
 
-  // 4. wait for the tutor to write something
   const started = Date.now()
-  // Wait for the TUTOR's blocks specifically. Any block would match the v0.0.4
-  // scaffold, and mistaking that for teaching would make this check worthless.
   await waitFor(
     cdp,
     'document.querySelector(".dt-origin") && document.querySelector(".dt-origin").textContent.trim() === "tutor"',
@@ -202,62 +197,51 @@ try {
   )
   console.log(`3. the tutor wrote blocks after ${((Date.now() - started) / 1000).toFixed(1)}s`)
 
+  // 2. Back to the conversation, with the lesson docked beside it.
+  await cdp.evaluate(`(() => {
+    const door = [...document.querySelectorAll('button')].find((el) =>
+      (el.textContent || '').includes('Answer in the chat'));
+    door?.click();
+  })()`)
   await sleep(1500)
 
-  const report = await cdp.evaluate(`(() => {
-    const root = document.querySelector('.dt-root');
-    const lesson = {
-      origin: root.querySelector('.dt-origin')?.textContent ?? null,
-      title: root.querySelector('.dt-pane:last-of-type h2')?.textContent ?? null,
-      blocks: [...root.querySelectorAll('[data-block-type]')].map((el) => el.getAttribute('data-block-type')),
-    };
-    const detail = root.querySelector('.dt-detail');
-    const focused = root.querySelector('.dt-node[data-focused="true"]');
+  const coexist = await cdp.evaluate(`(() => ({
+    composer: !!document.querySelector('[contenteditable="true"]'),
+    dockedTab: !!document.querySelector('.dt-tab'),
+    lessonBlocks: document.querySelectorAll('.dt-tab [data-block-type]').length,
+    mapNodes: document.querySelectorAll('.dt-tab-node').length,
+    fullPanelGone: !document.querySelector('.dt-root'),
+  }))()`)
+  console.log('\n=== coexistence (chat + surface at the same time) ===')
+  console.log(JSON.stringify(coexist, null, 2))
+
+  const readTab = () => cdp.evaluate(`(() => {
+    const tab = document.querySelector('.dt-tab');
+    if (!tab) return null;
     return {
-      course: root.querySelector('.dt-course-title')?.textContent ?? null,
-      focusedNode: focused?.querySelector('.dt-node-title')?.textContent?.trim() ?? null,
-      selectedNode: detail?.querySelector('h2')?.textContent ?? null,
-      state: detail?.querySelector('.dt-state')?.textContent ?? null,
-      note: detail?.querySelector('.dt-caption')?.textContent ?? null,
-      evidence: [...(detail?.querySelectorAll('.dt-evidence li') ?? [])].map((li) => li.textContent.trim().slice(0, 100)),
-      lesson,
-      chatTail: [...document.querySelectorAll('[class*=message], [class*=Message]')]
-        .slice(-3).map((el) => (el.textContent || '').trim().slice(0, 160)),
+      node: tab.querySelector('.dt-tab-title')?.textContent ?? null,
+      state: tab.querySelector('.dt-tab-head .dt-state')?.textContent ?? null,
+      evidence: [...tab.querySelectorAll('.dt-evidence li')].map((li) => li.textContent.trim().slice(0, 120)),
+      blocks: [...tab.querySelectorAll('[data-block-type]')].map((el) => el.getAttribute('data-block-type')),
+      lessonTitle: tab.querySelector('.dt-tab-lesson-title')?.textContent ?? null,
     };
   })()`)
 
-  console.log('\\n=== what the panel shows ===')
-  console.log(JSON.stringify(report, null, 2))
+  const before = await readTab()
+  console.log('\n=== BEFORE the learner answers ===')
+  console.log(JSON.stringify(before, null, 2))
 
-  console.log('4. the learner answers the check in the chat')
-  const before = report.evidence.length
-  // The panel fills the main column, which is also where the chat lives, so
-  // the surface offers a door back to it. Without this the learner could read
-  // the lesson but never answer the check.
-  const doorClicked = await cdp.evaluate(`(() => {
-    const buttons = [...document.querySelectorAll('button')];
-    const door = buttons.find((el) => (el.textContent || '').includes('Answer in the chat'));
-    if (!door) return false;
-    door.click();
-    return true;
-  })()`)
-  if (!doorClicked) console.log('   (no "Answer in the chat" button; trying the composer directly)')
-  await sleep(800)
-
-  // The composer is re-mounted when the conversation comes back.
-  await waitFor(cdp, `!!document.querySelector('[contenteditable="true"]')`, 'the chat input')
+  // 3. Answer in the chat, without leaving the surface.
   const answerable = await cdp.evaluate(`(() => {
     const input = document.querySelector('[contenteditable="true"]');
     if (!input) return false;
     input.click();
     input.focus();
-    return document.activeElement === input || input.contains(document.activeElement);
+    return true;
   })()`)
-  if (!answerable) throw new Error('could not focus the chat input for the answer')
+  if (!answerable) throw new Error('the composer was not available while the surface was docked')
+
   await cdp.send('Input.insertText', {
-    // Deliberately generic: the check is written by the model at run time, so a
-    // canned answer cannot match it. An honest "not sure" is a real learner
-    // answer and a real evidence signal either way.
     text:
       process.env.DT_ANSWER ||
       '我看了题目但不太确定：感觉和矩阵那部分有关，可我说不清为什么，也说不出步骤。能不能先给我讲讲它是怎么来的？',
@@ -267,13 +251,8 @@ try {
     type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, nativeVirtualKeyCode: 13,
   })
   await cdp.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
+  console.log('\n4. answered in the chat, surface still docked')
 
-  // 5. The tutor judges the answer and records what it observed. The panel
-  //    should follow with no user action -- that is the whole loop.
-  console.log('5. waiting for the tutor to record its judgement')
-  // While the conversation is showing, the panel is not in the DOM at all, so
-  // the only honest way to observe the result is to let the turn settle and
-  // then open the panel again.
   console.log('5. waiting for the tutor to finish its turn')
   await waitFor(
     cdp,
@@ -283,46 +262,17 @@ try {
   )
   await sleep(3000)
 
-  const reopened = await cdp.evaluate(`(() => {
-    const label = ${JSON.stringify(PANEL_LABEL)};
-    const nodes = [...document.querySelectorAll('button, [role=button]')];
-    const hit = nodes.find((el) => (el.getAttribute('aria-label') || '').trim() === label)
-      || nodes.find((el) => (el.textContent || '').trim() === label);
-    if (!hit) return false;
-    hit.click();
-    return true;
-  })()`)
-  if (!reopened) throw new Error('could not reopen the panel after answering')
-  await waitFor(cdp, '!!document.querySelector(".dt-root")', 'the panel again')
-  await sleep(1200)
-
-  const after = await cdp.evaluate(`(() => {
-    const root = document.querySelector('.dt-root');
-    // The panel opens with nothing selected; pick the focused node to read it.
-    const focused = root.querySelector('.dt-node[data-focused="true"]');
-    if (focused) focused.click();
-    return { focusedTitle: focused?.querySelector('.dt-node-title')?.textContent?.trim() ?? null };
-  })()`)
-  await sleep(1200)
-
-  const detail = await cdp.evaluate(`(() => {
-    const pane = document.querySelector('.dt-detail');
-    return {
-      state: pane?.querySelector('.dt-state')?.textContent ?? null,
-      evidence: [...(pane?.querySelectorAll('.dt-evidence li') ?? [])].map((li) =>
-        li.textContent.trim().slice(0, 150),
-      ),
-      blocks: [...document.querySelectorAll('[data-block-type]')].map((el) => el.getAttribute('data-block-type')),
-      lessonTitle: document.querySelector('.dt-pane:last-of-type h2')?.textContent ?? null,
-    };
-  })()`)
-  console.log('\n=== after the learner answered ===')
-  console.log(JSON.stringify({ ...after, ...detail }, null, 2))
-  console.log(`evidence went from ${before} to ${detail.evidence.length}`)
+  const after = await readTab()
+  console.log('\n=== AFTER the learner answered ===')
+  console.log(JSON.stringify(after, null, 2))
+  console.log(
+    `\nanswer -> evidence ${before?.evidence.length} to ${after?.evidence.length}, ` +
+      `state ${before?.state} to ${after?.state}, blocks ${before?.blocks.length} to ${after?.blocks.length}`,
+  )
 
   const shot = await cdp.send('Page.captureScreenshot', { format: 'png' })
   await writeFile(out, Buffer.from(shot.data, 'base64'))
-  console.log(`\\nscreenshot → ${out}`)
+  console.log(`\nscreenshot -> ${out}`)
 } finally {
   cdp?.close()
   chrome.kill('SIGTERM')

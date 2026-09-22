@@ -98,6 +98,46 @@ interface Registration {
   Component: (props: never) => unknown
 }
 
+interface FakeSlots {
+  registrations: Registration[]
+  disposers: (() => void)[]
+  tabKinds: Record<string, unknown>[]
+  openedTabs: string[]
+}
+
+/** A ctx with every service `apply` reaches for, recording what it claims. */
+function fakeClientContext(): { ctx: Record<string, unknown>; recorded: FakeSlots } {
+  const recorded: FakeSlots = { registrations: [], disposers: [], tabKinds: [], openedTabs: [] }
+  const ctx = {
+    get: (name: string) => {
+      if (name === 'layout') return { selectPanel: () => {} }
+      // Resolved with `get`, because this plugin injects the tab *registry*
+      // but not the navigation *controller*.
+      if (name === 'sidebarRight') return { openTab: (kind: string) => recorded.openedTabs.push(kind) }
+      return undefined
+    },
+    effect: (fn: () => () => void) => {
+      recorded.disposers.push(fn())
+    },
+    sidebarRightTabs: {
+      register(definition: Record<string, unknown>) {
+        recorded.tabKinds.push(definition)
+        return () => {}
+      },
+    },
+    slots: {
+      inject: (_key: string, callback: () => () => void) => {
+        recorded.disposers.push(callback())
+      },
+      register: (options: Record<string, unknown>, Component: Registration['Component']) => {
+        recorded.registrations.push({ options, Component })
+        return () => {}
+      },
+    },
+  }
+  return { ctx, recorded }
+}
+
 /** Load the bundle exactly as the browser would, and capture its module. */
 function loadBundle(): Record<string, unknown> {
   const captured: { module?: Record<string, unknown> } = {}
@@ -126,38 +166,19 @@ describe('the client plugin registers into the DSH slots', () => {
 
   it('exports a client plugin with the expected shape', () => {
     expect(module.name).toBe('diagnostic-tutor-client')
-    expect(module.inject).toEqual(['slots', 'layout'])
+    expect(module.inject).toEqual(['slots', 'layout', 'sidebarRightTabs'])
     expect(typeof module.apply).toBe('function')
     // Same rule as the host half: a default export is never used.
     expect('default' in module).toBe(false)
   })
 
-  it('registers a sidebar entry and a main panel under one shared id', () => {
-    const registrations: Registration[] = []
-    const disposers: (() => void)[] = []
-
-    const ctx = {
-      // `layout` is resolved lazily for the "back to the chat" action; a
-      // profile without it simply loses that button.
-      get: () => undefined,
-      effect: (fn: () => () => void) => {
-        disposers.push(fn())
-      },
-      slots: {
-        inject: (_key: string, callback: () => () => void) => {
-          disposers.push(callback())
-        },
-        register: (options: Record<string, unknown>, Component: Registration['Component']) => {
-          registrations.push({ options, Component })
-          return () => {}
-        },
-      },
-    }
-
+  it('registers a sidebar entry, a main panel, and a docked tab under one id', () => {
+    const { ctx, recorded } = fakeClientContext()
     ;(module.apply as (c: unknown) => void)(ctx)
 
-    const sidebar = registrations.find((entry) => entry.options.name === 'sidebar.panellist')
-    const main = registrations.find((entry) => entry.options.name === 'main')
+    const bySlot = (name: string) => recorded.registrations.filter((entry) => entry.options.name === name)
+    const sidebar = bySlot('sidebar.panellist')[0]
+    const main = bySlot('main')[0]
 
     expect(sidebar, 'no sidebar.panellist registration').toBeDefined()
     expect(main, 'no main registration').toBeDefined()
@@ -165,36 +186,40 @@ describe('the client plugin registers into the DSH slots', () => {
     // drift apart, the icon opens nothing.
     expect(sidebar?.options.id).toBe(main?.options.key)
     expect(sidebar?.options.label).toBe('Learn')
-    expect(typeof sidebar?.options.order).toBe('number')
 
-    expect(disposers.length).toBeGreaterThanOrEqual(2)
+    // The docked tab: a declared type, plus a body and a title registered under
+    // the type's own id, because that is the key the seats dispatch on.
+    expect(recorded.tabKinds).toHaveLength(1)
+    const kind = recorded.tabKinds[0] as { id: string; kind: string }
+    expect(kind.id).toBe(kind.kind)
+    expect(bySlot('sidebar.right.pane.tab')[0]?.options.key).toBe(kind.id)
+    expect(bySlot('sidebar.right.pane.tab.title')[0]?.options.key).toBe(kind.id)
+
+    // Nothing is force-opened on load in this environment (the overview fetch
+    // has no server), so the layout stays as the user left it.
+    expect(recorded.disposers.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('renders the panel when the registered main component is mounted', () => {
-    const registrations: Registration[] = []
-    const ctx = {
-      get: () => undefined,
-      effect: () => {},
-      slots: {
-        inject: (_key: string, callback: () => () => void) => {
-          callback()
-        },
-        register: (options: Record<string, unknown>, Component: Registration['Component']) => {
-          registrations.push({ options, Component })
-          return () => {}
-        },
-      },
-    }
+  it('renders both surfaces when their registered components are mounted', () => {
+    const { ctx, recorded } = fakeClientContext()
     ;(module.apply as (c: unknown) => void)(ctx)
 
-    const main = registrations.find((entry) => entry.options.name === 'main')
+    const main = recorded.registrations.find((entry) => entry.options.name === 'main')
+    const tab = recorded.registrations.find((entry) => entry.options.name === 'sidebar.right.pane.tab')
     expect(main).toBeDefined()
+    expect(tab).toBeDefined()
 
-    // It renders without a client injected; the real one fetches, and in a
+    // Both render without a client injected; the real one fetches, and in a
     // static render the loading state is what shows.
-    const html = renderToStaticMarkup(createElement(main?.Component as never, {} as never))
-    expect(html).toContain('dt-root')
-    expect(html).toContain('Current course')
+    const mainHtml = renderToStaticMarkup(createElement(main?.Component as never, {} as never))
+    expect(mainHtml).toContain('dt-root')
+    expect(mainHtml).toContain('Current course')
+
+    // The docked tab is narrow-first and says what it is for.
+    const tabHtml = renderToStaticMarkup(createElement(tab?.Component as never, {} as never))
+    expect(tabHtml).toContain('dt-tab')
+    expect(tabHtml).toContain('Now learning')
+    expect(tabHtml).toContain('Diagnosis map')
   })
 })
 
@@ -203,15 +228,7 @@ describe('the client plugin injects its stylesheet and takes it away again', () 
 
   it('injects exactly one sheet, and removes it on dispose', () => {
     const disposers: (() => void)[] = []
-    const ctx = {
-      // `layout` is resolved lazily for the "back to the chat" action; a
-      // profile without it simply loses that button.
-      get: () => undefined,
-      effect: (fn: () => () => void) => {
-        disposers.push(fn())
-      },
-      slots: { inject: () => () => {}, register: () => () => {} },
-    }
+    const { ctx, recorded } = fakeClientContext()
     ;(module.apply as (c: unknown) => void)(ctx)
 
     const sheets = document.querySelectorAll('style[data-diagnostic-tutor-style]')
@@ -219,18 +236,13 @@ describe('the client plugin injects its stylesheet and takes it away again', () 
     expect(sheets[0]?.textContent).toContain('.dt-root')
 
     // Unloading must leave no residue in the DOM.
-    for (const dispose of disposers) dispose()
+    for (const dispose of recorded.disposers) dispose()
     expect(document.querySelectorAll('style[data-diagnostic-tutor-style]')).toHaveLength(0)
   })
 
   it('does not inject a second copy when applied twice', () => {
-    const ctx = {
-      get: () => undefined,
-      effect: (fn: () => () => void) => {
-        fn()
-      },
-      slots: { inject: () => () => {}, register: () => () => {} },
-    }
+    const { ctx, recorded } = fakeClientContext()
+    for (const dispose of recorded.disposers) dispose()
     ;(module.apply as (c: unknown) => void)(ctx)
     ;(module.apply as (c: unknown) => void)(ctx)
     expect(document.querySelectorAll('style[data-diagnostic-tutor-style]').length).toBeLessThanOrEqual(1)

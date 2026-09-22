@@ -24,9 +24,12 @@ import type { PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
+import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
 import type { ReactNode } from 'react'
 
 import { LearningPanel } from './app.js'
+import { fetchOverview } from './api.js'
+import { LearningTab, LearningTabTitle } from './tab.jsx'
 import { injectStyles } from './styles.js'
 
 /** Client module name; distinct from the host plugin's name. */
@@ -38,7 +41,7 @@ export const name = 'diagnostic-tutor-client'
  * Declared here rather than in the host half because it is a *client* service:
  * the browser half runs in its own Cordis context against the page's registry.
  */
-export const inject = ['slots', 'layout']
+export const inject = ['slots', 'layout', 'sidebarRightTabs']
 
 /**
  * Identifier shared by the sidebar entry and the main panel.
@@ -47,6 +50,16 @@ export const inject = ['slots', 'layout']
  * select the `main` key — so they are derived from one constant.
  */
 export const PANEL_ID = 'diagnostic-tutor'
+
+/**
+ * The docked tab's identity.
+ *
+ * A tab type has two names: `id` is the implementation's own identity and is
+ * what its body and title register under; `kind` is the discriminator `openTab`
+ * names. They are the same string here because this plugin ships exactly one
+ * implementation of exactly one kind.
+ */
+export const TAB_ID = 'diagnostic-tutor'
 
 /** The sidebar icon: a small node graph, drawn inline so it needs no assets. */
 function PanelIcon({ size, active }: PropsRuntime<'sidebar.panellist'>): ReactNode {
@@ -87,15 +100,18 @@ function PanelIcon({ size, active }: PropsRuntime<'sidebar.panellist'>): ReactNo
 function MainPanel({
   useSessions,
   onOpenChat,
+  onFocusStarted,
 }: {
   useSessions?: ((select: (state: SessionListLike) => unknown) => unknown) | undefined
   onOpenChat?: (() => void) | undefined
+  onFocusStarted?: (() => void) | undefined
 }): ReactNode {
   const sessionId = useSessions?.((state) => state.ids[0])
   return (
     <LearningPanel
       {...(typeof sessionId === 'string' ? { sessionId } : {})}
       {...(onOpenChat === undefined ? {} : { onOpenChat })}
+      {...(onFocusStarted === undefined ? {} : { onFocusStarted })}
     />
   )
 }
@@ -131,7 +147,7 @@ export function apply(ctx: Context): void {
     ),
   )
 
-  // Captured once: the panel needs an *action*, and the standard props a slot
+  // Captured once: the panel needs *actions*, and the standard props a slot
   // receives only expose reads.
   const layout = ctx.get('layout')
 
@@ -145,14 +161,82 @@ export function apply(ctx: Context): void {
         return (
           <MainPanel
             {...props}
-            onOpenChat={() => layout?.selectPanel(null)}
+            onOpenChat={() => {
+              // Show the conversation, then dock: the session surface that the
+              // right sidebar needs comes back with it.
+              layout?.selectPanel(null)
+              openDockedTab()
+            }}
+            onFocusStarted={() => openDockedTab()}
           />
         )
       },
     ),
   )
+
+  // ---------------------------------------------------------------------------
+  // The docked tab.
+  //
+  // This is what lets the chat and the learning surface coexist. The full panel
+  // takes the main column — the same column the conversation lives in — so with
+  // only that panel the learner must leave the lesson to answer a check. The
+  // right sidebar is a separate column, so the same runtime sits beside the
+  // chat.
+  //
+  // Registration is two stages, and the order is enforced by the framework:
+  // declare the tab type, then register the body and title under the type's own
+  // `id`, because that is the key the seats dispatch on.
+  // ---------------------------------------------------------------------------
+  ctx.sidebarRightTabs.register({
+    id: TAB_ID,
+    kind: TAB_ID,
+    // A page type, not a resource viewer: it has no address globs, so it is
+    // opened by kind and never competes to render someone else's resource.
+    title: () => 'Learning',
+    priority: 'extension',
+  })
+
+  /**
+   * Dock the tab, retrying briefly.
+   *
+   * The right sidebar hosts **session-scoped** tabs, so it can only accept one
+   * while a session surface is mounted — and while the full panel occupies the
+   * main column, no session surface exists. Returning to the conversation
+   * mounts one, so the useful moment to dock is just after that. Retrying
+   * covers the gap between the click and the surface mounting.
+   */
+  const openDockedTab = (attempt = 0): void => {
+    // Resolved with `get`, not read as a property: this plugin injects the
+    // *registry*, not the navigation controller, and reading a service that was
+    // never injected throws rather than returning undefined.
+    const sidebarRight = ctx.get('sidebarRight')
+    if (!sidebarRight) return
+    try {
+      sidebarRight.openTab(TAB_ID)
+    } catch {
+      if (attempt < 8) setTimeout(() => openDockedTab(attempt + 1), 400)
+    }
+  }
+
+  ctx.slots.inject('sidebar.right.pane.tab', () =>
+    ctx.slots.register({ name: 'sidebar.right.pane.tab', key: TAB_ID }, LearningTab),
+  )
+  ctx.slots.inject('sidebar.right.pane.tab.title', () =>
+    ctx.slots.register({ name: 'sidebar.right.pane.tab.title', key: TAB_ID }, LearningTabTitle),
+  )
+
+  // Resume: if a focus is already active — a session being picked back up —
+  // have the surface docked and waiting rather than hidden behind a click.
+  void fetchOverview()
+    .then((overview) => {
+      if (overview.course !== null && overview.focus !== null) openDockedTab()
+    })
+    .catch(() => {
+      // The API may not be mounted (a client-only page); nothing to open.
+    })
 }
 
 export { LearningPanel } from './app.js'
+export { LearningTab, LearningTabTitle } from './tab.jsx'
 export { LessonBody, BlockView, BLOCK_RENDERERS } from './blocks.js'
 export type { PanelClient } from './app.js'
