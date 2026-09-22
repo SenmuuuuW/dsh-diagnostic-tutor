@@ -1,0 +1,13 @@
+# pnpm 11 moved build-script approval here (package.json#pnpm is no longer read).
+#
+# pnpm >=10 refuses to run a dependency's install scripts until the package is
+# approved. This is the SAME gate a DSH user must clear before a git-installed
+# plugin may run its `prepare` script — the docs call that "permission to
+# execute the package's code on your machine at install time, outside any
+# sandbox". That friction is why v0.1.0 will ship a prebuilt artifact rather
+# than rely on a GitHub source install (see docs/planning/PLAN.md R9).
+#
+# esbuild is a dev-only transitive dependency of vitest and never ships in the
+# published package.
+allowBuilds:
+  esbuild: true

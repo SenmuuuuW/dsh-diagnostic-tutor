@@ -1,0 +1,23 @@
+# dsh-diagnostic-tutor — bundle patch layer.
+#
+# This single `insert` row is the whole contribution of this package to a DSH
+# profile. Installing the bundle through the official CLI:
+#
+#   dsh plugin --profile <name> add dsh-diagnostic-tutor
+#
+# appends `dsh-diagnostic-tutor` to `dsh.profile.bundles`, and this patch is
+# then merged as one layer during profile boot.
+#
+# Requirements verified against the real loader:
+#   - the file MUST be a top-level YAML array (otherwise ConfigFileError);
+#   - `name` MUST be a bare module specifier so Node resolution finds the
+#     installed package (relative paths resolve beside the patch file);
+#   - `name` MUST equal package.json#name;
+#   - `id` is a stable composition key that later layers can override.
+#
+# There is deliberately no `config:` block yet. Every value a user might want
+# to change will become a Schemastery `Config` field first, so that users can
+# override it from their own profile patch layer without editing this package.
+- insert:
+    - id: diagnostic-tutor
+      name: 'dsh-diagnostic-tutor'
