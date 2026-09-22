@@ -15,12 +15,13 @@ import {
   COURSE_STATUSES,
   CourseSchema,
   LearnerProfileSchema,
-  TEACHING_MODES,
+  NODES_TABLE,
   UDT_DOMAIN_NAME,
   UDT_DOMAIN_VERSION,
   UNINITIALIZED,
   udtDomain,
 } from '../src/state.js'
+import { NODE_STATES, TEACHING_MODES } from '../src/vocabulary.js'
 
 describe('domain declaration', () => {
   it('uses a name the storage hub accepts', () => {
@@ -29,11 +30,24 @@ describe('domain declaration', () => {
     expect(UNIT_NAME_RE.test(COURSES_TABLE)).toBe(true)
   })
 
-  it('declares its version, global slot and table', () => {
+  it('declares its version, global slot and tables', () => {
     expect(udtDomain.name).toBe(UDT_DOMAIN_NAME)
     expect(udtDomain.version).toBe(UDT_DOMAIN_VERSION)
     expect(udtDomain.global).toBeDefined()
-    expect(Object.keys(udtDomain.tables)).toEqual([COURSES_TABLE])
+    expect(Object.keys(udtDomain.tables)).toEqual([COURSES_TABLE, NODES_TABLE])
+  })
+
+  it('keeps the domain version at 1 across an additive table', () => {
+    // The `single` layout enforces the stored version strictly: the json
+    // backend rejects a mismatched document before consulting
+    // `compatibleVersions`, which only `per-record` layouts honour. Since v2
+    // only ADDED the `nodes` table — an old document simply has none, and the
+    // facility builds the table set from the spec — bumping the version would
+    // make every existing store unopenable for no benefit.
+    expect(UDT_DOMAIN_VERSION).toBe(1)
+    // And no `compatibleVersions` safety net is declared, because relying on
+    // one is precisely the mistake: it does nothing for this layout.
+    expect('compatibleVersions' in udtDomain).toBe(false)
   })
 
   it('starts the learner global in an explicit never-written state', () => {

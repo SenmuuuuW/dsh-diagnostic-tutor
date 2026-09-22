@@ -6,16 +6,17 @@
  * on unload.
  *
  * ---------------------------------------------------------------------------
- * v0.0.2 scope (see docs/planning/PLAN.md §7)
+ * v0.0.3 scope (see docs/planning/PLAN.md §7)
  * ---------------------------------------------------------------------------
- * Proves the persistence and tool seams end to end: the plugin opens a storage
- * domain, initializes learner state on first run, registers a model-callable
- * tool, and releases everything on unload.
+ * Goal → detection → diagnosis map. The runtime now carries real product
+ * semantics: it records a learning goal in the learner's words, plants a map
+ * root, and lets a map grow one diagnosis at a time under rules that make
+ * unverified mastery impossible to store.
  *
  * Still deliberately absent:
- *   - no UDT skill detection  -> v0.0.3
- *   - no client half / UI     -> v0.0.4
- *   - no roadmap or lesson    -> v0.0.3 / v0.0.4
+ *   - no lesson generation, no quiz system -> v0.0.4+
+ *   - no client half / UI                  -> v0.0.4
+ *   - no resource ingestion, no RAG        -> out of scope for v0.1
  *
  * ---------------------------------------------------------------------------
  * Cross-version discipline (see PLAN.md 2.12 #9 / #16)
@@ -28,10 +29,10 @@
  *   2. every *type* coming from `@deepseek-ai/*` is imported with `import type`
  *      (enforced by `verbatimModuleSyntax`), so no second runtime copy is
  *      resolved for anything that merely describes a shape.
- *   3. services and instances — `tools`, `storageDomain`, the opened `Domain` —
- *      are always taken from `ctx` via `ctx.get(...)`, never constructed and
- *      never `instanceof`-checked. A cross-cohort copy would make such a check
- *      silently false.
+ *   3. services and instances — `tools`, `storageDomain`, `skills`,
+ *      `systemPrompt`, the opened `Domain` — are always taken from `ctx` via
+ *      `ctx.get(...)`, never constructed and never `instanceof`-checked. A
+ *      cross-cohort copy would make such a check silently false.
  *
  * Pure *builder* helpers (`defineTool`, `defineDomain`, `domainTable`) are the
  * one documented exception: they take plain data and return plain data, so
@@ -40,8 +41,10 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 
-import { openUdState } from './state.js'
+import { installRuntimeAdapter } from './adapter.js'
+import { UDT_DOMAIN_NAME, openUdState } from './state.js'
 import { registerTools } from './tools.js'
+import { describeUdtStatus, detectUdtSkill } from './udt.js'
 
 /**
  * Plugin module name. Stable kebab-case, equal to the loader row `id` in
@@ -52,10 +55,12 @@ export const name = 'diagnostic-tutor'
 /**
  * Services this plugin requires before it may load.
  *
- * Only services the standard profiles guarantee are declared here. Anything
- * optional or environment-specific is resolved lazily with `ctx.get(...)` so a
- * missing one degrades the plugin instead of leaving the whole plugin tree
- * pending — a pending plugin prints nothing at all, which is hard to diagnose.
+ * Only services the standard profiles guarantee are declared here — both come
+ * from `@deepseek-ai/dsh-base`. Everything optional (the skill catalog, the
+ * system prompt) is resolved lazily with `ctx.get(...)`, so a profile without
+ * them loses the corresponding enhancement instead of leaving the whole plugin
+ * tree pending. A pending plugin prints nothing at all, which is hard to
+ * diagnose.
  */
 export const inject = ['tools', 'storageDomain']
 
@@ -65,18 +70,9 @@ export const inject = ['tools', 'storageDomain']
  * `apply` is async, and Cordis keeps the fiber in `LOADING` until the returned
  * promise settles — so `await ctx.plugin(...)` genuinely waits for the storage
  * domain to be open, for first-run initialization to be durable, and for the
- * tools to be registered. That determinism is why the work happens here rather
- * than in a delayed `ctx.inject(...)` callback: a nested `inject` returns its
- * own fiber, so the outer fiber would report ACTIVE while the domain was still
- * opening and a caller could not tell the difference.
- *
- * The outer `inject` already guarantees both services exist. They are still
- * resolved through `ctx.get(...)` and checked, so a genuinely missing seam
- * fails loudly instead of dying on an opaque proxy error.
- *
- * `ctx.logger` is a built-in member of the Cordis `Context` class (not an
- * injected service), so it is always safe to use here. The plugin writes to
- * the harness log rather than stdout.
+ * tools to be registered. A nested `ctx.inject(...)` would return its own
+ * fiber, letting the outer fiber report ACTIVE while the domain was still
+ * opening.
  *
  * @param ctx - the Cordis context the loader hands to this plugin.
  */
@@ -93,7 +89,23 @@ export async function apply(ctx: Context): Promise<void> {
     return
   }
 
-  const state = await openUdState(facility)
+  // A storage failure must not take the whole plugin tree down with it. The
+  // loader treats a rejection from `apply` as a fatal composition error, so an
+  // unreadable or version-mismatched store file would otherwise stop every
+  // unrelated plugin in the profile from loading. Degrade instead: report the
+  // cause loudly, register nothing, and stay inert.
+  let state
+  try {
+    state = await openUdState(facility)
+  } catch (error) {
+    ctx.logger.error(
+      `[diagnostic-tutor] could not open storage domain "${UDT_DOMAIN_NAME}": ${(error as Error).message}. ` +
+        'The plugin is loaded but inert — no tools were registered. ' +
+        'This usually means a stored document written by an incompatible version.',
+    )
+    return
+  }
+
   // Unloading must leave no residue: this disposer closes the domain (which
   // rejects new writes, drains queued ones, and releases the backend unit) and
   // Cordis awaits the returned promise before the plugin counts as unloaded.
@@ -102,8 +114,20 @@ export async function apply(ctx: Context): Promise<void> {
   // First run writes the learner record; later runs leave it untouched.
   await state.ensureLearner(new Date().toISOString())
 
+  // Is the teaching brain present? Resolved lazily and never fatal: the
+  // runtime is useful without it, and a missing skill is a degraded mode, not
+  // an error. The result stays internal — it is logged, never surfaced to a
+  // learner through a tool, because the skill's own protocol forbids naming
+  // its files and versions in learner-facing text.
+  const udt = await detectUdtSkill(ctx.get('skills'))
+  ctx.logger.debug(`[diagnostic-tutor] teaching brain: ${describeUdtStatus(udt)}`)
+
+  // The runtime-semantics note only has a tension to resolve when the skill is
+  // actually installed; without it there is nothing to explain.
+  if (udt.available) installRuntimeAdapter(ctx)
+
   registerTools({ tools }, state)
   ctx.logger.debug(
-    `[diagnostic-tutor] ready — domain "${state.name}" v${state.version}, udt_status registered`,
+    `[diagnostic-tutor] ready — domain "${state.name}" v${state.version}, 4 tools registered`,
   )
 }

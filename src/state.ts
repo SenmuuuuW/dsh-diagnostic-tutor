@@ -2,15 +2,14 @@
  * The persistence contract for dsh-diagnostic-tutor.
  *
  * This module owns one Cordis **storage domain** — the official DSH
- * persistence seam — and nothing else. It deliberately contains no teaching
- * logic and no map/lesson concepts yet: those arrive in v0.0.3/v0.0.4. What it
- * establishes is the shape every later table will follow.
+ * persistence seam — and nothing else. It contains no teaching logic: it
+ * stores what was observed, never what should happen next.
  *
  * Why a storage domain rather than files of our own:
- *   - it is the supported seam; the profile routes it to a backend (the web
- *     profile uses `dsh-storage-json` under `dshHomePath('storages')`);
+ *   - it is the supported seam; the profile routes it to a backend (the
+ *     standard profiles use `dsh-storage-json` under `dshHomePath('storages')`);
  *   - **the zod schema is the contract** — every record is validated at the
- *     durable boundary, so corrupt data cannot enter memory;
+ *     durable boundary, so corrupt or hand-edited data cannot enter memory;
  *   - reads are synchronous from memory and writes ride one per-domain write
  *     chain, so concurrent writers cannot interleave;
  *   - unmounting is clean: `Domain.close()` releases the backend unit.
@@ -22,16 +21,15 @@
  * objects** — services, classes, instances. A second harness cohort must never
  * supply those, because identity checks and `instanceof` would silently fail.
  *
- * `defineDomain` and `domainTable` are a different category: they are **pure
- * builder functions**. `domainTable(schema)` is literally
- * `{ valueSchema: schema }`, and `defineDomain(spec)` validates a spec and
- * returns it unchanged. They take plain data and return plain data, carry no
- * identity, and are re-exported by the host for exactly this use. So they are
- * value-imported and declared as peer dependencies — the same pattern every
- * published DSH plugin uses.
+ * `defineDomain` and `domainTable` are a different category: **pure builder
+ * functions**. `domainTable(schema)` is literally `{ valueSchema: schema }`,
+ * and `defineDomain(spec)` validates a spec and returns it unchanged. They
+ * take plain data and return plain data, carry no identity, and are re-exported
+ * by the host for exactly this use — the same pattern every published DSH
+ * plugin follows.
  *
- * The rule that still holds absolutely: never `instanceof` a returned object,
- * and take every service instance (`DomainFacility`, `Domain`, stores) from
+ * The rules that still hold absolutely: never `instanceof` a returned object,
+ * and take every service instance (`DomainFacility`, `Domain`, tables) from
  * `ctx`. Here `DomainFacility` is imported as a **type**, and the `Domain` we
  * use is whatever the host's facility handed back.
  */
@@ -45,26 +43,15 @@ import type {
 } from '@deepseek-ai/dsh-storage-domain'
 import { z } from 'zod'
 
-/* -------------------------------------------------------------------------- */
-/* Closed vocabularies                                                        */
-/* -------------------------------------------------------------------------- */
-
-/**
- * These mirror vocabularies the Universal Diagnostic Tutor skill already owns.
- * They are copied verbatim rather than re-invented: the skill's own protocol
- * says "never invent a second vocabulary", and duplicating the terms here
- * would make the plugin and the teaching brain disagree over time.
- */
-
-/** Teaching modes (skill: `references/teaching_modes.md`). */
-export const TEACHING_MODES = ['auto', 'zero-base', 'standard', 'advanced'] as const
-export const TeachingModeSchema = z.enum(TEACHING_MODES)
-export type TeachingMode = z.infer<typeof TeachingModeSchema>
-
-/** Lifecycle of a learning goal. Not a mastery status — see PLAN.md §5. */
-export const COURSE_STATUSES = ['active', 'paused', 'archived'] as const
-export const CourseStatusSchema = z.enum(COURSE_STATUSES)
-export type CourseStatus = z.infer<typeof CourseStatusSchema>
+import {
+  EvidenceKindSchema,
+  INITIAL_NODE_STATE,
+  NodeRelationSchema,
+  NodeStateSchema,
+  ReadinessSchema,
+  TeachingModeSchema,
+} from './vocabulary.js'
+import type { NodeRelation, NodeState } from './vocabulary.js'
 
 /* -------------------------------------------------------------------------- */
 /* Records                                                                    */
@@ -78,6 +65,8 @@ export type CourseStatus = z.infer<typeof CourseStatusSchema>
  * `initializedAt` is the sentinel that distinguishes "the stored profile" from
  * "the spec's default": it is the empty string until the first write, which is
  * what makes first-run initialization idempotent and restart-detectable.
+ *
+ * Note there is no field for proficiency, level or score. Preferences only.
  */
 export const LearnerProfileSchema = z.object({
   preferredLanguage: z.string().min(1).optional(),
@@ -88,7 +77,17 @@ export const LearnerProfileSchema = z.object({
 })
 export type LearnerProfile = z.infer<typeof LearnerProfileSchema>
 
-/** A learning goal in the learner's own words. Container for later tables. */
+/** Lifecycle of a learning goal. Not a mastery status. */
+export const COURSE_STATUSES = ['active', 'paused', 'archived'] as const
+export const CourseStatusSchema = z.enum(COURSE_STATUSES)
+export type CourseStatus = z.infer<typeof CourseStatusSchema>
+
+/**
+ * A learning goal in the learner's own words.
+ *
+ * `goal` is the verbatim statement that started the course; `title` is a short
+ * label for display. Neither is ever auto-expanded into a syllabus.
+ */
 export const CourseSchema = z.object({
   id: z.string().min(1),
   title: z.string().min(1),
@@ -99,7 +98,46 @@ export const CourseSchema = z.object({
 })
 export type CourseRecord = z.infer<typeof CourseSchema>
 
+/**
+ * One observation attached to a node.
+ *
+ * Evidence records *what happened*, never how good it was. There is no score,
+ * no weight and no correctness flag — a `readiness` outcome is the skill's own
+ * six-term vocabulary, and it is optional because not every observation rises
+ * to a readiness judgement.
+ */
+export const EvidenceSchema = z.object({
+  kind: EvidenceKindSchema,
+  at: z.string(),
+  note: z.string().min(1).optional(),
+  readiness: ReadinessSchema.optional(),
+})
+export type Evidence = z.infer<typeof EvidenceSchema>
+
+/**
+ * One node of the diagnosis map.
+ *
+ * Nodes are born `unconfirmed` and stay that way until evidence supports
+ * something else; see `diagnosis.ts` for the transition rules. There is no
+ * `progress`, no `weight`, no `order` and no `dueAt`: nothing here describes a
+ * schedule or a completion percentage, because the map is not a syllabus.
+ */
+export const NodeSchema = z.object({
+  id: z.string().min(1),
+  courseId: z.string().min(1),
+  title: z.string().min(1),
+  /** Absent only for the course's single `goal` node. */
+  parentId: z.string().min(1).optional(),
+  relation: NodeRelationSchema,
+  state: NodeStateSchema,
+  evidence: z.array(EvidenceSchema),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+})
+export type NodeRecord = z.infer<typeof NodeSchema>
+
 export type CourseKey = string
+export type NodeKey = string
 
 /* -------------------------------------------------------------------------- */
 /* Domain declaration                                                         */
@@ -107,8 +145,27 @@ export type CourseKey = string
 
 /** Domain name. Must match the storage hub's `UNIT_NAME_RE` (`^[a-z][a-z0-9_]*$`). */
 export const UDT_DOMAIN_NAME = 'udt'
+/**
+ * Still 1, and that is a deliberate finding rather than an oversight.
+ *
+ * v0.0.3 added the `nodes` table. That is **additive**: a v1 document simply
+ * has no `nodes` map, and the facility builds its table set from the spec, so
+ * an old document opens with an empty map.
+ *
+ * The version must NOT be bumped for an additive change, because the `single`
+ * layout enforces it strictly: `dsh-storage-json`'s `openSingleUnit` rejects a
+ * document whose stamped version differs from the spec before any compatibility
+ * list is consulted (`StorageError: unit 'udt': stored version 1 != expected 2`,
+ * `code: 'version-mismatch'`). `compatibleVersions` is honoured by `per-record`
+ * backends only. Bumping here would make every existing store unopenable —
+ * an outage in exchange for nothing.
+ *
+ * So: bump this only when a stored *record* can no longer be read as-is, and
+ * ship a migration in the same release.
+ */
 export const UDT_DOMAIN_VERSION = 1
 export const COURSES_TABLE = 'courses'
+export const NODES_TABLE = 'nodes'
 
 /** Sentinel meaning "the global slot has never been written". */
 export const UNINITIALIZED = ''
@@ -122,6 +179,7 @@ export const udtDomain = defineDomain({
   },
   tables: {
     [COURSES_TABLE]: domainTable<CourseKey, CourseRecord>(CourseSchema),
+    [NODES_TABLE]: domainTable<NodeKey, NodeRecord>(NodeSchema),
   },
 })
 
@@ -139,19 +197,28 @@ export interface UdStateSnapshot {
   readonly initialized: boolean
   readonly learner: LearnerProfile
   readonly courseCount: number
+  readonly nodeCount: number
   readonly courses: readonly { id: string; title: string; status: CourseStatus }[]
+}
+
+/** The map for one course, as returned by `udt_map_get`. */
+export interface CourseMap {
+  readonly course: CourseRecord
+  readonly nodes: readonly NodeRecord[]
 }
 
 /**
  * The plugin's whole persistence surface.
  *
- * Nothing outside this module touches the `Domain` handle, so swapping the
+ * Nothing outside this module touches the `Domain` handle, so changing the
  * storage layout later is a change in one file. Every write returns the stored
  * record so callers never have to re-read.
  */
 export interface UdState {
   readonly name: string
   readonly version: number
+
+  /* learner ---------------------------------------------------------------- */
   /** Synchronous read of the learner singleton. */
   readLearner(): LearnerProfile
   /** Whether the learner singleton has ever been written. */
@@ -159,7 +226,6 @@ export interface UdState {
   /**
    * Write the learner singleton on first open, and do nothing on later opens.
    * @param now - ISO timestamp supplied by the caller so the write is testable.
-   * @returns the stored profile (freshly initialized or already present).
    */
   ensureLearner(now: string): Promise<LearnerProfile>
   /**
@@ -167,14 +233,76 @@ export interface UdState {
    * @param patch - fields to overwrite; omitted fields are preserved.
    * @param now - ISO timestamp for `updatedAt`.
    */
-  updateLearner(patch: Partial<Omit<LearnerProfile, 'initializedAt' | 'updatedAt'>>, now: string): Promise<LearnerProfile>
+  updateLearner(
+    patch: Partial<Omit<LearnerProfile, 'initializedAt' | 'updatedAt'>>,
+    now: string,
+  ): Promise<LearnerProfile>
+
+  /* courses ---------------------------------------------------------------- */
   listCourses(): CourseRecord[]
   readCourse(id: CourseKey): CourseRecord | undefined
   /** Insert or fully replace one course. */
   writeCourse(record: CourseRecord): Promise<CourseRecord>
+  /**
+   * Make one course active: it becomes `active`, every other course that was
+   * active becomes `paused`, and the learner's `activeCourseId` points at it.
+   *
+   * Only one goal is in focus at a time. Pausing is reversible — the other
+   * courses keep their records and all of their nodes.
+   *
+   * @param courseId - the course to focus.
+   * @param now - ISO timestamp.
+   * @returns the activated course.
+   */
+  activateCourse(courseId: CourseKey, now: string): Promise<CourseRecord>
+
+  /* nodes ------------------------------------------------------------------ */
+  /** Every node of one course, in insertion order. */
+  listNodes(courseId: CourseKey): NodeRecord[]
+  readNode(id: NodeKey): NodeRecord | undefined
+  /** Insert or fully replace one node. */
+  writeNode(record: NodeRecord): Promise<NodeRecord>
+  /** Number of nodes across every course. */
+  nodeCount(): number
+  /** The course plus its map. */
+  readMap(courseId: CourseKey): CourseMap | undefined
+
   snapshot(): UdStateSnapshot
   /** Release the backend unit. Idempotent. */
   close(): Promise<void>
+}
+
+/**
+ * Build a fresh node in its born state.
+ *
+ * Kept here rather than in the tool layer so the "nothing is born confirmed"
+ * rule has exactly one implementation.
+ *
+ * @param input - the fields the caller supplies.
+ * @returns a complete, valid record.
+ */
+export function newNode(input: {
+  id: string
+  courseId: string
+  title: string
+  relation: NodeRelation
+  parentId?: string
+  state?: NodeState
+  evidence?: Evidence[]
+  now: string
+}): NodeRecord {
+  const record: NodeRecord = {
+    id: input.id,
+    courseId: input.courseId,
+    title: input.title,
+    relation: input.relation,
+    state: input.state ?? INITIAL_NODE_STATE,
+    evidence: input.evidence ?? [],
+    createdAt: input.now,
+    updatedAt: input.now,
+  }
+  if (input.parentId !== undefined) record.parentId = input.parentId
+  return record
 }
 
 /**
@@ -189,7 +317,11 @@ export interface UdState {
 export async function openUdState(facility: DomainFacility): Promise<UdState> {
   const domain: Domain<UdtDomain> = await facility.open(udtDomain)
   const courses: KvTable<CourseKey, CourseRecord> = domain.table(COURSES_TABLE)
+  const nodes: KvTable<NodeKey, NodeRecord> = domain.table(NODES_TABLE)
   const learner: DomainGlobal<LearnerProfile> = domain.global
+
+  const listNodesFor = (courseId: CourseKey): NodeRecord[] =>
+    [...nodes.entries()].map(([, record]) => record).filter((record) => record.courseId === courseId)
 
   return {
     name: domain.name,
@@ -229,6 +361,39 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       return record
     },
 
+    async activateCourse(courseId, now) {
+      const target = courses.get(courseId)
+      if (!target) throw new Error(`no course "${courseId}"`)
+
+      // Pause whatever was in focus, then promote the target. Both writes ride
+      // the domain's single chain, so a reader never sees two active goals.
+      for (const [key, record] of [...courses.entries()]) {
+        if (key === courseId || record.status !== 'active') continue
+        await courses.put(key, { ...record, status: 'paused', updatedAt: now })
+      }
+      const activated: CourseRecord = { ...target, status: 'active', updatedAt: now }
+      await courses.put(courseId, activated)
+      await learner.set({ ...learner.get(), activeCourseId: courseId, updatedAt: now })
+      return activated
+    },
+
+    listNodes: listNodesFor,
+
+    readNode: (id) => nodes.get(id),
+
+    async writeNode(record) {
+      await nodes.put(record.id, record)
+      return record
+    },
+
+    nodeCount: () => nodes.size,
+
+    readMap(courseId) {
+      const course = courses.get(courseId)
+      if (!course) return undefined
+      return { course, nodes: listNodesFor(courseId) }
+    },
+
     snapshot() {
       const profile = learner.get()
       return {
@@ -237,6 +402,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
         initialized: profile.initializedAt !== UNINITIALIZED,
         learner: profile,
         courseCount: courses.size,
+        nodeCount: nodes.size,
         courses: [...courses.entries()].map(([id, record]) => ({
           id,
           title: record.title,

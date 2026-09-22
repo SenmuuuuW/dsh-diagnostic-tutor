@@ -7,10 +7,10 @@ it works out where you are stuck, decides the next best teaching step, and turns
 the whole process into a living learning map you can click through.
 
 > [!IMPORTANT]
-> **Status: `v0.0.2` — persistence and tool seams proven. Nothing user-facing yet.**
-> Learner state now persists to disk and a model-callable `udt_status` tool
-> reports it. There is still no learning map and no lesson page. See
-> [Roadmap](#roadmap) for what lands when.
+> **Status: `v0.0.3` — goal, teaching-brain detection, and a diagnosis map.**
+> A learner can state a goal; the runtime records it, finds the teaching brain
+> if it is installed, and grows a diagnosis map one observation at a time.
+> There is still no lesson page and no UI. See [Roadmap](#roadmap).
 
 ---
 
@@ -49,7 +49,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.0.2` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.0.3` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -86,7 +86,7 @@ supported path from `v0.1.0` onward**, so that this step disappears.
 
 ---
 
-## Learner state
+## Learner state and the diagnosis map
 
 State lives in one Cordis **storage domain** (`udt`, version 1) over the
 official `storageDomain` seam. The profile chooses the medium — the standard
@@ -99,8 +99,8 @@ With the json backend you get exactly one document, `<storage root>/udt.json`
 ```json
 {
   "unit": { "name": "udt", "version": 1 },
-  "global": { "initializedAt": "…", "updatedAt": "…" },
-  "tables": { "courses": {} }
+  "global": { "initializedAt": "…", "updatedAt": "…", "activeCourseId": "…" },
+  "tables": { "courses": { "…": {} }, "nodes": { "…": {} } }
 }
 ```
 
@@ -108,16 +108,77 @@ With the json backend you get exactly one document, `<storage root>/udt.json`
 | --- | --- |
 | `global` | the learner singleton — preferences, active goal, `initializedAt` |
 | `tables.courses` | one record per learning goal, in the learner's own words |
+| `tables.nodes` | the diagnosis map: `id`, `courseId`, `title`, `parentId?`, `relation`, `state`, `evidence[]` |
 
 Two deliberate rules:
 
 - **zod is the contract.** Every record is validated at the durable boundary, so
   a hand-edited or corrupt document fails loudly instead of entering memory.
 - **No scores, ever.** There is no field for points, grades or percentages —
-  the skill forbids turning mastery into a score, and the schema enforces it.
+  the skill forbids turning mastery into a score, and a test asserts that no
+  such key exists anywhere in the persisted document.
 
 Records are never mutated in place; writes go through `put`/`set` on one
 per-domain write chain, so concurrent writers cannot interleave.
+
+### How the map is kept from becoming a syllabus
+
+The rules are enforced in `src/diagnosis.ts` as pure functions, so no tool can
+route around them:
+
+- a node is **born `unconfirmed`**, and stays there without evidence;
+- `confirmed` requires a **`check` or `transfer`** evidence entry. Explanation
+  or practice alone never confirms — the skill is explicit that "explanation
+  alone and one lucky answer never confirm readiness";
+- a **goal node can never be confirmed**: it is the frame of the map, not a
+  claim about the learner;
+- every non-goal node must attach to a **parent that already exists** in the
+  same course, and there are no cycles — so the map grows outward from what has
+  been diagnosed, one step at a time;
+- **at most 8 nodes per call and 40 per course.** A single call cannot plant a
+  term's worth of material;
+- `relation` is `goal | part-of | prerequisite | related`. There is deliberately
+  no `next-in-course`, because nothing in this runtime knows a teaching order.
+
+### Tools
+
+Four, and none of them decides anything about teaching.
+
+| Tool | Does |
+| --- | --- |
+| `udt_status` | reports the runtime: domain, version, learner profile, goals, node count |
+| `udt_goal_create` | records a goal and plants the map root — and nothing else |
+| `udt_map_get` | reads the map with each node's relation, state and evidence |
+| `udt_map_update` | `add-nodes` · `set-state` · `add-evidence` |
+
+### Teaching-brain detection
+
+At load the plugin asks the platform's own skill registry whether the
+Universal Diagnostic Tutor skill is installed — no path is hardcoded, no skill
+root is assumed, and nothing is copied. A missing catalog, a missing skill and
+an unreadable body each degrade to a reported status rather than an error.
+
+Compatibility is probed by **capability**, not by a version string: the skill's
+maintenance contract permits only `name` and `description` in frontmatter, so
+it cannot declare a version. The result carries a short content digest as a
+version hint.
+
+Detection results stay **internal** — logged at `debug`, absent from every tool
+output. The skill forbids naming its files, versions or repository in
+learner-facing text, and this runtime will not be what leaks them.
+
+### The temporary runtime adapter
+
+The skill's guardrails say mastery tracking must never become "scores,
+databases, hidden memory, or a curriculum roadmap". This runtime deliberately
+persists state and renders a map, so it tells the teaching brain which reading
+is in force: one short system-prompt section noting that state here is explicit
+and user-visible, that stored state is evidence to be re-checked rather than
+truth, and that the map is diagnosis-driven and reversible.
+
+It carries no teaching logic, names no file or version, and is contributed only
+when the teaching brain is present. It is a **v0.0.x bridge** — the intent is to
+resolve the tension in the skill itself before v0.1.0.
 
 ## Development
 
@@ -140,11 +201,11 @@ shows a loader row exists.
 | Version | Ships |
 | --- | --- |
 | `v0.0.1` | installable bundle, plugin loads, guard + composition tests |
-| `v0.0.2` | **current** — `udt` storage domain, learner round-trip, `udt_status` tool |
-| `v0.0.3` | UDT skill detection; goal creation; the learning map (clickable nodes, prerequisite edges, next-best highlight) |
+| `v0.0.2` | `udt` storage domain, learner round-trip, `udt_status` tool |
+| `v0.0.3` | **current** — teaching-brain detection, `udt_goal_create`, the diagnosis map (`udt_map_get` / `udt_map_update`), runtime adapter |
 | `v0.0.4` | lesson page composed of Learning Blocks (text / formula / example / quiz / check) |
 | `v0.0.5` | check → mastery update → next best lesson (the closed loop) |
-| `v0.0.6` | state export/reset, settings, i18n, docs |
+| `v0.0.6` | the client half: a real map you can click, plus state export/reset, settings, i18n |
 | `v0.1.0` | **first playable MVP** — Goal → Map → Lesson → Check → Progress → Next |
 
 ## Trust

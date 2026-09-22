@@ -55,6 +55,7 @@ describe('tool registration', () => {
         version: 1,
         initialized: true,
         courseCount: 0,
+        nodeCount: 0,
         courses: [],
       })
       // Optional fields are omitted, never present-but-undefined.
@@ -103,6 +104,38 @@ describe('durability', () => {
       expect((stored.global as { initializedAt?: unknown } | undefined)?.initializedAt).toBe(initializedAt)
     } finally {
       await second.close()
+    }
+  })
+})
+
+describe('a broken store must not take the plugin tree down', () => {
+  it('degrades to inert instead of rejecting when the document cannot be read', async () => {
+    // Found by a real boot: the loader treats a rejection from `apply` as a
+    // fatal composition error, so an unreadable store would stop every
+    // unrelated plugin in the profile from loading. Simulate the exact case —
+    // a document stamped with a version this build does not expect.
+    const { mkdtemp, writeFile } = await import('node:fs/promises')
+    const { tmpdir } = await import('node:os')
+    const storeRoot = await mkdtemp(join(tmpdir(), 'udt-broken-'))
+    await writeFile(
+      join(storeRoot, STORE_FILE),
+      JSON.stringify({ unit: { name: 'udt', version: 99 }, global: {}, tables: {} }),
+      'utf8',
+    )
+
+    const harness = await createHarness({ storeRoot })
+    try {
+      const fiber = await harness.ctx.plugin(plugin)
+      // The plugin loads; it does not blow up the composition.
+      expect(fiber.state).toBe(FIBER_ACTIVE)
+
+      // And it says why, loudly, rather than pretending to work.
+      expect(harness.logs.some((line) => line.includes('could not open storage domain'))).toBe(true)
+
+      // Inert: no tools registered against a store it cannot trust.
+      expect(harness.ctx.get('tools')?.schemas() ?? []).toEqual([])
+    } finally {
+      await harness.close()
     }
   })
 })

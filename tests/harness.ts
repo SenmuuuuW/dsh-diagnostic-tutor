@@ -1,9 +1,10 @@
 /**
  * Real-composition test harness.
  *
- * Composes the *same* storage stack the standard DSH profiles mount —
- * `storage` hub → `json` backend → schema-validated `domain` form (see
- * `@deepseek-ai/dsh-base`'s cordis.patch.yml) — over a temporary directory.
+ * Composes the *same* stack the standard DSH profiles mount — `systemPrompt`,
+ * the `tools` registry, the skill catalog, and `storage` → `storage-json` →
+ * `storage-domain` (see `@deepseek-ai/dsh-base`'s cordis.patch.yml) — over a
+ * temporary directory.
  *
  * The point is to avoid the trap the plugin-test guidance warns about: a
  * handwritten fake proves only that a bridge moved bytes. Persistence tests
@@ -15,11 +16,12 @@
  * substitutes in production (`dshHomePath('storages')`).
  */
 
-import { mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, readdir, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { Context } from '@deepseek-ai/cordis'
+import SkillRegistry from '@deepseek-ai/dsh-skill'
 import Storage from '@deepseek-ai/dsh-storage'
 import * as storageDomain from '@deepseek-ai/dsh-storage-domain'
 import * as storageJson from '@deepseek-ai/dsh-storage-json'
@@ -30,12 +32,46 @@ import type { Fiber } from '@deepseek-ai/cordis'
 /** Debug is the lowest level; a bare exporter would otherwise filter it out. */
 const CAPTURE_ALL_LEVELS = 3
 
+/**
+ * Which fixture teaching brain the harness should present.
+ *
+ * `absent` models a profile where the skill was never installed; the other two
+ * model it being present with a recognisable or an unrecognised body.
+ */
+export type UdtFixture = 'compatible' | 'unrecognized' | 'absent'
+
+/**
+ * A minimal stand-in for the skill body.
+ *
+ * It carries the capability anchors the detector probes for, so detection can
+ * be exercised without depending on the real skill being installed on the
+ * machine running the tests.
+ */
+export const UDT_FIXTURE_CONTENT = `# Universal Diagnostic Tutor
+
+## Core Loop
+
+1. **Diagnose.** Name the subject and the likely blocking gap.
+2. **Intervene.** Teach one compact unit.
+
+Status terms: explained, practiced, checked, confirmed, unconfirmed, weak,
+blocked.
+`
+
+/** A body that lacks the anchors, standing in for an unrelated skill. */
+export const UNRECOGNISED_FIXTURE_CONTENT = `# Something Else
+
+A skill that is not the teaching brain.
+`
+
 export interface HarnessOptions {
   /**
    * Reuse an existing store directory. Passing the directory of a closed
    * harness is how the tests simulate a process restart.
    */
   readonly storeRoot?: string
+  /** Which teaching-brain fixture to install. Defaults to `absent`. */
+  readonly udt?: UdtFixture
 }
 
 export interface TestHarness {
@@ -52,9 +88,9 @@ export interface TestHarness {
 }
 
 /**
- * Compose the storage stack over a temporary (or reused) store root.
+ * Compose the stack over a temporary (or reused) store root.
  *
- * @param options - optional store root to reuse.
+ * @param options - optional store root and skill fixture.
  * @returns the harness handle.
  */
 export async function createHarness(options: HarnessOptions = {}): Promise<TestHarness> {
@@ -80,6 +116,18 @@ export async function createHarness(options: HarnessOptions = {}): Promise<TestH
   fibers.push(await ctx.plugin(Storage))
   fibers.push(await ctx.plugin(storageJson, { root: storeRoot }))
   fibers.push(await ctx.plugin(storageDomain, { backend: 'json' }))
+  fibers.push(await ctx.plugin(SkillRegistry))
+
+  if (options.udt !== undefined && options.udt !== 'absent') {
+    const skills = ctx.get('skills')
+    if (!skills) throw new Error('harness: skill registry did not mount')
+    skills.register({
+      name: 'universal-diagnostic-tutor',
+      description: 'Diagnosis-first tutoring.',
+      source: 'runtime',
+      content: options.udt === 'compatible' ? UDT_FIXTURE_CONTENT : UNRECOGNISED_FIXTURE_CONTENT,
+    })
+  }
 
   return {
     ctx,
@@ -99,6 +147,5 @@ export async function createHarness(options: HarnessOptions = {}): Promise<TestH
  * @returns sorted relative file names.
  */
 export async function storeFiles(storeRoot: string): Promise<string[]> {
-  const { readdir } = await import('node:fs/promises')
   return (await readdir(storeRoot)).sort()
 }
