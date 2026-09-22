@@ -24,6 +24,7 @@ import type {
   NodeView,
   OverviewResponse,
 } from '../src/contract.js'
+import { NextStepCard } from '../src/client/blocks.jsx'
 import { LearningTab, LearningTabTitle } from '../src/client/tab.jsx'
 import type { PanelClient } from '../src/client/use-learning.js'
 
@@ -69,6 +70,7 @@ const client: PanelClient = {
       },
       nodes,
       focus: activeFocus,
+  nextStep: null,
       lessonCount: 1,
     }),
   fetchNode: (nodeId): Promise<NodeDetailResponse> => {
@@ -117,6 +119,7 @@ function staticOverview(): OverviewResponse {
     },
     nodes,
     focus: null,
+  nextStep: null,
     lessonCount: 1,
   }
 }
@@ -163,6 +166,44 @@ describe('the tab shows the whole runtime in one column', () => {
     expect(html).toContain('dt-tab')
     // No fixed pixel width is baked into the markup.
     expect(html).not.toMatch(/width:\s*\d+px/)
+  })
+})
+
+describe('the next best step card', () => {
+  const move = {
+    fromNodeId: 'ml:math',
+    fromNodeTitle: 'Math Foundations',
+    targetNodeId: 'ml:la',
+    targetNodeTitle: 'Linear Algebra',
+    action: 'step-down',
+    reason: 'Vectors and matrix shapes come before anything built on them.',
+    createdAt: NOW,
+  }
+
+  it('names where it goes and why, and waits to be pressed', () => {
+    const html = renderToStaticMarkup(createElement(NextStepCard, { nextStep: move, onContinue: () => {} }))
+    expect(html).toContain('Next best step')
+    expect(html).toContain('Math Foundations')
+    expect(html).toContain('step down')
+    expect(html).toContain('Linear Algebra')
+    expect(html).toContain('Vectors and matrix shapes come before')
+    expect(html).toContain('Continue learning')
+  })
+
+  it('says plainly when the answer is to stay', () => {
+    const stay = { ...move, targetNodeId: null, targetNodeTitle: null, action: 'more-practice' }
+    const html = renderToStaticMarkup(createElement(NextStepCard, { nextStep: stay, onContinue: () => {} }))
+    expect(html).toContain('Stay on Math Foundations')
+    expect(html).toContain('more practice')
+    expect(html).not.toContain('Continue learning')
+  })
+
+  it('shows no percentage, score, XP or stars', () => {
+    const html = renderToStaticMarkup(createElement(NextStepCard, { nextStep: move, onContinue: () => {} }))
+    expect(html).not.toMatch(/\d+\s*%/)
+    for (const banned of ['score', 'xp', 'star', 'points', 'progress']) {
+      expect(html.toLowerCase()).not.toContain(`>${banned}`)
+    }
   })
 })
 

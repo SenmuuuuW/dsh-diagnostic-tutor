@@ -18,7 +18,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react'
 
 import type { NodeView, OverviewResponse } from '../contract.js'
-import { LessonBody } from './blocks.jsx'
+import { LessonBody, NextStepCard } from './blocks.jsx'
 import { buildMapTree, flattenTree, relationLabel, stateExplanation } from './model.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
@@ -87,7 +87,8 @@ export interface LearningTabProps {
  */
 export function LearningTab({ client, sessionId, initialOverview }: LearningTabProps): ReactNode {
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview })
-  const { overview, focus, selectedId, detail, lesson, note, error, starting, loading, select } = state
+  const { overview, focus, nextStep, selectedId, detail, lesson, note, error, starting, loading, select } =
+    state
 
   // Show something on first paint: the focused node if there is one, else the
   // map's first row. `select` is a stable callback, so this runs on arrival
@@ -155,6 +156,20 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
           </div>
           <LessonBody blocks={lesson.blocks} />
         </>
+      )}
+
+      {nextStep !== null && (
+        <NextStepCard
+          nextStep={nextStep}
+          busy={starting}
+          // Acting on the recommendation starts the focus it names — or, for a
+          // stay, re-opens the same node so the tutor picks the thread back up.
+          onContinue={() => {
+            const target = nextStep.targetNodeId ?? nextStep.fromNodeId
+            select(target)
+            state.continueTo(target)
+          }}
+        />
       )}
 
       {detail !== null && detail.node.evidence.length > 0 && (

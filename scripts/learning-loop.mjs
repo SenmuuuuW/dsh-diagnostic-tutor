@@ -27,7 +27,7 @@ const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const PANEL_LABEL = 'Learn'
 const PORT = 9224
 /** A model turn is not instant; this is the honest budget. */
-const TUTOR_TIMEOUT_MS = 180_000
+const TUTOR_TIMEOUT_MS = 420_000
 
 const url = process.argv[2]
 const out = process.argv[3] ?? 'preview/dsh-ui-loop.png'
@@ -269,6 +269,49 @@ try {
     `\nanswer -> evidence ${before?.evidence.length} to ${after?.evidence.length}, ` +
       `state ${before?.state} to ${after?.state}, blocks ${before?.blocks.length} to ${after?.blocks.length}`,
   )
+
+  // 4. The tutor decides what happens next. Nothing moves on its own: the
+  //    recommendation appears with its reason and waits to be pressed.
+  const nextStep = await cdp.evaluate(`(() => {
+    const card = document.querySelector('.dt-tab .dt-next');
+    if (!card) return null;
+    return {
+      action: card.querySelector('.dt-next-from')?.textContent?.trim() ?? null,
+      target: card.querySelector('.dt-next-target')?.textContent?.trim() ?? null,
+      why: card.querySelector('.dt-next-why')?.textContent?.trim() ?? null,
+      button: card.querySelector('button')?.textContent?.trim() ?? null,
+    };
+  })()`)
+  console.log('\n=== NEXT BEST STEP ===')
+  console.log(nextStep === null ? '(the tutor has not decided yet)' : JSON.stringify(nextStep, null, 2))
+
+  if (nextStep !== null) {
+    const nodeBefore = after?.node ?? null
+    await cdp.evaluate(`document.querySelector('.dt-tab .dt-next button')?.click()`)
+    console.log('6. pressed continue; the new focus should start on its own')
+
+    await waitFor(
+      cdp,
+      `(document.querySelector('.dt-tab-title')?.textContent ?? '') !== ${JSON.stringify(nodeBefore)}`,
+      'the new node to take over',
+      TUTOR_TIMEOUT_MS,
+    )
+    console.log('   -> focus moved')
+
+    // The tutor teaches the new node into the surface.
+    const lessonBefore = after?.lessonTitle ?? null
+    await waitFor(
+      cdp,
+      `(document.querySelector('.dt-tab-lesson-title')?.textContent ?? '') !== ${JSON.stringify(lessonBefore)} ` +
+        '|| document.querySelectorAll(".dt-tab [data-block-type]").length > 0',
+      'a lesson for the new node',
+      TUTOR_TIMEOUT_MS,
+    )
+
+    const continued = await readTab()
+    console.log('\n=== after continuing ===')
+    console.log(JSON.stringify(continued, null, 2))
+  }
 
   const shot = await cdp.send('Page.captureScreenshot', { format: 'png' })
   await writeFile(out, Buffer.from(shot.data, 'base64'))

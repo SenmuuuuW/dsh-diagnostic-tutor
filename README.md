@@ -7,7 +7,7 @@ it works out where you are stuck, decides the next best teaching step, and turns
 the whole process into a living learning map you can click through.
 
 > [!IMPORTANT]
-> **Status: `v0.0.6` — chat and the learning surface coexist.**
+> **Status: `v0.0.7` — a node now ends in a decision.**
 > The learning surface docks in the right sidebar, so the map, the conversation
 > and the lesson are on screen at once and answering a check never means leaving
 > the lesson. Still no quiz engine, no RAG, no flashcards.
@@ -49,7 +49,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.0.6` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.0.7` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -151,6 +151,7 @@ Five, and none of them decides anything about teaching.
 | `udt_map_get` | reads the map with each node's relation, state and evidence |
 | `udt_map_update` | `add-nodes` · `set-state` · `add-evidence` |
 | `udt_lesson_update` | writes teaching into the learning surface as blocks |
+| `udt_decide_next` | records where the learner should go next, and why |
 
 The division is the architecture: the tutor decides **what** to teach, when to
 check, and what an answer showed; the runtime decides **what may be stored** and
@@ -166,8 +167,28 @@ press Start learning
    → the tutor teaches into the surface via udt_lesson_update
    → the learner answers the check in the chat
    → the tutor judges, records evidence via udt_map_update, decides the next move
-   → the panel follows, and the next unit is written
+   → the panel follows
+   → the tutor decides the next step with udt_decide_next
+   → the panel shows the recommendation and its reason
+   → the learner presses Continue, and the next node begins
 ```
+
+### The decision
+
+`action` is the skill's six readiness outcomes, reused rather than re-invented:
+the words for "what this concept showed" and "where that sends the learner" are
+the same words. The runtime only needs one structural fact about each — whether
+it names a target:
+
+| outcome | target | means |
+| --- | --- | --- |
+| `advance` / `advance-with-caution` | required | move there |
+| `step-down` | required | the blocker; usually a prerequisite |
+| `review-first` | optional | go back, or review here |
+| `more-practice` / `diagnose-again` | forbidden | stay here |
+
+A move ends the focus and stamps `endedAt`; staying leaves it open. Nothing
+moves on its own — the learner reads the reason and presses Continue.
 
 `Start learning` is a **user-role turn attributed to this plugin**, not injected
 context: `agent.inject()` would add model-visible context without waking an idle
@@ -323,8 +344,9 @@ shows a loader row exists.
 | `v0.0.3` | teaching-brain detection, `udt_goal_create`, the diagnosis map (`udt_map_get` / `udt_map_update`), runtime adapter |
 | `v0.0.4` | the client half: slot-mounted panel, clickable map, node detail, Learning Blocks, browser API |
 | `v0.0.5` | the loop: learning focus, tutor-written lessons, check → evidence → state, live panel |
-| `v0.0.6` | **current** — the learning surface docks beside the chat; both surfaces share one state |
-| `v0.0.7` | state export/reset, settings, i18n, math typesetting |
+| `v0.0.6` | the learning surface docks beside the chat; both surfaces share one state |
+| `v0.0.7` | **current** — the tutor decides the next step; focus lifecycle; NEXT BEST STEP card |
+| `v0.0.8` | state export/reset, settings, i18n, math typesetting |
 | `v0.1.0` | **first playable MVP** — Goal → Map → Lesson → Check → Progress → Next |
 
 ## Trust

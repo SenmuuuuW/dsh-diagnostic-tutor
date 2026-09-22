@@ -1,6 +1,6 @@
 {
   "name": "dsh-diagnostic-tutor",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Diagnosis-first learning runtime for DeepSeek Harness — a live learning map, structured lessons, and persistent learner state, driven by the Universal Diagnostic Tutor skill.",
   "type": "module",
   "license": "MIT",

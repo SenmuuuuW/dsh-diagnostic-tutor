@@ -19,7 +19,7 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-import type { CourseView, FocusView, NodeView } from './contract.js'
+import type { CourseView, FocusView, NextStepView, NodeView } from './contract.js'
 import type { FocusPromptResult } from './prompt.js'
 import { focusPromptText } from './prompt.js'
 import type { CourseRecord, FocusRecord, NodeRecord, UdState } from './state.js'
@@ -149,11 +149,37 @@ function focusOf(state: UdState, courseId: string): FocusView | null {
   return focusView(focus, node)
 }
 
+/**
+ * The recommendation attached to the current focus, if it has one and the
+ * learner has not acted on it.
+ *
+ * "Attached to the focus" is the whole test: starting a new focus writes a
+ * fresh record without `nextStepId`, so acting on a recommendation clears it
+ * without anything having to remember that it did.
+ */
+function nextStepOf(state: UdState, courseId: string): NextStepView | null {
+  const focus = state.readFocus(courseId)
+  if (focus?.nextStepId === undefined) return null
+  const step = state.readNextStep(focus.nextStepId)
+  if (step === undefined) return null
+  const from = state.readNode(step.fromNodeId)
+  const target = step.targetNodeId === undefined ? undefined : state.readNode(step.targetNodeId)
+  return {
+    fromNodeId: step.fromNodeId,
+    fromNodeTitle: from?.title ?? step.fromNodeId,
+    targetNodeId: step.targetNodeId ?? null,
+    targetNodeTitle: target?.title ?? null,
+    action: step.action,
+    reason: step.reason,
+    createdAt: step.createdAt,
+  }
+}
+
 function handleOverview(state: UdState, res: ServerResponse): void {
   const course = currentCourse(state)
   if (course === undefined) {
     // An empty state is a normal state, not an error: the panel says so.
-    sendJson(res, 200, { ok: true, course: null, nodes: [], focus: null, lessonCount: 0 })
+    sendJson(res, 200, { ok: true, course: null, nodes: [], focus: null, nextStep: null, lessonCount: 0 })
     return
   }
   sendJson(res, 200, {
@@ -161,6 +187,7 @@ function handleOverview(state: UdState, res: ServerResponse): void {
     course: courseView(course),
     nodes: state.listNodes(course.id).map(nodeView),
     focus: focusOf(state, course.id),
+    nextStep: nextStepOf(state, course.id),
     lessonCount: state.lessonCount(),
   })
 }

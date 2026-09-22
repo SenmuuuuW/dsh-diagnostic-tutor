@@ -190,6 +190,25 @@ const CSS = `
   font-size: 10px; letter-spacing: .07em; text-transform: uppercase;
   color: var(--dt-accent); margin-bottom: 4px;
 }
+/* ---- next best step ---------------------------------------------------- */
+/* The recommendation reads as a conclusion, not a notification: it says where
+   the last node landed, where it sends the learner, and why. */
+.dt-next {
+  margin: 20px 0 4px; padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--dt-accent, #4f46e5);
+  background: var(--dt-surface, #f7f8fa);
+}
+.dt-next-label {
+  font-size: 10px; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--dt-accent, #4f46e5); margin: 0 0 8px;
+}
+.dt-next-from { margin: 0 0 6px; color: var(--dt-muted, #6b7280); font-size: 12px; }
+.dt-next-tick { color: #1f8b4c; margin-right: 5px; }
+.dt-next-target { margin: 0 0 8px; font-size: 13px; }
+.dt-next-why { margin: 0 0 4px; font-size: 12px; color: var(--dt-text, #1c1f23); }
+.dt-next-why-label { color: var(--dt-muted, #6b7280); }
+.dt-next .dt-primary { margin-top: 12px; }
+
 /* ---- docked tab -------------------------------------------------------- */
 /* Narrow-first: the right column is often a few hundred pixels, so this is one
    scrolling stack rather than columns. */

@@ -15,6 +15,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   FocusView,
   LessonRecord,
+  NextStepView,
   NodeDetailResponse,
   OverviewResponse,
 } from '../contract.js'
@@ -51,6 +52,8 @@ export const POLL_INTERVAL_MS = 2000
 export interface LearningState {
   readonly overview: OverviewResponse | null
   readonly focus: FocusView | null
+  /** The tutor's recommendation, when the learner has not acted on it yet. */
+  readonly nextStep: NextStepView | null
   /** The node whose detail is shown; the focus when nothing is picked. */
   readonly selectedId: string | null
   readonly detail: NodeDetailResponse | null
@@ -60,7 +63,10 @@ export interface LearningState {
   readonly starting: boolean
   readonly loading: boolean
   select(nodeId: string): void
+  /** Start learning on the selected node. */
   start(): void
+  /** Start learning on a named node — how a recommendation is acted on. */
+  continueTo(nodeId: string): void
   dismissLesson(): void
 }
 
@@ -131,13 +137,13 @@ export function useLearning(options: {
     [client],
   )
 
-  const start = useCallback(() => {
-    if (selectedId === null) return
+  const beginFocus = useCallback(
+    (nodeId: string) => {
     setStarting(true)
     setError(null)
     setNote(null)
     client
-      .startFocus(selectedId, sessionId)
+      .startFocus(nodeId, sessionId)
       .then(async (result) => {
         setNote(
           result.prompted
@@ -158,7 +164,14 @@ export function useLearning(options: {
       })
       .catch((cause: Error) => setError(cause.message))
       .finally(() => setStarting(false))
-  }, [client, selectedId, sessionId, onStarted])
+    },
+    [client, sessionId, onStarted],
+  )
+
+  const start = useCallback(() => {
+    if (selectedId === null) return
+    beginFocus(selectedId)
+  }, [beginFocus, selectedId])
 
   useEffect(() => {
     if (focus === null) return
@@ -193,6 +206,7 @@ export function useLearning(options: {
   return {
     overview,
     focus,
+    nextStep: overview?.nextStep ?? null,
     selectedId,
     detail,
     lesson,
@@ -202,6 +216,7 @@ export function useLearning(options: {
     loading,
     select,
     start,
+    continueTo: beginFocus,
     dismissLesson: useCallback(() => setLesson(null), []),
   }
 }

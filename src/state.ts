@@ -43,6 +43,7 @@ import type {
 } from '@deepseek-ai/dsh-storage-domain'
 import { z } from 'zod'
 
+import { endsFocus } from './vocabulary.js'
 import {
   EvidenceKindSchema,
   INITIAL_NODE_STATE,
@@ -51,7 +52,7 @@ import {
   ReadinessSchema,
   TeachingModeSchema,
 } from './vocabulary.js'
-import type { NodeRelation, NodeState } from './vocabulary.js'
+import type { NodeRelation, NodeState, Readiness } from './vocabulary.js'
 import { LessonSchema } from './lesson.js'
 import type { LessonKey, LessonRecord } from './lesson.js'
 
@@ -158,9 +159,41 @@ export const FocusSchema = z.object({
   startedAt: z.string(),
   status: FocusStatusSchema,
   updatedAt: z.string(),
+  /** Set when the status becomes `ended`; absent while the focus is active. */
+  endedAt: z.string().optional(),
+  /** The recommendation produced when this focus ended. */
+  nextStepId: z.string().optional(),
 })
 export type FocusRecord = z.infer<typeof FocusSchema>
 export type FocusKey = string
+
+/**
+ * The tutor's decision about where the learner should go after this node.
+ *
+ * `action` is one of the skill's six readiness outcomes, reused rather than
+ * re-invented: the words for "what this concept showed" and "where that sends
+ * the learner" are the same words. See `vocabulary.ts` for what each one
+ * implies about a target.
+ *
+ * `targetNodeId` absent means **stay here**. That is the only encoding of
+ * "stay" — a named target is always a move — so the runtime never has to guess
+ * what a decision meant.
+ *
+ * `reason` is required and is written for the learner: the panel shows it
+ * verbatim, which is what makes the recommendation explicable instead of
+ * mysterious.
+ */
+export const NextStepSchema = z.object({
+  /** Keyed by `fromNodeId`: the latest decision made on leaving that node. */
+  fromNodeId: z.string().min(1),
+  courseId: z.string().min(1),
+  action: ReadinessSchema,
+  targetNodeId: z.string().min(1).optional(),
+  reason: z.string().min(1),
+  createdAt: z.string(),
+})
+export type NextStepRecord = z.infer<typeof NextStepSchema>
+export type NextStepKey = string
 
 export type CourseKey = string
 export type NodeKey = string
@@ -194,6 +227,7 @@ export const COURSES_TABLE = 'courses'
 export const NODES_TABLE = 'nodes'
 export const LESSONS_TABLE = 'lessons'
 export const FOCUS_TABLE = 'focus'
+export const NEXT_STEPS_TABLE = 'next_steps'
 
 /** Sentinel meaning "the global slot has never been written". */
 export const UNINITIALIZED = ''
@@ -212,6 +246,7 @@ export const udtDomain = defineDomain({
     // Keyed by course, so a course has at most one focus and starting a new
     // one is an upsert rather than an accumulation.
     [FOCUS_TABLE]: domainTable<FocusKey, FocusRecord>(FocusSchema),
+    [NEXT_STEPS_TABLE]: domainTable<NextStepKey, NextStepRecord>(NextStepSchema),
   },
 })
 
@@ -318,6 +353,32 @@ export interface UdState {
   startFocus(courseId: CourseKey, nodeId: NodeKey, now: string): Promise<FocusRecord>
   /** Mark the course's focus as ended. No-op when there is none. */
   endFocus(courseId: CourseKey, now: string): Promise<void>
+  /**
+   * Record the tutor's decision about where to go next.
+   *
+   * This is the one place the focus lifecycle turns over: a decision that names
+   * a target ends the focus and links the recommendation to it; a decision that
+   * does not leaves the focus active, because the learner has not moved.
+   *
+   * The runtime validates the *shape* of the decision — the nodes must exist,
+   * belong to the course, and match what the action implies — and never invents
+   * a target. Choosing where to go is the tutor's.
+   *
+   * @param input - the decision.
+   * @returns the stored recommendation and the focus after the decision.
+   */
+  decideNext(input: {
+    courseId: CourseKey
+    fromNodeId: NodeKey
+    action: Readiness
+    targetNodeId?: NodeKey
+    reason: string
+    now: string
+  }): Promise<{ nextStep: NextStepRecord; focus: FocusRecord }>
+  /** The most recent recommendation recorded for a course, if any. */
+  latestNextStep(courseId: CourseKey): NextStepRecord | undefined
+  /** A recommendation by key. */
+  readNextStep(id: NextStepKey): NextStepRecord | undefined
   /** The focus of the learner's active course, joined with its course and node. */
   activeFocus(): { focus: FocusRecord; course: CourseRecord; node: NodeRecord } | undefined
 
@@ -383,6 +444,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
   const nodes: KvTable<NodeKey, NodeRecord> = domain.table(NODES_TABLE)
   const lessons: KvTable<LessonKey, LessonRecord> = domain.table(LESSONS_TABLE)
   const focus: KvTable<FocusKey, FocusRecord> = domain.table(FOCUS_TABLE)
+  const nextSteps: KvTable<NextStepKey, NextStepRecord> = domain.table(NEXT_STEPS_TABLE)
   const learner: DomainGlobal<LearnerProfile> = domain.global
 
   const listNodesFor = (courseId: CourseKey): NodeRecord[] =>
@@ -477,8 +539,70 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
     async endFocus(courseId, now) {
       const current = focus.get(courseId)
       if (!current || current.status === 'ended') return
-      await focus.put(courseId, { ...current, status: 'ended', updatedAt: now })
+      await focus.put(courseId, { ...current, status: 'ended', endedAt: now, updatedAt: now })
     },
+
+    async decideNext(input) {
+      const course = courses.get(input.courseId)
+      if (!course) throw new Error(`no course "${input.courseId}"`)
+      const from = nodes.get(input.fromNodeId)
+      if (!from) throw new Error(`no node "${input.fromNodeId}"`)
+      if (from.courseId !== input.courseId) {
+        throw new Error(`node "${input.fromNodeId}" belongs to course "${from.courseId}"`)
+      }
+      if (input.targetNodeId !== undefined) {
+        const target = nodes.get(input.targetNodeId)
+        if (!target) throw new Error(`no node "${input.targetNodeId}"`)
+        if (target.courseId !== input.courseId) {
+          throw new Error(`node "${input.targetNodeId}" belongs to course "${target.courseId}"`)
+        }
+        if (input.targetNodeId === input.fromNodeId) {
+          throw new Error('a target node equal to the current one is a stay: omit targetNodeId')
+        }
+      }
+
+      const nextStep: NextStepRecord = {
+        fromNodeId: input.fromNodeId,
+        courseId: input.courseId,
+        action: input.action,
+        reason: input.reason,
+        createdAt: input.now,
+        ...(input.targetNodeId === undefined ? {} : { targetNodeId: input.targetNodeId }),
+      }
+      await nextSteps.put(input.fromNodeId, nextStep)
+
+      // A move ends the focus; staying keeps it, because the learner has not
+      // moved and the panel must not say they have.
+      const moves = endsFocus(input.action, input.targetNodeId !== undefined)
+      const current = focus.get(input.courseId) ?? {
+        courseId: input.courseId,
+        nodeId: input.fromNodeId,
+        startedAt: input.now,
+        status: 'active' as const,
+        updatedAt: input.now,
+      }
+      const nextFocus: FocusRecord = moves
+        ? {
+            ...current,
+            status: 'ended',
+            endedAt: input.now,
+            nextStepId: input.fromNodeId,
+            updatedAt: input.now,
+          }
+        : { ...current, status: 'active', nextStepId: input.fromNodeId, updatedAt: input.now }
+      await focus.put(input.courseId, nextFocus)
+
+      return { nextStep, focus: nextFocus }
+    },
+
+    latestNextStep(courseId) {
+      return [...nextSteps.entries()]
+        .map(([, record]) => record)
+        .filter((record) => record.courseId === courseId)
+        .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0]
+    },
+
+    readNextStep: (id) => nextSteps.get(id),
 
     activeFocus() {
       const courseId = learner.get().activeCourseId

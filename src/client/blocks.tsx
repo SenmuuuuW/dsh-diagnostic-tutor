@@ -16,7 +16,7 @@
 
 import type { ReactNode } from 'react'
 
-import type { Block } from '../contract.js'
+import type { Block, NextStepView } from '../contract.js'
 
 /** Props every renderer receives. */
 export interface BlockRenderProps<B extends Block = Block> {
@@ -190,5 +190,57 @@ export function LessonBody({ blocks }: { blocks: Block[] }): ReactNode {
         <BlockView key={block.id} block={block} />
       ))}
     </>
+  )
+}
+
+/**
+ * The recommendation card.
+ *
+ * The learner reads *why* before they move, and nothing moves until they press
+ * the button — the tutor decides, the runtime stores, the learner chooses. That
+ * ordering is the whole point of the card existing rather than an automatic
+ * jump.
+ *
+ * Wording follows the decision: a move names where it goes, a stay says so
+ * plainly. No percentage, no score, no completion estimate — how far along the
+ * learner is lives in the node's state and evidence, and nowhere else.
+ */
+export function NextStepCard({
+  nextStep,
+  onContinue,
+  busy,
+}: {
+  nextStep: NextStepView
+  onContinue: () => void
+  busy?: boolean
+}): ReactNode {
+  const moves = nextStep.targetNodeId !== null
+  return (
+    <div className="dt-next">
+      <p className="dt-next-label">Next best step</p>
+      <p className="dt-next-from">
+        <span className="dt-next-tick" aria-hidden="true">
+          ✓
+        </span>
+        {nextStep.fromNodeTitle} — {nextStep.action.replace(/-/g, ' ')}
+      </p>
+      <p className="dt-next-target">
+        {moves ? (
+          <>
+            Next: <b>{nextStep.targetNodeTitle}</b>
+          </>
+        ) : (
+          <>
+            Next: <b>Stay on {nextStep.fromNodeTitle}</b>
+          </>
+        )}
+      </p>
+      <p className="dt-next-why">
+        <span className="dt-next-why-label">Why:</span> {nextStep.reason}
+      </p>
+      <button type="button" className="dt-primary" onClick={onContinue} disabled={busy === true}>
+        {busy === true ? 'Starting…' : moves ? 'Continue learning' : 'Continue'}
+      </button>
+    </div>
   )
 }

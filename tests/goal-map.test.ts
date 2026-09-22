@@ -50,7 +50,7 @@ function allKeys(value: unknown, found: Set<string> = new Set()): Set<string> {
 }
 
 describe('tool surface', () => {
-  it('registers exactly the v0.0.5 tool surface', async () => {
+  it('registers exactly the v0.0.7 tool surface', async () => {
     const harness = await createHarness()
     try {
       await harness.ctx.plugin(plugin)
@@ -60,6 +60,7 @@ describe('tool surface', () => {
         .map((schema) => schema.name)
         .sort()
       expect(names).toEqual([
+        'udt_decide_next',
         'udt_goal_create',
         'udt_lesson_update',
         'udt_map_get',

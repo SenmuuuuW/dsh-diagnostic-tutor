@@ -5,6 +5,78 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.7] — decide, then move
+
+No new surface. This release makes "what happens after this node" a real step:
+the tutor decides, the runtime stores the decision, and the learner sees why
+before anything moves.
+
+### Added
+
+- **`focus.status` is now used.** A decision that names a target ends the focus
+  and stamps `endedAt`; a decision that does not leaves it active, because the
+  learner has not moved and the panel must not say they have.
+- **`next_steps` table** — `fromNodeId`, `courseId`, `action`, `targetNodeId?`,
+  `reason`, `createdAt`, keyed by the node the decision was made from. The focus
+  carries `nextStepId`, so "a recommendation the learner has not acted on" is
+  exactly "the current focus links to one" — starting a new focus writes a fresh
+  record and the link is gone, with nothing having to remember that it was.
+- **`udt_decide_next`** — the tool the tutor says where to go with.
+
+  `action` is the skill's **six readiness outcomes, reused**. Inventing a second
+  vocabulary for "what happens next" is the duplication this project exists to
+  avoid, and the six already say it. `vocabulary.ts` records the only structural
+  thing the runtime needs: whether an outcome names a target —
+  `advance`/`advance-with-caution`/`step-down` require one, `more-practice`/
+  `diagnose-again` forbid one, `review-first` allows either.
+
+  `targetNodeId` absent is the **only** encoding of "stay", so the runtime never
+  has to interpret a decision. It validates that the nodes exist, belong to the
+  course, and agree with the outcome; it never fills in a target the tutor left
+  out. `reason` is required because the panel shows it verbatim.
+- **NEXT BEST STEP card** on both surfaces: what the last node landed on, where
+  it sends the learner, why, and a button. Nothing moves on its own.
+
+### Notes
+
+- `udt_decide_next` takes no node state at all, so it cannot confirm anything.
+  Mastery still goes through `udt_map_update`, where the evidence rules apply —
+  the separation is structural, not conventional.
+
+### Tests
+
+203 across eighteen files. New (`next-step.test.ts`, 14): the action vocabulary
+is the skill's six; a move ends the focus, stamps `endedAt` and links the step;
+a stay keeps it open; `review-first` is a stay without a target and a move with
+one; a move without a target is refused and records nothing; a stay that names
+one is refused; a target that does not exist, belongs to another course, or
+equals the current node is refused; the tool cannot change a node's state; the
+recommendation and the ended focus survive a restart. Plus three card-rendering
+tests, including that it shows no percentage, score, XP or stars.
+
+### Verified against DSH 0.1.6-alpha.2 with the real skill
+
+A real session produced a real decision — and it took the prerequisite branch:
+
+```
+action   step-down          (a move, so the focus ended)
+target   线性代数：向量、矩阵、形状与矩阵乘法直觉
+reason   「数学基础」这一格太大，先落到最底下、后面每个公式都要用的那一小块：
+         数据表怎么变成矩阵，形状为什么要对齐。学完这一小块，我们再回到上面那一格。
+```
+
+The panel rendered it as `✓ 数学基础（ML 最小集） — step down / Next: 线性代数… /
+Why: … / [Continue learning]`. Screenshot: `preview/dsh-ui-next.png`.
+
+### Honest note on the run
+
+The scripted capture of the *follow-through* — pressing Continue and watching the
+new focus take over — did not complete: the tutor's turn outran the script's
+wait budget twice (>7 minutes of model time on a large node). The record above,
+the ended focus and the card are all real; the click-through is covered by
+`next-step.test.ts` rather than by a screen recording.
+
+
 ## [0.0.6] — chat and the learning surface coexist
 
 No new features. This release fixes the one thing that made the loop awkward:

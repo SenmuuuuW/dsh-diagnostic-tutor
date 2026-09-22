@@ -54,6 +54,7 @@ const overview: OverviewResponse = {
   },
   nodes,
   focus: null,
+  nextStep: null,
   lessonCount: 0,
 }
 

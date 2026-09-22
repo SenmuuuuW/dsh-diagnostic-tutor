@@ -66,6 +66,63 @@ export const READINESS_OUTCOMES = [
 export const ReadinessSchema = z.enum(READINESS_OUTCOMES)
 export type Readiness = z.infer<typeof ReadinessSchema>
 
+/**
+ * What each readiness outcome means for *navigation*.
+ *
+ * The decision vocabulary is the skill's six readiness outcomes, reused as-is.
+ * Inventing a second set of words for "what happens next" would be exactly the
+ * duplication this project exists to avoid — and the six already say it: an
+ * outcome is a judgement about the current concept, and moving or staying is
+ * what that judgement implies.
+ *
+ * The runtime only needs to know one structural thing about each outcome:
+ * whether it names a different node to go to.
+ *
+ * | outcome                | target        | means                                  |
+ * | ---------------------- | ------------- | -------------------------------------- |
+ * | `advance`              | required      | move to that node                      |
+ * | `advance-with-caution` | required      | move, with an early check there         |
+ * | `step-down`            | required      | the blocker; usually a prerequisite     |
+ * | `review-first`         | optional      | go back to that node, or review here    |
+ * | `more-practice`        | forbidden     | stay here and practise                  |
+ * | `diagnose-again`       | forbidden     | stay here and ask a sharper question    |
+ */
+export type TargetRequirement = 'required' | 'optional' | 'forbidden'
+
+const TARGET_REQUIREMENT: Record<Readiness, TargetRequirement> = {
+  advance: 'required',
+  'advance-with-caution': 'required',
+  'step-down': 'required',
+  'review-first': 'optional',
+  'more-practice': 'forbidden',
+  'diagnose-again': 'forbidden',
+}
+
+/**
+ * Whether an outcome must, may, or must not name a target node.
+ *
+ * @param action - one of the skill's readiness outcomes.
+ * @returns the structural requirement.
+ */
+export function targetRequirement(action: Readiness): TargetRequirement {
+  return TARGET_REQUIREMENT[action]
+}
+
+/**
+ * Whether an outcome ends the current focus.
+ *
+ * Only a genuine move does. Staying keeps the focus active, because the learner
+ * is still working the same node — ending it there would make the panel claim
+ * they had moved on.
+ *
+ * @param action - one of the skill's readiness outcomes.
+ * @param hasTarget - whether a target node was named.
+ * @returns whether the focus should end.
+ */
+export function endsFocus(action: Readiness, hasTarget: boolean): boolean {
+  return targetRequirement(action) === 'required' || (action === 'review-first' && hasTarget)
+}
+
 /* -------------------------------------------------------------------------- */
 /* Teaching mode — the skill's four modes                                     */
 /* -------------------------------------------------------------------------- */

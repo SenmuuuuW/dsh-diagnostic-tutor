@@ -37,6 +37,7 @@ import {
   NODE_RELATIONS,
   NODE_STATES,
   READINESS_OUTCOMES,
+  targetRequirement,
 } from './vocabulary.js'
 import type { EvidenceKind, NodeRelation, NodeState, Readiness } from './vocabulary.js'
 
@@ -129,6 +130,12 @@ interface StatusValue {
     nodeState: string
     startedAt: string
   }
+  pendingNextStep?: {
+    action: string
+    fromNodeTitle: string
+    targetNodeTitle?: string
+    reason: string
+  }
 }
 
 /**
@@ -167,6 +174,21 @@ function statusValue(state: UdState): StatusValue {
       nodeTitle: focused.node.title,
       nodeState: focused.node.state,
       startedAt: focused.focus.startedAt,
+    }
+  }
+
+  // A recommendation the learner has not acted on yet. Reported so the tutor
+  // can see its own last decision instead of re-deciding from scratch.
+  const courseId = focused?.course.id ?? state.readLearner().activeCourseId
+  const pending = courseId === undefined ? undefined : state.latestNextStep(courseId)
+  if (pending !== undefined) {
+    const from = state.readNode(pending.fromNodeId)
+    const target = pending.targetNodeId === undefined ? undefined : state.readNode(pending.targetNodeId)
+    value.pendingNextStep = {
+      action: pending.action,
+      fromNodeTitle: from?.title ?? pending.fromNodeId,
+      reason: pending.reason,
+      ...(target === undefined ? {} : { targetNodeTitle: target.title }),
     }
   }
   return value
@@ -226,6 +248,18 @@ function udtStatusTool(state: UdState): ToolDefinition {
               nodeTitle: { type: 'string', required: true },
               nodeState: { type: 'string', required: true },
               startedAt: { type: 'string', required: true },
+            },
+          },
+          pendingNextStep: {
+            type: 'object',
+            additionalProperties: false,
+            description:
+              'A decision the learner has not acted on yet. Present it again rather than deciding afresh.',
+            properties: {
+              action: { type: 'string', required: true },
+              fromNodeTitle: { type: 'string', required: true },
+              targetNodeTitle: { type: 'string' },
+              reason: { type: 'string', required: true },
             },
           },
         },
@@ -907,6 +941,145 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
   })
 }
 
+
+/* -------------------------------------------------------------------------- */
+/* udt_decide_next                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Record the teaching decision about where the learner goes next.
+ *
+ * This tool exists because the plugin must not choose. The runtime knows which
+ * nodes exist and which evidence supports what; it does not know whether a
+ * learner is ready to move on, whether a gap is worth repairing here, or
+ * whether something newly diagnosed should come first. The tutor does, and this
+ * is where it says so.
+ *
+ * What the runtime does with the answer is structural only: it validates that
+ * the nodes named exist and belong to the course, that the outcome and the
+ * target agree, stores the recommendation, and turns the focus over if the
+ * decision is a move. It never fills in a target the tutor left out.
+ *
+ * `reason` is required because the panel shows it verbatim. A recommendation
+ * the learner cannot read is a jump, not a next step.
+ */
+function udtDecideNextTool(state: UdState): ToolDefinition {
+  return defineTool({
+    name: 'udt_decide_next',
+    description:
+      'Record your decision about what this learner should do after the current node.\n' +
+      'Use your own readiness vocabulary for `action` — advance | advance-with-caution | review-first | ' +
+      'step-down | more-practice | diagnose-again — and let it decide the shape:\n' +
+      '• advance, advance-with-caution, step-down — MUST name `targetNodeId` (a move).\n' +
+      '• more-practice, diagnose-again — MUST NOT name one (the learner stays here).\n' +
+      '• review-first — may name one (go back to it) or omit it (review here).\n' +
+      'The focus ends when you name a target, and stays open when you do not. Nothing moves on its own: ' +
+      'the learner sees your `reason` and chooses whether to continue.\n' +
+      'If the next step is a prerequisite you just diagnosed, add it to the map first with udt_map_update, ' +
+      'then name it here.\n' +
+      'Write `reason` for the learner — one or two plain sentences saying why this is the next thing.',
+    parameters: {
+      fromNodeId: {
+        type: 'string',
+        description: 'The node just worked on. Omit to use the current focus.',
+      },
+      action: {
+        type: 'string',
+        required: true,
+        enum: [...READINESS_OUTCOMES],
+        description:
+          'Your readiness outcome: advance | advance-with-caution | review-first | step-down | more-practice | diagnose-again.',
+      },
+      targetNodeId: {
+        type: 'string',
+        description: 'Where to go. Required for a move; omit to stay on this node.',
+      },
+      reason: {
+        type: 'string',
+        required: true,
+        description: 'Why this is the next step, in one or two plain sentences the learner will read.',
+      },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          fromNodeId: { type: 'string', required: true },
+          action: { type: 'string', required: true },
+          focusEnded: { type: 'boolean', required: true, description: 'Whether the focus was turned over.' },
+          targetNodeId: { type: 'string', description: 'The named target, when there is one.' },
+          reason: { type: 'string', required: true },
+        },
+      },
+      render: (_args, value) => [
+        {
+          type: 'text',
+          text: value.focusEnded
+            ? `Decision recorded: ${value.action} → next node "${value.targetNodeId}". The learner chooses when to continue.`
+            : `Decision recorded: ${value.action} → stay on "${value.fromNodeId}".`,
+        },
+      ],
+    },
+    execute: async (args) => {
+      const input = args as {
+        fromNodeId?: string
+        action: Readiness
+        targetNodeId?: string
+        reason: string
+      }
+      const focused = state.activeFocus()
+      const courseId = focused?.course.id ?? state.readLearner().activeCourseId
+      if (courseId === undefined) {
+        throw new Error('no active course; record a goal and start learning on a node first')
+      }
+      const fromNodeId = input.fromNodeId ?? focused?.node.id
+      if (fromNodeId === undefined) {
+        throw new Error('no fromNodeId given and no learning focus is active; call udt_status to see the focus')
+      }
+
+      // The runtime checks that the decision is well formed; it does not check
+      // that it is wise, and it never supplies a missing target.
+      const requirement = targetRequirement(input.action)
+      if (requirement === 'required' && input.targetNodeId === undefined) {
+        throw new Error(
+          `action "${input.action}" is a move and must name targetNodeId. ` +
+            'If the learner should stay here, use more-practice or diagnose-again.',
+        )
+      }
+      if (requirement === 'forbidden' && input.targetNodeId !== undefined) {
+        throw new Error(
+          `action "${input.action}" means staying on this node, so targetNodeId must be omitted. ` +
+            'Use advance, advance-with-caution, step-down or review-first to name a target.',
+        )
+      }
+
+      const { nextStep, focus } = await state.decideNext({
+        courseId,
+        fromNodeId,
+        action: input.action,
+        ...(input.targetNodeId === undefined ? {} : { targetNodeId: input.targetNodeId }),
+        reason: input.reason,
+        now: nowIso(),
+      })
+
+      return {
+        fromNodeId: nextStep.fromNodeId,
+        action: nextStep.action,
+        focusEnded: focus.status === 'ended',
+        ...(nextStep.targetNodeId === undefined ? {} : { targetNodeId: nextStep.targetNodeId }),
+        reason: nextStep.reason,
+      }
+    },
+    presentCall: (args) => ({
+      card: 'generic',
+      title: `Decide next: ${(args as { action?: string }).action ?? ''}`,
+      kind: 'other',
+      rawInput: args,
+    }),
+  })
+}
+
 /* -------------------------------------------------------------------------- */
 /* Registration                                                               */
 /* -------------------------------------------------------------------------- */
@@ -923,4 +1096,5 @@ export function registerTools(host: ToolsHost, state: UdState): void {
   host.tools.register(udtMapGetTool(state))
   host.tools.register(udtMapUpdateTool(state))
   host.tools.register(udtLessonUpdateTool(state))
+  host.tools.register(udtDecideNextTool(state))
 }

@@ -56,12 +56,31 @@ export interface FocusView {
   status: string
 }
 
+/**
+ * The tutor's recommendation, as the panel shows it.
+ *
+ * `targetNodeId` null means **stay on the current node** — the only encoding of
+ * "stay", so the panel never has to guess what a decision meant.
+ */
+export interface NextStepView {
+  fromNodeId: string
+  fromNodeTitle: string
+  targetNodeId: string | null
+  targetNodeTitle: string | null
+  /** One of the skill's six readiness outcomes. */
+  action: string
+  reason: string
+  createdAt: string
+}
+
 /** `GET /overview` — `course: null` means the learner has no goal yet. */
 export interface OverviewResponse {
   ok: true
   course: CourseView | null
   nodes: NodeView[]
   focus: FocusView | null
+  /** A decision the learner has not acted on yet, if there is one. */
+  nextStep: NextStepView | null
   lessonCount: number
 }
 
