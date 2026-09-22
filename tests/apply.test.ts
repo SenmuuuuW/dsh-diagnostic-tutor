@@ -1,10 +1,10 @@
 /**
  * Guard tests for the plugin entry's export shape.
  *
- * These are cheap but they defend the single most damaging and least visible
- * failure mode for a DSH plugin: `Loader.unwrapExports` prefers a module's
- * `.default` export, and a default-exported plugin object SILENTLY loses its
- * `inject` list. DSH shipped that exact outage once
+ * These are cheap, but they defend the most damaging and least visible failure
+ * mode for a DSH plugin: `Loader.unwrapExports` prefers a module's `.default`
+ * export, and a default-exported plugin object SILENTLY loses its `inject`
+ * list. DSH shipped that exact outage once
  * (docs/postmortem/0001-acp-default-export-drops-inject.md), so the shape is
  * pinned here rather than left to review.
  *
@@ -31,22 +31,31 @@ describe('plugin entry export shape', () => {
     expect(typeof mod.apply).toBe('function')
   })
 
-  it('applies against a minimal context without throwing', () => {
-    // Only `ctx.logger` is touched in v0.0.1, so a structural stub is enough.
-    // No DSH runtime object is imported, so this cannot drift with a harness
-    // cohort (PLAN.md 2.12 #16).
-    const lines: string[] = []
+  it('declares exactly the services it requires', () => {
+    // Only services the standard profiles guarantee belong here. Anything
+    // optional must be resolved lazily, because a missing top-level injection
+    // leaves the plugin pending forever and prints nothing.
+    expect(mod.inject).toEqual(['tools', 'storageDomain'])
+  })
+
+  it('fails loudly when a required service is missing', async () => {
+    const calls: string[] = []
     const ctx = {
       logger: {
-        info: (format: string) => {
-          lines.push(format)
-        },
+        debug: (format: string) => calls.push(`debug:${format}`),
+        error: (format: string) => calls.push(`error:${format}`),
       },
+      // Simulate a context where the required seams never arrived.
+      get: () => undefined,
     }
 
-    expect(() => {
-      mod.apply(ctx as unknown as Parameters<typeof mod.apply>[0])
-    }).not.toThrow()
-    expect(lines).toHaveLength(1)
+    await expect(
+      mod.apply(ctx as unknown as Parameters<typeof mod.apply>[0]),
+    ).resolves.toBeUndefined()
+
+    // Degrading silently would leave a plugin that looks loaded but does
+    // nothing, so a missing seam must be reported.
+    expect(calls.some((call) => call.includes('missing required service'))).toBe(true)
+    expect(calls.some((call) => call === 'error:[diagnostic-tutor] missing required service(s): tools storageDomain')).toBe(true)
   })
 })

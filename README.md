@@ -7,10 +7,10 @@ it works out where you are stuck, decides the next best teaching step, and turns
 the whole process into a living learning map you can click through.
 
 > [!IMPORTANT]
-> **Status: `v0.0.1` — bootstrap only. Nothing user-facing works yet.**
-> This release proves one thing: the repository is a real, installable DSH
-> bundle whose plugin loads inside a real harness. There is no roadmap UI and no
-> lesson page yet. See [Roadmap](#roadmap) for what lands when.
+> **Status: `v0.0.2` — persistence and tool seams proven. Nothing user-facing yet.**
+> Learner state now persists to disk and a model-callable `udt_status` tool
+> reports it. There is still no learning map and no lesson page. See
+> [Roadmap](#roadmap) for what lands when.
 
 ---
 
@@ -49,7 +49,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.0.1` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.0.2` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -86,26 +86,62 @@ supported path from `v0.1.0` onward**, so that this step disappears.
 
 ---
 
+## Learner state
+
+State lives in one Cordis **storage domain** (`udt`, version 1) over the
+official `storageDomain` seam. The profile chooses the medium — the standard
+profiles route it through `dsh-storage-json` under `dshHomePath('storages')` —
+so this plugin never hardcodes a path.
+
+With the json backend you get exactly one document, `<storage root>/udt.json`
+(`~/.dsh/storages/udt.json` for a default install):
+
+```json
+{
+  "unit": { "name": "udt", "version": 1 },
+  "global": { "initializedAt": "…", "updatedAt": "…" },
+  "tables": { "courses": {} }
+}
+```
+
+| Slot | Holds |
+| --- | --- |
+| `global` | the learner singleton — preferences, active goal, `initializedAt` |
+| `tables.courses` | one record per learning goal, in the learner's own words |
+
+Two deliberate rules:
+
+- **zod is the contract.** Every record is validated at the durable boundary, so
+  a hand-edited or corrupt document fails loudly instead of entering memory.
+- **No scores, ever.** There is no field for points, grades or percentages —
+  the skill forbids turning mastery into a score, and the schema enforces it.
+
+Records are never mutated in place; writes go through `put`/`set` on one
+per-domain write chain, so concurrent writers cannot interleave.
+
 ## Development
 
 ```sh
 pnpm install
 pnpm typecheck   # tsc --noEmit
-pnpm test        # unit + guard + real-Cordis composition tests
+pnpm test        # unit, guard, and real-composition tests
 pnpm build       # tsc -> lib/ (ESM + .d.ts)
 ```
 
-`tests/composition.test.ts` loads the plugin through a real Cordis `Context`,
-because `--dump-config` proves only that a loader row exists — not that the
-plugin module loads or that `apply` runs.
+`tests/harness.ts` mounts the **same storage stack the standard profiles use**
+(`systemPrompt` → `tools`, and `storage` → `storage-json` → `storage-domain`)
+over a temporary root. Persistence tests therefore exercise a real
+serialize → file → reparse → validate round trip rather than a fake, and
+`--dump-config` is never mistaken for proof that a plugin loads: that only
+shows a loader row exists.
 
 ## Roadmap
 
 | Version | Ships |
 | --- | --- |
-| `v0.0.1` | **current** — installable bundle, plugin loads, guard + composition tests |
-| `v0.0.2` | learning goal + learner state round-trip, storage domain, skill detection |
-| `v0.0.3` | the learning map: clickable nodes, prerequisite edges, next-best highlight |
+| `v0.0.1` | installable bundle, plugin loads, guard + composition tests |
+| `v0.0.2` | **current** — `udt` storage domain, learner round-trip, `udt_status` tool |
+| `v0.0.3` | UDT skill detection; goal creation; the learning map (clickable nodes, prerequisite edges, next-best highlight) |
 | `v0.0.4` | lesson page composed of Learning Blocks (text / formula / example / quiz / check) |
 | `v0.0.5` | check → mastery update → next best lesson (the closed loop) |
 | `v0.0.6` | state export/reset, settings, i18n, docs |
