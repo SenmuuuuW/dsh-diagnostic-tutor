@@ -21,6 +21,15 @@ import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
 
 import { MAX_NODES_PER_UPDATE, acceptNewNodes, recordEvidence, setNodeState } from './diagnosis.js'
 import type { Violation } from './diagnosis.js'
+import {
+  BLOCK_SCHEMAS,
+  BlockSchema,
+  LESSON_ORIGINS,
+  MAX_BLOCKS_PER_LESSON,
+  MAX_BLOCKS_PER_UPDATE,
+  LessonSchema,
+} from './lesson.js'
+import type { Block, LessonRecord } from './lesson.js'
 import { newNode } from './state.js'
 import type { Evidence, NodeRecord, UdState } from './state.js'
 import {
@@ -113,6 +122,13 @@ interface StatusValue {
   preferredLanguage?: string
   mode?: string
   activeCourseId?: string
+  focus?: {
+    courseId: string
+    nodeId: string
+    nodeTitle: string
+    nodeState: string
+    startedAt: string
+  }
 }
 
 /**
@@ -139,6 +155,20 @@ function statusValue(state: UdState): StatusValue {
   if (preferredLanguage !== undefined) value.preferredLanguage = preferredLanguage
   if (mode !== undefined) value.mode = mode
   if (activeCourseId !== undefined) value.activeCourseId = activeCourseId
+
+  // The focus is how the tutor learns which node the learner asked to work on.
+  // It is reported here rather than in a tool of its own: it is one fact about
+  // the runtime, not a separate concern.
+  const focused = state.activeFocus()
+  if (focused !== undefined) {
+    value.focus = {
+      courseId: focused.course.id,
+      nodeId: focused.node.id,
+      nodeTitle: focused.node.title,
+      nodeState: focused.node.state,
+      startedAt: focused.focus.startedAt,
+    }
+  }
   return value
 }
 
@@ -185,6 +215,19 @@ function udtStatusTool(state: UdState): ToolDefinition {
             description: 'Teaching mode preference: auto | zero-base | standard | advanced.',
           },
           activeCourseId: { type: 'string', description: 'The learning goal currently in focus.' },
+          focus: {
+            type: 'object',
+            additionalProperties: false,
+            description:
+              'The node the learner pressed Start learning on, when there is one. Read this to know what to teach.',
+            properties: {
+              courseId: { type: 'string', required: true },
+              nodeId: { type: 'string', required: true },
+              nodeTitle: { type: 'string', required: true },
+              nodeState: { type: 'string', required: true },
+              startedAt: { type: 'string', required: true },
+            },
+          },
         },
       },
       render: (_args, value) => [
@@ -628,6 +671,242 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
   })
 }
 
+
+/* -------------------------------------------------------------------------- */
+/* udt_lesson_update                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The block envelope, expressed precisely enough for the model to fill in.
+ *
+ * A `oneOf` over the four shapes rather than an open object: the model sees
+ * exactly which `content` belongs to which `type`, and the registry rejects a
+ * mismatched pair before `execute` ever runs. Zod validates the same shapes
+ * again on the way in, with messages that name the offending block.
+ */
+const BLOCK_PARAM_SPEC = {
+  oneOf: [
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        type: { type: 'string', required: true, enum: ['text'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: { md: { type: 'string', required: true, description: 'Markdown; math as \\(...\\) or \\[...\\].' } },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        type: { type: 'string', required: true, enum: ['example'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            title: { type: 'string', required: true },
+            steps: { type: 'array', required: true, items: { type: 'string' } },
+            takeaway: { type: 'string' },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        type: { type: 'string', required: true, enum: ['diagram'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            format: { type: 'string', required: true, enum: ['ascii', 'mermaid'] },
+            spec: { type: 'string', required: true },
+            caption: { type: 'string' },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        type: { type: 'string', required: true, enum: ['check'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            prompt: { type: 'string', required: true },
+            expect: { type: 'string', enum: ['reasoning', 'answer'] },
+            hint: { type: 'string' },
+          },
+        },
+      },
+    },
+  ],
+} as const
+
+/**
+ * Write this turn's teaching into the learning surface.
+ *
+ * The tutor decides the content; the runtime decides what may be stored. That
+ * split is why this tool validates hard and caps sizes: a lesson that arrives
+ * malformed, oversized, or bound to a node that does not exist is refused with
+ * a message naming the problem, and nothing is written.
+ *
+ * `append` is the default because teaching accumulates — a check is answered
+ * and the next unit follows. `replace` exists for revising a unit that was
+ * wrong, not for regenerating a course.
+ */
+function udtLessonUpdateTool(state: UdState): ToolDefinition {
+  return defineTool({
+    name: 'udt_lesson_update',
+    description:
+      'Write teaching content into the learner\'s Learning Surface as structured blocks.\n' +
+      'The blocks appear in the panel beside the diagnosis map, so the learner reads them while ' +
+      'answering in the chat — write for that surface, not as a chat message.\n' +
+      'Block types: **text** {md}, **example** {title, steps[], takeaway?}, ' +
+      '**diagram** {format: ascii|mermaid, spec, caption?}, **check** {prompt, expect?, hint?}.\n' +
+      `At most ${MAX_BLOCKS_PER_UPDATE} blocks per call and ${MAX_BLOCKS_PER_LESSON} per lesson; a teaching unit is a few ` +
+      'blocks, not a chapter.\n' +
+      'Default mode "append" adds to the current lesson; use "replace" only to correct what is there.\n' +
+      'End a unit with a **check** block and then STOP — the learner answers in the chat, you judge it, ' +
+      'record the outcome with udt_map_update, and only then write the next unit.',
+    parameters: {
+      nodeId: {
+        type: 'string',
+        description: 'Node to write for. Omit to use the learner\'s current focus (see udt_status).',
+      },
+      title: { type: 'string', description: 'Lesson title; defaults to the node title.' },
+      mode: {
+        type: 'string',
+        enum: ['append', 'replace'],
+        description: 'append (default) adds blocks; replace overwrites the lesson.',
+      },
+      blocks: {
+        type: 'array',
+        required: true,
+        description: 'The blocks to write, in reading order.',
+        items: BLOCK_PARAM_SPEC,
+      },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          lessonId: { type: 'string', required: true },
+          nodeId: { type: 'string', required: true },
+          courseId: { type: 'string', required: true },
+          mode: { type: 'string', required: true },
+          blockCount: { type: 'integer', required: true, description: 'Blocks in the lesson after this call.' },
+          addedCount: { type: 'integer', required: true },
+          origin: { type: 'string', required: true },
+        },
+      },
+      render: (_args, value) => [
+        {
+          type: 'text',
+          text: `Learning surface updated: ${value.addedCount} block(s) ${value.mode === 'replace' ? 'replacing' : 'added to'} the lesson for "${value.nodeId}" (now ${value.blockCount}).`,
+        },
+      ],
+    },
+    execute: async (args) => {
+      const input = args as {
+        nodeId?: string
+        title?: string
+        mode?: 'append' | 'replace'
+        blocks: unknown[]
+      }
+      const mode = input.mode ?? 'append'
+
+      const focused = state.activeFocus()
+      const courseId = focused?.course.id ?? state.readLearner().activeCourseId
+      if (courseId === undefined) {
+        throw new Error('no active course; record a goal and start learning on a node first')
+      }
+      const nodeId = input.nodeId ?? focused?.node.id
+      if (nodeId === undefined) {
+        throw new Error('no nodeId given and no learning focus is active; call udt_status to see the focus')
+      }
+      const node = state.readNode(nodeId)
+      if (node === undefined) throw new Error(`no node "${nodeId}"`)
+      if (node.courseId !== courseId) {
+        throw new Error(`node "${nodeId}" belongs to course "${node.courseId}", not "${courseId}"`)
+      }
+
+      if (!Array.isArray(input.blocks) || input.blocks.length === 0) {
+        throw new Error('`blocks` must be a non-empty array')
+      }
+      if (input.blocks.length > MAX_BLOCKS_PER_UPDATE) {
+        throw new Error(
+          `at most ${MAX_BLOCKS_PER_UPDATE} blocks per call, received ${input.blocks.length}. ` +
+            'Write one teaching unit, not a chapter.',
+        )
+      }
+
+      // Strict, and it names the offending block: a model that sent one bad
+      // block should not have to guess which.
+      const parsed: Block[] = input.blocks.map((candidate, index) => {
+        const result = BlockSchema.safeParse(candidate)
+        if (!result.success) {
+          const issue = result.error.issues[0]
+          const where = issue === undefined ? '' : `${issue.path.join('.') || '(root)'}: ${issue.message}`
+          throw new Error(`block[${index}] is not a valid block — ${where}`)
+        }
+        return result.data
+      })
+
+      const now = nowIso()
+      const existing = state.lessonForNode(nodeId)
+      const blocks = mode === 'replace' ? parsed : [...(existing?.blocks ?? []), ...parsed]
+
+      if (blocks.length > MAX_BLOCKS_PER_LESSON) {
+        throw new Error(
+          `a lesson holds at most ${MAX_BLOCKS_PER_LESSON} blocks; this would make ${blocks.length}. ` +
+            'Replace the lesson or start a new node.',
+        )
+      }
+
+      const lesson: LessonRecord = LessonSchema.parse({
+        id: existing?.id ?? `${nodeId}:lesson`,
+        courseId,
+        nodeId,
+        title: input.title ?? existing?.title ?? node.title,
+        blocks,
+        // Real teaching, written by the tutor — never the v0.0.4 scaffold.
+        origin: 'tutor',
+        createdAt: existing?.createdAt ?? now,
+        updatedAt: now,
+      })
+      await state.writeLesson(lesson)
+
+      return {
+        lessonId: lesson.id,
+        nodeId,
+        courseId,
+        mode,
+        blockCount: lesson.blocks.length,
+        addedCount: parsed.length,
+        origin: lesson.origin,
+      }
+    },
+    presentCall: (args) => ({
+      card: 'generic',
+      title: `Write ${(args as { blocks?: unknown[] }).blocks?.length ?? 0} learning block(s)`,
+      kind: 'other',
+      rawInput: args,
+    }),
+  })
+}
+
 /* -------------------------------------------------------------------------- */
 /* Registration                                                               */
 /* -------------------------------------------------------------------------- */
@@ -643,4 +922,5 @@ export function registerTools(host: ToolsHost, state: UdState): void {
   host.tools.register(udtGoalCreateTool(state))
   host.tools.register(udtMapGetTool(state))
   host.tools.register(udtMapUpdateTool(state))
+  host.tools.register(udtLessonUpdateTool(state))
 }

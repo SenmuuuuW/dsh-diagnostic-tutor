@@ -1,6 +1,6 @@
 {
   "name": "dsh-diagnostic-tutor",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Diagnosis-first learning runtime for DeepSeek Harness — a live learning map, structured lessons, and persistent learner state, driven by the Universal Diagnostic Tutor skill.",
   "type": "module",
   "license": "MIT",
@@ -49,11 +49,13 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "4.0.2",
+    "@deepseek-ai/dsh-agent": "0.1.6-alpha.2",
     "@deepseek-ai/dsh-client-ui-layout": "0.1.6-alpha.2",
     "@deepseek-ai/dsh-client-ui-renderer": "0.1.6-alpha.2",
     "@deepseek-ai/dsh-client-ui-sidebar": "0.1.6-alpha.2",
     "@deepseek-ai/dsh-client-ui-slots": "0.1.6-alpha.2",
     "@deepseek-ai/dsh-host-webserver": "0.1.6-alpha.2",
+    "@deepseek-ai/dsh-llm": "0.1.6-alpha.2",
     "@deepseek-ai/dsh-skill": "0.1.6-alpha.2",
     "@deepseek-ai/dsh-skill-filesystem": "0.1.6-alpha.2",
     "@deepseek-ai/dsh-storage": "0.1.6-alpha.2",
@@ -80,7 +82,8 @@
     "build:client": "tsdown",
     "preview": "node preview/serve.mjs",
     "pretest": "tsdown",
-    "screenshot": "node scripts/screenshot.mjs"
+    "screenshot": "node scripts/screenshot.mjs",
+    "loop": "node scripts/learning-loop.mjs"
   },
   "dependencies": {
     "zod": "^4.6.5"

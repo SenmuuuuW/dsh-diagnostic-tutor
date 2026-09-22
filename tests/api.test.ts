@@ -64,13 +64,29 @@ function fakeRequest(init: RequestInit = {}): IncomingMessage {
   } as unknown as IncomingMessage
 }
 
+/** Records what the API asked to be said to the tutor. */
+interface PromptCall {
+  sessionId: string | undefined
+  text: string
+}
+
 /** Issue a request against the real handler with the real state. */
 async function call(
   state: UdState,
   init: RequestInit & { path?: string } = {},
+  prompts: PromptCall[] = [],
+  promptResult: { prompted: boolean; reason?: string } = { prompted: true },
 ): Promise<{ status: number; json: Record<string, unknown> }> {
   const res = new FakeResponse()
-  const handler = guarded(createApiHandler(state))
+  const handler = guarded(
+    createApiHandler({
+      state,
+      prompt: (sessionId, text) => {
+        prompts.push({ sessionId, text })
+        return promptResult
+      },
+    }),
+  )
   await handler(
     fakeRequest({ ...init, url: `${API_PREFIX}${init.path ?? '/overview'}` }),
     res as unknown as ServerResponse,
@@ -99,6 +115,13 @@ async function seedGoal(state: UdState, title: string, goal: string): Promise<st
   const goalNode = newNode({ id: `${id}:goal`, courseId: id, title, relation: 'goal', now })
   await state.writeNode(goalNode)
   return goalNode.id
+}
+
+/** The goal node id of a seeded course, for cross-course checks. */
+async function openStateNode(state: UdState, courseId: string): Promise<string> {
+  const node = state.listNodes(courseId)[0]
+  if (!node) throw new Error(`no node in course ${courseId}`)
+  return node.id
 }
 
 /** Seed one child node the way `udt_map_update` would. */
@@ -325,58 +348,149 @@ describe('API over real persisted state', () => {
     }
   })
 
-  it('builds a lesson once and reuses it after that', async () => {
+  it('starts a focus, wakes the tutor, and reports the node', async () => {
     const harness = await createHarness()
     try {
       const state = await openState(harness)
       const goalId = await seedGoal(state, 'Machine Learning', 'learn ml')
+      const prompts: PromptCall[] = []
 
-      const first = await call(state, {
-        method: 'POST',
-        path: '/lesson',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ nodeId: goalId }),
-      })
-      expect(first.status).toBe(200)
-      expect(first.json.ok).toBe(true)
-      expect(first.json.reused).toBe(false)
-      const lesson = first.json.lesson as { blocks: { type: string }[]; origin: string }
-      expect(lesson.origin).toBe('prototype')
-      expect(lesson.blocks.map((block) => block.type)).toEqual([
-        'text',
-        'example',
-        'diagram',
-        'check',
-      ])
+      const { status, json } = await call(
+        state,
+        {
+          method: 'POST',
+          path: '/focus',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ nodeId: goalId, sessionId: 'sess-1' }),
+        },
+        prompts,
+      )
 
-      const second = await call(state, {
-        method: 'POST',
-        path: '/lesson',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ nodeId: goalId }),
-      })
-      expect(second.json.reused).toBe(true)
+      expect(status).toBe(200)
+      expect(json.prompted).toBe(true)
+      expect(json.focus).toMatchObject({ nodeId: goalId, nodeTitle: 'Machine Learning', status: 'active' })
 
-      // And it really was persisted, not just returned.
-      expect(state.lessonCount()).toBe(1)
+      // The focus is real state, not just a response field.
+      expect(state.activeFocus()?.node.id).toBe(goalId)
+
+      // And the tutor was woken in the right session, with a message that names
+      // the node and asks for teaching — not with teaching already in it.
+      expect(prompts).toHaveLength(1)
+      expect(prompts[0]?.sessionId).toBe('sess-1')
+      expect(prompts[0]?.text).toContain('Machine Learning')
+      expect(prompts[0]?.text).toContain('Learning Surface')
     } finally {
       await harness.close()
     }
   })
 
-  it('rejects malformed input rather than guessing', async () => {
+  it('records the focus even when the tutor cannot be reached', async () => {
+    // The record is what the panel and the tutor both read, so a failed wake
+    // must not roll it back.
+    const harness = await createHarness()
+    try {
+      const state = await openState(harness)
+      const goalId = await seedGoal(state, 'Machine Learning', 'learn ml')
+
+      const { json } = await call(
+        state,
+        {
+          method: 'POST',
+          path: '/focus',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ nodeId: goalId }),
+        },
+        [],
+        { prompted: false, reason: 'that session has no live agent' },
+      )
+
+      expect(json.prompted).toBe(false)
+      expect(json.promptReason).toBe('that session has no live agent')
+      expect(state.activeFocus()?.node.id).toBe(goalId)
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('refuses a focus on a node that does not exist, or one from another course', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openState(harness)
+      await seedGoal(state, 'Machine Learning', 'learn ml')
+      await seedGoal(state, 'Linear Algebra', 'brush up')
+      const other = await openStateNode(state, 'machine-learning')
+
+      const missing = await call(state, {
+        method: 'POST',
+        path: '/focus',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ nodeId: 'ghost' }),
+      })
+      expect(missing.status).toBe(404)
+
+      // The active course is Linear Algebra, so a Machine Learning node must be
+      // refused rather than silently focused.
+      const foreign = await call(state, {
+        method: 'POST',
+        path: '/focus',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ nodeId: other }),
+      })
+      expect(foreign.status).toBe(404)
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('serves the lesson for a node, and null before the tutor writes one', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openState(harness)
+      const goalId = await seedGoal(state, 'Machine Learning', 'learn ml')
+
+      const empty = await call(state, { path: `/lesson?nodeId=${encodeURIComponent(goalId)}` })
+      expect(empty.status).toBe(200)
+      expect(empty.json.lesson).toBeNull()
+
+      expect((await call(state, { path: '/lesson' })).status).toBe(400)
+      expect((await call(state, { path: '/lesson?nodeId=ghost' })).status).toBe(404)
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('reports the focus in the overview so the panel can follow it', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openState(harness)
+      const goalId = await seedGoal(state, 'Machine Learning', 'learn ml')
+
+      expect((await call(state, { path: '/overview' })).json.focus).toBeNull()
+
+      await call(state, {
+        method: 'POST',
+        path: '/focus',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ nodeId: goalId }),
+      })
+
+      const after = await call(state, { path: '/overview' })
+      expect(after.json.focus).toMatchObject({ nodeId: goalId, nodeTitle: 'Machine Learning' })
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('rejects malformed focus input rather than guessing', async () => {
     const harness = await createHarness()
     try {
       const state = await openState(harness)
       await seedGoal(state, 'Machine Learning', 'learn ml')
 
-      const notJson = await call(state, { method: 'POST', path: '/lesson', body: 'not json' })
-      expect(notJson.status).toBe(400)
+      expect((await call(state, { method: 'POST', path: '/focus', body: 'not json' })).status).toBe(400)
+      expect((await call(state, { method: 'POST', path: '/focus', body: '[1,2,3]' })).status).toBe(400)
 
-      const arrayBody = await call(state, { method: 'POST', path: '/lesson', body: '[1,2,3]' })
-      expect(arrayBody.status).toBe(400)
-
-      const noNode = await call(state, { method: 'POST', path: '/lesson', body: '{}' })
+      const noNode = await call(state, { method: 'POST', path: '/focus', body: '{}' })
       expect(noNode.status).toBe(400)
       expect((noNode.json.error as { code: string }).code).toBe('missing-node-id')
     } finally {
@@ -390,7 +504,7 @@ describe('API over real persisted state', () => {
       const state = await openState(harness)
       await seedGoal(state, 'Machine Learning', 'learn ml')
       const huge = JSON.stringify({ nodeId: 'x'.repeat(70 * 1024) })
-      expect((await call(state, { method: 'POST', path: '/lesson', body: huge })).status).toBe(400)
+      expect((await call(state, { method: 'POST', path: '/focus', body: huge })).status).toBe(400)
     } finally {
       await harness.close()
     }

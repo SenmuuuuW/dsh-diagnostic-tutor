@@ -47,11 +47,21 @@ export interface CourseView {
   updatedAt: string
 }
 
+/** The node the learner pressed Start learning on. A pointer, not a measure. */
+export interface FocusView {
+  courseId: string
+  nodeId: string
+  nodeTitle: string
+  startedAt: string
+  status: string
+}
+
 /** `GET /overview` — `course: null` means the learner has no goal yet. */
 export interface OverviewResponse {
   ok: true
   course: CourseView | null
   nodes: NodeView[]
+  focus: FocusView | null
   lessonCount: number
 }
 
@@ -64,12 +74,20 @@ export interface NodeDetailResponse {
   lessonExists: boolean
 }
 
-/** `POST /lesson { nodeId }` */
+/** `GET /lesson?nodeId=` — `lesson: null` until the tutor has written one. */
 export interface LessonResponse {
   ok: true
-  lesson: import('./lesson.js').LessonRecord
-  /** True when an existing lesson was returned instead of a new one. */
-  reused: boolean
+  lesson: import('./lesson.js').LessonRecord | null
+}
+
+/** `POST /focus { nodeId, sessionId? }` — the result of pressing Start learning. */
+export interface FocusResponse {
+  ok: true
+  focus: FocusView
+  /** Whether the tutor was actually woken. */
+  prompted: boolean
+  /** Why it was not, when it was not. The focus is recorded either way. */
+  promptReason?: string
 }
 
 /** Every failure shape the API produces. */

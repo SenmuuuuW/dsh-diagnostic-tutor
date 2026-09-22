@@ -44,6 +44,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import { installRuntimeAdapter } from './adapter.js'
 import { API_PREFIX, registerApi } from './api.js'
 import type { WebServerLike } from './api.js'
+import { promptSession } from './prompt.js'
 import { UDT_DOMAIN_NAME, openUdState } from './state.js'
 import { registerTools } from './tools.js'
 import { describeUdtStatus, detectUdtSkill } from './udt.js'
@@ -138,7 +139,12 @@ export async function apply(ctx: Context): Promise<void> {
   // load deterministic for callers and tests.
   const mountApi = (server: unknown): void => {
     if (!server) return
-    ctx.effect(() => registerApi(server as WebServerLike, state))
+    ctx.effect(() =>
+      registerApi(server as WebServerLike, {
+        state,
+        prompt: (sessionId, text) => promptSession(ctx, sessionId, text),
+      }),
+    )
     ctx.logger.debug(`[diagnostic-tutor] browser API mounted at ${API_PREFIX}`)
   }
   const webServer = ctx.get('webServer')

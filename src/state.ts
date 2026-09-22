@@ -138,6 +138,30 @@ export const NodeSchema = z.object({
 })
 export type NodeRecord = z.infer<typeof NodeSchema>
 
+/**
+ * The one node being learned right now, per course.
+ *
+ * This is what makes "Start learning" an explicit act rather than an implicit
+ * one: the runtime records which node the learner asked to work on and when,
+ * and both the tutor and the panel read it from here instead of guessing.
+ *
+ * There is deliberately no `progress` field. A focus is a pointer, not a
+ * measure; how far along the learner is lives in the node's state and evidence.
+ */
+export const FOCUS_STATUSES = ['active', 'ended'] as const
+export const FocusStatusSchema = z.enum(FOCUS_STATUSES)
+export type FocusStatus = z.infer<typeof FocusStatusSchema>
+
+export const FocusSchema = z.object({
+  courseId: z.string().min(1),
+  nodeId: z.string().min(1),
+  startedAt: z.string(),
+  status: FocusStatusSchema,
+  updatedAt: z.string(),
+})
+export type FocusRecord = z.infer<typeof FocusSchema>
+export type FocusKey = string
+
 export type CourseKey = string
 export type NodeKey = string
 
@@ -169,6 +193,7 @@ export const UDT_DOMAIN_VERSION = 1
 export const COURSES_TABLE = 'courses'
 export const NODES_TABLE = 'nodes'
 export const LESSONS_TABLE = 'lessons'
+export const FOCUS_TABLE = 'focus'
 
 /** Sentinel meaning "the global slot has never been written". */
 export const UNINITIALIZED = ''
@@ -184,6 +209,9 @@ export const udtDomain = defineDomain({
     [COURSES_TABLE]: domainTable<CourseKey, CourseRecord>(CourseSchema),
     [NODES_TABLE]: domainTable<NodeKey, NodeRecord>(NodeSchema),
     [LESSONS_TABLE]: domainTable<LessonKey, LessonRecord>(LessonSchema),
+    // Keyed by course, so a course has at most one focus and starting a new
+    // one is an upsert rather than an accumulation.
+    [FOCUS_TABLE]: domainTable<FocusKey, FocusRecord>(FocusSchema),
   },
 })
 
@@ -272,6 +300,27 @@ export interface UdState {
   /** The course plus its map. */
   readMap(courseId: CourseKey): CourseMap | undefined
 
+  /* focus ------------------------------------------------------------------ */
+  /** The recorded focus for one course, if any. */
+  readFocus(courseId: CourseKey): FocusRecord | undefined
+  /**
+   * Record that learning is starting on one node of one course.
+   *
+   * Fails loudly when the course or the node does not exist, or when the node
+   * belongs to another course — a focus pointing at nothing would leave the
+   * tutor teaching a node the map does not have.
+   *
+   * @param courseId - the course.
+   * @param nodeId - the node to focus.
+   * @param now - ISO timestamp.
+   * @returns the stored focus.
+   */
+  startFocus(courseId: CourseKey, nodeId: NodeKey, now: string): Promise<FocusRecord>
+  /** Mark the course's focus as ended. No-op when there is none. */
+  endFocus(courseId: CourseKey, now: string): Promise<void>
+  /** The focus of the learner's active course, joined with its course and node. */
+  activeFocus(): { focus: FocusRecord; course: CourseRecord; node: NodeRecord } | undefined
+
   /* lessons ---------------------------------------------------------------- */
   readLesson(id: LessonKey): LessonRecord | undefined
   /** The lesson already stored for a node, if any. */
@@ -333,6 +382,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
   const courses: KvTable<CourseKey, CourseRecord> = domain.table(COURSES_TABLE)
   const nodes: KvTable<NodeKey, NodeRecord> = domain.table(NODES_TABLE)
   const lessons: KvTable<LessonKey, LessonRecord> = domain.table(LESSONS_TABLE)
+  const focus: KvTable<FocusKey, FocusRecord> = domain.table(FOCUS_TABLE)
   const learner: DomainGlobal<LearnerProfile> = domain.global
 
   const listNodesFor = (courseId: CourseKey): NodeRecord[] =>
@@ -407,6 +457,38 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       const course = courses.get(courseId)
       if (!course) return undefined
       return { course, nodes: listNodesFor(courseId) }
+    },
+
+    readFocus: (courseId) => focus.get(courseId),
+
+    async startFocus(courseId, nodeId, now) {
+      const course = courses.get(courseId)
+      if (!course) throw new Error(`no course "${courseId}"`)
+      const node = nodes.get(nodeId)
+      if (!node) throw new Error(`no node "${nodeId}"`)
+      if (node.courseId !== courseId) {
+        throw new Error(`node "${nodeId}" belongs to course "${node.courseId}", not "${courseId}"`)
+      }
+      const record: FocusRecord = { courseId, nodeId, startedAt: now, status: 'active', updatedAt: now }
+      await focus.put(courseId, record)
+      return record
+    },
+
+    async endFocus(courseId, now) {
+      const current = focus.get(courseId)
+      if (!current || current.status === 'ended') return
+      await focus.put(courseId, { ...current, status: 'ended', updatedAt: now })
+    },
+
+    activeFocus() {
+      const courseId = learner.get().activeCourseId
+      if (courseId === undefined) return undefined
+      const record = focus.get(courseId)
+      if (record === undefined || record.status !== 'active') return undefined
+      const course = courses.get(courseId)
+      const node = nodes.get(record.nodeId)
+      if (!course || !node) return undefined
+      return { focus: record, course, node }
     },
 
     readLesson: (id) => lessons.get(id),

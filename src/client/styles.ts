@@ -133,6 +133,13 @@ const CSS = `
   font: inherit; font-weight: 560; cursor: pointer;
 }
 .dt-primary:disabled { opacity: .55; cursor: default; }
+.dt-secondary {
+  margin-top: 8px; width: 100%; padding: 8px 12px;
+  border-radius: 8px; border: 1px solid var(--dt-border);
+  background: transparent; color: var(--dt-muted);
+  font: inherit; cursor: pointer;
+}
+.dt-secondary:hover { background: var(--dt-surface); }
 
 /* ---- lesson ---- */
 .dt-lesson-head {
@@ -146,6 +153,19 @@ const CSS = `
 .dt-block { margin: 0 0 14px; }
 .dt-block-md { white-space: pre-wrap; }
 .dt-block-md strong { font-weight: 620; }
+/* Math is set apart from prose. Styling, not typesetting -- see blocks.tsx. */
+.dt-math {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .95em; padding: 0 2px; border-radius: 4px;
+  background: var(--dt-surface);
+}
+.dt-math-block {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px; line-height: 1.6; white-space: pre-wrap;
+  margin: 8px 0; padding: 8px 10px; border-radius: 8px;
+  background: var(--dt-surface); border: 1px solid var(--dt-border);
+  overflow-x: auto;
+}
 .dt-block-example {
   border: 1px solid var(--dt-border); border-radius: 8px;
   background: var(--dt-surface); padding: 10px 12px;

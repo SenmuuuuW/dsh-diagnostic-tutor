@@ -126,7 +126,7 @@ describe('the client plugin registers into the DSH slots', () => {
 
   it('exports a client plugin with the expected shape', () => {
     expect(module.name).toBe('diagnostic-tutor-client')
-    expect(module.inject).toEqual(['slots'])
+    expect(module.inject).toEqual(['slots', 'layout'])
     expect(typeof module.apply).toBe('function')
     // Same rule as the host half: a default export is never used.
     expect('default' in module).toBe(false)
@@ -137,6 +137,9 @@ describe('the client plugin registers into the DSH slots', () => {
     const disposers: (() => void)[] = []
 
     const ctx = {
+      // `layout` is resolved lazily for the "back to the chat" action; a
+      // profile without it simply loses that button.
+      get: () => undefined,
       effect: (fn: () => () => void) => {
         disposers.push(fn())
       },
@@ -170,6 +173,7 @@ describe('the client plugin registers into the DSH slots', () => {
   it('renders the panel when the registered main component is mounted', () => {
     const registrations: Registration[] = []
     const ctx = {
+      get: () => undefined,
       effect: () => {},
       slots: {
         inject: (_key: string, callback: () => () => void) => {
@@ -200,6 +204,9 @@ describe('the client plugin injects its stylesheet and takes it away again', () 
   it('injects exactly one sheet, and removes it on dispose', () => {
     const disposers: (() => void)[] = []
     const ctx = {
+      // `layout` is resolved lazily for the "back to the chat" action; a
+      // profile without it simply loses that button.
+      get: () => undefined,
       effect: (fn: () => () => void) => {
         disposers.push(fn())
       },
@@ -218,6 +225,7 @@ describe('the client plugin injects its stylesheet and takes it away again', () 
 
   it('does not inject a second copy when applied twice', () => {
     const ctx = {
+      get: () => undefined,
       effect: (fn: () => () => void) => {
         fn()
       },

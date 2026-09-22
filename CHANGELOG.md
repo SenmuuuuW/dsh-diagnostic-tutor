@@ -5,6 +5,78 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.5] — the learning loop
+
+The runtime now teaches. Pressing **Start learning** wakes the tutor, the tutor
+writes real lesson blocks, and the panel follows the evidence and state changes
+it records. Still no quiz engine, no RAG, no flashcards.
+
+### Added
+
+- **Learning focus** (`focus` table, keyed by course): `courseId`, `nodeId`,
+  `startedAt`, `status`. A pointer, not a measure — there is deliberately no
+  progress field. Readable by both sides: `udt_status` reports it to the tutor,
+  `/overview` reports it to the panel.
+- **`POST /focus { nodeId, sessionId? }`** — records the focus, then wakes the
+  tutor with one user-role turn attributing the request to this plugin. Order
+  matters: the record exists even when no agent can be reached, and a failed
+  wake is reported rather than rolled back.
+- **`udt_lesson_update`** — the tool the tutor writes teaching with. Blocks are
+  validated twice: the declared `oneOf` parameter schema rejects a bad block
+  before `execute` runs, and zod validates again in the body with a message
+  naming the offending index. Caps: 6 blocks per call, 24 per lesson, plus
+  per-field length limits, so an oversized payload is a rejection rather than a
+  rendering problem.
+- **`origin: 'tutor'`** — lesson blocks written by the teaching brain. The
+  v0.0.4 `prototype` origin is retained so old records still parse, but the
+  runtime no longer produces it.
+- **Panel polling** while a focus is active, so blocks, evidence and state
+  appear without user action. Nothing polls when idle.
+- **"Answer in the chat"** — the panel fills the main column, which is also
+  where the conversation lives, so the surface needed a door back to it.
+  Supplied through `ctx.layout.selectPanel(null)`.
+
+### Changed
+
+- `apply` no longer mounts a lesson for a node; teaching is the tutor's.
+- `udt_status` reports the focus, which is how the tutor learns what to teach.
+
+### Fixed
+
+- **The panel never saw its own focus.** Pressing Start learning did not refetch
+  the overview, so the focus the server had just recorded was invisible and the
+  polling effect — which keys off it — never started.
+- **A parent cycle made nodes vanish from the map** (found in v0.0.4, kept
+  fixed here): unreachable nodes render as roots rather than disappearing.
+- **LaTeX was printed raw.** The teaching brain writes `\(...\)` and `\[...\]`
+  by convention, and a STEM surface showing the delimiters is unreadable. Inline
+  and display math are now set apart (styling, not typesetting — KaTeX is a
+  later decision, recorded rather than hidden).
+
+### Verified against DSH 0.1.6-alpha.2 with the real skill
+
+One real session, on a real stored course:
+
+1. the learner pressed **Start learning** on a `blocked` node;
+2. the tutor was woken and wrote its own lesson — `origin: tutor`, five blocks,
+   31s for the first unit;
+3. the panel showed the blocks without any user action;
+4. the tutor recorded evidence on its own (1 → 3 entries, with its readiness
+   vocabulary: `step-down`, `diagnose-again`, `more-practice`) and the panel
+   followed live;
+5. it also moved the map: a child node went to `explained` with 4 evidence.
+
+Screenshot: `preview/dsh-ui-loop.png`.
+
+### Honest gap
+
+The learner's typed answer producing a *new* evidence entry is covered by tests
+(`tests/lesson-loop.test.ts`) rather than by the screen capture above — whether
+an answer deserves an observation is the teaching brain's judgement, and in the
+recorded runs it chose to re-teach before recording. The mechanism is the same
+one proven in step 4.
+
+
 ## [0.0.4] — the learning UI
 
 The runtime now has a real interface. A three-pane panel in the DSH web GUI

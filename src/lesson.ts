@@ -30,6 +30,40 @@ import { z } from 'zod'
 import type { CourseRecord, NodeRecord } from './state.js'
 
 /* -------------------------------------------------------------------------- */
+/* Size limits                                                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A teaching unit is a few blocks, not a chapter.
+ *
+ * The cap is what makes "never generate a whole course in one call" structural
+ * rather than advisory — the same reasoning as the diagnosis map's node caps.
+ * Six leaves room for a real unit (orient, example, diagram, check) plus a
+ * correction.
+ */
+export const MAX_BLOCKS_PER_UPDATE = 6
+
+/**
+ * A lesson accumulates across a session, so its ceiling is higher than one
+ * call's — but it is still a ceiling. Past this the lesson has stopped being a
+ * learning surface and become a document.
+ */
+export const MAX_BLOCKS_PER_LESSON = 24
+
+/**
+ * Per-field length caps, enforced by zod at the durable boundary.
+ *
+ * Structural validation alone would accept a single 5 MB text block; these make
+ * "oversized payload" a rejection rather than a rendering problem.
+ */
+export const MAX_TEXT_CHARS = 6000
+export const MAX_DIAGRAM_CHARS = 4000
+export const MAX_PROMPT_CHARS = 1000
+export const MAX_TITLE_CHARS = 200
+export const MAX_STEP_CHARS = 400
+export const MAX_STEPS = 12
+
+/* -------------------------------------------------------------------------- */
 /* Blocks                                                                     */
 /* -------------------------------------------------------------------------- */
 
@@ -45,7 +79,7 @@ export const TextBlockSchema = z.object({
   type: z.literal('text'),
   content: z.object({
     /** Markdown. Math uses the skill's convention: `\(...\)` / `\[...\]`. */
-    md: z.string().min(1),
+    md: z.string().min(1).max(MAX_TEXT_CHARS),
   }),
 })
 
@@ -53,9 +87,9 @@ export const ExampleBlockSchema = z.object({
   ...blockBase,
   type: z.literal('example'),
   content: z.object({
-    title: z.string().min(1),
-    steps: z.array(z.string().min(1)).min(1),
-    takeaway: z.string().min(1).optional(),
+    title: z.string().min(1).max(MAX_TITLE_CHARS),
+    steps: z.array(z.string().min(1).max(MAX_STEP_CHARS)).min(1).max(MAX_STEPS),
+    takeaway: z.string().min(1).max(MAX_STEP_CHARS).optional(),
   }),
 })
 
@@ -70,8 +104,8 @@ export const DiagramBlockSchema = z.object({
      * a labelled source block rather than pulling in a renderer.
      */
     format: z.enum(['ascii', 'mermaid']),
-    spec: z.string().min(1),
-    caption: z.string().min(1).optional(),
+    spec: z.string().min(1).max(MAX_DIAGRAM_CHARS),
+    caption: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
   }),
 })
 
@@ -79,10 +113,10 @@ export const CheckBlockSchema = z.object({
   ...blockBase,
   type: z.literal('check'),
   content: z.object({
-    prompt: z.string().min(1),
+    prompt: z.string().min(1).max(MAX_PROMPT_CHARS),
     /** What the check is really probing; a hint for the teaching brain. */
     expect: z.enum(['reasoning', 'answer']).optional(),
-    hint: z.string().min(1).optional(),
+    hint: z.string().min(1).max(MAX_PROMPT_CHARS).optional(),
   }),
 })
 
@@ -117,7 +151,16 @@ export const SUPPORTED_BLOCK_TYPES: readonly BlockType[] = BLOCK_SCHEMAS.map(
 /* Lesson                                                                     */
 /* -------------------------------------------------------------------------- */
 
-export const LESSON_ORIGINS = ['prototype', 'model'] as const
+/**
+ * `tutor` is what the runtime writes now: blocks the teaching brain submitted
+ * through `udt_lesson_update`.
+ *
+ * `prototype` is retained rather than removed because v0.0.4 wrote records with
+ * it, and the domain version cannot be bumped to invalidate them (the `single`
+ * layout rejects a version mismatch outright — see `state.ts`). It is no longer
+ * produced by the runtime.
+ */
+export const LESSON_ORIGINS = ['prototype', 'tutor'] as const
 export const LessonOriginSchema = z.enum(LESSON_ORIGINS)
 export type LessonOrigin = z.infer<typeof LessonOriginSchema>
 
@@ -126,8 +169,8 @@ export const LessonSchema = z.object({
   courseId: z.string().min(1),
   nodeId: z.string().min(1),
   title: z.string().min(1),
-  blocks: z.array(BlockSchema).min(1),
-  /** `prototype` is a projection of stored state; `model` will be generated. */
+  blocks: z.array(BlockSchema).min(1).max(MAX_BLOCKS_PER_LESSON),
+  /** Who produced the blocks: the teaching brain, or the v0.0.4 scaffold. */
   origin: LessonOriginSchema,
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -188,11 +231,16 @@ function relationExplanation(node: NodeRecord): string {
 }
 
 /**
- * Build the prototype lesson for one node.
+ * Build a prototype lesson for one node.
  *
- * Deterministic: the same course, node and map always produce the same blocks,
- * and the timestamp is supplied by the caller. It projects stored state into
- * the four block types — it does not invent teaching content.
+ * **Not on the runtime path any more.** v0.0.5 teaches through the tutor, and
+ * `udt_lesson_update` is how blocks arrive. This builder is kept for two
+ * honest reasons: v0.0.4 wrote `origin: 'prototype'` records that must still
+ * parse, and it is a convenient deterministic fixture for the preview and the
+ * block-renderer tests.
+ *
+ * It projects stored state into the four block types — it does not invent
+ * teaching content.
  *
  * @param input.course - the course the node belongs to.
  * @param input.node - the node to build for.

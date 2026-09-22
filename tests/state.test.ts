@@ -15,6 +15,7 @@ import {
   COURSE_STATUSES,
   CourseSchema,
   LearnerProfileSchema,
+  FOCUS_TABLE,
   LESSONS_TABLE,
   NODES_TABLE,
   UDT_DOMAIN_NAME,
@@ -35,7 +36,7 @@ describe('domain declaration', () => {
     expect(udtDomain.name).toBe(UDT_DOMAIN_NAME)
     expect(udtDomain.version).toBe(UDT_DOMAIN_VERSION)
     expect(udtDomain.global).toBeDefined()
-    expect(Object.keys(udtDomain.tables)).toEqual([COURSES_TABLE, NODES_TABLE, LESSONS_TABLE])
+    expect(Object.keys(udtDomain.tables)).toEqual([COURSES_TABLE, NODES_TABLE, LESSONS_TABLE, FOCUS_TABLE])
   })
 
   it('keeps the domain version at 1 across an additive table', () => {

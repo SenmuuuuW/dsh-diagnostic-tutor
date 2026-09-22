@@ -101,11 +101,11 @@
     if (!target) return null
     const trail = evidence[nodeId] ?? []
     return {
-      id: `${nodeId}:prototype`,
+      id: `${nodeId}:lesson`,
       courseId: course.id,
       nodeId,
       title: target.title,
-      origin: 'prototype',
+      origin: 'tutor',
       createdAt: now,
       updatedAt: now,
       blocks: [
@@ -166,10 +166,20 @@
     }
   }
 
-  /** A `PanelClient` backed by this fixture instead of HTTP. */
+  /**
+   * A `PanelClient` backed by this fixture instead of HTTP.
+   *
+   * Stateful on purpose: `startFocus` records a focus and the lesson only
+   * exists afterwards, so the preview exercises the same sequence the real
+   * panel does — press Start learning, then the surface fills in.
+   */
   window.createFixtureClient = function createFixtureClient() {
+    let focus = null
+    const lessons = new Map()
+
     return {
-      fetchOverview: () => Promise.resolve({ ok: true, course, nodes, lessonCount: 1 }),
+      fetchOverview: () => Promise.resolve({ ok: true, course, nodes, focus, lessonCount: lessons.size }),
+
       fetchNode: (nodeId) => {
         const target = nodes.find((entry) => entry.id === nodeId)
         if (!target) return Promise.reject(new Error('no such node'))
@@ -178,13 +188,27 @@
           node: { ...target, evidence: evidence[nodeId] ?? [] },
           parent: nodes.find((entry) => entry.id === target.parentId) ?? null,
           children: nodes.filter((entry) => entry.parentId === nodeId),
-          lessonExists: false,
+          lessonExists: lessons.has(nodeId),
         })
       },
-      startLesson: (nodeId) => {
-        const lesson = lessonFor(nodeId)
-        if (!lesson) return Promise.reject(new Error('no such node'))
-        return Promise.resolve({ lesson, reused: false })
+
+      fetchLesson: (nodeId) =>
+        Promise.resolve({ ok: true, lesson: lessons.get(nodeId) ?? null }),
+
+      startFocus: (nodeId, sessionId) => {
+        const target = nodes.find((entry) => entry.id === nodeId)
+        if (!target) return Promise.reject(new Error('no such node'))
+        focus = {
+          courseId: course.id,
+          nodeId,
+          nodeTitle: target.title,
+          startedAt: now,
+          status: 'active',
+        }
+        // The tutor "writes" its unit: the preview has no agent, so the fixture
+        // supplies what udt_lesson_update would have stored.
+        lessons.set(nodeId, lessonFor(nodeId))
+        return Promise.resolve({ ok: true, focus, prompted: true, sessionId })
       },
     }
   }

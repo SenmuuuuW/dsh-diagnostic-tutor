@@ -7,11 +7,10 @@ it works out where you are stuck, decides the next best teaching step, and turns
 the whole process into a living learning map you can click through.
 
 > [!IMPORTANT]
-> **Status: `v0.0.4` — there is now a UI.**
-> The DSH web GUI gets a three-pane learning panel: the course, its diagnosis
-> map, the selected node, and a learning surface. Lessons are **prototypes** —
-> deterministic projections of stored state, not generated teaching content.
-> There is no quiz engine and no model-written lesson yet. See [Roadmap](#roadmap).
+> **Status: `v0.0.5` — the learning loop runs.**
+> Press **Start learning** on a node and the tutor is woken, teaches into the
+> panel, and records what it observed; the map and the evidence follow live.
+> Still no quiz engine, no RAG, no flashcards. See [Roadmap](#roadmap).
 
 ---
 
@@ -50,7 +49,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.0.4` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.0.5` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -143,14 +142,41 @@ route around them:
 
 ### Tools
 
-Four, and none of them decides anything about teaching.
+Five, and none of them decides anything about teaching.
 
 | Tool | Does |
 | --- | --- |
-| `udt_status` | reports the runtime: domain, version, learner profile, goals, node count |
+| `udt_status` | reports the runtime: domain, version, goals, map, **and the current focus** |
 | `udt_goal_create` | records a goal and plants the map root — and nothing else |
 | `udt_map_get` | reads the map with each node's relation, state and evidence |
 | `udt_map_update` | `add-nodes` · `set-state` · `add-evidence` |
+| `udt_lesson_update` | writes teaching into the learning surface as blocks |
+
+The division is the architecture: the tutor decides **what** to teach, when to
+check, and what an answer showed; the runtime decides **what may be stored** and
+renders it. There is no branch anywhere in this repository that says "if blocked
+then explain the prerequisite" — that is the skill's call, made in the chat.
+
+### The loop
+
+```
+press Start learning
+   → focus recorded (courseId, nodeId, startedAt, status)
+   → the tutor is woken in that conversation with the node named
+   → the tutor teaches into the surface via udt_lesson_update
+   → the learner answers the check in the chat
+   → the tutor judges, records evidence via udt_map_update, decides the next move
+   → the panel follows, and the next unit is written
+```
+
+`Start learning` is a **user-role turn attributed to this plugin**, not injected
+context: `agent.inject()` would add model-visible context without waking an idle
+agent, so nothing would happen until the learner typed. Opening a turn is what
+the button means.
+
+The panel occupies the main column, which is also where the conversation lives,
+so the learning surface offers **Answer in the chat** to switch back. That is a
+real constraint of the layout, not a decoration.
 
 ### Teaching-brain detection
 
@@ -280,9 +306,9 @@ shows a loader row exists.
 | `v0.0.1` | installable bundle, plugin loads, guard + composition tests |
 | `v0.0.2` | `udt` storage domain, learner round-trip, `udt_status` tool |
 | `v0.0.3` | teaching-brain detection, `udt_goal_create`, the diagnosis map (`udt_map_get` / `udt_map_update`), runtime adapter |
-| `v0.0.4` | **current** — the client half: slot-mounted panel, clickable map, node detail, Learning Blocks, prototype lesson, browser API |
-| `v0.0.5` | model-written lessons and the check → mastery update → next best lesson loop |
-| `v0.0.6` | state export/reset, settings, i18n |
+| `v0.0.4` | the client half: slot-mounted panel, clickable map, node detail, Learning Blocks, browser API |
+| `v0.0.5` | **current** — the loop: learning focus, tutor-written lessons, check → evidence → state, live panel |
+| `v0.0.6` | state export/reset, settings, i18n, math typesetting |
 | `v0.1.0` | **first playable MVP** — Goal → Map → Lesson → Check → Progress → Next |
 
 ## Trust

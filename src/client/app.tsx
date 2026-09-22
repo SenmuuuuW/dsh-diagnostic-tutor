@@ -9,13 +9,26 @@
  * The panel takes its API as a prop. In DSH that is the real HTTP client; in
  * the standalone preview and in tests it is a fixture-backed object. That one
  * seam is what lets the UI be developed and tested without an agent running.
+ *
+ * ---------------------------------------------------------------------------
+ * Who decides what
+ * ---------------------------------------------------------------------------
+ * The panel never writes teaching content and never decides what happens next.
+ * Pressing **Start learning** records a focus and wakes the tutor; the blocks
+ * that appear are whatever the tutor wrote through `udt_lesson_update`; the
+ * evidence and state changes are whatever the tutor recorded through
+ * `udt_map_update`. The panel's whole job is to show the current truth and to
+ * keep showing it as it changes.
  */
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type {
   CourseView,
+  FocusResponse,
+  FocusView,
   LessonRecord,
+  LessonResponse,
   NodeDetailResponse,
   NodeView,
   OverviewResponse,
@@ -30,24 +43,46 @@ import {
   stateExplanation,
 } from './model.js'
 
-/** The three calls the panel needs; injectable so preview and tests can fake them. */
+/** The calls the panel makes; injectable so preview and tests can fake them. */
 export interface PanelClient {
   fetchOverview(): Promise<OverviewResponse>
   fetchNode(nodeId: string): Promise<NodeDetailResponse>
-  startLesson(nodeId: string): Promise<{ lesson: LessonRecord; reused: boolean }>
+  fetchLesson(nodeId: string): Promise<LessonResponse>
+  startFocus(nodeId: string, sessionId?: string): Promise<FocusResponse>
 }
 
 const defaultClient: PanelClient = {
   fetchOverview: realApi.fetchOverview,
   fetchNode: realApi.fetchNode,
-  startLesson: realApi.startLesson,
+  fetchLesson: realApi.fetchLesson,
+  startFocus: realApi.startFocus,
 }
+
+/**
+ * How often the panel re-reads state while a focus is active.
+ *
+ * Polling rather than a push channel: DSH exposes no generic host→client push
+ * for third-party plugins, and the published UI plugins poll for the same
+ * reason. The interval only runs while something is being learned, so an idle
+ * panel makes no requests at all.
+ */
+const POLL_INTERVAL_MS = 2000
 
 export interface LearningPanelProps {
   /** Defaults to the real HTTP client. */
   client?: PanelClient
   /** Pre-supplied overview, so the preview and tests skip the first fetch. */
   initialOverview?: OverviewResponse
+  /** The session the tutor should be woken in, when the host half knows one. */
+  sessionId?: string
+  /**
+   * Show the conversation again.
+   *
+   * The panel fills the main column, which is also where the chat lives, so
+   * answering a check means leaving the surface. Supplied by the client plugin
+   * through the layout service; absent in the preview and in tests.
+   */
+  onOpenChat?: () => void
 }
 
 /** The status pill plus its mark. Never a number. */
@@ -64,11 +99,13 @@ function MapPane({
   course,
   nodes,
   selectedId,
+  focus,
   onSelect,
 }: {
   course: CourseView | null
   nodes: NodeView[]
   selectedId: string | null
+  focus: FocusView | null
   onSelect: (id: string) => void
 }): ReactNode {
   const rows = useMemo(() => flattenTree(buildMapTree(nodes)), [nodes])
@@ -99,6 +136,7 @@ function MapPane({
           className="dt-node"
           style={{ marginLeft: `${depth * 12}px` }}
           aria-current={node.id === selectedId}
+          data-focused={node.id === focus?.nodeId}
           onClick={() => onSelect(node.id)}
         >
           {/* Mark, then title, then the state word: the pill sits in its own
@@ -123,13 +161,17 @@ function MapPane({
 
 function DetailPane({
   detail,
+  isFocused,
   onStart,
   starting,
+  note,
   error,
 }: {
   detail: NodeDetailResponse | null
+  isFocused: boolean
   onStart: () => void
   starting: boolean
+  note: string | null
   error: string | null
 }): ReactNode {
   if (detail === null) {
@@ -174,9 +216,10 @@ function DetailPane({
         </ul>
       )}
 
+      {note !== null && <p className="dt-caption">{note}</p>}
       {error !== null && <p className="dt-empty">{error}</p>}
       <button type="button" className="dt-primary" onClick={onStart} disabled={starting}>
-        {starting ? 'Opening…' : detail.lessonExists ? 'Continue learning' : 'Start learning'}
+        {starting ? 'Starting…' : isFocused ? 'Learning in progress' : 'Start learning'}
       </button>
     </div>
   )
@@ -184,17 +227,33 @@ function DetailPane({
 
 function LessonPane({
   lesson,
+  awaitingTutor,
   onClose,
+  onOpenChat,
 }: {
   lesson: LessonRecord | null
+  awaitingTutor: boolean
   onClose: () => void
+  onOpenChat?: (() => void) | undefined
 }): ReactNode {
   if (lesson === null) {
     return (
       <div className="dt-pane">
-        <p className="dt-empty">
-          The learning surface opens here. Choose a node and press <b>Start learning</b>.
-        </p>
+        <p className="dt-eyebrow">Learning surface</p>
+        {awaitingTutor ? (
+          <>
+            <p className="dt-empty">The tutor is preparing this node…</p>
+            <p className="dt-caption">
+              The teaching appears here as it is written, while the conversation continues in the
+              chat.
+            </p>
+          </>
+        ) : (
+          <p className="dt-empty">
+            Choose a node and press <b>Start learning</b>. The teaching appears here, and the
+            conversation stays in the chat.
+          </p>
+        )}
       </div>
     )
   }
@@ -205,16 +264,15 @@ function LessonPane({
         <span className="dt-origin">{lesson.origin}</span>
       </div>
       <h2>{lesson.title}</h2>
-      {lesson.origin === 'prototype' && (
-        <p className="dt-caption">
-          A prototype: assembled deterministically from what the runtime already recorded, not
-          generated teaching content.
-        </p>
-      )}
       <div style={{ marginTop: 14 }}>
         <LessonBody blocks={lesson.blocks} />
       </div>
-      <button type="button" className="dt-primary" onClick={onClose}>
+      {onOpenChat !== undefined && (
+        <button type="button" className="dt-primary" onClick={onOpenChat}>
+          Answer in the chat
+        </button>
+      )}
+      <button type="button" className="dt-secondary" onClick={onClose}>
         Back to the node
       </button>
     </div>
@@ -224,17 +282,30 @@ function LessonPane({
 /**
  * The panel.
  *
- * @param props - injectable client and optional pre-supplied overview.
+ * @param props - injectable client, optional pre-supplied overview, session id.
  * @returns the three-pane learning surface.
  */
-export function LearningPanel({ client = defaultClient, initialOverview }: LearningPanelProps): ReactNode {
+export function LearningPanel({
+  client = defaultClient,
+  initialOverview,
+  sessionId,
+  onOpenChat,
+}: LearningPanelProps): ReactNode {
   const [overview, setOverview] = useState<OverviewResponse | null>(initialOverview ?? null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<NodeDetailResponse | null>(null)
   const [lesson, setLesson] = useState<LessonRecord | null>(null)
+  const [note, setNote] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
   const [loading, setLoading] = useState(initialOverview === undefined)
+
+  const focus = overview?.focus ?? null
+  // Which node the surface is showing. Kept apart from the map selection so
+  // that browsing the map does not blank a lesson the tutor is still writing.
+  const [surfaceNodeId, setSurfaceNodeId] = useState<string | null>(null)
+  const surfaceRef = useRef<string | null>(null)
+  surfaceRef.current = surfaceNodeId
 
   useEffect(() => {
     if (initialOverview !== undefined) return
@@ -258,7 +329,6 @@ export function LearningPanel({ client = defaultClient, initialOverview }: Learn
   const select = useCallback(
     (nodeId: string) => {
       setSelectedId(nodeId)
-      setLesson(null)
       setError(null)
       client
         .fetchNode(nodeId)
@@ -272,12 +342,63 @@ export function LearningPanel({ client = defaultClient, initialOverview }: Learn
     if (selectedId === null) return
     setStarting(true)
     setError(null)
+    setNote(null)
     client
-      .startLesson(selectedId)
-      .then((result) => setLesson(result.lesson))
+      .startFocus(selectedId, sessionId)
+      .then(async (result) => {
+        setSurfaceNodeId(result.focus.nodeId)
+        setNote(
+          result.prompted
+            ? 'Started. The tutor is teaching this node in the chat — the surface updates as it writes.'
+            : `Focus recorded, but the tutor was not woken (${result.promptReason ?? 'unknown reason'}). Say anything in the chat to continue.`,
+        )
+        // Re-read the overview rather than trusting the response: the focus
+        // lives in stored state, and the panel follows stored state. Without
+        // this the panel would never see its own focus, and the polling effect
+        // below — which keys off it — would never start.
+        const [nextOverview, nextLesson] = await Promise.all([
+          client.fetchOverview(),
+          client.fetchLesson(result.focus.nodeId),
+        ])
+        setOverview(nextOverview)
+        setLesson(nextLesson.lesson)
+      })
       .catch((cause: Error) => setError(cause.message))
       .finally(() => setStarting(false))
-  }, [client, selectedId])
+  }, [client, selectedId, sessionId])
+
+  // Poll only while something is being learned. Three small local reads, and
+  // nothing at all when idle.
+  useEffect(() => {
+    if (focus === null) return
+    const nodeId = focus.nodeId
+    let live = true
+
+    const tick = async (): Promise<void> => {
+      try {
+        const [nextOverview, nextLesson] = await Promise.all([
+          client.fetchOverview(),
+          client.fetchLesson(nodeId),
+        ])
+        if (!live) return
+        setOverview(nextOverview)
+        setLesson(nextLesson.lesson)
+        // The evidence trail and the node's state are what a check changes.
+        if (surfaceRef.current === nodeId || selectedId === nodeId) {
+          setDetail(await client.fetchNode(nodeId))
+        }
+      } catch {
+        // A failed poll is not worth surfacing; the next one may succeed.
+      }
+    }
+
+    void tick()
+    const timer = setInterval(() => void tick(), POLL_INTERVAL_MS)
+    return () => {
+      live = false
+      clearInterval(timer)
+    }
+  }, [client, focus, selectedId])
 
   return (
     <div className="dt-root">
@@ -285,15 +406,26 @@ export function LearningPanel({ client = defaultClient, initialOverview }: Learn
         course={overview?.course ?? null}
         nodes={overview?.nodes ?? []}
         selectedId={selectedId}
+        focus={focus}
         onSelect={select}
       />
       <DetailPane
         detail={detail}
+        isFocused={focus !== null && focus.nodeId === selectedId}
         onStart={start}
         starting={starting}
+        note={note}
         error={loading ? 'Loading…' : error}
       />
-      <LessonPane lesson={lesson} onClose={() => setLesson(null)} />
+      <LessonPane
+        lesson={lesson}
+        awaitingTutor={focus !== null}
+        onOpenChat={onOpenChat}
+        onClose={() => {
+          setLesson(null)
+          setSurfaceNodeId(null)
+        }}
+      />
     </div>
   )
 }

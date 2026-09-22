@@ -8,7 +8,12 @@
  * a failure cannot be mistaken for data.
  */
 
-import type { LessonResponse, NodeDetailResponse, OverviewResponse } from '../contract.js'
+import type {
+  FocusResponse,
+  LessonResponse,
+  NodeDetailResponse,
+  OverviewResponse,
+} from '../contract.js'
 
 /** Route prefix owned by this plugin; must match the host's `API_PREFIX`. */
 const BASE = '/diagnostic-tutor/api'
@@ -57,16 +62,22 @@ export function fetchNode(nodeId: string): Promise<NodeDetailResponse> {
   return request<NodeDetailResponse>(`/node?id=${encodeURIComponent(nodeId)}`)
 }
 
+/** The lesson the tutor has written for a node; `lesson: null` until it has. */
+export function fetchLesson(nodeId: string): Promise<LessonResponse> {
+  return request<LessonResponse>(`/lesson?nodeId=${encodeURIComponent(nodeId)}`)
+}
+
 /**
- * Open the learning surface for a node.
+ * What the Start learning button does.
  *
- * The host builds the prototype lesson on first call and returns the same one
- * afterwards, so this is safe to press twice.
+ * Records the focus and asks the host to wake the tutor. `sessionId` is the
+ * session the panel is showing; without it the focus is still recorded and the
+ * response says the tutor was not reached.
  */
-export function startLesson(nodeId: string): Promise<LessonResponse> {
-  return request<LessonResponse>('/lesson', {
+export function startFocus(nodeId: string, sessionId?: string): Promise<FocusResponse> {
+  return request<FocusResponse>('/focus', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ nodeId }),
+    body: JSON.stringify(sessionId === undefined ? { nodeId } : { nodeId, sessionId }),
   })
 }

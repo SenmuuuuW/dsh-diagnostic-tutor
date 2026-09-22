@@ -38,7 +38,7 @@ export const name = 'diagnostic-tutor-client'
  * Declared here rather than in the host half because it is a *client* service:
  * the browser half runs in its own Cordis context against the page's registry.
  */
-export const inject = ['slots']
+export const inject = ['slots', 'layout']
 
 /**
  * Identifier shared by the sidebar entry and the main panel.
@@ -68,9 +68,46 @@ function PanelIcon({ size, active }: PropsRuntime<'sidebar.panellist'>): ReactNo
   )
 }
 
-/** The panel body. Kept separate so the preview can mount it directly. */
-function MainPanel(): ReactNode {
-  return <LearningPanel />
+/**
+ * The panel body, with the session the tutor should be woken in threaded
+ * through, plus a way back to the conversation.
+ *
+ * That last part matters more than it looks. The map, the node detail and the
+ * learning surface occupy the **main** column, which is the same column the
+ * conversation lives in — so while the panel is open the learner cannot type.
+ * Checks are answered in the chat, so the surface needs a door back to it, and
+ * `ctx.layout.selectPanel(null)` is the documented way to show the conversation
+ * again.
+ *
+ * `useSessions` is part of the standard kit every root-scoped slot receives, so
+ * the panel can name the session it is looking at without any plumbing of its
+ * own. The host needs it to reach the right agent when the learner presses
+ * Start learning.
+ */
+function MainPanel({
+  useSessions,
+  onOpenChat,
+}: {
+  useSessions?: ((select: (state: SessionListLike) => unknown) => unknown) | undefined
+  onOpenChat?: (() => void) | undefined
+}): ReactNode {
+  const sessionId = useSessions?.((state) => state.ids[0])
+  return (
+    <LearningPanel
+      {...(typeof sessionId === 'string' ? { sessionId } : {})}
+      {...(onOpenChat === undefined ? {} : { onOpenChat })}
+    />
+  )
+}
+
+/** The slice of the session-list snapshot this panel reads. */
+interface SessionListLike {
+  ids: string[]
+}
+
+/** Props the slot supplies; re-declared for the bound wrapper. */
+interface MainPanelProps {
+  useSessions?: ((select: (state: SessionListLike) => unknown) => unknown) | undefined
 }
 
 /**
@@ -94,13 +131,24 @@ export function apply(ctx: Context): void {
     ),
   )
 
+  // Captured once: the panel needs an *action*, and the standard props a slot
+  // receives only expose reads.
+  const layout = ctx.get('layout')
+
   ctx.slots.inject('main', () =>
     ctx.slots.register(
       {
         name: 'main',
         key: PANEL_ID,
       },
-      MainPanel,
+      function BoundMainPanel(props: MainPanelProps): ReactNode {
+        return (
+          <MainPanel
+            {...props}
+            onOpenChat={() => layout?.selectPanel(null)}
+          />
+        )
+      },
     ),
   )
 }

@@ -34,6 +34,7 @@ const overview: OverviewResponse = {
     createdAt: NOW,
     updatedAt: NOW,
   },
+  focus: null,
   nodes: [
     node('ml:goal', 'Machine Learning', 'goal', 'unconfirmed', null),
     node('ml:math', 'Math Foundations', 'prerequisite', 'blocked', 'ml:goal'),
@@ -48,7 +49,8 @@ const overview: OverviewResponse = {
 const client = {
   fetchOverview: () => Promise.resolve(overview),
   fetchNode: () => Promise.reject(new Error('not used')),
-  startLesson: () => Promise.reject(new Error('not used')),
+  fetchLesson: () => Promise.reject(new Error('not used')),
+  startFocus: () => Promise.reject(new Error('not used')),
 }
 
 /** Render through React so hooks are legal; calling a component directly would not be. */
@@ -69,7 +71,7 @@ describe('the panel shows the product, not a dashboard', () => {
 
   it('names the three panes in order', () => {
     const course = html.indexOf('Current course')
-    const surface = html.indexOf('The learning surface opens here')
+    const surface = html.indexOf('Learning surface')
     expect(course).toBeGreaterThanOrEqual(0)
     // The detail pane shows its empty prompt before the first selection.
     expect(html).toContain('Pick a node on the map')
@@ -108,13 +110,9 @@ describe('the panel shows the product, not a dashboard', () => {
 })
 
 describe('an empty runtime is a normal state', () => {
-  const empty: OverviewResponse = { ok: true, course: null, nodes: [], lessonCount: 0 }
+  const empty: OverviewResponse = { ok: true, course: null, nodes: [], focus: null, lessonCount: 0 }
   const html = panel({
-    client: {
-      fetchOverview: () => Promise.resolve(empty),
-      fetchNode: client.fetchNode,
-      startLesson: client.startLesson,
-    },
+    client: { ...client, fetchOverview: () => Promise.resolve(empty) },
     initialOverview: empty,
   })
 

@@ -19,10 +19,10 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-import type { CourseView, NodeView } from './contract.js'
-import { buildPrototypeLesson } from './lesson.js'
-import type { LessonRecord } from './lesson.js'
-import type { CourseRecord, NodeRecord, UdState } from './state.js'
+import type { CourseView, FocusView, NodeView } from './contract.js'
+import type { FocusPromptResult } from './prompt.js'
+import { focusPromptText } from './prompt.js'
+import type { CourseRecord, FocusRecord, NodeRecord, UdState } from './state.js'
 import { guarded } from './trust-fence.js'
 
 /** The slice of `webServer` this module uses, declared structurally. */
@@ -53,6 +53,16 @@ function nodeView(node: NodeRecord): NodeView {
     parentId: node.parentId ?? null,
     evidenceCount: node.evidence.length,
     updatedAt: node.updatedAt,
+  }
+}
+
+function focusView(focus: FocusRecord, node: NodeRecord): FocusView {
+  return {
+    courseId: focus.courseId,
+    nodeId: focus.nodeId,
+    nodeTitle: node.title,
+    startedAt: focus.startedAt,
+    status: focus.status,
   }
 }
 
@@ -130,19 +140,42 @@ function currentCourse(state: UdState): CourseRecord | undefined {
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0]
 }
 
+/** The active focus for one course, joined with its node, as a view. */
+function focusOf(state: UdState, courseId: string): FocusView | null {
+  const focus = state.readFocus(courseId)
+  if (focus === undefined || focus.status !== 'active') return null
+  const node = state.readNode(focus.nodeId)
+  if (node === undefined) return null
+  return focusView(focus, node)
+}
+
 function handleOverview(state: UdState, res: ServerResponse): void {
   const course = currentCourse(state)
   if (course === undefined) {
     // An empty state is a normal state, not an error: the panel says so.
-    sendJson(res, 200, { ok: true, course: null, nodes: [], lessonCount: 0 })
+    sendJson(res, 200, { ok: true, course: null, nodes: [], focus: null, lessonCount: 0 })
     return
   }
   sendJson(res, 200, {
     ok: true,
     course: courseView(course),
     nodes: state.listNodes(course.id).map(nodeView),
+    focus: focusOf(state, course.id),
     lessonCount: state.lessonCount(),
   })
+}
+
+/** `GET /lesson?nodeId=` — the lesson the tutor has written for a node, if any. */
+function handleLesson(
+  state: UdState,
+  course: CourseRecord | undefined,
+  nodeId: string,
+  res: ServerResponse,
+): void {
+  if (course === undefined) return fail(res, 404, 'no-course')
+  const node = state.readNode(nodeId)
+  if (node === undefined || node.courseId !== course.id) return fail(res, 404, 'no-such-node')
+  sendJson(res, 200, { ok: true, lesson: state.lessonForNode(nodeId) ?? null })
 }
 
 function handleNode(
@@ -179,8 +212,17 @@ function handleNode(
   })
 }
 
-async function handleStartLesson(
+/**
+ * `POST /focus { nodeId, sessionId? }` — what Start learning does.
+ *
+ * Two steps, in this order and deliberately: record the focus first, then try
+ * to wake the tutor. The record is what the panel and the tutor both read, so
+ * it must exist even when no agent can be reached; a failed wake is reported
+ * rather than rolled back.
+ */
+async function handleStartFocus(
   state: UdState,
+  deps: ApiDeps,
   course: CourseRecord | undefined,
   req: IncomingMessage,
   res: ServerResponse,
@@ -191,35 +233,45 @@ async function handleStartLesson(
   if (body === undefined) return fail(res, 400, 'bad-body')
   const nodeId = stringField(body, 'nodeId')
   if (nodeId === undefined) return fail(res, 400, 'missing-node-id')
+  const sessionId = stringField(body, 'sessionId')
 
-  const node = state.readNode(nodeId)
-  if (node === undefined || node.courseId !== course.id) return fail(res, 404, 'no-such-node')
-
-  // Idempotent: opening the same node twice returns the same lesson rather
-  // than accumulating copies.
-  const existing = state.lessonForNode(node.id)
-  if (existing !== undefined) {
-    sendJson(res, 200, { ok: true, lesson: existing, reused: true })
-    return
+  let focus: FocusRecord
+  try {
+    focus = await state.startFocus(course.id, nodeId, new Date().toISOString())
+  } catch (error) {
+    // Covers an unknown node and a node from another course alike.
+    return fail(res, 404, 'no-such-node', (error as Error).message)
   }
 
-  const lesson: LessonRecord = buildPrototypeLesson({
-    course,
-    node,
-    nodes: state.listNodes(course.id),
-    now: new Date().toISOString(),
+  const node = state.readNode(nodeId)
+  if (node === undefined) return fail(res, 404, 'no-such-node')
+
+  const outcome: FocusPromptResult = deps.prompt(sessionId, focusPromptText(course, node))
+  sendJson(res, 200, {
+    ok: true,
+    focus: focusView(focus, node),
+    prompted: outcome.prompted,
+    ...(outcome.reason === undefined ? {} : { promptReason: outcome.reason }),
   })
-  await state.writeLesson(lesson)
-  sendJson(res, 200, { ok: true, lesson, reused: false })
+}
+
+export interface ApiDeps {
+  readonly state: UdState
+  /**
+   * Wake the tutor for a session. Injected rather than reached for, so the API
+   * can be exercised without an agent registry.
+   */
+  readonly prompt: (sessionId: string | undefined, text: string) => FocusPromptResult
 }
 
 /**
  * Build the request handler.
  *
- * @param state - the open persistence handle.
+ * @param deps - the open state handle and the prompt hook.
  * @returns a handler suitable for `webServer.register`.
  */
-export function createApiHandler(state: UdState) {
+export function createApiHandler(deps: ApiDeps) {
+  const { state } = deps
   return async (req: IncomingMessage, res: ServerResponse): Promise<void> => {
     const method = req.method ?? 'GET'
     const url = new URL(req.url ?? '/', 'http://localhost')
@@ -232,7 +284,14 @@ export function createApiHandler(state: UdState) {
       if (nodeId === null || nodeId.length === 0) return fail(res, 400, 'missing-id')
       return handleNode(state, course, nodeId, res)
     }
-    if (method === 'POST' && route === '/lesson') return handleStartLesson(state, course, req, res)
+    if (method === 'GET' && route === '/lesson') {
+      const nodeId = url.searchParams.get('nodeId')
+      if (nodeId === null || nodeId.length === 0) return fail(res, 400, 'missing-node-id')
+      return handleLesson(state, course, nodeId, res)
+    }
+    if (method === 'POST' && route === '/focus') {
+      return handleStartFocus(state, deps, course, req, res)
+    }
 
     return fail(res, method === 'GET' || method === 'POST' ? 404 : 405, 'no-such-route')
   }
@@ -242,13 +301,13 @@ export function createApiHandler(state: UdState) {
  * Mount the API on the web server.
  *
  * @param server - the `webServer` service taken from `ctx`.
- * @param state - the open persistence handle.
+ * @param deps - the open state handle and the prompt hook.
  * @returns the route disposer.
  */
-export function registerApi(server: WebServerLike, state: UdState): () => void {
+export function registerApi(server: WebServerLike, deps: ApiDeps): () => void {
   return server.register({
     kind: 'prefix',
     path: API_PREFIX,
-    handler: guarded(createApiHandler(state)),
+    handler: guarded(createApiHandler(deps)),
   })
 }

@@ -25,25 +25,65 @@ export interface BlockRenderProps<B extends Block = Block> {
 
 type Renderer = (props: BlockRenderProps) => ReactNode
 
-/** Minimal inline formatter: `**bold**` and `` `code` `` only. */
+/**
+ * Inline formatting: `**bold**`, `` `code` ``, and inline math.
+ *
+ * Math is handled because the teaching brain writes it by convention —
+ * `\(...\)` inline and `\[...\]` display are the skill's own rule — and a
+ * STEM surface that prints the delimiters verbatim is unreadable.
+ *
+ * This is *styling*, not typesetting: the span is set apart and given a
+ * monospace face so the expression is legible. Real math rendering needs a
+ * typesetter (KaTeX or MathML), which is a later decision, not a silent gap.
+ */
+const INLINE_PATTERN = /(\*\*[^*]+\*\*|`[^`]+`|\\\([^)]*\\\))/g
+
 function inline(text: string): ReactNode[] {
-  return text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).filter(Boolean).map((part, index) => {
-    if (part.startsWith('**') && part.endsWith('**')) return <strong key={index}>{part.slice(2, -2)}</strong>
-    if (part.startsWith('`') && part.endsWith('`')) return <code key={index}>{part.slice(1, -1)}</code>
-    return part
-  })
+  return text
+    .split(INLINE_PATTERN)
+    .filter(Boolean)
+    .map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={index}>{part.slice(2, -2)}</strong>
+      }
+      if (part.startsWith('`') && part.endsWith('`')) return <code key={index}>{part.slice(1, -1)}</code>
+      if (part.startsWith('\\(') && part.endsWith('\\)')) {
+        return (
+          <span className="dt-math" key={index}>
+            {part.slice(2, -2)}
+          </span>
+        )
+      }
+      return part
+    })
 }
 
-/** Paragraph-per-blank-line, so a TextBlock reads as prose rather than one wall. */
+/**
+ * Split a text body into display-math blocks and prose paragraphs, then format
+ * each part inline. Blank-line separated, so a TextBlock reads as prose rather
+ * than one wall.
+ */
 function Paragraphs({ md }: { md: string }): ReactNode {
-  const paragraphs = md.split(/\n{2,}/).filter((part) => part.trim().length > 0)
+  const segments = md.split(/(\\\[[\s\S]*?\\\])/g).filter((part) => part.trim().length > 0)
   return (
     <>
-      {paragraphs.map((paragraph, index) => (
-        <p key={index} className="dt-block-md">
-          {inline(paragraph.trim())}
-        </p>
-      ))}
+      {segments.map((segment, index) => {
+        if (segment.startsWith('\\[') && segment.endsWith('\\]')) {
+          return (
+            <div className="dt-math-block" key={index}>
+              {segment.slice(2, -2).trim()}
+            </div>
+          )
+        }
+        return segment
+          .split(/\n{2,}/)
+          .filter((part) => part.trim().length > 0)
+          .map((paragraph, inner) => (
+            <p key={`${index}-${inner}`} className="dt-block-md">
+              {inline(paragraph.trim())}
+            </p>
+          ))
+      })}
     </>
   )
 }
