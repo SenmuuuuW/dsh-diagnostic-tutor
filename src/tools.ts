@@ -21,6 +21,7 @@ import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
 
 import { MAX_NODES_PER_UPDATE, acceptNewNodes, recordEvidence, setNodeState } from './diagnosis.js'
 import type { Violation } from './diagnosis.js'
+import { withLesson } from './handoff.js'
 import {
   BLOCK_SCHEMAS,
   BlockSchema,
@@ -201,7 +202,10 @@ function udtStatusTool(state: UdState): ToolDefinition {
       'Report the state of the learning runtime: the storage domain in use, whether learner state has been ' +
       'initialized, the learner profile, the registered learning goals and how many diagnosis-map nodes exist. ' +
       'Call this before starting a session to see whether there is existing state to continue from, and after ' +
-      'changing state to confirm what was stored. Read-only: it records no teaching decision.',
+      'changing state to confirm what was stored. ' +
+      'After judging an answer, record the outcome here and then record where the learner goes next with ' +
+      'udt_decide_next; a judged answer with no next step leaves them looking at a finished node. ' +
+      'Read-only: it records no teaching decision.',
     parameters: {},
     output: {
       schema: {
@@ -810,9 +814,14 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       '**diagram** {format: ascii|mermaid, spec, caption?}, **check** {prompt, expect?, hint?}.\n' +
       `At most ${MAX_BLOCKS_PER_UPDATE} blocks per call and ${MAX_BLOCKS_PER_LESSON} per lesson; a teaching unit is a few ` +
       'blocks, not a chapter.\n' +
+      '**Write your first unit as soon as you know it** rather than composing the whole thing first: ' +
+      'the blocks appear in the learner\'s surface the moment you send them, so a short first unit ' +
+      'turns a silent wait into visible progress. Send more later with append.\n' +
       'Default mode "append" adds to the current lesson; use "replace" only to correct what is there.\n' +
       'End a unit with a **check** block and then STOP — the learner answers in the chat, you judge it, ' +
-      'record the outcome with udt_map_update, and only then write the next unit.',
+      'record the outcome with udt_map_update, and only then write the next unit.\n' +
+      'When this node has reached a conclusion, record where the learner goes next with udt_decide_next — ' +
+      'that is what ends the focus and puts a next step in front of them.',
     parameters: {
       nodeId: {
         type: 'string',
@@ -921,6 +930,14 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
         updatedAt: now,
       })
       await state.writeLesson(lesson)
+
+      // The tutor has produced teaching for this node: the handoff that was
+      // waiting on it is now ready, and its timing chain closes.
+      // Atomic and monotonic: a lesson can only move a handoff forward, never
+      // back, so a late activity event cannot undo it.
+      if (state.readHandoff(nodeId) !== undefined) {
+        await state.updateHandoff(nodeId, (current) => withLesson(current, now))
+      }
 
       return {
         lessonId: lesson.id,

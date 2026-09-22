@@ -55,6 +55,8 @@ import {
 import type { NodeRelation, NodeState, Readiness } from './vocabulary.js'
 import { LessonSchema } from './lesson.js'
 import type { LessonKey, LessonRecord } from './lesson.js'
+import { HandoffSchema } from './handoff.js'
+import type { HandoffKey, HandoffRecord } from './handoff.js'
 
 /* -------------------------------------------------------------------------- */
 /* Records                                                                    */
@@ -228,6 +230,7 @@ export const NODES_TABLE = 'nodes'
 export const LESSONS_TABLE = 'lessons'
 export const FOCUS_TABLE = 'focus'
 export const NEXT_STEPS_TABLE = 'next_steps'
+export const HANDOFFS_TABLE = 'handoffs'
 
 /** Sentinel meaning "the global slot has never been written". */
 export const UNINITIALIZED = ''
@@ -247,6 +250,9 @@ export const udtDomain = defineDomain({
     // one is an upsert rather than an accumulation.
     [FOCUS_TABLE]: domainTable<FocusKey, FocusRecord>(FocusSchema),
     [NEXT_STEPS_TABLE]: domainTable<NextStepKey, NextStepRecord>(NextStepSchema),
+    // Keyed by target node, which is what makes "press Continue twice" one
+    // handoff rather than two.
+    [HANDOFFS_TABLE]: domainTable<HandoffKey, HandoffRecord>(HandoffSchema),
   },
 })
 
@@ -379,6 +385,31 @@ export interface UdState {
   latestNextStep(courseId: CourseKey): NextStepRecord | undefined
   /** A recommendation by key. */
   readNextStep(id: NextStepKey): NextStepRecord | undefined
+
+  /* handoffs --------------------------------------------------------------- */
+  readHandoff(targetNodeId: HandoffKey): HandoffRecord | undefined
+  /** Insert or replace one handoff. */
+  writeHandoff(record: HandoffRecord): Promise<HandoffRecord>
+  /**
+   * Apply a transition atomically.
+   *
+   * Two writers touch a handoff concurrently in normal operation — the
+   * first-activity listener and the tool that writes a lesson — and a plain
+   * read-modify-write loses one of them. The domain's `update` runs the
+   * transform on its single write chain, so the transitions serialise.
+   *
+   * @param targetNodeId - the handoff.
+   * @param transform - pure transform from current to next.
+   * @returns the stored record.
+   */
+  updateHandoff(
+    targetNodeId: HandoffKey,
+    transform: (record: HandoffRecord) => HandoffRecord,
+  ): Promise<HandoffRecord>
+  /** The handoff for whichever node is currently focused, if any. */
+  activeHandoff(): HandoffRecord | undefined
+  /** Every handoff, for diagnostics and tests. */
+  listHandoffs(): HandoffRecord[]
   /** The focus of the learner's active course, joined with its course and node. */
   activeFocus(): { focus: FocusRecord; course: CourseRecord; node: NodeRecord } | undefined
 
@@ -445,6 +476,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
   const lessons: KvTable<LessonKey, LessonRecord> = domain.table(LESSONS_TABLE)
   const focus: KvTable<FocusKey, FocusRecord> = domain.table(FOCUS_TABLE)
   const nextSteps: KvTable<NextStepKey, NextStepRecord> = domain.table(NEXT_STEPS_TABLE)
+  const handoffs: KvTable<HandoffKey, HandoffRecord> = domain.table(HANDOFFS_TABLE)
   const learner: DomainGlobal<LearnerProfile> = domain.global
 
   const listNodesFor = (courseId: CourseKey): NodeRecord[] =>
@@ -603,6 +635,28 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
     },
 
     readNextStep: (id) => nextSteps.get(id),
+
+    readHandoff: (targetNodeId) => handoffs.get(targetNodeId),
+
+    async writeHandoff(record) {
+      await handoffs.put(record.targetNodeId, record)
+      return record
+    },
+
+    async updateHandoff(targetNodeId, transform) {
+      const current = handoffs.get(targetNodeId)
+      if (current === undefined) throw new Error(`no handoff for "${targetNodeId}"`)
+      return handoffs.update(targetNodeId, (record) => transform(record))
+    },
+
+    listHandoffs: () => [...handoffs.entries()].map(([, record]) => record),
+
+    activeHandoff() {
+      const courseId = learner.get().activeCourseId
+      const record = courseId === undefined ? undefined : focus.get(courseId)
+      if (record === undefined) return undefined
+      return handoffs.get(record.nodeId)
+    },
 
     activeFocus() {
       const courseId = learner.get().activeCourseId

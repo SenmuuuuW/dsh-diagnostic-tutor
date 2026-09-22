@@ -55,6 +55,7 @@ const overview: OverviewResponse = {
   nodes,
   focus: null,
   nextStep: null,
+  handoff: null,
   lessonCount: 0,
 }
 
@@ -133,7 +134,7 @@ const fixtureClient: PanelClient = {
       status: 'active',
     }
     activeFocus = focus
-    return Promise.resolve({ ok: true, focus, prompted: true })
+    return Promise.resolve({ ok: true, focus, prompted: true, handoff: null })
   },
 }
 

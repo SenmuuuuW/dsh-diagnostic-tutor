@@ -7,7 +7,7 @@ it works out where you are stuck, decides the next best teaching step, and turns
 the whole process into a living learning map you can click through.
 
 > [!IMPORTANT]
-> **Status: `v0.0.7` — a node now ends in a decision.**
+> **Status: `v0.0.8` — the handoff is visible and measured.**
 > The learning surface docks in the right sidebar, so the map, the conversation
 > and the lesson are on screen at once and answering a check never means leaving
 > the lesson. Still no quiz engine, no RAG, no flashcards.
@@ -49,7 +49,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.0.7` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.0.8` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -189,6 +189,32 @@ it names a target:
 
 A move ends the focus and stamps `endedAt`; staying leaves it open. Nothing
 moves on its own — the learner reads the reason and presses Continue.
+
+### The wait, measured
+
+Moving to a node is not instant, so the wait is a **persisted record** keyed by
+target node — which makes it idempotent, refresh-proof, restart-proof and
+retryable — and it carries a timestamp per stage:
+
+```
+requestedAt → focusRecordedAt → promptedAt → firstActivityAt → lessonAt → observedAt
+```
+
+The same record is the progress line (`focus recorded` → `tutor requested` →
+`tutor working` → `lesson ready`, with elapsed seconds) and the measurement. A
+real run against DSH 0.1.6-alpha.2 and the real skill:
+
+| stage | when |
+| --- | --- |
+| focus persisted | 0.0s |
+| followup accepted | 0.0s |
+| first tutor activity | 1.0s |
+| lesson written | 26.1s |
+| UI observed | 26.1s |
+
+**The plugin costs about a second; the rest is the model writing.** A stall is
+derived from the record rather than stored, and retrying never touches the
+focus — a timeout is a statement about the wait, not about where the learner is.
 
 `Start learning` is a **user-role turn attributed to this plugin**, not injected
 context: `agent.inject()` would add model-visible context without waking an idle
@@ -345,8 +371,9 @@ shows a loader row exists.
 | `v0.0.4` | the client half: slot-mounted panel, clickable map, node detail, Learning Blocks, browser API |
 | `v0.0.5` | the loop: learning focus, tutor-written lessons, check → evidence → state, live panel |
 | `v0.0.6` | the learning surface docks beside the chat; both surfaces share one state |
-| `v0.0.7` | **current** — the tutor decides the next step; focus lifecycle; NEXT BEST STEP card |
-| `v0.0.8` | state export/reset, settings, i18n, math typesetting |
+| `v0.0.7` | the tutor decides the next step; focus lifecycle; NEXT BEST STEP card |
+| `v0.0.8` | **current** — handoff record, progress line, retry, and the latency measured |
+| `v0.0.9` | state export/reset, settings, i18n, math typesetting |
 | `v0.1.0` | **first playable MVP** — Goal → Map → Lesson → Check → Progress → Next |
 
 ## Trust

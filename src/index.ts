@@ -44,6 +44,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import { installRuntimeAdapter } from './adapter.js'
 import { API_PREFIX, registerApi } from './api.js'
 import type { WebServerLike } from './api.js'
+import { withActivity } from './handoff.js'
 import { promptSession } from './prompt.js'
 import { UDT_DOMAIN_NAME, openUdState } from './state.js'
 import { registerTools } from './tools.js'
@@ -150,6 +151,28 @@ export async function apply(ctx: Context): Promise<void> {
   const webServer = ctx.get('webServer')
   if (webServer) mountApi(webServer)
   else ctx.inject(['webServer'], (webCtx) => mountApi(webCtx.get('webServer')))
+
+  // First sign of life from the tutor.
+  //
+  // The handoff records when the tutor was asked; this records when it actually
+  // started, which is the difference between "waiting" and "nothing is
+  // happening". Only the first event counts, and only from the session the
+  // handoff asked in, so a busy conversation elsewhere cannot make a quiet
+  // handoff look alive.
+  ctx.on('session/event', (session, event) => {
+    const handoff = state.activeHandoff()
+    if (handoff === undefined || handoff.status !== 'prompted') return
+    if (handoff.sessionId !== undefined && String(session.id) !== handoff.sessionId) return
+    void event
+    // Atomic, and re-checked inside the transform: the lesson write races this
+    // listener, and a plain read-modify-write here would clobber a handoff that
+    // had already become ready.
+    void state
+      .updateHandoff(handoff.targetNodeId, (current) =>
+        current.status === 'prompted' ? withActivity(current, new Date().toISOString()) : current,
+      )
+      .catch(() => {})
+  })
 
   registerTools({ tools }, state)
   ctx.logger.debug(

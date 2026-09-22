@@ -108,11 +108,15 @@ describe('runtime adapter content', () => {
     // The map is diagnosis-driven, not a syllabus, and carries no scores.
     expect(RUNTIME_SEMANTICS_TEXT).toMatch(/diagnosis-driven and reversible/i)
     expect(RUNTIME_SEMANTICS_TEXT).toMatch(/no scores/i)
+    // A finished turn produces a decision, and nothing moves without the learner.
+    expect(RUNTIME_SEMANTICS_TEXT).toMatch(/udt_decide_next/)
+    expect(RUNTIME_SEMANTICS_TEXT).toMatch(/nothing moves until the learner chooses/i)
   })
 
   it('carries no teaching logic', () => {
     // If any of these appear, the adapter has started teaching.
-    for (const forbidden of ['Diagnose the', 'teach one', 'cognitive load', 'readiness gate', 'Clarify']) {
+    // The tutor decides these; the adapter must not name them at all.
+    for (const forbidden of ['Diagnose the', 'teach one', 'cognitive load', 'readiness gate', 'Clarify', 'advance to', 'practice until']) {
       expect(RUNTIME_SEMANTICS_TEXT).not.toContain(forbidden)
     }
   })
@@ -126,9 +130,13 @@ describe('runtime adapter content', () => {
   })
 
   it('stays a short note', () => {
-    // A second teaching brain would not fit in a paragraph.
-    expect(RUNTIME_SEMANTICS_TEXT.length).toBeLessThan(900)
-    expect(RUNTIME_SEMANTICS_TEXT.split('. ').length).toBeLessThanOrEqual(6)
+    // The bound exists to catch drift into a second teaching brain, not to
+    // forbid growth: the focus/handoff clause added in v0.0.8 is still runtime
+    // semantics — what the runtime holds, and which artifact a finished turn
+    // produces — and says nothing about what to teach or how to judge. It is
+    // also the difference between a tool the tutor owns and one it reaches for.
+    expect(RUNTIME_SEMANTICS_TEXT.length).toBeLessThan(1400)
+    expect(RUNTIME_SEMANTICS_TEXT.split('. ').length).toBeLessThanOrEqual(8)
   })
 
   it('sits after the tool descriptions and before the output sections', () => {

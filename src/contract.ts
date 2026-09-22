@@ -73,6 +73,24 @@ export interface NextStepView {
   createdAt: string
 }
 
+/**
+ * How a handoff is going, as a surface renders it.
+ *
+ * Every field is derived from the stored record and the clock; nothing here is
+ * written to the store as a progress state.
+ */
+export interface HandoffView {
+  /** The node being moved to — what a retry asks for again. */
+  targetNodeId: string
+  phase: 'focus-recorded' | 'tutor-requested' | 'tutor-working' | 'lesson-ready' | 'failed' | 'stalled'
+  label: string
+  elapsedMs: number
+  attempts: number
+  /** Per-stage durations so far, in milliseconds. Absent stages are omitted. */
+  stages: Record<string, number>
+  detail?: string
+}
+
 /** `GET /overview` — `course: null` means the learner has no goal yet. */
 export interface OverviewResponse {
   ok: true
@@ -81,6 +99,8 @@ export interface OverviewResponse {
   focus: FocusView | null
   /** A decision the learner has not acted on yet, if there is one. */
   nextStep: NextStepView | null
+  /** The handoff for the focused node, so a reload rebuilds the progress line. */
+  handoff: HandoffView | null
   lessonCount: number
 }
 
@@ -107,6 +127,10 @@ export interface FocusResponse {
   prompted: boolean
   /** Why it was not, when it was not. The focus is recorded either way. */
   promptReason?: string
+  /** The progress record for this target. */
+  handoff: HandoffView | null
+  /** True when an identical request was already in flight. */
+  deduped?: boolean
 }
 
 /** Every failure shape the API produces. */

@@ -71,6 +71,7 @@ const client: PanelClient = {
       nodes,
       focus: activeFocus,
   nextStep: null,
+  handoff: null,
       lessonCount: 1,
     }),
   fetchNode: (nodeId): Promise<NodeDetailResponse> => {
@@ -101,7 +102,7 @@ const client: PanelClient = {
       startedAt: NOW,
       status: 'active',
     }
-    return Promise.resolve({ ok: true, focus: activeFocus, prompted: true })
+    return Promise.resolve({ ok: true, focus: activeFocus, prompted: true, handoff: null })
   },
 }
 
@@ -120,6 +121,7 @@ function staticOverview(): OverviewResponse {
     nodes,
     focus: null,
   nextStep: null,
+  handoff: null,
     lessonCount: 1,
   }
 }

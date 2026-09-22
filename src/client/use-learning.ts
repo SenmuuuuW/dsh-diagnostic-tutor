@@ -14,6 +14,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type {
   FocusView,
+  HandoffView,
   LessonRecord,
   NextStepView,
   NodeDetailResponse,
@@ -27,6 +28,8 @@ export interface PanelClient {
   fetchNode(nodeId: string): Promise<NodeDetailResponse>
   fetchLesson(nodeId: string): Promise<LessonResponse>
   startFocus(nodeId: string, sessionId?: string): Promise<FocusResponse>
+  /** Optional: only the real client can report it. */
+  reportObserved?(nodeId: string): Promise<unknown>
 }
 
 type LessonResponse = Awaited<ReturnType<typeof realApi.fetchLesson>>
@@ -37,6 +40,7 @@ export const defaultClient: PanelClient = {
   fetchNode: realApi.fetchNode,
   fetchLesson: realApi.fetchLesson,
   startFocus: realApi.startFocus,
+  reportObserved: realApi.reportObserved,
 }
 
 /**
@@ -54,6 +58,8 @@ export interface LearningState {
   readonly focus: FocusView | null
   /** The tutor's recommendation, when the learner has not acted on it yet. */
   readonly nextStep: NextStepView | null
+  /** How the current handoff is going, for the progress line. */
+  readonly handoff: HandoffView | null
   /** The node whose detail is shown; the focus when nothing is picked. */
   readonly selectedId: string | null
   readonly detail: NodeDetailResponse | null
@@ -105,6 +111,8 @@ export function useLearning(options: {
   const liveNodeId = focusNodeId ?? selectedId
   const liveRef = useRef<string | null>(liveNodeId)
   liveRef.current = liveNodeId
+  /** The node whose lesson has already been reported as seen. */
+  const observedRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (initialOverview !== undefined) return
@@ -190,6 +198,13 @@ export function useLearning(options: {
         // The evidence trail and the node's state are what a check changes.
         const watched = liveRef.current
         if (watched !== null) setDetail(await client.fetchNode(watched))
+
+        // Tell the host the lesson reached a screen. Reported once per node, so
+        // the timing chain records the first sighting rather than every poll.
+        if (nextLesson.lesson !== null && observedRef.current !== nodeId) {
+          observedRef.current = nodeId
+          void client.reportObserved?.(nodeId)?.catch(() => {})
+        }
       } catch {
         // A failed poll is not worth surfacing; the next one may succeed.
       }
@@ -207,6 +222,7 @@ export function useLearning(options: {
     overview,
     focus,
     nextStep: overview?.nextStep ?? null,
+    handoff: overview?.handoff ?? null,
     selectedId,
     detail,
     lesson,

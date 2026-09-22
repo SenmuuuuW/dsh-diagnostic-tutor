@@ -5,6 +5,105 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.8] — reliable handoff and latency UX
+
+No new learning features. This release makes the wait between pressing Continue
+and seeing a lesson visible, measurable and survivable — and measures where the
+time actually goes.
+
+### The measurement (this is the headline)
+
+Instrumented from the runtime's own timestamps, on a real run against
+DSH 0.1.6-alpha.2 and the real skill:
+
+```
+focus persisted    0.0s
+followup accepted  0.0s
+first tutor activity 1.0s
+lesson written    26.1s
+UI observed       26.1s
+```
+
+**The plugin costs about one second. 25 of the 26 seconds is the model writing
+the lesson.** The earlier seven-minute turns were the same thing at a larger
+node: a long generation, not a stuck runtime. That is now a number rather than
+a suspicion.
+
+### Added
+
+- **`handoffs` table**, keyed by target node — which is what makes pressing
+  Continue twice one handoff instead of two. Every stage carries a timestamp:
+  `requestedAt → focusRecordedAt → promptedAt → firstActivityAt → lessonAt →
+  observedAt`. The record is the progress display *and* the measurement.
+- **The progress line** on both surfaces: `focus recorded` → `tutor requested`
+  → `tutor working` → `lesson ready`, with the elapsed seconds shown. A silent
+  wait is indistinguishable from a broken button, and a tutor that takes ninety
+  seconds should look like a tutor that takes ninety seconds.
+- **Retry** on `failed` and on a stall, and **the focus is never touched**:
+  a timeout is a statement about the wait, not about where the learner is.
+- **`POST /handoff/observed`** — the last leg, which only the browser can
+  answer: when a surface first rendered the lesson.
+- The `udt_lesson_update` description now asks for **a short first unit sent as
+  soon as it is known**, so the surface fills in early instead of staying blank
+  while the whole lesson is composed. The plugin still generates nothing.
+
+### Changed
+
+- **A stall is derived, never stored.** `handoffView` computes it from
+  `updatedAt`; writing a timeout into the record would make the store a clock,
+  and a quiet record is not a different record.
+
+### Fixed
+
+- **A read-modify-write race between the first-activity listener and the lesson
+  write.** Both read the record, transformed it, and wrote it back; the loser's
+  write was lost, so a handoff could read `working` while a lesson existed.
+  Transitions now go through the domain's atomic `update`, with the condition
+  re-checked inside the transform, and a lesson can only move a handoff forward.
+- The runtime adapter now states that a turn which reaches a conclusion ends by
+  recording the next step. That is runtime semantics — what the runtime holds
+  and which artifact a finished turn produces — not teaching content.
+
+### Tests
+
+217 across nineteen files. New (`handoff.test.ts`, 14): the stage offsets are
+cumulative from the request; only the first activity and the first sighting are
+kept; a stall is derived and changes nothing about the record; a failure keeps
+its reason; a double click is one handoff with one attempt; a failed wake leaves
+the focus standing; the record and its chain survive a restart; a lesson write
+moves the handoff to ready; `observed` is recorded once and refused for a node
+with no handoff.
+
+### The acceptance run — what completed and what did not
+
+Completed, with no store editing:
+
+- A focus recorded, tutor woken, lesson written and observed — chain measured
+  above;
+- the page fully reloaded, and the progress line rebuilt from the persisted
+  record with the same stage offsets (`--resume`), which is refresh and restart
+  proof;
+- `POST /focus` twice → one handoff, one attempt.
+
+**Not completed: the tutor never called `udt_decide_next`.** In three
+consecutive runs it judged the learner's answer correctly — writing real
+evidence (`check · advance-with-caution`) and moving the node to `explained` —
+and then went on teaching, never recording a decision. So the run stops at "A is
+finished, B is not chosen", and the A → Continue → B acceptance is **not met**.
+
+That is a finding about the teaching brain, not about the runtime: the handoff
+machinery it depends on is measured, tested and working, and v0.0.7 already
+demonstrated a real `step-down` decision with a prerequisite target recorded
+through the same tool. What is missing is that the skill does not treat
+"record the next step" as part of its own loop — its protocol says *decide the
+next move*, and it does that in the conversation rather than through the
+runtime's artifact. A tool description and a runtime-semantics sentence were not
+enough to change that.
+
+The fix belongs upstream, in the skill's protocol, which is the v2.1 amendment
+already planned before v0.1.0 — now with evidence for why it matters.
+
+
 ## [0.0.7] — decide, then move
 
 No new surface. This release makes "what happens after this node" a real step:

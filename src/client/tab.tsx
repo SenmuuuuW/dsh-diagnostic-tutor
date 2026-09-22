@@ -18,7 +18,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react'
 
 import type { NodeView, OverviewResponse } from '../contract.js'
-import { LessonBody, NextStepCard } from './blocks.jsx'
+import { HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
 import { buildMapTree, flattenTree, relationLabel, stateExplanation } from './model.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
@@ -87,7 +87,7 @@ export interface LearningTabProps {
  */
 export function LearningTab({ client, sessionId, initialOverview }: LearningTabProps): ReactNode {
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview })
-  const { overview, focus, nextStep, selectedId, detail, lesson, note, error, starting, loading, select } =
+  const { overview, focus, nextStep, handoff, selectedId, detail, lesson, note, error, starting, loading, select } =
     state
 
   // Show something on first paint: the focused node if there is one, else the
@@ -142,6 +142,12 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
       />
 
       <p className="dt-tab-section">Learning surface</p>
+      {handoff !== null && (
+        <HandoffLine
+          handoff={handoff}
+          onRetry={() => state.continueTo(handoff.targetNodeId)}
+        />
+      )}
       {lesson === null ? (
         <p className="dt-empty">
           {focus !== null

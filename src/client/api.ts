@@ -10,6 +10,7 @@
 
 import type {
   FocusResponse,
+  HandoffView,
   LessonResponse,
   NodeDetailResponse,
   OverviewResponse,
@@ -65,6 +66,20 @@ export function fetchNode(nodeId: string): Promise<NodeDetailResponse> {
 /** The lesson the tutor has written for a node; `lesson: null` until it has. */
 export function fetchLesson(nodeId: string): Promise<LessonResponse> {
   return request<LessonResponse>(`/lesson?nodeId=${encodeURIComponent(nodeId)}`)
+}
+
+/**
+ * Tell the host a surface has rendered the lesson.
+ *
+ * The last leg of the timing chain: everything before it is measured on the
+ * host, and this is the only part only the browser can answer.
+ */
+export function reportObserved(nodeId: string): Promise<{ handoff: HandoffView | null }> {
+  return request<{ handoff: HandoffView | null }>('/handoff/observed', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ nodeId }),
+  })
 }
 
 /**

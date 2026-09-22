@@ -20,6 +20,15 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 import type { CourseView, FocusView, NextStepView, NodeView } from './contract.js'
+import {
+  beginHandoff,
+  handoffView,
+  withFocusRecorded,
+  withObserved,
+  withPromptFailure,
+  withPrompted,
+} from './handoff.js'
+import type { HandoffView } from './handoff.js'
 import type { FocusPromptResult } from './prompt.js'
 import { focusPromptText } from './prompt.js'
 import type { CourseRecord, FocusRecord, NodeRecord, UdState } from './state.js'
@@ -188,6 +197,12 @@ function handleOverview(state: UdState, res: ServerResponse): void {
     nodes: state.listNodes(course.id).map(nodeView),
     focus: focusOf(state, course.id),
     nextStep: nextStepOf(state, course.id),
+    // The handoff for whichever node is focused, so a reload or a restart
+    // rebuilds the progress line instead of showing a blank wait.
+    handoff: (() => {
+      const focus = state.readFocus(course.id)
+      return focus === undefined ? null : handoffFor(state, focus.nodeId, Date.now())
+    })(),
     lessonCount: state.lessonCount(),
   })
 }
@@ -239,13 +254,31 @@ function handleNode(
   })
 }
 
+/** How long a handoff is left alone before another request is treated as a retry. */
+const HANDOFF_DEDUPE_MS = 3000
+
+/** Build the handoff view, which is what a surface renders. */
+function handoffFor(state: UdState, nodeId: string, nowMs: number): HandoffView | null {
+  const record = state.readHandoff(nodeId)
+  if (record === undefined) return null
+  return handoffView(record, nowMs, state.lessonForNode(nodeId) !== undefined)
+}
+
 /**
- * `POST /focus { nodeId, sessionId? }` — what Start learning does.
+ * `POST /focus { nodeId, sessionId? }` — what Start learning and Continue do.
  *
- * Two steps, in this order and deliberately: record the focus first, then try
- * to wake the tutor. The record is what the panel and the tutor both read, so
- * it must exist even when no agent can be reached; a failed wake is reported
- * rather than rolled back.
+ * Three steps, in this order and deliberately:
+ *
+ *   1. **record the handoff and the focus** — this is the durable part, and it
+ *      must exist even when no agent can be reached;
+ *   2. **wake the tutor** — a failure here is reported, never rolled back, since
+ *      the focus is what both sides read;
+ *   3. **stamp the prompt** — so the timing chain has a start and the UI has
+ *      something to say while the model runs.
+ *
+ * Idempotent by target node. A second request while the same handoff is fresh
+ * returns it untouched, which is what makes a double click harmless; a request
+ * after it has gone quiet is a retry and bumps the attempt count.
  */
 async function handleStartFocus(
   state: UdState,
@@ -262,24 +295,81 @@ async function handleStartFocus(
   if (nodeId === undefined) return fail(res, 400, 'missing-node-id')
   const sessionId = stringField(body, 'sessionId')
 
+  const node = state.readNode(nodeId)
+  if (node === undefined || node.courseId !== course.id) return fail(res, 404, 'no-such-node')
+
+  const now = new Date()
+  const previous = state.readHandoff(nodeId)
+
+  // Double-click protection: the same target, still in flight and recent, is
+  // the same handoff. Not an error — just nothing new to do.
+  if (
+    previous !== undefined &&
+    previous.status !== 'failed' &&
+    now.getTime() - Date.parse(previous.requestedAt) < HANDOFF_DEDUPE_MS
+  ) {
+    const focus = state.readFocus(course.id)
+    sendJson(res, 200, {
+      ok: true,
+      focus: focus === undefined ? null : focusView(focus, node),
+      prompted: previous.promptedAt !== undefined,
+      handoff: handoffFor(state, nodeId, now.getTime()),
+      deduped: true,
+    })
+    return
+  }
+
+  let handoff = beginHandoff({
+    courseId: course.id,
+    fromNodeId: previous?.fromNodeId ?? state.readFocus(course.id)?.nodeId ?? nodeId,
+    targetNodeId: nodeId,
+    now: now.toISOString(),
+    ...(sessionId === undefined ? {} : { sessionId }),
+    ...(previous === undefined ? {} : { previous }),
+  })
+  await state.writeHandoff(handoff)
+
   let focus: FocusRecord
   try {
-    focus = await state.startFocus(course.id, nodeId, new Date().toISOString())
+    focus = await state.startFocus(course.id, nodeId, now.toISOString())
   } catch (error) {
     // Covers an unknown node and a node from another course alike.
     return fail(res, 404, 'no-such-node', (error as Error).message)
   }
-
-  const node = state.readNode(nodeId)
-  if (node === undefined) return fail(res, 404, 'no-such-node')
+  handoff = withFocusRecorded(handoff, new Date().toISOString())
+  await state.writeHandoff(handoff)
 
   const outcome: FocusPromptResult = deps.prompt(sessionId, focusPromptText(course, node))
+  handoff = outcome.prompted
+    ? withPrompted(handoff, new Date().toISOString())
+    : withPromptFailure(handoff, new Date().toISOString(), outcome.reason ?? 'the tutor was not reached')
+  await state.writeHandoff(handoff)
+
   sendJson(res, 200, {
     ok: true,
     focus: focusView(focus, node),
     prompted: outcome.prompted,
     ...(outcome.reason === undefined ? {} : { promptReason: outcome.reason }),
+    handoff: handoffFor(state, nodeId, Date.now()),
   })
+}
+
+/** `POST /handoff/observed { nodeId }` — a surface has rendered the lesson. */
+async function handleObserved(
+  state: UdState,
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<void> {
+  const body = await readJsonBody(req)
+  if (body === undefined) return fail(res, 400, 'bad-body')
+  const nodeId = stringField(body, 'nodeId')
+  if (nodeId === undefined) return fail(res, 400, 'missing-node-id')
+
+  const record = state.readHandoff(nodeId)
+  if (record === undefined) return fail(res, 404, 'no-handoff')
+
+  await state.writeHandoff(withObserved(record, new Date().toISOString()))
+  sendJson(res, 200, { ok: true, handoff: handoffFor(state, nodeId, Date.now()) })
 }
 
 export interface ApiDeps {
@@ -318,6 +408,9 @@ export function createApiHandler(deps: ApiDeps) {
     }
     if (method === 'POST' && route === '/focus') {
       return handleStartFocus(state, deps, course, req, res)
+    }
+    if (method === 'POST' && route === '/handoff/observed') {
+      return handleObserved(state, req, res)
     }
 
     return fail(res, method === 'GET' || method === 'POST' ? 404 : 405, 'no-such-route')

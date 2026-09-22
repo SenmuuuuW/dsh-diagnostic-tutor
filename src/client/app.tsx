@@ -22,7 +22,7 @@
 
 import type { ReactNode } from 'react'
 
-import { LessonBody, NextStepCard } from './blocks.jsx'
+import { HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
 import { buildMapTree, flattenTree, isFilledState, relationLabel, stateExplanation } from './model.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
@@ -77,7 +77,7 @@ export function LearningPanel({
     initialOverview,
     onStarted: onFocusStarted,
   })
-  const { overview, focus, nextStep, selectedId, detail, lesson, note, error, starting, loading } = state
+  const { overview, focus, nextStep, handoff, selectedId, detail, lesson, note, error, starting, loading } = state
   const rows = flattenTree(buildMapTree(overview?.nodes ?? []))
   const confirmed = (overview?.nodes ?? []).filter((node) => node.state === 'confirmed').length
 
@@ -208,6 +208,9 @@ export function LearningPanel({
               <LessonBody blocks={lesson.blocks} />
             </div>
           </>
+        )}
+        {handoff !== null && lesson === null && focus !== null && (
+          <HandoffLine handoff={handoff} onRetry={() => state.continueTo(handoff.targetNodeId)} />
         )}
         {nextStep !== null && (
           <NextStepCard

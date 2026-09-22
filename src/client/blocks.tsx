@@ -16,7 +16,7 @@
 
 import type { ReactNode } from 'react'
 
-import type { Block, NextStepView } from '../contract.js'
+import type { Block, HandoffView, NextStepView } from '../contract.js'
 
 /** Props every renderer receives. */
 export interface BlockRenderProps<B extends Block = Block> {
@@ -241,6 +241,43 @@ export function NextStepCard({
       <button type="button" className="dt-primary" onClick={onContinue} disabled={busy === true}>
         {busy === true ? 'Starting…' : moves ? 'Continue learning' : 'Continue'}
       </button>
+    </div>
+  )
+}
+
+/**
+ * The handoff progress line.
+ *
+ * A model turn is not instant, and a silent wait is indistinguishable from a
+ * broken button — so the wait is narrated: which stage it is in, how long it
+ * has been, and how many attempts. When it goes quiet the learner gets a retry
+ * rather than a dead end, and retrying **never touches the focus**: the record
+ * is a statement about the wait, never about where they are.
+ *
+ * The elapsed time is shown because it is honest. A tutor that takes ninety
+ * seconds should look like a tutor that takes ninety seconds, not like a hang.
+ */
+export function HandoffLine({
+  handoff,
+  onRetry,
+}: {
+  handoff: HandoffView
+  onRetry: () => void
+}): ReactNode {
+  const retryable = handoff.phase === 'failed' || handoff.phase === 'stalled'
+  const seconds = Math.round(handoff.elapsedMs / 1000)
+  return (
+    <div className="dt-handoff" data-phase={handoff.phase}>
+      <span className="dt-handoff-dot" aria-hidden="true" />
+      <span className="dt-handoff-label">{handoff.label}</span>
+      <span className="dt-handoff-time">{seconds}s</span>
+      {handoff.attempts > 1 && <span className="dt-handoff-try">attempt {handoff.attempts}</span>}
+      {handoff.detail !== undefined && <span className="dt-handoff-detail">{handoff.detail}</span>}
+      {retryable && (
+        <button type="button" className="dt-handoff-retry" onClick={onRetry}>
+          Ask again
+        </button>
+      )}
     </div>
   )
 }

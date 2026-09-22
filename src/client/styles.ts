@@ -190,6 +190,32 @@ const CSS = `
   font-size: 10px; letter-spacing: .07em; text-transform: uppercase;
   color: var(--dt-accent); margin-bottom: 4px;
 }
+/* ---- handoff progress -------------------------------------------------- */
+.dt-handoff {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin: 8px 0 4px; padding: 7px 10px; border-radius: 8px;
+  background: var(--dt-surface, #f7f8fa); border: 1px solid var(--dt-border, #e3e6ea);
+  font-size: 12px;
+}
+.dt-handoff-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--dt-accent, #4f46e5);
+  animation: dt-pulse 1.4s ease-in-out infinite;
+}
+.dt-handoff[data-phase="lesson-ready"] .dt-handoff-dot { background: #1f8b4c; animation: none; }
+.dt-handoff[data-phase="failed"] .dt-handoff-dot,
+.dt-handoff[data-phase="stalled"] .dt-handoff-dot { background: #c0392b; animation: none; }
+@keyframes dt-pulse { 0%,100% { opacity: 1 } 50% { opacity: .3 } }
+.dt-handoff-label { font-weight: 550; }
+.dt-handoff-time, .dt-handoff-try, .dt-handoff-detail { color: var(--dt-muted, #6b7280); font-size: 11px; }
+.dt-handoff-detail { flex-basis: 100%; }
+.dt-handoff-retry {
+  margin-left: auto; padding: 3px 10px; border-radius: 6px;
+  border: 1px solid var(--dt-border, #e3e6ea); background: transparent;
+  color: inherit; font: inherit; font-size: 11px; cursor: pointer;
+}
+.dt-handoff-retry:hover { background: var(--dt-bg, #fff); }
+@media (prefers-reduced-motion: reduce) { .dt-handoff-dot { animation: none } }
+
 /* ---- next best step ---------------------------------------------------- */
 /* The recommendation reads as a conclusion, not a notification: it says where
    the last node landed, where it sends the learner, and why. */
