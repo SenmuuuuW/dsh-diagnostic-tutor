@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023"],
+    // DOM is needed by the browser half under src/client. The host build
+    // (tsconfig.build.json) narrows this back to ES2023 only, so host code
+    // reaching for a DOM global fails the build rather than the typecheck.
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "types": ["node"],
@@ -15,6 +18,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "jsx": "react-jsx",
 
     // Enforces the cross-version discipline mechanically: every type-only
     // import from @deepseek-ai/* MUST be written as `import type`, which the

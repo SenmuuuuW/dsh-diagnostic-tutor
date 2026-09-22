@@ -5,6 +5,83 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.4] — the learning UI
+
+The runtime now has a real interface. A three-pane panel in the DSH web GUI
+shows the course, its diagnosis map, the selected node, and a learning surface
+— and the map, the panel and the API are all exercised against real persisted
+state. Still no model-generated lessons and no quiz engine.
+
+### Added
+
+- **Client half** — `dsh.client` + `exports["./client"]`, built by tsdown into a
+  single classic script registered through `window.__ModuleLoader__.load({ id })`
+  with `id` equal to the package name. React and the Cordis service stay
+  external and come from DSH's shared module table; nothing else is required,
+  there is no dynamic import, and no host code (zod, storage) reaches the
+  browser.
+- **The panel**, registered into two stable slots: `sidebar.panellist` (a `list`,
+  which draws the sidebar icon) and `main` (a `keyed` slot, which is the page).
+  The sidebar `id` and the panel `key` come from one constant, because a drift
+  between them means the icon opens nothing.
+- **Diagnosis map rendering** — the flat node list becomes a tree, drawn with
+  per-state marks and words. State is always a word from the skill's vocabulary;
+  there is no percentage, score, star or progress bar anywhere.
+- **Node detail** — state, relation, parent and child context, the evidence
+  trail, and a plain-language explanation of what the state means.
+- **`Start learning`** → a **learning surface**.
+- **Learning Block schema** (host) and **renderer registry** (browser),
+  deliberately separate. v0.0.4 supports `text`, `example`, `diagram`, `check`;
+  an unknown block type renders a readable placeholder instead of throwing, so a
+  lesson authored by a newer host still renders in an older browser half, and
+  adding a type means adding one registry entry.
+- **Lesson record** — `id`, `courseId`, `nodeId`, `title`, `blocks`, `origin`,
+  timestamps. `origin` is `prototype` for everything this release produces: the
+  lesson is a **deterministic projection of stored state**, not generated
+  teaching content, and the record says so rather than relying on convention.
+- **Host API** at `/diagnostic-tutor/api` (`overview`, `node`, `lesson`) with
+  the browser trust fence: loopback Host, loopback Origin, and no cross-site
+  `sec-fetch-site`. Views only — no storage path, no domain handle, no raw
+  record crosses the wire.
+- **`preview/`** — a standalone page that runs the *real built bundle* over
+  fixture data, with no DSH and no agent, so the UI can be iterated without
+  booting anything.
+- **`scripts/screenshot.mjs`** — drives Chrome over the DevTools Protocol to
+  capture the panel from a live profile, including the node → lesson flow.
+
+### Fixed
+
+- **A node caught in a parent cycle vanished from the map.** A cycle has no
+  root, so the tree walk reached nothing and the node was silently dropped.
+  Unreachable nodes are now rendered as roots: showing a node in the wrong place
+  beats hiding it.
+- **A missing web server left the panel's route mount non-deterministic.** The
+  route is now registered eagerly when `webServer` is already present, with the
+  deferred injection kept only as the fallback for a late provider.
+- Map rows no longer squeeze the title: the state pill occupies its own grid
+  column, which matters most in the narrow sidebar width.
+
+### Tests
+
+160 tests across fifteen files. New in this release: the map model and
+vocabulary (pure), panel and block rendering via `renderToStaticMarkup`,
+interaction in a real DOM (mount → click a node → detail updates → `Start
+learning` → the surface, and unmount leaving no residue), the built bundle's
+loader contract (single file, right id, only allowlisted requires, no host
+imports) plus **executing it through a simulated module loader** and asserting
+both slot registrations, the API and every trust-fence rule, and that the plugin
+mounts one prefix route and disposes it on unload.
+
+### Verified by hand against DSH 0.1.6-alpha.2
+
+- DSH serves the built bundle **byte-for-byte identical** to `lib/client.js`;
+- the module appears in the boot manifest as
+  `{"id":"dsh-diagnostic-tutor","url":"/plugins/??dsh-diagnostic-tutor/client.js&rev=…"}`;
+- the panel renders the real persisted course with its six nodes, and clicking
+  the blocked node then `Start learning` produces a lesson carrying all four
+  block types. Screenshots in `preview/`: `dsh-ui.png`, `dsh-ui-detail.png`,
+  `dsh-ui-lesson.png`.
+
 ## [0.0.3] — goal → detection → diagnosis map
 
 The runtime now carries real product semantics. A goal can be recorded, the

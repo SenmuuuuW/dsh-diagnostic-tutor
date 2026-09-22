@@ -7,10 +7,11 @@ it works out where you are stuck, decides the next best teaching step, and turns
 the whole process into a living learning map you can click through.
 
 > [!IMPORTANT]
-> **Status: `v0.0.3` — goal, teaching-brain detection, and a diagnosis map.**
-> A learner can state a goal; the runtime records it, finds the teaching brain
-> if it is installed, and grows a diagnosis map one observation at a time.
-> There is still no lesson page and no UI. See [Roadmap](#roadmap).
+> **Status: `v0.0.4` — there is now a UI.**
+> The DSH web GUI gets a three-pane learning panel: the course, its diagnosis
+> map, the selected node, and a learning surface. Lessons are **prototypes** —
+> deterministic projections of stored state, not generated teaching content.
+> There is no quiz engine and no model-written lesson yet. See [Roadmap](#roadmap).
 
 ---
 
@@ -49,7 +50,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.0.3` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.0.4` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -180,13 +181,89 @@ It carries no teaching logic, names no file or version, and is contributed only
 when the teaching brain is present. It is a **v0.0.x bridge** — the intent is to
 resolve the tension in the skill itself before v0.1.0.
 
+## The panel
+
+The browser half registers two things and nothing else: a sidebar icon
+(`sidebar.panellist`, a `list`) and the page it opens (`main`, a `keyed` slot).
+The sidebar `id` and the panel `key` come from one constant — a drift between
+them would leave the icon opening nothing.
+
+It reads as one sentence, left to right:
+
+```
+[ Course + Diagnosis Map ]  →  [ Selected node ]  →  [ Learning surface ]
+```
+
+There is no dashboard: three panes, and the map is the navigation.
+
+### Learning Blocks
+
+A block is `{ id, type, content, metadata? }`. The **schema is host-side**
+(zod-validated at the durable boundary) and the **renderers are browser-side**,
+keyed by `type`:
+
+| Type | Content |
+| --- | --- |
+| `text` | `md` — markdown, with the skill's `\(...\)` math convention |
+| `example` | `title`, `steps[]`, `takeaway?` |
+| `diagram` | `format` (`ascii` \| `mermaid`), `spec`, `caption?` |
+| `check` | `prompt`, `expect?`, `hint?` — the stop-and-wait surface |
+
+Adding Formula, Code, Comparison, Practice or Resource later means adding one
+registry entry, never rewriting the lesson renderer. An **unknown type renders a
+readable placeholder** rather than throwing, so a lesson authored by a newer
+host still renders here.
+
+### Browser API
+
+Three calls, at `/diagnostic-tutor/api`:
+
+| Route | Returns |
+| --- | --- |
+| `GET /overview` | the current course and its whole map (`course: null` on a first run) |
+| `GET /node?id=` | one node with its evidence, parent and children |
+| `POST /lesson {nodeId}` | the prototype lesson, built once and reused after that |
+
+Every request passes a **trust fence**: a bare `ctx.webServer.register()` route
+inherits no authentication, so the route checks that the request arrived at a
+loopback `Host`, from a loopback `Origin`, and is not marked cross-site. Anything
+else gets `403` and no body. The browser receives **views only** — no storage
+path, no domain handle, no raw record.
+
+## Preview
+
+The panel takes its API as a prop, so the UI runs with no DSH and no agent:
+
+```sh
+pnpm build && pnpm preview     # then open the printed URL
+```
+
+`preview/index.html` loads the **real built bundle** through a
+`__ModuleLoader__` shim over `preview/fixture.js`, which models a learner who
+said "I want to learn machine learning" with shaky maths:
+
+```
+Machine Learning            [goal, unconfirmed]
+├─ Math Foundations         [prerequisite, blocked]
+│  ├─ Linear Algebra        [part-of, unconfirmed]
+│  ├─ Calculus              [part-of, unconfirmed]
+│  └─ Probability           [part-of, unconfirmed]
+└─ Python                   [prerequisite, unconfirmed]
+```
+
+To capture the panel from a *live* profile instead:
+
+```sh
+pnpm screenshot "<dsh-url-with-token>" preview/dsh-ui.png
+```
+
 ## Development
 
 ```sh
 pnpm install
-pnpm typecheck   # tsc --noEmit
-pnpm test        # unit, guard, and real-composition tests
-pnpm build       # tsc -> lib/ (ESM + .d.ts)
+pnpm typecheck   # tsc --noEmit  (host and client)
+pnpm test        # unit, guard, DOM, and real-composition tests
+pnpm build       # tsc -> lib/ (host) + tsdown -> lib/client.js
 ```
 
 `tests/harness.ts` mounts the **same storage stack the standard profiles use**
@@ -202,10 +279,10 @@ shows a loader row exists.
 | --- | --- |
 | `v0.0.1` | installable bundle, plugin loads, guard + composition tests |
 | `v0.0.2` | `udt` storage domain, learner round-trip, `udt_status` tool |
-| `v0.0.3` | **current** — teaching-brain detection, `udt_goal_create`, the diagnosis map (`udt_map_get` / `udt_map_update`), runtime adapter |
-| `v0.0.4` | lesson page composed of Learning Blocks (text / formula / example / quiz / check) |
-| `v0.0.5` | check → mastery update → next best lesson (the closed loop) |
-| `v0.0.6` | the client half: a real map you can click, plus state export/reset, settings, i18n |
+| `v0.0.3` | teaching-brain detection, `udt_goal_create`, the diagnosis map (`udt_map_get` / `udt_map_update`), runtime adapter |
+| `v0.0.4` | **current** — the client half: slot-mounted panel, clickable map, node detail, Learning Blocks, prototype lesson, browser API |
+| `v0.0.5` | model-written lessons and the check → mastery update → next best lesson loop |
+| `v0.0.6` | state export/reset, settings, i18n |
 | `v0.1.0` | **first playable MVP** — Goal → Map → Lesson → Check → Progress → Next |
 
 ## Trust

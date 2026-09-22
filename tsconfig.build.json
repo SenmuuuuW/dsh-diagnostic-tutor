@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
+    "lib": ["ES2023"],
     "outDir": "lib",
     "rootDir": "src",
     "declaration": true,
@@ -9,5 +10,6 @@
     "declarationDir": "lib/types",
     "sourceMap": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/client"]
 }

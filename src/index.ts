@@ -42,6 +42,8 @@
 import type { Context } from '@deepseek-ai/cordis'
 
 import { installRuntimeAdapter } from './adapter.js'
+import { API_PREFIX, registerApi } from './api.js'
+import type { WebServerLike } from './api.js'
 import { UDT_DOMAIN_NAME, openUdState } from './state.js'
 import { registerTools } from './tools.js'
 import { describeUdtStatus, detectUdtSkill } from './udt.js'
@@ -125,6 +127,23 @@ export async function apply(ctx: Context): Promise<void> {
   // The runtime-semantics note only has a tension to resolve when the skill is
   // actually installed; without it there is nothing to explain.
   if (udt.available) installRuntimeAdapter(ctx)
+
+  // Mount the browser API if this profile has a web surface.
+  //
+  // Resolved eagerly first: a profile's web server is mounted by the base and
+  // web-app bundles, which always precede a user bundle, so it is present by
+  // the time this runs. The deferred `ctx.inject` is the fallback for the rare
+  // case where the service arrives later — awaiting the outer fiber would not
+  // wait for that nested fiber, so preferring the eager path also keeps the
+  // load deterministic for callers and tests.
+  const mountApi = (server: unknown): void => {
+    if (!server) return
+    ctx.effect(() => registerApi(server as WebServerLike, state))
+    ctx.logger.debug(`[diagnostic-tutor] browser API mounted at ${API_PREFIX}`)
+  }
+  const webServer = ctx.get('webServer')
+  if (webServer) mountApi(webServer)
+  else ctx.inject(['webServer'], (webCtx) => mountApi(webCtx.get('webServer')))
 
   registerTools({ tools }, state)
   ctx.logger.debug(

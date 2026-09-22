@@ -52,6 +52,8 @@ import {
   TeachingModeSchema,
 } from './vocabulary.js'
 import type { NodeRelation, NodeState } from './vocabulary.js'
+import { LessonSchema } from './lesson.js'
+import type { LessonKey, LessonRecord } from './lesson.js'
 
 /* -------------------------------------------------------------------------- */
 /* Records                                                                    */
@@ -166,6 +168,7 @@ export const UDT_DOMAIN_NAME = 'udt'
 export const UDT_DOMAIN_VERSION = 1
 export const COURSES_TABLE = 'courses'
 export const NODES_TABLE = 'nodes'
+export const LESSONS_TABLE = 'lessons'
 
 /** Sentinel meaning "the global slot has never been written". */
 export const UNINITIALIZED = ''
@@ -180,6 +183,7 @@ export const udtDomain = defineDomain({
   tables: {
     [COURSES_TABLE]: domainTable<CourseKey, CourseRecord>(CourseSchema),
     [NODES_TABLE]: domainTable<NodeKey, NodeRecord>(NodeSchema),
+    [LESSONS_TABLE]: domainTable<LessonKey, LessonRecord>(LessonSchema),
   },
 })
 
@@ -198,6 +202,7 @@ export interface UdStateSnapshot {
   readonly learner: LearnerProfile
   readonly courseCount: number
   readonly nodeCount: number
+  readonly lessonCount: number
   readonly courses: readonly { id: string; title: string; status: CourseStatus }[]
 }
 
@@ -267,6 +272,15 @@ export interface UdState {
   /** The course plus its map. */
   readMap(courseId: CourseKey): CourseMap | undefined
 
+  /* lessons ---------------------------------------------------------------- */
+  readLesson(id: LessonKey): LessonRecord | undefined
+  /** The lesson already stored for a node, if any. */
+  lessonForNode(nodeId: NodeKey): LessonRecord | undefined
+  /** Insert or fully replace one lesson. */
+  writeLesson(record: LessonRecord): Promise<LessonRecord>
+  /** Number of lessons across every course. */
+  lessonCount(): number
+
   snapshot(): UdStateSnapshot
   /** Release the backend unit. Idempotent. */
   close(): Promise<void>
@@ -318,6 +332,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
   const domain: Domain<UdtDomain> = await facility.open(udtDomain)
   const courses: KvTable<CourseKey, CourseRecord> = domain.table(COURSES_TABLE)
   const nodes: KvTable<NodeKey, NodeRecord> = domain.table(NODES_TABLE)
+  const lessons: KvTable<LessonKey, LessonRecord> = domain.table(LESSONS_TABLE)
   const learner: DomainGlobal<LearnerProfile> = domain.global
 
   const listNodesFor = (courseId: CourseKey): NodeRecord[] =>
@@ -394,6 +409,18 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       return { course, nodes: listNodesFor(courseId) }
     },
 
+    readLesson: (id) => lessons.get(id),
+
+    lessonForNode: (nodeId) =>
+      [...lessons.entries()].map(([, record]) => record).find((record) => record.nodeId === nodeId),
+
+    async writeLesson(record) {
+      await lessons.put(record.id, record)
+      return record
+    },
+
+    lessonCount: () => lessons.size,
+
     snapshot() {
       const profile = learner.get()
       return {
@@ -403,6 +430,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
         learner: profile,
         courseCount: courses.size,
         nodeCount: nodes.size,
+        lessonCount: lessons.size,
         courses: [...courses.entries()].map(([id, record]) => ({
           id,
           title: record.title,

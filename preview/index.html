@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" data-diagnostic-tutor-preview>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Universal Diagnostic Tutor — panel preview</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #fff; color: #1c1f23;
+    font-family: ui-sans-serif, system-ui, "PingFang SC", "Helvetica Neue", sans-serif; }
+  #host { height: 100%; }
+  .preview-bar {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 8px 16px; border-bottom: 1px solid #e3e6ea; background: #f7f8fa;
+    font-size: 11px; color: #6b7280;
+  }
+  .preview-bar b { color: #1c1f23; font-weight: 600; }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-left: auto; }
+  .legend span { display: inline-flex; align-items: center; gap: 4px; }
+  .legend i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; box-sizing: border-box; }
+  .legend i[data-filled="true"] { background: currentColor; }
+  #app { height: calc(100% - 37px); }
+</style>
+</head>
+<body>
+<div class="preview-bar">
+  <b>Preview</b>
+  <span>no DSH, no agent — the real built bundle over fixture data</span>
+  <span class="legend" id="legend"></span>
+</div>
+<div id="app"><div id="host"></div></div>
+
+<!-- React UMD globals; the panel's bundle keeps react external. -->
+<script src="/node_modules/react/umd/react.production.min.js"></script>
+<script src="/node_modules/react-dom/umd/react-dom.production.min.js"></script>
+<script>
+/* Minimal __ModuleLoader__ shim: capture the plugin's exported module. */
+window.__capturedModule = null;
+window.__ModuleLoader__ = {
+  load(def) {
+    const require = (name) => {
+      if (name === "react") return window.React;
+      if (name === "react-dom") return window.ReactDOM;
+      if (name === "react-dom/client") return window.ReactDOM;
+      if (name === "react/jsx-runtime") {
+        const R = window.React;
+        const jsx = (type, props) => R.createElement(type, props);
+        return { Fragment: R.Fragment, jsx, jsxs: jsx };
+      }
+      throw new Error("preview require: " + name);
+    };
+    const mod = def.factory(require);
+    window.__capturedModule = mod && mod.exports ? mod.exports : mod;
+  },
+};
+</script>
+<script src="/lib/client.js"></script>
+<script src="/preview/fixture.js"></script>
+<script>
+(function () {
+  const M = window.__capturedModule;
+  const host = document.getElementById("host");
+  if (!M) { host.textContent = "module load failed — run `pnpm build` first"; return; }
+  if (typeof M.LearningPanel !== "function") {
+    host.textContent = "bundle did not export LearningPanel: " + Object.keys(M).join(", ");
+    return;
+  }
+
+  /* Run the real apply() against a stub context, so the preview also exercises
+     the plugin's own entry point (style injection happens here). */
+  M.apply({
+    effect: (fn) => { fn(); return () => {}; },
+    slots: { inject: () => () => {}, register: () => () => {} },
+  });
+
+  /* Legend for the seven status terms, drawn with the panel's own classes. */
+  const states = ["unconfirmed","explained","practiced","checked","weak","blocked","confirmed"];
+  const legend = document.getElementById("legend");
+  states.forEach((state) => {
+    const el = document.createElement("span");
+    el.className = "dt-state-" + state;
+    el.innerHTML = '<i class="dt-dot" data-filled="' + (state === "confirmed") + '"></i>' + state;
+    legend.appendChild(el);
+  });
+
+  window.ReactDOM.createRoot(host).render(
+    window.React.createElement(M.LearningPanel, { client: window.createFixtureClient() })
+  );
+})();
+</script>
+</body>
+</html>
