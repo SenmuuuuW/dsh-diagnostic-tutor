@@ -2,31 +2,74 @@
 
 > **From a Tutor Skill to a Learning Runtime.**
 
-A diagnosis-first learning app that runs inside [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness):
-it works out where you are stuck, decides the next best teaching step, and turns
-the whole process into a living learning map you can click through.
+Diagnosis-first AI learning runtime for DeepSeek Harness — map what you need,
+learn interactively, and move to the next best step.
 
-> [!IMPORTANT]
-> **Status: `v0.0.9` — a full A → B run works on DSH 0.1.7 + UDT v2.1.**
-> The learning surface docks in the right sidebar, so the map, the conversation
-> and the lesson are on screen at once and answering a check never means leaving
-> the lesson. Still no quiz engine, no RAG, no flashcards.
+![The learning runtime in DeepSeek Harness: the conversation on the left, the diagnosis map and the lesson docked beside it](preview/dsh-ui-v0107-ab.png)
+
+## Early development
+
+`v0.0.x`. The learning loop works end to end — a real goal, a real diagnosis
+map, a tutor-written lesson, a check answered in the chat, recorded evidence,
+and a next step the tutor chose — but this is not a finished product. Expect
+breaking changes, and expect gaps to be documented rather than papered over.
+Not built yet, and not claimed anywhere below: PDF or document ingestion, RAG,
+flashcards, resource libraries, analytics, or course generation.
+
+## Two halves, one system
+
+The unusual thing about this project is that **the teaching and the runtime are
+separate programs**, and only one of them makes decisions.
+
+| | Owns | Where |
+| --- | --- | --- |
+| **[Universal Diagnostic Tutor](https://github.com/SenmuuuuW/universal-diagnostic-tutor-skill) skill**<br>= **the teaching brain** | What to teach next: diagnosis, teaching moves, pacing, when a check is passed, what the next step is | that repository (v2.1, MIT) |
+| **`dsh-diagnostic-tutor`**<br>= **the learning runtime** | Where it is kept: persistent learner state, the diagnosis map, structured lessons, the UI | here |
+
+That split is not a packaging detail. This repository contains **no teaching
+logic**: no rule that says "if blocked, explain the prerequisite", no rule that
+says "if wrong, give a simpler example". Those live in the skill. The runtime
+stores what the tutor decided, shows it, and never decides it.
+
+## The loop
+
+```
+Goal  →  Diagnose  →  Map  →  Learn  →  Check  →  Decide  →  Next lesson
+ │                      │        │         │         │            │
+ │                      │        │         │         │            └ the tutor names
+ │                      │        │         │         │              the next node, with a reason
+ │                      │        │         │         └ the learner answers in the chat
+ │                      │        │         └ the tutor writes the lesson into the side panel
+ │                      │        └ nodes appear only as diagnosis reveals them
+ │                      └ the tutor asks what you actually know
+ └ stated in your own words, in the chat
+```
+
+Read left to right, that is also the guarantee: **the runtime never advances on
+its own.** A decision is stored with the tutor's reason, shown to the learner,
+and waits to be pressed.
 
 ---
 
-## What this is (and is not)
+## Why this is not just another AI tutor
 
-This is **not** a prompt wrapper, and it is **not** a re-implementation of a
-tutor. It is the runtime half of a two-part system:
+Most "AI tutor" projects are a prompt wrapped around a chat box: the model
+teaches, and nothing about the learner survives the conversation. Three things
+are different here.
 
-| Part | Owns | Lives in |
-| --- | --- | --- |
-| **[Universal Diagnostic Tutor](https://github.com/SenmuuuuW/universal-diagnostic-tutor-skill) skill** | *What to teach next* — diagnosis, teaching moves, pacing, mastery judgement | that repository (v2.0, MIT) |
-| **This plugin** | *State, artifacts and presentation* — persistent learner state, the learning map, structured lessons, the UI | here |
+**The teaching brain is a real, separate artifact.** Diagnosis, teaching moves,
+pacing and mastery judgement live in a written skill with its own protocols —
+not in a system prompt this repository invented. This plugin depends on it and
+refuses to duplicate it.
 
-The plugin deliberately contains **no teaching logic**. Teaching decisions stay
-in the skill, which this plugin treats as the canonical teaching brain and
-depends on rather than duplicates.
+**State is real, and it is the learner's.** A goal, a map of what you actually
+know, and a record of the evidence behind each status. Nothing is `confirmed`
+without a check to back it, nothing is scored, and it is all visible and
+exportable.
+
+**The runtime does not decide.** The tutor names the next step and says why; the
+runtime stores that and shows it; the learner presses Continue. There is no
+path by which progress advances on its own.
 
 Its state vocabulary is not invented here either: nodes carry the skill's own
 seven status terms, and checks carry its six readiness outcomes.
@@ -256,18 +299,19 @@ Detection results stay **internal** — logged at `debug`, absent from every too
 output. The skill forbids naming its files, versions or repository in
 learner-facing text, and this runtime will not be what leaks them.
 
-### The temporary runtime adapter
+### How the two halves agree
 
 The skill's guardrails say mastery tracking must never become "scores,
-databases, hidden memory, or a curriculum roadmap". This runtime deliberately
-persists state and renders a map, so it tells the teaching brain which reading
-is in force: one short system-prompt section noting that state here is explicit
-and user-visible, that stored state is evidence to be re-checked rather than
-truth, and that the map is diagnosis-driven and reversible.
+databases, hidden memory, or a curriculum roadmap", while this runtime
+deliberately persists state and renders a map.
 
-It carries no teaching logic, names no file or version, and is contributed only
-when the teaching brain is present. It is a **v0.0.x bridge** — the intent is to
-resolve the tension in the skill itself before v0.1.0.
+Until `v0.0.8` that tension was bridged from this side: a short system-prompt
+section explained the runtime's storage semantics to the teaching brain. UDT
+v2.1's `learning_runtime_contract.md` now states all of it in the skill's own
+words — what a runtime may hold, when a decision is recorded, and that a turn
+which judged an answer is *not finished* until the next step is recorded — so
+the bridge was **deleted rather than kept as a second voice**. The plugin got
+better at it, which is the evidence it belonged upstream.
 
 ## The panel
 
@@ -367,15 +411,14 @@ shows a loader row exists.
 | --- | --- |
 | `v0.0.1` | installable bundle, plugin loads, guard + composition tests |
 | `v0.0.2` | `udt` storage domain, learner round-trip, `udt_status` tool |
-| `v0.0.3` | teaching-brain detection, `udt_goal_create`, the diagnosis map (`udt_map_get` / `udt_map_update`), runtime adapter |
+| `v0.0.3` | teaching-brain detection, `udt_goal_create`, the diagnosis map (`udt_map_get` / `udt_map_update`) |
 | `v0.0.4` | the client half: slot-mounted panel, clickable map, node detail, Learning Blocks, browser API |
 | `v0.0.5` | the loop: learning focus, tutor-written lessons, check → evidence → state, live panel |
 | `v0.0.6` | the learning surface docks beside the chat; both surfaces share one state |
 | `v0.0.7` | the tutor decides the next step; focus lifecycle; NEXT BEST STEP card |
 | `v0.0.8` | handoff record, progress line, retry, and the latency measured |
 | `v0.0.9` | **current** — DSH 0.1.7 compatibility, and the first real A → B |
-| `v0.1.0` | state export/reset, settings, i18n, math typesetting |
-| `v0.1.0` | **first playable MVP** — Goal → Map → Lesson → Check → Progress → Next |
+| `v0.1.0` | **first playable MVP** — state export/reset, settings, i18n, math typesetting |
 
 ## Trust
 

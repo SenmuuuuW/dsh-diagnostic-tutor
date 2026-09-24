@@ -4,10 +4,10 @@ Scope: four real, shipping DSH (DeepSeek Harness) plugins, read from the actual 
 
 | # | Repo | Local path | npm | Version (local) |
 |---|---|---|---|---|
-| 1 | dsh-study (鲸鱼私塾) | `/Users/sunjungong/Documents/DSH/dsh-study` | **not published** (`npm view dsh-study` → 404) | 0.1.0 |
-| 2 | dsh-whale-report (深迹 DeepTrace) | `/Users/sunjungong/Documents/DSH/dsh-whale-report` | **published** `dsh-whale-report@0.6.1` | 0.6.1 |
-| 3 | dsh-minecraft | `/Users/sunjungong/Documents/DSH/dsh-minecraft` | name **taken by another project** on npm (`dsh-minecraft@0.12.4` = Ruqii/dsh-minecraft, a Mineflayer bot) | 0.2.0 |
-| 4 | dsh-better-sidebar (`-011` copy) | `/Users/sunjungong/Documents/DSH/dsh-better-sidebar-011` | **published** `dsh-better-sidebar@0.19.1` (this copy is the 0.11.0 *extracted npm tarball*, no `.git`, no tsconfig) | 0.11.0 |
+| 1 | dsh-study (鲸鱼私塾) | `<local-checkout>/dsh-study` | **not published** (`npm view dsh-study` → 404) | 0.1.0 |
+| 2 | dsh-whale-report (深迹 DeepTrace) | `<local-checkout>/dsh-whale-report` | **published** `dsh-whale-report@0.6.1` | 0.6.1 |
+| 3 | dsh-minecraft | `<local-checkout>/dsh-minecraft` | name **taken by another project** on npm (`dsh-minecraft@0.12.4` = Ruqii/dsh-minecraft, a Mineflayer bot) | 0.2.0 |
+| 4 | dsh-better-sidebar (`-011` copy) | `<local-checkout>/dsh-better-sidebar-011` | **published** `dsh-better-sidebar@0.19.1` (this copy is the 0.11.0 *extracted npm tarball*, no `.git`, no tsconfig) | 0.11.0 |
 
 Runtime facts measured on this machine (this is what a new plugin must be compatible with):
 
@@ -775,7 +775,7 @@ Two things stand out for launchability: (1) the **"Model Experience" section** �
 
 README `:52-64`:
 ```bash
-dsh plugin --profile web add link:/Users/sunjungong/Documents/DSH/dsh-minecraft   # local dev install
+dsh plugin --profile web add link:<local-checkout>/dsh-minecraft   # local dev install
 dsh plugin --profile web remove dsh-minecraft
 ```
 plus the most valuable operational note in the four READMEs (`:64-75`):

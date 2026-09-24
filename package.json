@@ -2,6 +2,14 @@
   "name": "dsh-diagnostic-tutor",
   "version": "0.0.9",
   "description": "Diagnosis-first learning runtime for DeepSeek Harness — a live learning map, structured lessons, and persistent learner state, driven by the Universal Diagnostic Tutor skill.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SenmuuuuW/dsh-diagnostic-tutor.git"
+  },
+  "homepage": "https://github.com/SenmuuuuW/dsh-diagnostic-tutor#readme",
+  "bugs": {
+    "url": "https://github.com/SenmuuuuW/dsh-diagnostic-tutor/issues"
+  },
   "type": "module",
   "license": "MIT",
   "engines": {

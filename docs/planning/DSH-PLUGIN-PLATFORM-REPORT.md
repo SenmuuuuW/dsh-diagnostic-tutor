@@ -5,8 +5,8 @@ read side by side:
 
 | Tag | What it is | Path |
 |---|---|---|
-| **A / rc.1** | source checkout `0.1.5-rc.1` | `/Users/sunjungong/Documents/DSH/deepseek-harness-alpha` |
-| **B / alpha.2** | the **running** host, npm `@deepseek-ai/dsh@0.1.6-alpha.2` via npx | `/Users/sunjungong/.npm/_npx/750cc96126099c02/node_modules/@deepseek-ai` |
+| **A / rc.1** | source checkout `0.1.5-rc.1` | `<dsh-checkout>` |
+| **B / alpha.2** | the **running** host, npm `@deepseek-ai/dsh@0.1.6-alpha.2` via npx | `<npx-cache>/@deepseek-ai` |
 
 Confirmed running: `ps` shows `node .../.bin/dsh web` under `npm exec @deepseek-ai/dsh@0.1.6-alpha.2 web` (pid 13285).
 Where a fact exists in both I cite the rc.1 source (it has line numbers); where the running alpha.2 differs
@@ -1024,7 +1024,7 @@ constant the update check reads and require exact string equality.
 |---|---|---|
 | **dsh-whale-report** | `dsh plugin --profile web add "github:SenmuuuuW/dsh-whale-report"` + "restart dsh web"; separately documents `npm install dsh-whale-report@0.6.1` and warns it does **not** register as a plugin; states the compat baseline (`DSH 0.1.1-rc.2`, peer `>=0.1.1-rc.2 <0.2.0`) | **Best.** Two clearly-labelled tracks, an explicit "npm install doesn't register" warning, and a stated compatibility baseline with the restart requirement |
 | **dsh-study** | `dsh plugin --profile web add "github:<your repo>/dsh-study"` + "restart dsh web" | Good but the repo is a **placeholder** (`<你的仓库>`) and the package is **not published to npm** |
-| **dsh-minecraft** | `dsh plugin --profile web add link:/Users/sunjungong/…/dsh-minecraft` | **Bad.** A hand-written absolute path on the author's machine. Plus a genuinely valuable warning that `dependencies` and `dsh.profile.bundles` are two separate manifests, and the `disabled: true` patch recipe for pausing |
+| **dsh-minecraft** | `dsh plugin --profile web add link:~/…/dsh-minecraft` | **Bad.** A hand-written absolute path on the author's machine. Plus a genuinely valuable warning that `dependencies` and `dsh.profile.bundles` are two separate manifests, and the `disabled: true` patch recipe for pausing |
 | **dsh-better-sidebar** | `curl -fsSL …/install.sh \| bash` / `irm …/install.ps1 \| iex`, then "hard-refresh" | **Most polished UX, most machinery.** Idempotent script that (1) pre-writes `allowBuilds` for node-pty/protobufjs, (2) pre-writes `minimumReleaseAgeExclude` to bypass pnpm 11's 24h quarantine, (3) runs `dsh plugin --profile web add dsh-better-sidebar`, (4) removes stale manual mount lines. Also documents plain `npx -y --package @deepseek-ai/dsh dsh plugin --profile web add dsh-better-sidebar`, a pinned-version form, `--restart`, `--dry-run`, and a rollback |
 
 ### 8.2 What makes install hard

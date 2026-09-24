@@ -1,6 +1,6 @@
 # DSH Backend Plugin Architecture — Code-Grounded Reference
 
-**Source of truth:** `/Users/sunjungong/Documents/DSH/deepseek-harness-alpha`
+**Source of truth:** `<dsh-checkout>`
 **Version:** root `package.json` `"version": "0.1.5-rc.1"` (every workspace package carries the same version — verified by `grep -h '"version"' packages/*/*/package.json | sort -u` → one unique value)
 **Vendored Cordis:** `vendor/cordis/package.json` → `@deepseek-ai/cordis@4.0.2`
 **Schemastery:** `vendor/schemastery/package.json` → `@deepseek-ai/schemastery@3.18.2`
@@ -8,7 +8,7 @@
 
 Everything below is read from source. Where a claim comes from documentation rather than code, the doc is cited; where the doc and code disagree, code wins and the discrepancy is noted.
 
-> **Note on `packages/examples`:** it exists but is **empty** (`ls -la packages/examples/` → only `.` and `..`). The real plugin examples in this checkout are `packages/extensions/tool-cordis`, `packages/extensions/cordis-host-runner`, `packages/guard/timeout-policy`, `packages/hooks/hooks-claude-code`, `packages/hooks/hooks-codex`, `packages/skill/skill-badge`, `packages/skill/skill-filesystem`. A complete *out-of-tree* plugin exists at `/Users/sunjungong/Documents/DSH/dsh-minecraft` (the `mc__show_sketch` author) and is used throughout as the third-party reference.
+> **Note on `packages/examples`:** it exists but is **empty** (`ls -la packages/examples/` → only `.` and `..`). The real plugin examples in this checkout are `packages/extensions/tool-cordis`, `packages/extensions/cordis-host-runner`, `packages/guard/timeout-policy`, `packages/hooks/hooks-claude-code`, `packages/hooks/hooks-codex`, `packages/skill/skill-badge`, `packages/skill/skill-filesystem`. A complete *out-of-tree* plugin exists at `<local-checkout>/dsh-minecraft` (the `mc__show_sketch` author) and is used throughout as the third-party reference.
 
 ---
 
@@ -166,7 +166,7 @@ The two roles a plugin author cares about:
 
 ### 1.5 Real third-party manifest (the ground truth)
 
-`/Users/sunjungong/Documents/DSH/dsh-minecraft/package.json` (**abridged** — the real file also exports `./rcon`, `./sidebar`, `./sketch` and carries a legacy `dshClient` block plus `devDependencies`/`scripts`):
+`<local-checkout>/dsh-minecraft/package.json` (**abridged** — the real file also exports `./rcon`, `./sidebar`, `./sketch` and carries a legacy `dshClient` block plus `devDependencies`/`scripts`):
 
 ```json
 {
@@ -2012,5 +2012,5 @@ The generated, authoritative service-method reference (with full JSDoc and sourc
 | Every config field | `docs/config-catalog.md` |
 | Persistence catalog | `docs/persistence-catalog.md`, `docs/subsystems/storage.md` |
 | Real plugin to copy | `packages/guard/timeout-policy/src/index.ts`, `packages/skill/skill-badge/src/index.ts`, `packages/hooks/hooks-claude-code/src/index.ts`, `packages/extensions/tool-cordis/src/index.ts` |
-| Real *out-of-tree* plugin to copy | `/Users/sunjungong/Documents/DSH/dsh-minecraft/` (`package.json`, `cordis.patch.yml`, `tsconfig.build.json`, `tsdown.config.ts`, `src/index.ts`, `src/tools.ts`) |
+| Real *out-of-tree* plugin to copy | `<local-checkout>/dsh-minecraft/` (`package.json`, `cordis.patch.yml`, `tsconfig.build.json`, `tsdown.config.ts`, `src/index.ts`, `src/tools.ts`) |
 | Failure stories worth reading first | `docs/postmortem/0001-acp-default-export-drops-inject.md`, `docs/postmortem/0002-js-expression-disabled-filesystem-tools.md` |

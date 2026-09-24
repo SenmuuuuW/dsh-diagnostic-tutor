@@ -8,15 +8,30 @@
     "packageName": "dsh-diagnostic-tutor"
   },
   "names": {
-    "pluginNames": ["diagnostic-tutor"],
-    "loaderIds": ["diagnostic-tutor"],
-    "services": ["diagnosticTutor"],
-    "tools": ["udt_state", "udt_roadmap", "udt_lesson", "udt_check", "udt_next"],
+    "pluginNames": [
+      "diagnostic-tutor"
+    ],
+    "loaderIds": [
+      "diagnostic-tutor"
+    ],
+    "services": [
+      "diagnosticTutor"
+    ],
+    "tools": [
+      "udt_status",
+      "udt_goal_create",
+      "udt_map_get",
+      "udt_map_update",
+      "udt_lesson_update",
+      "udt_decide_next"
+    ],
     "commands": [],
     "skills": [],
     "skillProviders": [],
     "events": [],
-    "settingsNamespaces": ["diagnostic-tutor"],
+    "settingsNamespaces": [
+      "diagnostic-tutor"
+    ],
     "routes": []
   }
 }

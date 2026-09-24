@@ -1,6 +1,6 @@
 # DSH Web-GUI Client Plugins — Source-Grounded Research Report
 
-Scope: DSH v0.1.5-rc.1 source checkout at `/Users/sunjungong/Documents/DSH/deepseek-harness-alpha`, plus three working third-party plugin repos (`dsh-better-sidebar-011`, `dsh-minecraft`, `dsh-whale-report`).
+Scope: DSH v0.1.5-rc.1 source checkout at `<dsh-checkout>`, plus three working third-party plugin repos (`dsh-better-sidebar-011`, `dsh-minecraft`, `dsh-whale-report`).
 
 Everything below is read from real source. Where I could not find something, I say so explicitly.
 
@@ -28,7 +28,7 @@ The three real plugins studied all use channel **A** but **not** `ctx.slots` for
 
 ### 1.1 Declaration in `package.json`
 
-A package joins the web client graph by declaring `dsh.client` and exporting a `./client` subpath. Authoritative type: `DshClientManifest` in [`packages/util/package-manifest/src/types.ts:44`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/util/package-manifest/src/types.ts):
+A package joins the web client graph by declaring `dsh.client` and exporting a `./client` subpath. Authoritative type: `DshClientManifest` in [`packages/util/package-manifest/src/types.ts:44`](<dsh-checkout>/packages/util/package-manifest/src/types.ts):
 
 ```ts
 /** Client module declaration read by client-modules and the client build. */
@@ -93,13 +93,13 @@ Real example, `dsh-better-sidebar-011/package.json`:
 "dshClient": { "inject": [], "platform": "web", "immediately": true }
 ```
 
-**`dshClient` is not read anywhere in v0.1.5-rc.1.** Grep of the whole checkout for `dshClient` finds only doc comments (`packages/client/ui-jobs/src/index.ts:5`, `packages/extensions/cordis-client-runner/src/index.ts:5`, `packages/extensions/ui-cordis/src/index.ts:5`); the only parser is `parseDshClient`, which reads `pkg.dsh.client` ([`packages/client/modules/src/index.ts:186-206`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/client/modules/src/index.ts)). It is dead metadata in those two repos.
+**`dshClient` is not read anywhere in v0.1.5-rc.1.** Grep of the whole checkout for `dshClient` finds only doc comments (`packages/client/ui-jobs/src/index.ts:5`, `packages/extensions/cordis-client-runner/src/index.ts:5`, `packages/extensions/ui-cordis/src/index.ts:5`); the only parser is `parseDshClient`, which reads `pkg.dsh.client` ([`packages/client/modules/src/index.ts:186-206`](<dsh-checkout>/packages/client/modules/src/index.ts)). It is dead metadata in those two repos.
 
 **The split is therefore:**
 - **Host (node) half** = `main` / `exports["."]` → `lib/index.js`, a Cordis plugin (`export const name/inject/apply/Config`), run in the DSH host process, listed as a Loader row via `cordis.patch.yml`.
 - **Client (browser) half** = `exports["./client"]` → `lib/client.js`, a single CJS file whose entire body is wrapped in `window.__ModuleLoader__.load({ id, factory })`.
 
-There is **no** `dsh.client.entry` field, no subpath other than `./client` (resolver: `clientExportOf`, [`packages/client/modules/src/index.ts:209-220`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/client/modules/src/index.ts)).
+There is **no** `dsh.client.entry` field, no subpath other than `./client` (resolver: `clientExportOf`, [`packages/client/modules/src/index.ts:209-220`](<dsh-checkout>/packages/client/modules/src/index.ts)).
 
 ### 1.2 The scan (host side)
 
@@ -112,7 +112,7 @@ There is **no** `dsh.client.entry` field, no subpath other than `./client` (reso
 
 ### 1.3 The wire: `window.__DSH_BOOT__`
 
-[`packages/client/modules/src/client/manifest.ts:50`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/client/modules/src/client/manifest.ts):
+[`packages/client/modules/src/client/manifest.ts:50`](<dsh-checkout>/packages/client/modules/src/client/manifest.ts):
 
 ```ts
 export interface WebBootEntry {
@@ -172,7 +172,7 @@ export const inject = ['slots', 'sessions', 'connection', 'workspaces', 'locale'
 
 ### 2.1 Bundler and output
 
-Official preset: `clientBundle()` in [`packages/client/tsdown.client.ts:107`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/client/tsdown.client.ts). It emits two faces per package:
+Official preset: `clientBundle()` in [`packages/client/tsdown.client.ts:107`](<dsh-checkout>/packages/client/tsdown.client.ts). It emits two faces per package:
 
 - **node half** — `lib/index.js`, ESM, `platform: 'node'`, `target: 'es2024'` (`clientLibraryConfig`, line 227).
 - **browser half** — `lib/client.js`, **CJS**, `platform: 'browser'` (`clientConfig`, line 428), with:
@@ -197,7 +197,7 @@ Key facts:
 - **Bundle purity gate** (`dsh-client-bundle-purity`, line 489) is a build-time error for any `@deepseek-ai/*` value import that is not (a) a module-table row, (b) a vendored library (`cosmokit|schemastery`, line 69), (c) in `INLINE_SAFE` (line 61), or (d) a generated `/remote` contribution (line 72). Error text: *"cross-plugin value imports are forbidden; declare a non-default module request or collaborate through cordis services (type-only imports are erased and never reach this gate)"*.
 - **CSS handling**: `x.module.css` → hashed class map + injected `<style data-plugin>` at factory execution; `x.css?inline` → exported text; plain `.css` → global injected style. All via lightningcss inside the bundle (`styleInjectionModule`, lines 30-45). There is **no separate CSS artifact** for module-table plugins.
 
-The baseline module table — the exact set of specifiers a client bundle may `require()` — is [`packages/client/web/src/platform.ts:8`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/client/web/src/platform.ts):
+The baseline module table — the exact set of specifiers a client bundle may `require()` — is [`packages/client/web/src/platform.ts:8`](<dsh-checkout>/packages/client/web/src/platform.ts):
 
 ```ts
 export const PLATFORM_MODULES = [
@@ -290,9 +290,9 @@ pnpm run dev:web   # terminal 2: watch tsc -b tsconfig.client.json + tsdown watc
 
 ### 3.1 The registry: `ctx.slots`
 
-Pure core: [`packages/client/ui-slots/src/index.ts`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/client/ui-slots/src/index.ts). Cordis service wrapper: [`packages/client/ui-renderer/src/client/registry.ts:95`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/client/ui-renderer/src/client/registry.ts) (`class SlotRegistry extends Service`, `super(ctx, 'slots')` at line 134).
+Pure core: [`packages/client/ui-slots/src/index.ts`](<dsh-checkout>/packages/client/ui-slots/src/index.ts). Cordis service wrapper: [`packages/client/ui-renderer/src/client/registry.ts:95`](<dsh-checkout>/packages/client/ui-renderer/src/client/registry.ts) (`class SlotRegistry extends Service`, `super(ctx, 'slots')` at line 134).
 
-Declaration-merge contract ([`packages/client/ui-slots/src/index.ts:26`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/client/ui-slots/src/index.ts)):
+Declaration-merge contract ([`packages/client/ui-slots/src/index.ts:26`](<dsh-checkout>/packages/client/ui-slots/src/index.ts)):
 
 ```ts
 /** Slot contract table. Owners extend via declaration merging; entries are {@link SlotEntryDef}. */
@@ -344,7 +344,7 @@ inject(key: keyof SlotMap & string, callback: () => SlotInjectionEffect): () => 
 
 Other service methods: `install(renderer)` (242, boot-once), `installLocale(face)` (259), `provideRoot(contribution)` (275), `installScope(scope, adapter)` (300), `bindStoreScope` (326), and the ctx-level `renderSlot('root')` guard (line 350: *"ctx-level renderSlot only renders 'root'"*).
 
-Canonical plugin code from the shipped docs ([`docs/subsystems/slots.md:19-42`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/docs/subsystems/slots.md)):
+Canonical plugin code from the shipped docs ([`docs/subsystems/slots.md:19-42`](<dsh-checkout>/docs/subsystems/slots.md)):
 
 ```tsx
 import type { Context } from '@deepseek-ai/cordis'
@@ -371,7 +371,7 @@ export function apply(ctx: Context): void {
 
 ### 3.2 Complete UI contribution-point table
 
-This is generated from `SlotMap` declarations + `slots.register()` call sites by `pnpm run gen-client-catalog` into [`packages/extensions/cordis-client-runner/src/client/slot-catalog.ts`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/extensions/cordis-client-runner/src/client/slot-catalog.ts) (`CLIENT_SLOT_API`, 61 entries). `risk=shadows-shipped-ui` means registering replaces shipped UI (a second entry at the same priority throws; a *dynamic* package gets an auto-lower priority so it wins).
+This is generated from `SlotMap` declarations + `slots.register()` call sites by `pnpm run gen-client-catalog` into [`packages/extensions/cordis-client-runner/src/client/slot-catalog.ts`](<dsh-checkout>/packages/extensions/cordis-client-runner/src/client/slot-catalog.ts) (`CLIENT_SLOT_API`, 61 entries). `risk=shadows-shipped-ui` means registering replaces shipped UI (a second entry at the same priority throws; a *dynamic* package gets an auto-lower priority so it wins).
 
 | Slot key | kind | scope | risk | declared by (source) |
 |---|---|---|---|---|
@@ -432,8 +432,8 @@ Standard hook seats by scope (from the same catalog + `docs/subsystems/slots.md:
 
 ### 3.3 Component library / styling
 
-- **No Tailwind, no component library.** [`docs/web-styling.md:16`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/docs/web-styling.md): *"Use CSS Modules and `clsx`; do not add a component library or Tailwind."*
-- Design system = [`packages/client/ui-theme`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/client/ui-theme/README.md): six sheets in `src/styles/` (`base.css`, `corner-shape.css`, `design-platform.css`, `scrollbar.css`, `gradient-shadow-text.css`, `shiki.css`), exposing `--dsw-*` tokens. Feature components use **semantic aliases** `--dsw-alias-*` (e.g. `var(--dsw-alias-bg-layer-1)`, `var(--dsw-alias-label-primary)`), never literal colors (`docs/web-styling.md:17`).
+- **No Tailwind, no component library.** [`docs/web-styling.md:16`](<dsh-checkout>/docs/web-styling.md): *"Use CSS Modules and `clsx`; do not add a component library or Tailwind."*
+- Design system = [`packages/client/ui-theme`](<dsh-checkout>/packages/client/ui-theme/README.md): six sheets in `src/styles/` (`base.css`, `corner-shape.css`, `design-platform.css`, `scrollbar.css`, `gradient-shadow-text.css`, `shiki.css`), exposing `--dsw-*` tokens. Feature components use **semantic aliases** `--dsw-alias-*` (e.g. `var(--dsw-alias-bg-layer-1)`, `var(--dsw-alias-label-primary)`), never literal colors (`docs/web-styling.md:17`).
 - Shared controls live in `ui-primitives` (module-table row, so importable). `docs/web-styling.md:15`: *"the ui-primitives component catalog is the only channel that crosses feature packages."*
 - Third-party theme registration: `ctx.theme` alias-token overrides (`packages/client/ui-theme/README.md`, "Registering a theme").
 - **Dynamic packages** cannot import `ui-primitives`: `styles.insert(css)` + `React.createElement` only, with the same `--dsw-*` variables (`slot-catalog.ts` `CLIENT_NOTES[3]`).
@@ -452,7 +452,7 @@ Alternatively register an `inject` factory returning a reserved `hooks` compartm
 
 **Writing back to the agent** — three real mechanisms:
 
-1. `ctx.sessions` client model: the `Session` object exposes `prompt(content, mode: 'queue'|'steer', signal?, requestId?)` returning `RemoteResult<{accepted:true}>` ([`packages/api/session-controller/src/client/sessions/session.ts:232`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/packages/api/session-controller/src/client/sessions/session.ts)). It validates `sessionId`, `mode`, `content`, `clientTimeZone` and calls `this.remote.session.prompt(...)`.
+1. `ctx.sessions` client model: the `Session` object exposes `prompt(content, mode: 'queue'|'steer', signal?, requestId?)` returning `RemoteResult<{accepted:true}>` ([`packages/api/session-controller/src/client/sessions/session.ts:232`](<dsh-checkout>/packages/api/session-controller/src/client/sessions/session.ts)). It validates `sessionId`, `mode`, `content`, `clientTimeZone` and calls `this.remote.session.prompt(...)`.
 2. The composer's `inputActions` (only on `session`/`session-maybe` slots): `setDraft(text)`, `addAttachments(ids)`, `removeAttachment(id)`, `pruneAttachments(ids)`, `submit()` (`packages/client/ui-conversation/src/client/contract/input.ts:229-241`).
 3. A custom client→host call: a generated Remote method, an exact Fetch route, or (dynamic packages) `host.call`.
 
@@ -486,7 +486,7 @@ export class NotesController extends TypertRemoteService {
   async remoteExportList(agent: Agent, signal: AbortSignal): Promise<NoteRow[]> { ... }
 }
 ```
-([`docs/cookbook/adding-a-remote-api.md:11-49`](/Users/sunjungong/Documents/DSH/deepseek-harness-alpha/docs/cookbook/adding-a-remote-api.md))
+([`docs/cookbook/adding-a-remote-api.md:11-49`](<dsh-checkout>/docs/cookbook/adding-a-remote-api.md))
 
 Client calls (no Proxy, no hand-written signature):
 
@@ -592,7 +592,7 @@ Rules: *"Arguments and return values must be lossless JSON. Do not pass function
 
 ## 5. How `mc__show_sketch` renders — end to end
 
-Exact chain in [`dsh-minecraft`](/Users/sunjungong/Documents/DSH/dsh-minecraft):
+Exact chain in [`dsh-minecraft`](<local-checkout>/dsh-minecraft):
 
 **1. Tool definition (host).** `dsh-minecraft/src/tools.ts:48-49`:
 

@@ -9,10 +9,10 @@
 
 | 对象 | 版本 | 位置 |
 | --- | --- | --- |
-| DSH 源码 checkout | `0.1.5-rc.1` | `/Users/sunjungong/Documents/DSH/deepseek-harness-alpha` |
+| DSH 源码 checkout | `0.1.5-rc.1` | `<dsh-checkout>` |
 | **实际在跑的 DSH（权威基准）** | **`@deepseek-ai/*@0.1.6-alpha.2`** | npx 安装，261 个包；`dsh-tools`/`dsh-session`/`dsh-storage-domain`/`dsh-client-ui-slots`/`dsh-skill` 均已逐个确认 |
 | UDT Skill | `v2.0.0`（已 tag；HEAD 领先 5 个纯文档 commit） | `.../universal-diagnostic-tutor-skill`（MIT，140 个 skill 文件，GitHub 225★） |
-| 同生态插件参考 | dsh-study / dsh-whale-report / dsh-minecraft / dsh-better-sidebar | `/Users/sunjungong/Documents/DSH/*` |
+| 同生态插件参考 | dsh-study / dsh-whale-report / dsh-minecraft / dsh-better-sidebar | `<workspace>/*` |
 | 插件开发规范 Skill | plugin-write / plugin-release / plugin-test / plugin-workflow / plugin-upgrade | `dsh-plugin-upgrade-skill/skills/*` |
 
 > ⚠️ **版本号有三层**（源码 / 运行库 / 插件自 pin 的副本），详见 2.12 #5。
@@ -33,12 +33,12 @@
 ### 现状核查
 
 ```
-/Users/sunjungong/Documents/DSH/UDT DSH plugin/   ← 空目录（只有 . 和 ..）
+<workspace>/UDT DSH plugin/   ← 空目录（只有 . 和 ..）
 ```
 
 - **不是** git repo：`git rev-parse --show-toplevel` → `fatal: not a git repository`。
 - **未被任何父仓库追踪**：向上逐级检查到 `/` 都没有 `.git`；
-  `/Users/sunjungong/Documents/DSH/` 本身也不是 repo，只是普通文件夹。
+  `<workspace>/` 本身也不是 repo，只是普通文件夹。
 - 因此：**不存在"被父仓库误追踪"的风险**，也无 .gitignore 需要处理。
 
 ### 结论
@@ -62,7 +62,7 @@
 
 **建议**（二选一，需你拍板）：
 
-- **A（推荐）**：把实际开发目录移到 `/Users/sunjungong/Documents/DSH/dsh-diagnostic-tutor`，
+- **A（推荐）**：把实际开发目录移到 `<this-repo>`，
   当前带空格的空目录留作壳或删掉。风险最低，路径与生态一致。
 - **B**：就地初始化。省一步，但要接受带空格路径进入 `package.json` 的 `link:` 依赖。
 
@@ -315,8 +315,8 @@ dsh-diagnostic-tutor/
     "dsh-whale-report", "dsh-minecraft", "dsh-better-sidebar" ] } },
   "dependencies": {
     "dsh-better-sidebar": "0.18.0-alpha.0",
-    "dsh-minecraft": "link:/Users/sunjungong/Documents/DSH/dsh-minecraft",
-    "dsh-whale-report": "link:/Users/sunjungong/Documents/DSH/dsh-whale-report"
+    "dsh-minecraft": "link:<local-checkout>/dsh-minecraft",
+    "dsh-whale-report": "link:<local-checkout>/dsh-whale-report"
   }
 }
 ```
@@ -1670,7 +1670,7 @@ v0.0.4 Lesson+Blocks → v0.0.5 闭环 → v0.0.6 打磨 → **v0.1.0 可试玩 
 
 在我开工前，有三件事需要你的决定：
 
-1. **目录位置**：移到 `/Users/sunjungong/Documents/DSH/dsh-diagnostic-tutor`（推荐 A），
+1. **目录位置**：移到 `<this-repo>`（推荐 A），
    还是就地初始化（B）？
 2. **仓库名**：`dsh-diagnostic-tutor`（推荐）还是 `universal-diagnostic-tutor-dsh`？
 3. **UDT guardrail 冲突**（3.5 节）：选 A（给 UDT 提 v2.1 amendment，推荐）、

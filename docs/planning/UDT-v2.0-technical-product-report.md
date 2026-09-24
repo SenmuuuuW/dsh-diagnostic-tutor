@@ -3,13 +3,13 @@
 Scope: analysis of the UDT Skill v2.0 as it exists on disk at HEAD `cbc2d1b`
 (`git describe` → `v2.0.0-5-gcbc2d1b`).
 
-Primary checkout (target of the symlink `/Users/sunjungong/.agents/skills/universal-diagnostic-tutor`):
+Primary checkout (target of the symlink `~/.agents/skills/universal-diagnostic-tutor`):
 
 ```
-/Users/sunjungong/Documents/Codex/2026-07-06/tutor/work/universal-diagnostic-tutor-skill/skills/universal-diagnostic-tutor
+~/Documents/Codex/2026-07-06/tutor/work/universal-diagnostic-tutor-skill/skills/universal-diagnostic-tutor
 ```
 
-Parent repo: `/Users/sunjungong/Documents/Codex/2026-07-06/tutor/work/universal-diagnostic-tutor-skill`
+Parent repo: `~/Documents/Codex/2026-07-06/tutor/work/universal-diagnostic-tutor-skill`
 
 ---
 
