@@ -41,7 +41,6 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 
-import { installRuntimeAdapter } from './adapter.js'
 import { API_PREFIX, registerApi } from './api.js'
 import type { WebServerLike } from './api.js'
 import { withActivity } from './handoff.js'
@@ -123,12 +122,14 @@ export async function apply(ctx: Context): Promise<void> {
   // an error. The result stays internal — it is logged, never surfaced to a
   // learner through a tool, because the skill's own protocol forbids naming
   // its files and versions in learner-facing text.
+  //
+  // Nothing is installed on the strength of it. Until v0.0.8 this gated a
+  // runtime-semantics system-prompt section that explained the storage model to
+  // a skill whose guardrails read as forbidding it; UDT v2.1's
+  // `learning_runtime_contract.md` now says all of that in the skill's own
+  // words, so the bridge was deleted rather than kept as a second voice.
   const udt = await detectUdtSkill(ctx.get('skills'))
   ctx.logger.debug(`[diagnostic-tutor] teaching brain: ${describeUdtStatus(udt)}`)
-
-  // The runtime-semantics note only has a tension to resolve when the skill is
-  // actually installed; without it there is nothing to explain.
-  if (udt.available) installRuntimeAdapter(ctx)
 
   // Mount the browser API if this profile has a web surface.
   //

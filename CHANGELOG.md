@@ -5,6 +5,101 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.9] — DSH 0.1.7 compatibility, and a real A → B
+
+Three compatibility fixes against harness **0.1.7-alpha.2**, and the first
+complete two-node learning run against **UDT v2.1**.
+
+### Fixed
+
+- **The message source.** 0.1.6 accepted `{ kind: 'plugin', plugin: 'x' }`.
+  0.1.7 removed the shared catch-all `plugin` kind entirely: `MessageSourceMap`
+  is merge-extensible and every producer declares its own name in its own
+  module — `dsh-schedule`, `dsh-webhook` and `agent-team` all do this. The
+  plugin now declares
+
+  ```ts
+  declare module '@deepseek-ai/dsh-llm' {
+    interface MessageSourceMap {
+      'diagnostic-tutor': { readonly kind: 'diagnostic-tutor' }
+    }
+  }
+  ```
+
+  and sends `{ kind: 'diagnostic-tutor' }`. The old shape is not deprecated but
+  *absent from the union*, so `pnpm typecheck` fails on it — which is the
+  regression test.
+- **Node identity for the model.** `udt_map_get` returned nodes under `id` and
+  `parentId` while every tool that *takes* a node argument spells it `nodeId`,
+  and `udt_status.pendingNextStep` returned only display titles — so a model
+  reading its own last decision had to derive an identifier from a string that
+  is neither unique nor a key. Nodes are now `nodeId` / `parentNodeId`, the
+  pending decision carries `fromNodeId` and `targetNodeId`, and four tests
+  assert the output schema promises exactly the names the value delivers.
+
+### Removed
+
+- **`src/adapter.ts` and its system-prompt section**, the `installRuntimeAdapter`
+  call, and `tests/adapter.test.ts`. It existed to explain this runtime's
+  storage semantics to a skill whose guardrails read as forbidding them. UDT
+  v2.1's `learning_runtime_contract.md` now says all of that in the skill's own
+  words and in more detail, so the bridge is a second voice rather than a
+  missing one.
+- **The two compensating hints in `tools.ts`** that told the tutor *when* to
+  record a decision. That judgement is the skill's, and v2.1 owns it. Genuine
+  tool/API descriptions — block caps, `append` vs `replace`, and the real
+  mechanic that a check block has no input box so the learner answers in the
+  chat — all stay, guarded by a test.
+
+### Verified: a real A → B on 0.1.7 + v2.1
+
+No store editing, no hand-called tools, no re-hooked `nextStepId`. Everything
+below happened through the composer and the Continue button:
+
+```
+A = Python 与 NumPy 基础
+  learner answers the check in the chat
+  → evidence: check · advance-with-caution
+  → udt_decide_next records the move
+       action  advance-with-caution
+       target  微积分与优化：导数、梯度直觉与 loss 下降方向
+       reason  「形状这一层你在 NumPy 里已经能自己说清楚了（连广播都推得出来），
+                基础不用再停留。下一站补的是『loss 往哪边调会变小』…」
+  → NEXT BEST STEP appears with that reason
+  → Continue pressed
+  → B becomes the active focus
+  → B's tutor woken             first activity  0.2s
+  → B's lesson written                          20.2s
+  → B's lesson on screen                        20.3s
+```
+
+Chain, from the runtime's own record:
+`focus persisted 0.0s → followup accepted 0.0s → first activity 0.2s → lesson written 20.2s → UI observed 20.3s`
+
+Screenshot: `preview/dsh-ui-v0107-ab.png` — B under **NOW LEARNING**, the
+progress line reading `Lesson ready 21s`, both finished nodes marked `checked`.
+
+### The v2.1 contract closed the v0.0.8 gap
+
+v0.0.8 ended with the tutor never calling `udt_decide_next`: it judged answers
+correctly and went on teaching. Across this release it recorded a decision on
+**every** judged answer — four `more-practice` stays while a node was being
+consolidated, then the `advance-with-caution` move above. Nothing in the plugin
+changed to cause that; the skill now treats a judged answer as an unfinished
+turn. The plugin-side hints that tried to compensate were deleted, and the
+behaviour got *better*, which is the evidence that they were in the wrong place.
+
+### Tests
+
+219 across nineteen files. New (`model-contract.test.ts`, 12): the source value
+and its absence of a `plugin` field; a compile-time guard that fails if the
+module augmentation is removed; the platform's own `createUserMessage` accepting
+the message; a refusal to wake the wrong session; node ids in `udt_map_get`,
+`udt_status` focus and pending decision; the declared schemas matching the
+values; and the deleted bridge staying deleted while the real API descriptions
+survive.
+
+
 ## [0.0.8] — reliable handoff and latency UX
 
 No new learning features. This release makes the wait between pressing Continue

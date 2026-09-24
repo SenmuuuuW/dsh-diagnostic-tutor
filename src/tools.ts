@@ -133,7 +133,11 @@ interface StatusValue {
   }
   pendingNextStep?: {
     action: string
+    /** The node the decision was made from. */
+    fromNodeId: string
     fromNodeTitle: string
+    /** The node it sends the learner to; absent means stay on `fromNodeId`. */
+    targetNodeId?: string
     targetNodeTitle?: string
     reason: string
   }
@@ -187,9 +191,14 @@ function statusValue(state: UdState): StatusValue {
     const target = pending.targetNodeId === undefined ? undefined : state.readNode(pending.targetNodeId)
     value.pendingNextStep = {
       action: pending.action,
+      // Ids, not just titles: a model must never have to guess an identifier
+      // from a display string, and titles are not unique across a map.
+      fromNodeId: pending.fromNodeId,
       fromNodeTitle: from?.title ?? pending.fromNodeId,
       reason: pending.reason,
-      ...(target === undefined ? {} : { targetNodeTitle: target.title }),
+      ...(target === undefined
+        ? {}
+        : { targetNodeId: pending.targetNodeId as string, targetNodeTitle: target.title }),
     }
   }
   return value
@@ -203,8 +212,6 @@ function udtStatusTool(state: UdState): ToolDefinition {
       'initialized, the learner profile, the registered learning goals and how many diagnosis-map nodes exist. ' +
       'Call this before starting a session to see whether there is existing state to continue from, and after ' +
       'changing state to confirm what was stored. ' +
-      'After judging an answer, record the outcome here and then record where the learner goes next with ' +
-      'udt_decide_next; a judged answer with no next step leaves them looking at a finished node. ' +
       'Read-only: it records no teaching decision.',
     parameters: {},
     output: {
@@ -261,7 +268,16 @@ function udtStatusTool(state: UdState): ToolDefinition {
               'A decision the learner has not acted on yet. Present it again rather than deciding afresh.',
             properties: {
               action: { type: 'string', required: true },
+              fromNodeId: {
+                type: 'string',
+                required: true,
+                description: 'The node id the decision was made from — pass this, never the title.',
+              },
               fromNodeTitle: { type: 'string', required: true },
+              targetNodeId: {
+                type: 'string',
+                description: 'The node id it sends the learner to. Absent means stay on fromNodeId.',
+              },
               targetNodeTitle: { type: 'string' },
               reason: { type: 'string', required: true },
             },
@@ -435,15 +451,19 @@ function udtMapGetTool(state: UdState): ToolDefinition {
               type: 'object',
               additionalProperties: false,
               properties: {
-                id: { type: 'string', required: true },
-                title: { type: 'string', required: true },
+                nodeId: {
+                  type: 'string',
+                  required: true,
+                  description: 'The node id — pass this to udt_map_update, udt_lesson_update and udt_decide_next.',
+                },
+                title: { type: 'string', required: true, description: 'Display text. Never pass this as an id.' },
                 relation: {
                   type: 'string',
                   required: true,
                   description: 'goal | part-of | prerequisite | related',
                 },
                 state: { type: 'string', required: true },
-                parentId: { type: 'string' },
+                parentNodeId: { type: 'string' },
                 evidence: {
                   type: 'array',
                   required: true,
@@ -483,11 +503,14 @@ function udtMapGetTool(state: UdState): ToolDefinition {
         goal: map.course.goal,
         status: map.course.status,
         nodes: map.nodes.map((node) => ({
-          id: node.id,
+          // Named `nodeId`, not `id`: every tool that takes a node argument
+          // spells it `nodeId`, so the model reads the identifier it will pass
+          // rather than translating between two spellings.
+          nodeId: node.id,
           title: node.title,
           relation: node.relation,
           state: node.state,
-          ...(node.parentId === undefined ? {} : { parentId: node.parentId }),
+          ...(node.parentId === undefined ? {} : { parentNodeId: node.parentId }),
           evidence: node.evidence.map((entry) => ({
             kind: entry.kind,
             at: entry.at,
@@ -818,10 +841,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       'the blocks appear in the learner\'s surface the moment you send them, so a short first unit ' +
       'turns a silent wait into visible progress. Send more later with append.\n' +
       'Default mode "append" adds to the current lesson; use "replace" only to correct what is there.\n' +
-      'End a unit with a **check** block and then STOP — the learner answers in the chat, you judge it, ' +
-      'record the outcome with udt_map_update, and only then write the next unit.\n' +
-      'When this node has reached a conclusion, record where the learner goes next with udt_decide_next — ' +
-      'that is what ends the focus and puts a next step in front of them.',
+      'A check block has no input box: the surface displays the question and the learner answers in the chat.',
     parameters: {
       nodeId: {
         type: 'string',

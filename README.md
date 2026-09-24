@@ -7,7 +7,7 @@ it works out where you are stuck, decides the next best teaching step, and turns
 the whole process into a living learning map you can click through.
 
 > [!IMPORTANT]
-> **Status: `v0.0.8` — the handoff is visible and measured.**
+> **Status: `v0.0.9` — a full A → B run works on DSH 0.1.7 + UDT v2.1.**
 > The learning surface docks in the right sidebar, so the map, the conversation
 > and the lesson are on screen at once and answering a check never means leaving
 > the lesson. Still no quiz engine, no RAG, no flashcards.
@@ -49,7 +49,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.0.8` | `0.1.6-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.0.9` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -372,8 +372,9 @@ shows a loader row exists.
 | `v0.0.5` | the loop: learning focus, tutor-written lessons, check → evidence → state, live panel |
 | `v0.0.6` | the learning surface docks beside the chat; both surfaces share one state |
 | `v0.0.7` | the tutor decides the next step; focus lifecycle; NEXT BEST STEP card |
-| `v0.0.8` | **current** — handoff record, progress line, retry, and the latency measured |
-| `v0.0.9` | state export/reset, settings, i18n, math typesetting |
+| `v0.0.8` | handoff record, progress line, retry, and the latency measured |
+| `v0.0.9` | **current** — DSH 0.1.7 compatibility, and the first real A → B |
+| `v0.1.0` | state export/reset, settings, i18n, math typesetting |
 | `v0.1.0` | **first playable MVP** — Goal → Map → Lesson → Check → Progress → Next |
 
 ## Trust

@@ -236,14 +236,21 @@ try {
   await waitFor(cdp, '!!document.querySelector(".dt-root")', 'the panel')
   await sleep(1000)
 
+  const wanted = process.env.DT_NODE
   const picked = await cdp.evaluate(`(() => {
     const rows = [...document.querySelectorAll('.dt-node')];
-    // A leaf is one no other row names as its parent; the panel shows depth,
-    // so the deepest row is the closest thing to a leaf without extra plumbing.
+    const want = ${JSON.stringify(wanted ?? null)};
     let best = rows[0], bestDepth = -1;
-    for (const row of rows) {
-      const depth = parseInt(row.style.marginLeft || '0', 10);
-      if (depth > bestDepth) { bestDepth = depth; best = row; }
+    if (want) {
+      // Honour an explicit request: some nodes are better first subjects than
+      // others, and picking by name is how the run stays reproducible.
+      const hit = rows.find((row) => (row.textContent || '').includes(want));
+      if (hit) best = hit;
+    } else {
+      for (const row of rows) {
+        const depth = parseInt(row.style.marginLeft || '0', 10);
+        if (depth > bestDepth) { bestDepth = depth; best = row; }
+      }
     }
     const title = best?.querySelector('.dt-node-title')?.textContent?.trim() ?? '';
     best?.click();

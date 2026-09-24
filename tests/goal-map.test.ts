@@ -300,8 +300,8 @@ describe('mastery cannot be asserted', () => {
       expect(second.evidenceCount).toBe(2)
 
       const map = await callTool(harness, 'udt_map_get', {})
-      const node = (map.nodes as { id: string; evidence: { kind: string }[] }[]).find(
-        (entry) => entry.id === nodeId,
+      const node = (map.nodes as { nodeId: string; evidence: { kind: string }[] }[]).find(
+        (entry) => entry.nodeId === nodeId,
       )
       expect(node?.evidence.map((entry) => entry.kind)).toEqual(['diagnosis', 'practice'])
     } finally {
@@ -343,8 +343,8 @@ describe('persistence', () => {
 
       const map = await callTool(second, 'udt_map_get', {})
       expect(map.goal).toBe('build a project')
-      const nodes = map.nodes as { id: string; state: string; evidence: unknown[] }[]
-      const probability = nodes.find((entry) => entry.id === 'machine-learning:probability')
+      const nodes = map.nodes as { nodeId: string; state: string; evidence: unknown[] }[]
+      const probability = nodes.find((entry) => entry.nodeId === 'machine-learning:probability')
       expect(probability?.state).toBe('weak')
       expect(probability?.evidence).toHaveLength(1)
     } finally {

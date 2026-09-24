@@ -12,8 +12,11 @@
  * exactly the intent of pressing the button. `@deepseek-ai/dsh-command-goal`
  * and `dsh-headless` do the same thing for the same reason.
  *
- * The source is `{ kind: 'plugin', plugin: 'diagnostic-tutor' }`, so the turn is
- * attributable rather than forged as something the learner typed.
+ * The source is `{ kind: 'diagnostic-tutor' }` — the plugin declares its own
+ * kind. Harness 0.1.7 removed the shared catch-all `plugin` kind: a producer now
+ * merges its own entry into `MessageSourceMap`, and the augmentation below is
+ * that declaration. It is also what makes the value type-check at all, so a
+ * future rename cannot drift out of sync silently.
  *
  * Note what this module does **not** do: it does not decide what to teach. It
  * reports which node the learner selected and asks the tutor to begin. Every
@@ -25,8 +28,31 @@ import { createUserMessage } from '@deepseek-ai/dsh-llm'
 
 import type { CourseRecord, NodeRecord } from './state.js'
 
-/** Attribution for every turn this plugin opens. */
+/**
+ * Attribution for every turn this plugin opens.
+ *
+ * Must equal the declared kind below; TypeScript enforces it, because the value
+ * is passed where the augmented union is expected.
+ */
 export const PLUGIN_SOURCE = 'diagnostic-tutor'
+
+/**
+ * Declare this plugin's message-source kind.
+ *
+ * Harness 0.1.7 has no shared catch-all `plugin` kind (see `MessageSourceMap`
+ * in `@deepseek-ai/dsh-llm`): `kind` is merge-extensible and each producer names
+ * itself in its own module. `dsh-schedule`, `dsh-webhook` and `agent-team` all
+ * do exactly this.
+ *
+ * The literal is repeated rather than referenced through `PLUGIN_SOURCE`,
+ * because a module augmentation needs a literal type. The two cannot drift: the
+ * assignment below fails to compile if they disagree.
+ */
+declare module '@deepseek-ai/dsh-llm' {
+  interface MessageSourceMap {
+    'diagnostic-tutor': { readonly kind: 'diagnostic-tutor' }
+  }
+}
 
 export interface FocusPromptResult {
   /** Whether a turn was actually opened. */
@@ -101,7 +127,7 @@ export function promptSession(ctx: Context, sessionId: string | undefined, text:
   target.followup(
     createUserMessage({
       content: [{ type: 'text', text }],
-      source: { kind: 'plugin', plugin: PLUGIN_SOURCE },
+      source: { kind: PLUGIN_SOURCE },
     }),
   )
   return { prompted: true }
