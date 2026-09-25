@@ -5,6 +5,79 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.11] — the storage layout, tested rather than flipped
+
+The goal was to switch to `layout: 'per-record'` so that `invalidRecords:
+'backup-and-skip'` would start working. It was tested against the platform
+first. **It is not viable, and the switch was not made.**
+
+### What the migration does — verified, and good
+
+A real store was copied and opened under a `per-record` domain. Everything
+seeded, nothing was lost, and the original file was left untouched:
+
+| | before | after |
+| --- | --- | --- |
+| courses | 1 | 1 |
+| nodes | 6 | 6 |
+| lessons | 3 | 3 |
+| focus | 1 | 1 |
+| next dec. | 2 | 2 |
+
+### Why the switch was not made
+
+In `per-record`, a record key becomes a path segment and must match
+`[a-zA-Z0-9_-]+`. Every write through the domain was then rejected:
+
+```
+unit 'udt': per-record key '机器学习' is not path-safe (must match /^[a-zA-Z0-9_-]+$/)
+```
+
+It is not about non-ASCII: `ml:math` is rejected too. Every node, lesson and
+decision id in this plugin is `<courseId>:<slug>`, and course ids are derived
+from the learner's own words. Flipping the layout would have shipped a runtime
+that can read and cannot write — worse than the limit it was meant to fix.
+
+`dsh-storage-json` is also the only backend in the tree, so there is no
+alternative medium to route to.
+
+Making the ids path-safe is a referential migration across five tables plus a
+change to the ids the tutor passes back to the tools. That is a deliberate
+change, not a layout flag, and it is left as a decision rather than taken as a
+side effect.
+
+### So: `single`, unchanged, with the limit stated
+
+`layout` stays `single` and `invalidRecords: 'backup-and-skip'` stays declared —
+correct intent, currently inert, and now documented as inert. The README
+section on storage says plainly what is true (a damaged record fails the open,
+is reported with its table and key, is not deleted, and the plugin loads inert
+rather than failing the profile) and what is not (no backup-and-skip today, no
+claimed recovery).
+
+### Regression: everything else, verified on a real harness
+
+| | |
+| --- | --- |
+| Goal → Map | 6 nodes, states `blocked` / `checked` / `unconfirmed` |
+| Lesson | 5 blocks, read back through the API |
+| Evidence / state | 3 entries on the node, `checked` |
+| Focus | present, on the node the last run moved to |
+| Next Best Step | correctly absent — the pending one was acted on |
+| Export | 1 course, 6 nodes, 3 lessons, 1 focus, 2 decisions |
+| Reset | clears everything and returns to first run |
+| Restart, unload | covered by the suite; the domain closes and reopens clean |
+
+On-disk structure, unchanged: `<dsh-home>/storages/udt.json`, one document with
+`unit` / `global` / `tables`, and six tables.
+
+### Tests
+
+250 across twenty-one files, unchanged. **No test was added for backup-and-skip,
+because it does not run** — a passing test there would have been the most
+misleading artifact this release could produce.
+
+
 ## [0.0.10] — your data is yours
 
 The runtime claimed learner state was "visible, exportable and deletable". Two

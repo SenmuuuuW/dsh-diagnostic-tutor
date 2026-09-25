@@ -116,7 +116,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.0.10` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.0.11` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -474,8 +474,9 @@ shows a loader row exists.
 | `v0.0.7` | the tutor decides the next step; focus lifecycle; NEXT BEST STEP card |
 | `v0.0.8` | handoff record, progress line, retry, and the latency measured |
 | `v0.0.9` | DSH 0.1.7 compatibility, the first real A → B, and product polish |
-| `v0.0.10` | **current** — export and delete your data |
-| `v0.1.0` | **first playable MVP** — state export/reset, settings, i18n, math typesetting |
+| `v0.0.10` | export and delete your data |
+| `v0.0.11` | **current** — storage layout tested; `single` kept, with the reason |
+| `v0.1.0` | **first playable MVP** — packaged install, settings, i18n, math typesetting |
 
 ## Trust
 
@@ -492,21 +493,59 @@ authentication. This plugin's commitments:
   removes it, behind a second click, irreversibly. An undo would mean keeping a
   copy of exactly what was asked to be deleted.
 
-### If the store is damaged
+### Where your data lives, and what happens when it breaks
 
-The runtime declares `invalidRecords: 'backup-and-skip'`, which is the
-platform's recovery path: a record that fails its schema is moved aside and the
-domain opens without it. **It does not currently take effect here**, because the
-platform only honours it when the unit can move a *per-record* document aside,
-and this domain uses the default `single` layout — one `udt.json` holding
-everything. So one malformed record still rejects the open, the plugin reports
-it and stays inert rather than failing the profile, and nothing is destroyed:
-removing the offending record by hand restores the rest.
+Everything is stored **locally**, in one JSON document:
+`<dsh-home>/storages/udt.json`. Nothing is sent anywhere, there is no account,
+and the file is plain enough to read.
 
-The fix is a one-line change to `layout: 'per-record'`, which the JSON backend
-seeds from the existing single file. It is not done yet because it changes the
-on-disk format, and that is a decision worth making deliberately rather than as
-a side effect. Until then, **export before you edit**.
+**Export before you edit it.** Hand-editing is not blocked, but every record is
+validated against its schema when the store opens, so one record that no longer
+matches stops the plugin from loading.
+
+**What is true today.** A damaged record fails the open, is reported with the
+table and key that failed, and is **not deleted**. The plugin loads inert rather
+than failing the rest of the profile, and removing the offending record restores
+everything else. `GET /export` on a healthy store is the way to make sure you
+still have your data.
+
+**What is not true, and is not claimed.** The runtime declares the platform's
+record-recovery option:
+
+```ts
+invalidRecords: 'backup-and-skip'
+```
+
+It is the right intent and it currently has **no effect**. The platform only
+honours it when the store can move a *per-record* document aside, and this
+plugin uses the `single` layout — one document holding everything. So a bad
+record is **not** backed up and skipped today. This README says so rather than
+implying a recovery ability that does not run.
+
+#### Why not `per-record`
+
+Switching the layout would make that option live, so it was tested against the
+platform rather than assumed. Migration is fine: a real store's 1 course,
+6 nodes, 3 lessons, 1 focus and 2 decisions were all seeded into per-record
+documents, with the original file left untouched.
+
+Writing is not. In `per-record`, each record key becomes a path segment and must
+match `[a-zA-Z0-9_-]+`:
+
+```
+unit 'udt': per-record key '机器学习' is not path-safe (must match /^[a-zA-Z0-9_-]+$/)
+```
+
+The `:` alone is enough — `ml:math` is rejected too. Every node, lesson and
+decision id in this plugin is `<courseId>:<slug>`, so the layout would leave the
+runtime able to read and unable to write. The same applies to course ids, which
+come from the learner's own words and are frequently not ASCII.
+
+Making the ids path-safe means a referential migration across courses, nodes,
+lessons, focus and decisions, plus changing the ids the tutor passes back to the
+tools. That is worth doing deliberately — not as a side effect of flipping a
+layout flag. Until then, `single` is the honest choice, and its limit is the one
+stated above.
 
 ## License
 
