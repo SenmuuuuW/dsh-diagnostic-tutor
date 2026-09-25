@@ -30,6 +30,10 @@ export interface PanelClient {
   startFocus(nodeId: string, sessionId?: string): Promise<FocusResponse>
   /** Optional: only the real client can report it. */
   reportObserved?(nodeId: string): Promise<unknown>
+  /** Optional: only the real client can save a file. */
+  downloadExport?(): Promise<string>
+  /** Optional: only the real client can delete state. */
+  resetState?(): Promise<unknown>
 }
 
 type LessonResponse = Awaited<ReturnType<typeof realApi.fetchLesson>>
@@ -41,6 +45,8 @@ export const defaultClient: PanelClient = {
   fetchLesson: realApi.fetchLesson,
   startFocus: realApi.startFocus,
   reportObserved: realApi.reportObserved,
+  downloadExport: realApi.downloadExport,
+  resetState: realApi.resetState,
 }
 
 /**
@@ -76,6 +82,12 @@ export interface LearningState {
   /** Start learning on a named node — how a recommendation is acted on. */
   continueTo(nodeId: string): void
   dismissLesson(): void
+  /** Save everything to a file. */
+  exportData(): void
+  /** Delete everything and re-read from empty. */
+  resetAll(): void
+  /** A one-line account of the last data action, for the surface to show. */
+  readonly dataNote: string | null
 }
 
 /**
@@ -183,6 +195,44 @@ export function useLearning(options: {
     beginFocus(selectedId)
   }, [beginFocus, selectedId])
 
+  const [dataNote, setDataNote] = useState<string | null>(null)
+
+  /** Re-read everything, the same way the initial load does. */
+  const refresh = useCallback(
+    () =>
+      client
+        .fetchOverview()
+        .then((data) => {
+          setOverview(data)
+          setError(null)
+          return data
+        })
+        .catch((cause: Error) => {
+          setError(cause.message)
+          return null
+        }),
+    [client],
+  )
+
+  const exportData = useCallback(() => {
+    setDataNote(null)
+    void client
+      .downloadExport?.()
+      .then((name) => setDataNote(`Saved ${name}.`))
+      .catch((cause: Error) => setDataNote(`Could not export: ${cause.message}`))
+  }, [client])
+
+  const resetAll = useCallback(() => {
+    setDataNote(null)
+    setDetail(null)
+    setLesson(null)
+    void client
+      .resetState?.()
+      .then(refresh)
+      .then(() => setDataNote('Everything was deleted.'))
+      .catch((cause: Error) => setDataNote(`Could not delete: ${cause.message}`))
+  }, [client, refresh])
+
   useEffect(() => {
     if (focus === null) return
     const nodeId = focus.nodeId
@@ -236,6 +286,9 @@ export function useLearning(options: {
     select,
     start,
     continueTo: beginFocus,
+    exportData,
+    resetAll,
+    dataNote,
     dismissLesson: useCallback(() => setLesson(null), []),
   }
 }

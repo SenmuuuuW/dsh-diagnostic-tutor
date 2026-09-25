@@ -14,7 +14,7 @@
  * State is always a word from the skill's vocabulary plus a coloured mark.
  */
 
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import type { Block, HandoffView, NextStepView } from '../contract.js'
 
@@ -393,6 +393,68 @@ export function HandoffLine({
           Ask again
         </button>
       )}
+    </div>
+  )
+}
+
+/**
+ * The learner's controls over their own data.
+ *
+ * Both promises this project makes about state are kept here: that it is
+ * **visible and exportable**, and that it can be **deleted**. An export that
+ * only existed as an API route would not be a promise kept, and a delete that
+ * happened on one click would be a trap — so the second click is the
+ * confirmation, inline, with no dialog to dismiss by reflex.
+ */
+export function DataFooter({
+  onExport,
+  onReset,
+  busy,
+}: {
+  onExport: () => void
+  onReset: () => void
+  busy?: boolean
+}): ReactNode {
+  const [confirming, setConfirming] = useState(false)
+
+  if (confirming) {
+    return (
+      <div className="dt-data dt-data-confirm">
+        <p className="dt-data-ask">
+          Delete your goal, your map, every lesson and all the evidence behind it? This cannot
+          be undone.
+        </p>
+        <div className="dt-data-row">
+          <button
+            type="button"
+            className="dt-danger"
+            onClick={() => {
+              setConfirming(false)
+              onReset()
+            }}
+            disabled={busy === true}
+          >
+            {busy === true ? 'Deleting…' : 'Yes, delete everything'}
+          </button>
+          <button type="button" className="dt-quiet" onClick={() => setConfirming(false)}>
+            Cancel
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="dt-data">
+      <button type="button" className="dt-quiet" onClick={onExport} disabled={busy === true}>
+        Export my data
+      </button>
+      <button type="button" className="dt-quiet" onClick={() => setConfirming(true)} disabled={busy === true}>
+        Delete everything
+      </button>
+      <span className="dt-data-note">
+        Stored on this machine only. Nothing is sent anywhere.
+      </span>
     </div>
   )
 }

@@ -355,6 +355,37 @@ async function handleStartFocus(
   })
 }
 
+/**
+ * `GET /export` — everything the learner owns, as one file.
+ *
+ * Served as an attachment with a dated filename so a browser saves it rather
+ * than rendering it. The document is self-describing (`format` + `version`), so
+ * it explains itself on a disk years from now without this plugin installed.
+ */
+function handleExport(state: UdState, res: ServerResponse): void {
+  const now = new Date()
+  const document = state.exportState(now.toISOString())
+  const body = JSON.stringify(document, null, 2)
+  res.setHeader('content-type', 'application/json; charset=utf-8')
+  res.setHeader('content-disposition', `attachment; filename="dsh-diagnostic-tutor-${now.toISOString().slice(0, 10)}.json"`)
+  res.setHeader('cache-control', 'no-store')
+  res.statusCode = 200
+  res.end(body)
+}
+
+/**
+ * `POST /reset` — delete everything and return to first run.
+ *
+ * Destructive and irreversible on purpose. An undo would mean keeping a copy of
+ * exactly what the learner asked to remove, which defeats the request. The
+ * surface asks twice; the route does as it is told.
+ */
+async function handleReset(state: UdState, res: ServerResponse): Promise<void> {
+  await state.resetState(new Date().toISOString())
+  await state.ensureLearner(new Date().toISOString())
+  sendJson(res, 200, { ok: true, reset: true })
+}
+
 /** `POST /handoff/observed { nodeId }` — a surface has rendered the lesson. */
 async function handleObserved(
   state: UdState,
@@ -402,6 +433,8 @@ export function createApiHandler(deps: ApiDeps) {
     const course = currentCourse(state)
 
     if (method === 'GET' && route === '/overview') return handleOverview(state, deps, res)
+    if (method === 'GET' && route === '/export') return handleExport(state, res)
+    if (method === 'POST' && route === '/reset') return await handleReset(state, res)
     if (method === 'GET' && route === '/node') {
       const nodeId = url.searchParams.get('id')
       if (nodeId === null || nodeId.length === 0) return fail(res, 400, 'missing-id')

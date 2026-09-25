@@ -22,7 +22,7 @@
 
 import type { ReactNode } from 'react'
 
-import { HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
+import { DataFooter, HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
 import { buildMapTree, flattenTree, isFilledState, relationLabel, stateExplanation } from './model.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
@@ -77,7 +77,7 @@ export function LearningPanel({
     initialOverview,
     onStarted: onFocusStarted,
   })
-  const { overview, focus, nextStep, handoff, teachingBrain, selectedId, detail, lesson, note, error, starting, loading } =
+  const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading } =
     state
   const rows = flattenTree(buildMapTree(overview?.nodes ?? []))
   const confirmed = (overview?.nodes ?? []).filter((node) => node.state === 'confirmed').length
@@ -103,8 +103,9 @@ export function LearningPanel({
           </div>
           <p className="dt-welcome-note">
             No account, no scores, no streak. Your goal, your map and the evidence behind it stay
-            on this machine and are yours to export.
+            on this machine, and are yours to keep or delete.
           </p>
+          <DataFooter onExport={state.exportData} onReset={state.resetAll} />
       {teachingBrain === false && (
         <p className="dt-notice">
           <b>No tutor is installed for this workspace.</b> This panel will record and show
@@ -265,6 +266,8 @@ export function LearningPanel({
             Back to the node
           </button>
         )}
+        {dataNote !== null && <p className="dt-caption">{dataNote}</p>}
+        <DataFooter onExport={state.exportData} onReset={state.resetAll} />
       </div>
     </div>
   )

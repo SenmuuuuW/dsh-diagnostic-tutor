@@ -19,7 +19,7 @@
 import { useEffect, useMemo, type ReactNode } from 'react'
 
 import type { NodeView, OverviewResponse } from '../contract.js'
-import { HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
+import { DataFooter, HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
 import { buildMapTree, flattenTree, relationLabel, stateExplanation } from './model.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
@@ -94,7 +94,7 @@ export interface LearningTabProps {
  */
 export function LearningTab({ client, sessionId, initialOverview }: LearningTabProps): ReactNode {
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview })
-  const { overview, focus, nextStep, handoff, teachingBrain, selectedId, detail, lesson, note, error, starting, loading, select } =
+  const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading, select } =
     state
 
   // Show something on first paint: the focused node if there is one, else the
@@ -133,8 +133,9 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
           </div>
           <p className="dt-welcome-note">
             No account, no scores, no streak. Your goal, your map and the evidence behind it
-            stay on this machine and are yours to export.
+            stay on this machine, and are yours to keep or delete.
           </p>
+          <DataFooter onExport={state.exportData} onReset={state.resetAll} />
       {teachingBrain === false && (
         <p className="dt-notice">
           <b>No tutor is installed for this workspace.</b> This panel will record and show
@@ -233,6 +234,8 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
         onSelect={select}
       />
 
+      {dataNote !== null && <p className="dt-caption">{dataNote}</p>}
+
       {/* ---- the evidence behind this node ---- */}
       {detail !== null && detail.node.evidence.length > 0 && (
         <>
@@ -252,6 +255,8 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
           </ul>
         </>
       )}
+
+      <DataFooter onExport={state.exportData} onReset={state.resetAll} />
     </div>
   )
 }

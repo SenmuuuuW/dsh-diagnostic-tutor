@@ -116,7 +116,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.0.9` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.0.10` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -450,7 +450,7 @@ pnpm screenshot "<dsh-url-with-token>" preview/dsh-ui.png
 ```sh
 pnpm install
 pnpm typecheck   # tsc --noEmit  (host and client)
-pnpm test        # 241 tests: unit, guard, DOM, render, real composition
+pnpm test        # 250 tests: unit, guard, DOM, render, real composition
 pnpm build       # tsc -> lib/ (host) + tsdown -> lib/client.js
 ```
 
@@ -473,7 +473,8 @@ shows a loader row exists.
 | `v0.0.6` | the learning surface docks beside the chat; both surfaces share one state |
 | `v0.0.7` | the tutor decides the next step; focus lifecycle; NEXT BEST STEP card |
 | `v0.0.8` | handoff record, progress line, retry, and the latency measured |
-| `v0.0.9` | **current** — DSH 0.1.7 compatibility, the first real A → B, and product polish |
+| `v0.0.9` | DSH 0.1.7 compatibility, the first real A → B, and product polish |
+| `v0.0.10` | **current** — export and delete your data |
 | `v0.1.0` | **first playable MVP** — state export/reset, settings, i18n, math typesetting |
 
 ## Trust
@@ -487,6 +488,25 @@ authentication. This plugin's commitments:
 - makes no outbound network requests;
 - writes no files outside the harness's own storage;
 - keeps learner state visible, exportable and deletable — never hidden memory.
+  **Export my data** writes one self-describing JSON file; **Delete everything**
+  removes it, behind a second click, irreversibly. An undo would mean keeping a
+  copy of exactly what was asked to be deleted.
+
+### If the store is damaged
+
+The runtime declares `invalidRecords: 'backup-and-skip'`, which is the
+platform's recovery path: a record that fails its schema is moved aside and the
+domain opens without it. **It does not currently take effect here**, because the
+platform only honours it when the unit can move a *per-record* document aside,
+and this domain uses the default `single` layout — one `udt.json` holding
+everything. So one malformed record still rejects the open, the plugin reports
+it and stays inert rather than failing the profile, and nothing is destroyed:
+removing the offending record by hand restores the rest.
+
+The fix is a one-line change to `layout: 'per-record'`, which the JSON backend
+seeds from the existing single file. It is not done yet because it changes the
+on-disk format, and that is a decision worth making deliberately rather than as
+a side effect. Until then, **export before you edit**.
 
 ## License
 

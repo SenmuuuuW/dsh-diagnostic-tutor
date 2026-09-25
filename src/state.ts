@@ -197,6 +197,34 @@ export const NextStepSchema = z.object({
 export type NextStepRecord = z.infer<typeof NextStepSchema>
 export type NextStepKey = string
 
+/**
+ * Identifies the document, so a file found on a disk years later explains
+ * itself without this project having to be installed.
+ */
+export const EXPORT_FORMAT = 'dsh-diagnostic-tutor/state'
+export const EXPORT_VERSION = 1
+
+/**
+ * Everything the learner owns.
+ *
+ * Plain data, no handles and no methods: an export that needed this plugin to
+ * read it would not be an export. `format` and `version` are first so the file
+ * is self-describing, and there is no `handoffs` key on purpose — a handoff is
+ * operational timing for a wait in progress, not learning state.
+ */
+export interface UdExport {
+  readonly format: typeof EXPORT_FORMAT
+  readonly version: number
+  readonly exportedAt: string
+  readonly domain: { readonly name: string; readonly version: number }
+  readonly learner: LearnerProfile
+  readonly courses: readonly CourseRecord[]
+  readonly nodes: readonly NodeRecord[]
+  readonly lessons: readonly LessonRecord[]
+  readonly nextSteps: readonly NextStepRecord[]
+  readonly focus: readonly FocusRecord[]
+}
+
 export type CourseKey = string
 export type NodeKey = string
 
@@ -238,6 +266,16 @@ export const UNINITIALIZED = ''
 export const udtDomain = defineDomain({
   name: UDT_DOMAIN_NAME,
   version: UDT_DOMAIN_VERSION,
+  // Declared so that one unreadable record does not cost the learner the rest:
+  // the backend moves the record's document aside, logs the cause, and opens
+  // without it. The platform gates this on the unit being able to move a
+  // per-record document, and this domain uses the default `single` layout —
+  // one `udt.json` for everything — where there is no such document, so the
+  // option currently falls back to the rejecting default. It is declared
+  // anyway because it is the correct intent and becomes live the moment the
+  // layout changes; see the damaged-store note in the README for what this
+  // costs today.
+  invalidRecords: 'backup-and-skip',
   global: {
     schema: LearnerProfileSchema,
     initial: { initializedAt: UNINITIALIZED, updatedAt: UNINITIALIZED },
@@ -385,6 +423,29 @@ export interface UdState {
   latestNextStep(courseId: CourseKey): NextStepRecord | undefined
   /** A recommendation by key. */
   readNextStep(id: NextStepKey): NextStepRecord | undefined
+  /** Every recommendation, for export. */
+  listNextSteps(): NextStepRecord[]
+  /** Every lesson, for export. */
+  listLessons(): LessonRecord[]
+  /** Every focus, for export. */
+  listFocus(): FocusRecord[]
+
+  /* whole-state operations ------------------------------------------------- */
+  /**
+   * Everything the learner owns, as one plain document.
+   *
+   * Handoffs are deliberately **not** included: they are operational timing
+   * for a wait in progress, not learning state, and restoring them would mean
+   * restoring a claim about a model turn that is no longer running.
+   */
+  exportState(now: string): UdExport
+  /**
+   * Delete everything and return to first-run.
+   *
+   * Irreversible by design — an undo would mean keeping a copy of what the
+   * learner asked to delete, which is the opposite of the point.
+   */
+  resetState(now: string): Promise<void>
 
   /* handoffs --------------------------------------------------------------- */
   readHandoff(targetNodeId: HandoffKey): HandoffRecord | undefined
@@ -635,6 +696,34 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
     },
 
     readNextStep: (id) => nextSteps.get(id),
+
+    listNextSteps: () => [...nextSteps.entries()].map(([, record]) => record),
+    listLessons: () => [...lessons.entries()].map(([, record]) => record),
+    listFocus: () => [...focus.entries()].map(([, record]) => record),
+
+    exportState(now) {
+      return {
+        format: EXPORT_FORMAT,
+        version: EXPORT_VERSION,
+        exportedAt: now,
+        domain: { name: domain.name, version: EXPORT_VERSION },
+        learner: learner.get(),
+        courses: [...courses.entries()].map(([, record]) => record),
+        nodes: [...nodes.entries()].map(([, record]) => record),
+        lessons: [...lessons.entries()].map(([, record]) => record),
+        nextSteps: [...nextSteps.entries()].map(([, record]) => record),
+        focus: [...focus.entries()].map(([, record]) => record),
+      }
+    },
+
+    async resetState(now) {
+      // Table by table, on the domain's own write chain, so a reset cannot
+      // interleave with a write that is already queued.
+      for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs]) {
+        for (const key of [...table.keys()]) await table.delete(key)
+      }
+      await learner.set({ initializedAt: UNINITIALIZED, updatedAt: now })
+    },
 
     readHandoff: (targetNodeId) => handoffs.get(targetNodeId),
 

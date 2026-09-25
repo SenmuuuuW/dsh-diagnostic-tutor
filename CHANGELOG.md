@@ -5,6 +5,53 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.0.10] — your data is yours
+
+The runtime claimed learner state was "visible, exportable and deletable". Two
+of those three did not exist. This closes that gap, and pins the limit that is
+left.
+
+### Added
+
+- **`GET /export`** — everything the learner owns as one self-describing JSON
+  file (`format` + `version` first, so it explains itself years later without
+  this plugin installed), served as an attachment with a dated filename.
+  Handoffs are deliberately excluded: a handoff is timing for a model turn in
+  progress, not learning state, and restoring one would restore a claim about
+  something that is no longer running.
+- **`POST /reset`** — deletes everything and returns to first run. Irreversible
+  on purpose; an undo would mean keeping a copy of exactly what was asked to be
+  removed. Refused over GET, so a link cannot delete anyone's work.
+- **Both in the panel**, on both surfaces: *Export my data* and *Delete
+  everything*, the second behind a second click rather than a dialog to dismiss
+  by reflex.
+
+### Found, and not fixed
+
+The runtime declares `invalidRecords: 'backup-and-skip'` — the platform's
+recovery path for a record that fails its schema. **It has no effect here.** The
+facility only honours it when the unit can move a *per-record* document aside,
+and this domain uses the default `single` layout, where every record lives in
+one `udt.json`. The declaration is correct but inert.
+
+The consequence is contained rather than catastrophic: one malformed record
+rejects the open, the plugin reports it and stays inert instead of failing the
+profile, and nothing is destroyed — removing the record by hand restores
+everything else. Both halves are pinned by tests, including one asserting the
+rejection so the limit stays visible instead of being assumed away. The fix is
+`layout: 'per-record'`, which the JSON backend seeds from the existing single
+file; it changes the on-disk format, so it is left as a deliberate decision.
+
+### Tests
+
+250 across twenty-one files. New (`state-export.test.ts`, 9): the export serves
+an attachment with the right headers, carries everything, is self-describing,
+omits handoffs, round-trips through JSON unchanged, and survives an empty state;
+reset clears every table and returns to *first run* rather than "initialized
+with nothing in it", leaves a working runtime behind, and is refused over GET;
+and the damaged-store limit is asserted in both directions.
+
+
 ## [0.0.9] — DSH 0.1.7 compatibility, and a real A → B
 
 Three compatibility fixes against harness **0.1.7-alpha.2**, and the first

@@ -117,6 +117,35 @@ const CSS = `.dt-root {
 }
 .dt-notice b { font-weight: 640; }
 
+/* ---- learner data controls --------------------------------------------- */
+/* Quiet by default: these are rights, not calls to action. They sit below the
+   teaching so they are findable without competing with it. */
+.dt-data {
+  margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--dt-border);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+}
+.dt-quiet {
+  padding: 4px 10px; border-radius: 7px; border: 1px solid var(--dt-border);
+  background: transparent; color: var(--dt-muted);
+  font: inherit; font-size: 11.5px; cursor: pointer;
+}
+.dt-quiet:hover { background: var(--dt-surface); color: var(--dt-text); }
+.dt-quiet:disabled { opacity: .5; cursor: default; }
+.dt-data-note { flex-basis: 100%; color: var(--dt-muted); font-size: 11px; line-height: 1.5; }
+.dt-data-confirm {
+  border-top-color: var(--dt-stop);
+  background: color-mix(in srgb, var(--dt-stop) 6%, transparent);
+  border-radius: var(--dt-radius); padding: 12px 13px; margin-top: 26px;
+}
+.dt-data-ask { margin: 0 0 10px; font-size: 12px; line-height: 1.6; }
+.dt-data-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.dt-danger {
+  padding: 5px 12px; border-radius: 7px; border: 1px solid var(--dt-stop);
+  background: var(--dt-stop); color: #fff;
+  font: inherit; font-size: 11.5px; font-weight: 550; cursor: pointer;
+}
+.dt-danger:disabled { opacity: .55; cursor: default; }
+
 /* ---- now learning ------------------------------------------------------ */
 .dt-now {
   padding: 13px 14px 14px;

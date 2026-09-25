@@ -69,6 +69,47 @@ export function fetchLesson(nodeId: string): Promise<LessonResponse> {
 }
 
 /**
+ * Save everything the learner owns to a file.
+ *
+ * Deliberately a full download rather than a call that returns data: the point
+ * of an export is that the learner ends up holding it, and a file they can move,
+ * read and keep is the only version of that which survives this app.
+ *
+ * @returns the filename the browser was asked to save.
+ */
+export async function downloadExport(): Promise<string> {
+  const response = await fetch(`${BASE}/export`, { headers: { accept: 'application/json' } })
+  if (!response.ok) throw new Error(`export failed (HTTP ${response.status})`)
+  const text = await response.text()
+
+  const stamp = new Date().toISOString().slice(0, 10)
+  const name = `dsh-diagnostic-tutor-${stamp}.json`
+  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }))
+  try {
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = name
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+  } finally {
+    // Revoking immediately is safe because the click has already handed the
+    // blob to the browser's download machinery.
+    URL.revokeObjectURL(url)
+  }
+  return name
+}
+
+/**
+ * Delete everything and return to first run.
+ *
+ * @returns nothing; the caller re-reads the overview.
+ */
+export function resetState(): Promise<{ ok: true; reset: true }> {
+  return request<{ ok: true; reset: true }>('/reset', { method: 'POST' })
+}
+
+/**
  * Tell the host a surface has rendered the lesson.
  *
  * The last leg of the timing chain: everything before it is measured on the
