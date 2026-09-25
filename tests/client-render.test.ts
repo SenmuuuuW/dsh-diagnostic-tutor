@@ -37,6 +37,7 @@ const overview: OverviewResponse = {
   focus: null,
   nextStep: null,
   handoff: null,
+  teachingBrain: true,
   nodes: [
     node('ml:goal', 'Machine Learning', 'goal', 'unconfirmed', null),
     node('ml:math', 'Math Foundations', 'prerequisite', 'blocked', 'ml:goal'),
@@ -112,15 +113,35 @@ describe('the panel shows the product, not a dashboard', () => {
 })
 
 describe('an empty runtime is a normal state', () => {
-  const empty: OverviewResponse = { ok: true, course: null, nodes: [], focus: null, nextStep: null, handoff: null, lessonCount: 0 }
+  const empty: OverviewResponse = { ok: true, course: null, nodes: [], focus: null, nextStep: null, handoff: null, teachingBrain: true, lessonCount: 0 }
   const html = panel({
     client: { ...client, fetchOverview: () => Promise.resolve(empty) },
     initialOverview: empty,
   })
 
-  it('says so instead of rendering broken chrome', () => {
-    expect(html).toContain('No goal yet')
-    expect(html).toContain('Nothing on the map yet')
+  it('says when nothing will teach, instead of waiting forever', () => {
+    // The runtime is useful without the skill but it cannot teach, and a
+    // learner watching an empty panel deserves the reason.
+    const noTutor = panel({
+      client: { ...client, fetchOverview: () => Promise.resolve({ ...empty, teachingBrain: false }) },
+      initialOverview: { ...empty, teachingBrain: false },
+    })
+    expect(noTutor).toContain('No tutor is installed for this workspace')
+    expect(noTutor).toContain('no lesson will be written')
+  })
+
+  it('does not cry wolf when the tutor is present', () => {
+    expect(html).not.toContain('No tutor is installed')
+  })
+
+  it('asks the one question that starts everything', () => {
+    // First use is not an error state and not a wizard: it is one question and
+    // the sentence that answers it, so a new learner knows the chat is the
+    // input.
+    expect(html).toContain('What do you want to learn?')
+    expect(html).toContain('I want to learn machine learning.')
+    // And it must not promise machinery that is not there.
+    expect(html).not.toContain('No goal yet')
   })
 })
 

@@ -7,9 +7,10 @@
  * a *separate column*, so the same runtime sits beside the chat and the learner
  * never has to switch.
  *
- * Layout is deliberately narrow-first: node, then map, then the lesson, stacked
- * in one scrolling column. A three-column split inside a docked panel would be
- * unreadable at the widths this column actually takes.
+ * Layout is deliberately narrow-first and ordered by what the learner needs
+ * next: **the lesson, then the recommendation, then the map, then the
+ * evidence.** The lesson leads because it is the teaching; the map and the
+ * evidence are reference material the learner consults, not the main event.
  *
  * It runs on the same `useLearning` state as the full panel, so the two cannot
  * disagree about what is focused or what the tutor wrote.
@@ -48,21 +49,27 @@ function CompactMap({
         Diagnosis map <span>{nodes.length}</span>
       </p>
       {rows.length === 0 && <p className="dt-empty">No map yet — state a goal in the chat.</p>}
-      {rows.map(({ node, depth }) => (
-        <button
-          key={node.id}
-          type="button"
-          className="dt-tab-node"
-          style={{ paddingLeft: `${6 + depth * 10}px` }}
-          aria-current={node.id === selectedId}
-          data-focused={node.id === focusNodeId}
-          onClick={() => onSelect(node.id)}
-        >
-          <span className={`dt-dot dt-state-${node.state}`} data-filled={node.state === 'confirmed'} />
-          <span className="dt-tab-node-title">{node.title}</span>
-          <span className={`dt-state dt-state-${node.state}`}>{node.state}</span>
-        </button>
-      ))}
+      <div className="dt-tree">
+        {rows.map(({ node, depth }) => (
+          <button
+            key={node.id}
+            type="button"
+            className="dt-tab-node"
+            style={{ paddingLeft: `${6 + depth * 14}px` }}
+            // Depth as data, so the stylesheet can draw the guide without
+            // measuring anything.
+            data-depth={depth > 0 ? Math.min(depth, 3) : undefined}
+            data-attention={node.state === 'blocked' || node.state === 'weak' ? 'true' : undefined}
+            aria-current={node.id === selectedId}
+            data-focused={node.id === focusNodeId}
+            onClick={() => onSelect(node.id)}
+          >
+            <span className={`dt-dot dt-state-${node.state}`} data-filled={node.state === 'confirmed'} />
+            <span className="dt-tab-node-title">{node.title}</span>
+            <span className={`dt-tab-state dt-state-${node.state}`}>{node.state}</span>
+          </button>
+        ))}
+      </div>
       <p className="dt-caption">
         {confirmed} of {nodes.length} confirmed by evidence.
       </p>
@@ -87,7 +94,7 @@ export interface LearningTabProps {
  */
 export function LearningTab({ client, sessionId, initialOverview }: LearningTabProps): ReactNode {
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview })
-  const { overview, focus, nextStep, handoff, selectedId, detail, lesson, note, error, starting, loading, select } =
+  const { overview, focus, nextStep, handoff, teachingBrain, selectedId, detail, lesson, note, error, starting, loading, select } =
     state
 
   // Show something on first paint: the focused node if there is one, else the
@@ -101,69 +108,110 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
 
   const shownId = focus?.nodeId ?? selectedId
 
+  const hasCourse = overview?.course != null
+  const rows = overview?.nodes ?? []
+
+  // First use: no goal yet. A blank panel would read as a broken panel, so it
+  // says what to do and shows the exact sentence that starts everything. No
+  // wizard — the chat is the input, and the shortest path there is one line of
+  // text the learner can copy.
+  if (!hasCourse) {
+    return (
+      <div className="dt-tab">
+        <div className="dt-welcome">
+          <p className="dt-welcome-eyebrow">Universal Diagnostic Tutor</p>
+          <h2 className="dt-welcome-title">What do you want to learn?</h2>
+          <p className="dt-welcome-body">
+            Say it in the chat — in your own words. The tutor will ask what you already know
+            before it teaches anything, and this panel fills in as it does.
+          </p>
+          <div className="dt-welcome-sample">
+            <span className="dt-welcome-sample-label">Try</span>
+            <span className="dt-welcome-sample-text">
+              I want to learn machine learning. I know some Python, but my math is weak.
+            </span>
+          </div>
+          <p className="dt-welcome-note">
+            No account, no scores, no streak. Your goal, your map and the evidence behind it
+            stay on this machine and are yours to export.
+          </p>
+      {teachingBrain === false && (
+        <p className="dt-notice">
+          <b>No tutor is installed for this workspace.</b> This panel will record and show
+          your learning state, but no lesson will be written until the Universal Diagnostic
+          Tutor skill is available.
+        </p>
+      )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="dt-tab">
-      <p className="dt-eyebrow">Now learning</p>
+      {/* ---- now learning ---- */}
       {detail === null ? (
-        <p className="dt-empty">
-          {loading ? 'Loading…' : 'Pick a node on the map below to begin.'}
-        </p>
-      ) : (
-        <>
-          <div className="dt-tab-head">
-            <h3 className="dt-tab-title">{detail.node.title}</h3>
-            <span className={`dt-state dt-state-${detail.node.state}`}>{detail.node.state}</span>
-          </div>
-          <p className="dt-tab-meta">
-            {relationLabel(detail.node.relation)}
-            {detail.parent !== null && ` · ${detail.parent.title}`}
-            {` · ${detail.node.evidence.length} evidence`}
+        // The header frame stays even before the first fetch lands, so the
+        // surface never looks like an empty box on a slow connection.
+        <header className="dt-now">
+          <p className="dt-now-eyebrow">Now learning</p>
+          <p className="dt-empty">
+            {loading ? 'Loading…' : 'Pick a node on the map below to begin.'}
           </p>
-          <p className="dt-why">{stateExplanation(detail.node.state)}</p>
-
+        </header>
+      ) : (
+        <header className="dt-now" data-state={detail.node.state}>
+          <p className="dt-now-eyebrow">Now learning</p>
+          <h2 className="dt-now-title">{detail.node.title}</h2>
+          <div className="dt-now-meta">
+            <span className={`dt-tab-state dt-state-${detail.node.state}`}>{detail.node.state}</span>
+            <span className="dt-now-rel">{relationLabel(detail.node.relation)}</span>
+            {detail.parent !== null && <span className="dt-now-rel">in {detail.parent.title}</span>}
+          </div>
+          <p className="dt-now-note">{stateExplanation(detail.node.state)}</p>
           <button
             type="button"
-            className="dt-primary dt-tab-action"
+            className="dt-primary dt-now-action"
             onClick={state.start}
             disabled={starting || shownId === null}
           >
-            {starting ? 'Starting…' : focus !== null && focus.nodeId === shownId ? 'Learning in progress' : 'Start learning'}
+            {starting
+              ? 'Starting…'
+              : focus !== null && focus.nodeId === shownId
+                ? 'Keep going'
+                : 'Start learning'}
           </button>
           {note !== null && <p className="dt-caption">{note}</p>}
           {error !== null && <p className="dt-empty">{error}</p>}
-        </>
+        </header>
       )}
 
-      <CompactMap
-        nodes={overview?.nodes ?? []}
-        selectedId={shownId}
-        focusNodeId={focus?.nodeId ?? null}
-        onSelect={select}
-      />
+      {/* ---- the teaching ---- */}
+      {/* Always present, even before it has content: the surface names its three
+          regions so a first-time learner can see what will fill them. */}
+      <section className="dt-lesson">
+        <p className="dt-tab-section">Learning surface</p>
+        {handoff !== null && (
+          <HandoffLine handoff={handoff} onRetry={() => state.continueTo(handoff.targetNodeId)} />
+        )}
+        {lesson === null ? (
+          <p className="dt-empty">
+            {focus !== null
+              ? 'The tutor is preparing this node…'
+              : 'Press Start learning and the teaching appears here, while the chat stays open beside it.'}
+          </p>
+        ) : (
+          <article className="dt-lesson-body">
+            <div className="dt-lesson-head">
+              <h3 className="dt-lesson-title">{lesson.title}</h3>
+              <span className="dt-origin">{lesson.origin}</span>
+            </div>
+            <LessonBody blocks={lesson.blocks} />
+          </article>
+        )}
+      </section>
 
-      <p className="dt-tab-section">Learning surface</p>
-      {handoff !== null && (
-        <HandoffLine
-          handoff={handoff}
-          onRetry={() => state.continueTo(handoff.targetNodeId)}
-        />
-      )}
-      {lesson === null ? (
-        <p className="dt-empty">
-          {focus !== null
-            ? 'The tutor is preparing this node…'
-            : 'Press Start learning and the teaching appears here, while the chat stays open beside it.'}
-        </p>
-      ) : (
-        <>
-          <div className="dt-lesson-head">
-            <span className="dt-tab-lesson-title">{lesson.title}</span>
-            <span className="dt-origin">{lesson.origin}</span>
-          </div>
-          <LessonBody blocks={lesson.blocks} />
-        </>
-      )}
-
+      {/* ---- where to go next ---- */}
       {nextStep !== null && (
         <NextStepCard
           nextStep={nextStep}
@@ -178,6 +226,14 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
         />
       )}
 
+      <CompactMap
+        nodes={rows}
+        selectedId={shownId}
+        focusNodeId={focus?.nodeId ?? null}
+        onSelect={select}
+      />
+
+      {/* ---- the evidence behind this node ---- */}
       {detail !== null && detail.node.evidence.length > 0 && (
         <>
           <p className="dt-tab-section">
@@ -186,11 +242,11 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
           <ul className="dt-evidence">
             {detail.node.evidence.map((entry, index) => (
               <li key={index}>
-                <div className="kind">
-                  {entry.kind}
-                  {entry.readiness !== undefined && ` · ${entry.readiness}`}
-                </div>
-                {entry.note !== undefined && <div>{entry.note}</div>}
+                <span className="dt-ev-kind">{entry.kind}</span>
+                {entry.readiness !== undefined && (
+                  <span className="dt-ev-readiness">{entry.readiness.replace(/-/g, ' ')}</span>
+                )}
+                {entry.note !== undefined && <span className="dt-ev-note">{entry.note}</span>}
               </li>
             ))}
           </ul>

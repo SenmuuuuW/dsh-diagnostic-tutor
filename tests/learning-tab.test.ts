@@ -72,6 +72,7 @@ const client: PanelClient = {
       focus: activeFocus,
   nextStep: null,
   handoff: null,
+      teachingBrain: true,
       lessonCount: 1,
     }),
   fetchNode: (nodeId): Promise<NodeDetailResponse> => {
@@ -122,6 +123,7 @@ function staticOverview(): OverviewResponse {
     focus: null,
   nextStep: null,
   handoff: null,
+    teachingBrain: true,
     lessonCount: 1,
   }
 }
@@ -239,7 +241,7 @@ describe('the tab follows the runtime', () => {
 
   it('picks a node on arrival rather than showing an empty panel', async () => {
     await mount()
-    expect(container.querySelector('.dt-tab-head')).not.toBeNull()
+    expect(container.querySelector('.dt-now')).not.toBeNull()
     expect(container.textContent).toContain('Machine Learning')
   })
 
@@ -250,7 +252,7 @@ describe('the tab follows the runtime', () => {
     await act(async () => {
       linear?.click()
     })
-    expect(container.querySelector('.dt-tab-title')?.textContent).toBe('Linear Algebra')
+    expect(container.querySelector('.dt-now-title')?.textContent).toBe('Linear Algebra')
   })
 
   it('starts learning and opens the tutor-written lesson', async () => {

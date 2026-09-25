@@ -77,9 +77,45 @@ export function LearningPanel({
     initialOverview,
     onStarted: onFocusStarted,
   })
-  const { overview, focus, nextStep, handoff, selectedId, detail, lesson, note, error, starting, loading } = state
+  const { overview, focus, nextStep, handoff, teachingBrain, selectedId, detail, lesson, note, error, starting, loading } =
+    state
   const rows = flattenTree(buildMapTree(overview?.nodes ?? []))
   const confirmed = (overview?.nodes ?? []).filter((node) => node.state === 'confirmed').length
+
+  // First use, same as the docked tab: a blank three-column page reads as a
+  // broken page. One question and the sentence that starts everything.
+  if (overview?.course == null) {
+    return (
+      <div className="dt-root dt-root-welcome">
+        <div className="dt-welcome">
+          <p className="dt-welcome-eyebrow">Universal Diagnostic Tutor</p>
+          <h1 className="dt-welcome-title">What do you want to learn?</h1>
+          <p className="dt-welcome-body">
+            Say it in the chat — in your own words. The tutor will ask what you already know
+            before it teaches anything. Then this page fills in: a map of what you actually
+            know, the lesson, and the evidence behind every status.
+          </p>
+          <div className="dt-welcome-sample">
+            <span className="dt-welcome-sample-label">Try</span>
+            <span className="dt-welcome-sample-text">
+              I want to learn machine learning. I know some Python, but my math is weak.
+            </span>
+          </div>
+          <p className="dt-welcome-note">
+            No account, no scores, no streak. Your goal, your map and the evidence behind it stay
+            on this machine and are yours to export.
+          </p>
+      {teachingBrain === false && (
+        <p className="dt-notice">
+          <b>No tutor is installed for this workspace.</b> This panel will record and show
+          your learning state, but no lesson will be written until the Universal Diagnostic
+          Tutor skill is available.
+        </p>
+      )}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="dt-root">

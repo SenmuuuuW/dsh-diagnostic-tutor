@@ -60,6 +60,8 @@ export interface LearningState {
   readonly nextStep: NextStepView | null
   /** How the current handoff is going, for the progress line. */
   readonly handoff: HandoffView | null
+  /** Whether a teaching brain is installed; `null` until the first fetch. */
+  readonly teachingBrain: boolean | null
   /** The node whose detail is shown; the focus when nothing is picked. */
   readonly selectedId: string | null
   readonly detail: NodeDetailResponse | null
@@ -223,6 +225,7 @@ export function useLearning(options: {
     focus,
     nextStep: overview?.nextStep ?? null,
     handoff: overview?.handoff ?? null,
+    teachingBrain: overview?.teachingBrain ?? null,
     selectedId,
     detail,
     lesson,

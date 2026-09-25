@@ -94,17 +94,25 @@ export async function apply(ctx: Context): Promise<void> {
 
   // A storage failure must not take the whole plugin tree down with it. The
   // loader treats a rejection from `apply` as a fatal composition error, so an
-  // unreadable or version-mismatched store file would otherwise stop every
-  // unrelated plugin in the profile from loading. Degrade instead: report the
-  // cause loudly, register nothing, and stay inert.
+  // unreadable, partial or version-mismatched store file would otherwise stop
+  // every unrelated plugin in the profile from loading — and would do it
+  // silently, because nothing is registered to report it. Degrade instead:
+  // report the cause loudly, register nothing, and stay inert.
+  //
+  // First-run initialization is inside this guard on purpose. It is the first
+  // *read* of the stored document, so it is where a partial file actually
+  // throws — a domain can open successfully and still fail on the first record
+  // that does not match its schema.
   let state
   try {
     state = await openUdState(facility)
+    // First run writes the learner record; later runs leave it untouched.
+    await state.ensureLearner(new Date().toISOString())
   } catch (error) {
     ctx.logger.error(
       `[diagnostic-tutor] could not open storage domain "${UDT_DOMAIN_NAME}": ${(error as Error).message}. ` +
         'The plugin is loaded but inert — no tools were registered. ' +
-        'This usually means a stored document written by an incompatible version.',
+        'This usually means a stored document written by an incompatible version, or one edited by hand.',
     )
     return
   }
@@ -113,9 +121,6 @@ export async function apply(ctx: Context): Promise<void> {
   // rejects new writes, drains queued ones, and releases the backend unit) and
   // Cordis awaits the returned promise before the plugin counts as unloaded.
   ctx.effect(() => () => state.close())
-
-  // First run writes the learner record; later runs leave it untouched.
-  await state.ensureLearner(new Date().toISOString())
 
   // Is the teaching brain present? Resolved lazily and never fatal: the
   // runtime is useful without it, and a missing skill is a degraded mode, not
@@ -129,7 +134,19 @@ export async function apply(ctx: Context): Promise<void> {
   // `learning_runtime_contract.md` now says all of that in the skill's own
   // words, so the bridge was deleted rather than kept as a second voice.
   const udt = await detectUdtSkill(ctx.get('skills'))
-  ctx.logger.debug(`[diagnostic-tutor] teaching brain: ${describeUdtStatus(udt)}`)
+  if (udt.available) {
+    ctx.logger.debug(`[diagnostic-tutor] teaching brain: ${describeUdtStatus(udt)}`)
+  } else {
+    // Not debug: without the skill nothing will ever be taught, and a learner
+    // staring at an empty panel deserves a reason in the log. The panel says
+    // the same thing in its own words; neither names the skill's files or
+    // version, because its protocol forbids that in learner-facing text.
+    ctx.logger.warn(
+      `[diagnostic-tutor] no teaching brain in this profile: ${describeUdtStatus(udt)}. ` +
+        'The runtime will record and display state, but no lesson will be written until the ' +
+        'Universal Diagnostic Tutor skill is installed for this workspace.',
+    )
+  }
 
   // Mount the browser API if this profile has a web surface.
   //
@@ -145,6 +162,7 @@ export async function apply(ctx: Context): Promise<void> {
       registerApi(server as WebServerLike, {
         state,
         prompt: (sessionId, text) => promptSession(ctx, sessionId, text),
+        teachingBrain: udt.available,
       }),
     )
     ctx.logger.debug(`[diagnostic-tutor] browser API mounted at ${API_PREFIX}`)

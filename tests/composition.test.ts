@@ -70,3 +70,30 @@ describe('real cordis composition', () => {
     }
   })
 })
+
+describe('a profile with no teaching brain', () => {
+  it('says so at a level a user will see, not at debug', async () => {
+    // The default fixture is `absent`, which is exactly a profile where the
+    // skill was never installed. Without the skill nothing will ever be taught,
+    // so silence here would leave a learner staring at a panel with no reason.
+    const harness = await createHarness({ udt: 'absent' })
+    try {
+      const warnings: string[] = []
+      const debug: string[] = []
+      harness.ctx.logger.warn = (format: string) => warnings.push(String(format))
+      harness.ctx.logger.debug = (format: string) => debug.push(String(format))
+
+      await harness.ctx.plugin(plugin)
+
+      expect(warnings.some((line) => line.includes('no teaching brain'))).toBe(true)
+      // It must not name the skill's files or version: the skill's own protocol
+      // forbids that in learner-facing text, and this message is one step away.
+      const warning = warnings.find((line) => line.includes('no teaching brain')) ?? ''
+      expect(warning).not.toMatch(/\.md|v2\.\d|github\.com/)
+      // And it must still load: the runtime is useful without the tutor.
+      expect(harness.ctx.get('tools')?.schemas()?.length ?? 0).toBeGreaterThan(0)
+    } finally {
+      await harness.close()
+    }
+  })
+})

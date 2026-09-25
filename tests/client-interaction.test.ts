@@ -56,6 +56,7 @@ const overview: OverviewResponse = {
   focus: null,
   nextStep: null,
   handoff: null,
+  teachingBrain: true,
   lessonCount: 0,
 }
 

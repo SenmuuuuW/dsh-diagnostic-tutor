@@ -58,31 +58,122 @@ function inline(text: string): ReactNode[] {
     })
 }
 
+/** One line of a text body, classified. */
+type Line =
+  | { kind: 'heading'; level: 2 | 3; text: string }
+  | { kind: 'bullet'; text: string }
+  | { kind: 'ordered'; marker: string; text: string }
+  | { kind: 'math'; text: string }
+  | { kind: 'text'; text: string }
+
 /**
- * Split a text body into display-math blocks and prose paragraphs, then format
- * each part inline. Blank-line separated, so a TextBlock reads as prose rather
- * than one wall.
+ * Classify one line.
+ *
+ * The teaching brain writes ordinary light markdown — `###` headings, `-`
+ * bullets, `1.` steps — because that is how a person writes an explanation.
+ * Printing the markers verbatim is what makes a lesson look like a Markdown
+ * renderer instead of a lesson, so they are recognised here.
+ *
+ * This adds **no block type**: it is how the existing text and check blocks are
+ * displayed, which is the part of the surface the learner actually reads.
+ */
+function classify(line: string): Line {
+  const heading = /^(#{2,3})\s+(.*)$/.exec(line)
+  if (heading) return { kind: 'heading', level: heading[1] === '##' ? 2 : 3, text: heading[2]! }
+  // Display math is written with escaped delimiters: \[...\]
+  const trimmed = line.trim()
+  if (trimmed.startsWith('\\[') && trimmed.endsWith('\\]')) {
+    return { kind: 'math', text: trimmed.slice(2, -2).trim() }
+  }
+  const bullet = /^\s*[-*•]\s+(.*)$/.exec(line)
+  if (bullet) return { kind: 'bullet', text: bullet[1]! }
+  const ordered = /^\s*(\d+)[.)]\s+(.*)$/.exec(line)
+  if (ordered) return { kind: 'ordered', marker: ordered[1]!, text: ordered[2]! }
+  return { kind: 'text', text: line }
+}
+
+/** Group consecutive lines into runs that render as one element. */
+function toRuns(md: string): Line[][] {
+  const runs: Line[][] = []
+  let current: Line[] = []
+  let currentKind: Line['kind'] | null = null
+  const flush = (): void => {
+    if (current.length > 0) runs.push(current)
+    current = []
+    currentKind = null
+  }
+  for (const raw of md.split(/\n/)) {
+    const line = raw.trimEnd()
+    if (line.trim().length === 0) {
+      flush()
+      continue
+    }
+    const parsed = classify(line)
+    // Three things join the run in progress: a wrapped prose line, and a bullet
+    // or ordered step continuing a list of the same kind. Everything else —
+    // headings, display math, a change of list kind — starts a new run, so a
+    // heading never swallows the prose under it.
+    const continues =
+      parsed.kind === 'text'
+        ? currentKind === 'text'
+        : (parsed.kind === 'bullet' || parsed.kind === 'ordered') && currentKind === parsed.kind
+    if (!continues) flush()
+    current.push(parsed)
+    currentKind = parsed.kind
+  }
+  flush()
+  return runs
+}
+
+/**
+ * Render a text body as a lesson rather than as source.
+ *
+ * Blank-line separated runs become paragraphs, `###` becomes a real heading,
+ * `-` and `1.` become real lists, and `\[...\]` becomes a display-math panel.
  */
 function Paragraphs({ md }: { md: string }): ReactNode {
-  const segments = md.split(/(\\\[[\s\S]*?\\\])/g).filter((part) => part.trim().length > 0)
   return (
     <>
-      {segments.map((segment, index) => {
-        if (segment.startsWith('\\[') && segment.endsWith('\\]')) {
+      {toRuns(md).map((run, index) => {
+        const first = run[0]!
+        if (first.kind === 'heading') {
+          const Tag = first.level === 2 ? 'h3' : 'h4'
+          return (
+            <Tag className={`dt-md-h${first.level}`} key={index}>
+              {inline(first.text)}
+            </Tag>
+          )
+        }
+        if (first.kind === 'math') {
           return (
             <div className="dt-math-block" key={index}>
-              {segment.slice(2, -2).trim()}
+              {first.text}
             </div>
           )
         }
-        return segment
-          .split(/\n{2,}/)
-          .filter((part) => part.trim().length > 0)
-          .map((paragraph, inner) => (
-            <p key={`${index}-${inner}`} className="dt-block-md">
-              {inline(paragraph.trim())}
-            </p>
-          ))
+        if (first.kind === 'bullet') {
+          return (
+            <ul className="dt-md-ul" key={index}>
+              {run.map((line, inner) => (
+                <li key={inner}>{inline(line.text)}</li>
+              ))}
+            </ul>
+          )
+        }
+        if (first.kind === 'ordered') {
+          return (
+            <ol className="dt-md-ol" key={index}>
+              {run.map((line, inner) => (
+                <li key={inner}>{inline(line.text)}</li>
+              ))}
+            </ol>
+          )
+        }
+        return (
+          <p className="dt-block-md" key={index}>
+            {inline(run.map((line) => line.text).join(' '))}
+          </p>
+        )
       })}
     </>
   )
@@ -101,6 +192,7 @@ function ExampleBlockView({ block }: BlockRenderProps): ReactNode {
   if (block.type !== 'example') return null
   return (
     <div className="dt-block dt-block-example">
+      <p className="dt-block-label">Worked example</p>
       <h4>{block.content.title}</h4>
       <ol>
         {block.content.steps.map((step, index) => (
@@ -119,10 +211,10 @@ function DiagramBlockView({ block }: BlockRenderProps): ReactNode {
   const isMermaid = block.content.format === 'mermaid'
   return (
     <div className="dt-block dt-block-diagram">
+      <p className="dt-block-label">Diagram</p>
       {isMermaid && (
         <p className="dt-caption">
-          Diagram source (<code>mermaid</code>) — shown as text because this build ships no
-          mermaid renderer.
+          Source shown as text — this build ships no <code>mermaid</code> renderer.
         </p>
       )}
       <pre className="dt-pre">{block.content.spec}</pre>
@@ -131,13 +223,31 @@ function DiagramBlockView({ block }: BlockRenderProps): ReactNode {
   )
 }
 
+/**
+ * The check.
+ *
+ * Rendered as an invitation rather than a field: this surface has no input box,
+ * so the block has to make it obvious that the next move is the learner's and
+ * that it happens in the chat. The wording says so instead of leaving a dead
+ * question sitting in a panel.
+ */
 function CheckBlockView({ block }: BlockRenderProps): ReactNode {
   if (block.type !== 'check') return null
   return (
     <div className="dt-block dt-block-check">
-      <div className="dt-check-tag">Check — answer in the chat</div>
-      <Paragraphs md={block.content.prompt} />
-      {block.content.hint !== undefined && <p className="dt-caption">{block.content.hint}</p>}
+      <div className="dt-check-head">
+        <span className="dt-check-tag">Your turn</span>
+        <span className="dt-check-where">answer in the chat →</span>
+      </div>
+      <div className="dt-check-body">
+        <Paragraphs md={block.content.prompt} />
+      </div>
+      {block.content.hint !== undefined && (
+        <p className="dt-check-hint">
+          <span>Hint</span>
+          {inline(block.content.hint)}
+        </p>
+      )}
     </div>
   )
 }
@@ -217,7 +327,12 @@ export function NextStepCard({
   const moves = nextStep.targetNodeId !== null
   return (
     <div className="dt-next">
-      <p className="dt-next-label">Next best step</p>
+      <p className="dt-next-label">
+        <span className="dt-next-arrow" aria-hidden="true">
+          ↓
+        </span>
+        Next best step
+      </p>
       <p className="dt-next-from">
         <span className="dt-next-tick" aria-hidden="true">
           ✓

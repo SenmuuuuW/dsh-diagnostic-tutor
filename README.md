@@ -5,7 +5,9 @@
 Diagnosis-first AI learning runtime for DeepSeek Harness — map what you need,
 learn interactively, and move to the next best step.
 
-![The learning runtime in DeepSeek Harness: the conversation on the left, the diagnosis map and the lesson docked beside it](preview/dsh-ui-v0107-ab.png)
+![The learning runtime in DeepSeek Harness: the conversation in the middle, the diagnosis map and the lesson docked beside it](preview/dsh-ui-v0107-ab.png)
+
+<sub>The learning surface docked in the right sidebar, beside the conversation. The map, the lesson and the chat are on screen at once, so answering a check never means leaving the lesson.</sub>
 
 ## Early development
 
@@ -48,6 +50,28 @@ Goal  →  Diagnose  →  Map  →  Learn  →  Check  →  Decide  →  Next le
 Read left to right, that is also the guarantee: **the runtime never advances on
 its own.** A decision is stored with the tutor's reason, shown to the learner,
 and waits to be pressed.
+
+### The demo scenario
+
+The screenshots below come from one scenario, run against real DeepSeek Harness
+with the real skill:
+
+> **I want to learn machine learning. I know some Python, but my math is weak.**
+
+The tutor asks what the goal is *for* before it teaches anything, then grows a
+map one diagnosis at a time.
+
+Nothing in these images is a fixture or a mock — they are screenshots of the
+running app. `demo-1` is a cold start from an empty store; the rest are the same
+scenario resumed, because the clarify-then-diagnose phase costs several model
+turns and a cold start to a full lesson runs to roughly fifteen minutes.
+
+| | |
+| --- | --- |
+| ![First use: the panel asks one question](preview/demo-1-first-use.png) | **First use.** No goal yet. One question, and the sentence that answers it — no wizard, no empty dashboard. |
+| ![The diagnosis map](preview/demo-3-map.png) | **The diagnosis map.** Six nodes, each traceable to evidence, nested by depth. `blocked` and `checked` read at a glance; nothing is `confirmed` without a check behind it. |
+| ![A lesson with a check](preview/demo-4-lesson.png) | **A lesson.** Real headings and lists, a worked example set apart, a diagram in its own frame, and a check that hands the turn back to the learner. |
+| ![The docked surface with the progress line](preview/demo-5-next-step.png) | **The docked surface.** The same loop in the right sidebar, with the handoff progress line (`Lesson ready 7s`) so a slow model turn reads as *working* rather than *broken*. |
 
 ---
 
@@ -107,25 +131,57 @@ Rules this repository enforces mechanically:
 
 ---
 
-## Install (development only)
+## Install
 
-Requires a DSH install and pnpm. `--profile` is **mandatory** — `dsh plugin add`
-without it exits non-zero, because `dsh plugin` is a thin pnpm forwarder.
+> **There is no npm release yet.** Install from the repository; that is the only
+> path until `v0.1.0`.
+
+**Requirements**
+
+| | |
+| --- | --- |
+| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | verified against `0.1.7-alpha.2` |
+| Node | `^22.19.0 \|\| >=24.0.0` |
+| pnpm | for the build, and because `dsh plugin` forwards to it |
+| the [Universal Diagnostic Tutor](https://github.com/SenmuuuuW/universal-diagnostic-tutor-skill) skill | the teaching brain. Without it the runtime loads and records state, but **no lesson is ever written** — and it says so, in the log and in the panel |
+
+**Install**
 
 ```sh
-pnpm install && pnpm build
+git clone https://github.com/SenmuuuuW/dsh-diagnostic-tutor
+cd dsh-diagnostic-tutor
+pnpm install
+pnpm build
 
-# use an absolute path: `dsh plugin` runs pnpm inside the profile directory,
-# so a relative path would resolve against the profile, not your checkout.
+# --profile is mandatory: `dsh plugin` without it exits non-zero, because it is
+# a thin pnpm forwarder that needs a profile to forward into.
+#
+# Use an absolute path. `dsh plugin` runs pnpm inside the profile directory, so
+# a relative path would resolve against the profile, not your checkout.
 dsh plugin --profile <profile> add "$PWD"
+```
 
+**Verify it mounted**
+
+```sh
+# The plugin should appear in the merged tree, as an insert row.
 dsh --profile <profile> --dump-config | grep -A2 dsh-diagnostic-tutor
 ```
 
-A `github:` install additionally requires the user to approve the package's
-build script in the profile's `pnpm-workspace.yaml` — which is permission for
-that code to run on your machine at install time. **Prebuilt artifacts are the
-supported path from `v0.1.0` onward**, so that this step disappears.
+Then start the profile with a web surface and look for **Learn** in the sidebar:
+
+```sh
+dsh <profile> --port 8399 --no-open
+```
+
+A `--dump-config` entry only proves a loader row exists — it is not proof the
+plugin runs. For that, open the panel: a first run shows *What do you want to
+learn?*, and a profile with no skill shows the no-tutor notice instead.
+
+**Known install limitation.** A `github:` install also requires approving the
+package's build script in the profile's `pnpm-workspace.yaml`, which is
+permission for that code to run on your machine at install time. Prebuilt
+artifacts remove this step, and are the intent from `v0.1.0` onward.
 
 ---
 
@@ -394,7 +450,7 @@ pnpm screenshot "<dsh-url-with-token>" preview/dsh-ui.png
 ```sh
 pnpm install
 pnpm typecheck   # tsc --noEmit  (host and client)
-pnpm test        # unit, guard, DOM, and real-composition tests
+pnpm test        # 241 tests: unit, guard, DOM, render, real composition
 pnpm build       # tsc -> lib/ (host) + tsdown -> lib/client.js
 ```
 
@@ -417,7 +473,7 @@ shows a loader row exists.
 | `v0.0.6` | the learning surface docks beside the chat; both surfaces share one state |
 | `v0.0.7` | the tutor decides the next step; focus lifecycle; NEXT BEST STEP card |
 | `v0.0.8` | handoff record, progress line, retry, and the latency measured |
-| `v0.0.9` | **current** — DSH 0.1.7 compatibility, and the first real A → B |
+| `v0.0.9` | **current** — DSH 0.1.7 compatibility, the first real A → B, and product polish |
 | `v0.1.0` | **first playable MVP** — state export/reset, settings, i18n, math typesetting |
 
 ## Trust

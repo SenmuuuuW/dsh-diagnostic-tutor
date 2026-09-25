@@ -51,6 +51,53 @@ complete two-node learning run against **UDT v2.1**.
   mechanic that a check block has no input box so the learner answers in the
   chat — all stay, guarded by a test.
 
+### Product polish and demo quality (same release)
+
+The loop worked; it did not yet look like a product. No new capability was
+added, and no block type — the four that exist are the four that render.
+
+**Lessons read as lessons.** The teaching brain writes ordinary light markdown
+inside its blocks — `###` headings, `-` bullets, `1.` steps — and the renderer
+printed the markers verbatim, so a lesson looked like a Markdown source file.
+Headings, bullet lists and ordered steps are now recognised and rendered, with
+no new block type. Worked examples, diagrams and checks each gained a label;
+the check in particular now reads as an invitation (*Your turn — answer in the
+chat →*) rather than a question sitting in a dead panel.
+
+**The surface is ordered by what a learner needs next:** the lesson, then the
+recommendation, then the map, then the evidence. The lesson leads because it is
+the teaching; the map and the evidence are reference.
+
+**`NOW LEARNING` is a card, not an eyebrow**, edged in the colour of the node's
+state so the most important fact is the first thing seen. The diagnosis map
+draws depth guides and tints blocker rows, so `blocked` is findable without
+reading every line. Evidence became a compact record — kind, readiness,
+timestamp, and a clamped note — instead of three stacked lines per entry. The
+next-best-step card is now the most deliberate thing on the surface.
+
+**First use is a question, not a blank page.** With no goal yet, both surfaces
+ask *What do you want to learn?*, show the exact sentence that starts
+everything, and say what happens to your data. No wizard.
+
+**A missing teaching brain is now visible.** It used to be a `debug` line: the
+plugin loaded, the panel sat empty, and nothing said why. It is a `warn` in the
+log and a notice in the panel — deliberately worded without the skill's files or
+version, because its own protocol forbids naming those in learner-facing text.
+
+**Fixed:** a damaged store could take the whole plugin tree down. `apply` guarded
+the domain *open* but not the first-run learner write, so a partial or
+hand-edited file rejected `apply` — which the loader treats as a fatal
+composition error, failing every unrelated plugin in the profile with nothing
+registered to report it. Both are inside the guard now, and a regression test
+drives the damaged-store path.
+
+**README** rewritten for a public audience: what it is, why it is not just
+another AI tutor, the teaching-brain/runtime split, the seven-stage loop as a
+diagram, an honest *early development* notice that names what does **not** exist,
+and the demo scenario with real screenshots. Caught while writing it: a stale
+"temporary runtime adapter" section describing a file deleted in `v0.0.9`, and a
+duplicated `v0.1.0` row in the roadmap.
+
 ### Verified: a real A → B on 0.1.7 + v2.1
 
 No store editing, no hand-called tools, no re-hooked `nextStepId`. Everything
@@ -91,7 +138,7 @@ behaviour got *better*, which is the evidence that they were in the wrong place.
 
 ### Tests
 
-219 across nineteen files. New (`model-contract.test.ts`, 12): the source value
+241 across twenty files. New (`model-contract.test.ts`, 12): the source value
 and its absence of a `plugin` field; a compile-time guard that fails if the
 module augmentation is removed; the platform's own `createUserMessage` accepting
 the message; a refusal to wake the wrong session; node ids in `udt_map_get`,

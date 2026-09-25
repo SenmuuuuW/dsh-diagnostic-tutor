@@ -209,17 +209,20 @@ describe('the client plugin registers into the DSH slots', () => {
     expect(main).toBeDefined()
     expect(tab).toBeDefined()
 
-    // Both render without a client injected; the real one fetches, and in a
-    // static render the loading state is what shows.
+    // Both render without a client injected. With no data at all — what a
+    // freshly mounted client has before its first fetch — both show the
+    // first-use state rather than an empty shell.
     const mainHtml = renderToStaticMarkup(createElement(main?.Component as never, {} as never))
     expect(mainHtml).toContain('dt-root')
-    expect(mainHtml).toContain('Current course')
+    expect(mainHtml).toContain('What do you want to learn?')
 
-    // The docked tab is narrow-first and says what it is for.
+    // The docked tab is narrow-first. With no data at all — which is what a
+    // freshly mounted client has before its first fetch — it must show the
+    // first-use state rather than an empty box.
     const tabHtml = renderToStaticMarkup(createElement(tab?.Component as never, {} as never))
     expect(tabHtml).toContain('dt-tab')
-    expect(tabHtml).toContain('Now learning')
-    expect(tabHtml).toContain('Diagnosis map')
+    expect(tabHtml).toContain('What do you want to learn?')
+    expect(tabHtml).toContain('I want to learn machine learning.')
   })
 })
 

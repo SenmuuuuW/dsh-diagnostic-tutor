@@ -101,6 +101,15 @@ export interface OverviewResponse {
   nextStep: NextStepView | null
   /** The handoff for the focused node, so a reload rebuilds the progress line. */
   handoff: HandoffView | null
+  /**
+   * Whether the teaching brain is installed.
+   *
+   * A boolean, not a name or a version: the skill's own protocol forbids
+   * naming its files or versions in learner-facing text, and a runtime that
+   * leaked them would be the thing that broke that rule. The surface only needs
+   * to know whether teaching will happen at all.
+   */
+  teachingBrain: boolean
   lessonCount: number
 }
 

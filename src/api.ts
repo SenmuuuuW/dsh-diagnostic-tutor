@@ -184,7 +184,7 @@ function nextStepOf(state: UdState, courseId: string): NextStepView | null {
   }
 }
 
-function handleOverview(state: UdState, res: ServerResponse): void {
+function handleOverview(state: UdState, deps: ApiDeps, res: ServerResponse): void {
   const course = currentCourse(state)
   if (course === undefined) {
     // An empty state is a normal state, not an error: the panel says so.
@@ -197,6 +197,7 @@ function handleOverview(state: UdState, res: ServerResponse): void {
     nodes: state.listNodes(course.id).map(nodeView),
     focus: focusOf(state, course.id),
     nextStep: nextStepOf(state, course.id),
+    teachingBrain: deps.teachingBrain ?? true,
     // The handoff for whichever node is focused, so a reload or a restart
     // rebuilds the progress line instead of showing a blank wait.
     handoff: (() => {
@@ -379,6 +380,11 @@ export interface ApiDeps {
    * can be exercised without an agent registry.
    */
   readonly prompt: (sessionId: string | undefined, text: string) => FocusPromptResult
+  /**
+   * Whether a teaching brain was detected. Defaults to `true` so a caller that
+   * does not model one is not made to claim it is missing.
+   */
+  readonly teachingBrain?: boolean
 }
 
 /**
@@ -395,7 +401,7 @@ export function createApiHandler(deps: ApiDeps) {
     const route = url.pathname.slice(API_PREFIX.length) || '/'
     const course = currentCourse(state)
 
-    if (method === 'GET' && route === '/overview') return handleOverview(state, res)
+    if (method === 'GET' && route === '/overview') return handleOverview(state, deps, res)
     if (method === 'GET' && route === '/node') {
       const nodeId = url.searchParams.get('id')
       if (nodeId === null || nodeId.length === 0) return fail(res, 400, 'missing-id')
