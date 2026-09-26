@@ -198,7 +198,10 @@ describe('clicking a node switches the detail pane', () => {
       nodeButton('Linear Algebra').click()
     })
 
-    expect(asked).toEqual(['ml:math:la'])
+    // The panel picks something on arrival now, so the record starts with the
+    // arrival choice; the click must not ask for the same node a second time.
+    expect(asked.at(-1)).toBe('ml:math:la')
+    expect(asked.filter((id) => id === 'ml:math:la')).toHaveLength(1)
     const detail = container.querySelector('.dt-detail')
     expect(detail?.textContent).toContain('Linear Algebra')
     // Its evidence and its parent context are both shown.
@@ -215,7 +218,9 @@ describe('clicking a node switches the detail pane', () => {
       nodeButton('Python').click()
     })
 
-    expect(asked).toEqual(['ml:math', 'ml:python'])
+    // One ask per distinct selection, in order, with the arrival pick first.
+    expect(asked).toEqual([...new Set(asked)])
+    expect(asked.slice(-2)).toEqual(['ml:math', 'ml:python'])
     const current = [...container.querySelectorAll('button.dt-node[aria-current="true"]')]
     expect(current).toHaveLength(1)
     expect(current[0]?.textContent).toContain('Python')
