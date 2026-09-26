@@ -36,6 +36,21 @@ export type UdtCompatibility = (typeof UDT_COMPATIBILITIES)[number]
 export interface UdtSkillStatus {
   /** Whether the skill was found in the catalog. */
   readonly available: boolean
+  /**
+   * Whether the catalog could be read well enough to conclude anything.
+   *
+   * `false` means the skill was not found **in a catalog that demonstrably has
+   * entries**, so its absence is a real finding. `true` means entries were
+   * visible and the search was meaningful.
+   *
+   * This distinction exists because the registry's `list()` reads **the global
+   * layer alone** unless given a viewing `scope`, and the standard web profile
+   * mounts the filesystem skill provider inside a nested agent layer. From a
+   * plugin at the profile root the catalog is therefore *empty* even when the
+   * skill is installed and the tutor is using it — a miss that says nothing.
+   * Treating that as "not installed" produced a confident, wrong answer.
+   */
+  readonly catalogVisible: boolean
   /** The name we looked for. */
   readonly name: string
   readonly compatibility: UdtCompatibility
@@ -69,8 +84,8 @@ export function fingerprintContent(content: string): string {
   return createHash('sha256').update(content, 'utf8').digest('hex').slice(0, 12)
 }
 
-function unavailable(name: string, reason: string): UdtSkillStatus {
-  return { available: false, name, compatibility: 'unavailable', reason }
+function unavailable(name: string, reason: string, catalogVisible = false): UdtSkillStatus {
+  return { available: false, name, compatibility: 'unavailable', reason, catalogVisible }
 }
 
 /**
@@ -94,11 +109,21 @@ export async function detectUdtSkill(skills: SkillRegistry | undefined): Promise
 
   const summary = summaries.find((entry) => entry.name === UDT_SKILL_NAME)
   if (!summary) {
-    return unavailable(UDT_SKILL_NAME, 'not found in any skill root for this workspace')
+    // An empty catalog proves nothing: see `catalogVisible`. Report the miss
+    // either way, but only claim absence when entries were actually visible.
+    return summaries.length === 0
+      ? unavailable(
+          UDT_SKILL_NAME,
+          'no skills are visible from this profile scope; the catalog is mounted per agent ' +
+            'in some profiles, so nothing can be concluded about what is installed',
+          false,
+        )
+      : unavailable(UDT_SKILL_NAME, `not among the ${summaries.length} skills visible in this scope`, true)
   }
 
   const base = {
     available: true,
+    catalogVisible: true,
     name: UDT_SKILL_NAME,
     source: summary.source,
     provider: summary.provider,

@@ -266,16 +266,18 @@ export const UNINITIALIZED = ''
 export const udtDomain = defineDomain({
   name: UDT_DOMAIN_NAME,
   version: UDT_DOMAIN_VERSION,
-  // Declared so that one unreadable record does not cost the learner the rest:
-  // the backend moves the record's document aside, logs the cause, and opens
-  // without it. The platform gates this on the unit being able to move a
-  // per-record document, and this domain uses the default `single` layout —
-  // one `udt.json` for everything — where there is no such document, so the
-  // option currently falls back to the rejecting default. It is declared
-  // anyway because it is the correct intent and becomes live the moment the
-  // layout changes; see the damaged-store note in the README for what this
-  // costs today.
-  invalidRecords: 'backup-and-skip',
+  // Storage architecture is FROZEN for v0.1.0: `single` layout, no per-record,
+  // no id migration. One `udt.json` holding every record is what the learner
+  // can read, copy and export.
+  //
+  // `invalidRecords: 'backup-and-skip'` was declared here and deliberately
+  // removed. The platform only honours it when the store can move a per-record
+  // document aside, so under this layout it never ran — a declaration that
+  // reads like a recovery guarantee while doing nothing. What is true instead:
+  // a damaged record fails the open, is reported with its table and key, is
+  // **not deleted**, and the plugin loads inert rather than failing the
+  // profile. `GET /export` on a healthy store is how you keep a copy. See the
+  // storage section of the README, which states the same limit.
   global: {
     schema: LearnerProfileSchema,
     initial: { initializedAt: UNINITIALIZED, updatedAt: UNINITIALIZED },

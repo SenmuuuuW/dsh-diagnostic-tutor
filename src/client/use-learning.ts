@@ -66,7 +66,10 @@ export interface LearningState {
   readonly nextStep: NextStepView | null
   /** How the current handoff is going, for the progress line. */
   readonly handoff: HandoffView | null
-  /** Whether a teaching brain is installed; `null` until the first fetch. */
+  /**
+   * Whether a teaching brain is installed: `true`, confidently `false`, or
+   * `null` when this scope cannot see the catalog. Only `false` may warn.
+   */
   readonly teachingBrain: boolean | null
   /** The node whose detail is shown; the focus when nothing is picked. */
   readonly selectedId: string | null

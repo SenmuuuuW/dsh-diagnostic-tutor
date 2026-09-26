@@ -5,6 +5,85 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.1.0-rc.1] — packaging and clean install
+
+The first release meant to be installed rather than built. Two storage decisions
+were taken first and are now frozen; one detection bug was found by testing the
+package the way a user would.
+
+### Storage: frozen for v0.1.0
+
+`single` layout, no `per-record`, no id migration. The
+`invalidRecords: 'backup-and-skip'` declaration was **removed**: under this
+layout the platform ignores it, so it read like a recovery guarantee while doing
+nothing. The recovery strategy is the one the README states — precise errors
+naming the table and key, nothing destroyed, export/reset, hand repair.
+
+### Fixed: a false negative that shipped in v0.0.10
+
+v0.0.10 added a panel notice for "no tutor is installed". It was wrong in the
+standard web profile — and stayed wrong in a way that only a clean install would
+show. The registry's `list()` reads **the global layer alone** unless given a
+viewing `scope`, and the web profile mounts the filesystem skill provider
+**inside a per-agent group** (`skill-filesystem` is `disabled: true` at the top
+level and re-declared nested). From a plugin at the profile root the catalog is
+therefore empty whether the skill is missing or merely out of sight.
+
+Measured on both profiles with the skill installed and demonstrably in use:
+`teachingBrain: false`. The notice would have fired for everyone.
+
+Detection is now tri-state — `true` / `false` / `null`, where `null` means
+*this scope cannot tell* — and the panel warns only on `false`.
+
+Also fixed: `GET /overview` **omitted** `teachingBrain` and `handoff` on the
+no-course path, so the notice could never have appeared in the first-use state
+it was written for.
+
+### Packaging
+
+- Version `0.1.0-rc.1`; keywords, `repository`, `homepage`, `bugs`, `engines`,
+  and a `files` allowlist of `lib`, `cordis.patch.yml`, `README.md`, `LICENSE`.
+- The tarball ships **prebuilt** output. Verified contents: no `src`, `tests`,
+  `preview`, `docs`, `scripts`, no store or session data, no local paths.
+- Installing it pulls in **`dsh-diagnostic-tutor` and `zod` — and no
+  `@deepseek-ai/*`**, so no second copy of the DSH runtime. Every harness
+  package is a peer, satisfied by the installation.
+
+### Clean-room install: verified
+
+A profile created from the shipped `web` template, with nothing else in it:
+
+```
+dsh --profile udt-clean --from-default-profile web --dump-config
+dsh plugin --profile udt-clean add dsh-diagnostic-tutor-0.1.0-rc.1.tgz
+```
+
+Bundles resolve to `@deepseek-ai/dsh-base`, `@deepseek-ai/dsh-web-app`,
+`dsh-diagnostic-tutor`. The client bundle is served, **Learn** appears in the
+sidebar, and the panel renders the map, the node and the lesson from a real
+store. No clone, no `pnpm install`, no `pnpm build`, no `link:` dependency.
+
+### Without the skill: verified
+
+Skill removed, profile restarted: the plugin loads, `/overview` and `/export`
+both answer 200, the panel mounts, and no local path appears in any response.
+`teachingBrain` reports `null` rather than claiming an absence it cannot prove.
+
+### README
+
+Install is now npm-first: `dsh plugin --profile web add dsh-diagnostic-tutor`,
+with `web` explained as a shipped template that is created on first use, and a
+`--from-default-profile` recipe for a custom name. The checkout-and-build path
+moved to Development. A new section states the no-skill behaviour and the
+tri-state honestly, including that the runtime cannot always tell.
+
+### Tests
+
+255 across twenty-one files. New: an empty catalog is not evidence of absence
+and a populated one is; the overview carries `teachingBrain` and `handoff` even
+before a goal exists; and `null` survives the round trip to the browser.
+
+
 ## [0.0.11] — the storage layout, tested rather than flipped
 
 The goal was to switch to `layout: 'per-record'` so that `invalidRecords:

@@ -162,7 +162,11 @@ export async function apply(ctx: Context): Promise<void> {
       registerApi(server as WebServerLike, {
         state,
         prompt: (sessionId, text) => promptSession(ctx, sessionId, text),
-        teachingBrain: udt.available,
+        // Three states, because two would be a lie. `null` means this scope
+        // cannot see the catalog well enough to say — the normal case in a web
+        // profile, where skills are mounted per agent — and a surface must not
+        // turn that into "no tutor installed".
+        teachingBrain: udt.available ? true : udt.catalogVisible ? false : null,
       }),
     )
     ctx.logger.debug(`[diagnostic-tutor] browser API mounted at ${API_PREFIX}`)

@@ -104,12 +104,15 @@ export interface OverviewResponse {
   /**
    * Whether the teaching brain is installed.
    *
-   * A boolean, not a name or a version: the skill's own protocol forbids
-   * naming its files or versions in learner-facing text, and a runtime that
-   * leaked them would be the thing that broke that rule. The surface only needs
-   * to know whether teaching will happen at all.
+   * `true` found, `false` confidently absent, `null` **cannot tell** — the
+   * registry reads the global layer alone without a viewing scope, and the
+   * standard web profile mounts skills per agent, so an empty catalog from a
+   * root-scope plugin means nothing. A surface must only warn on `false`.
+   *
+   * A tri-state rather than a name or version: the skill's own protocol forbids
+   * naming its files or versions in learner-facing text.
    */
-  teachingBrain: boolean
+  teachingBrain: boolean | null
   lessonCount: number
 }
 

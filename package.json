@@ -1,6 +1,6 @@
 {
   "name": "dsh-diagnostic-tutor",
-  "version": "0.0.11",
+  "version": "0.1.0-rc.1",
   "description": "Diagnosis-first learning runtime for DeepSeek Harness — a live learning map, structured lessons, and persistent learner state, driven by the Universal Diagnostic Tutor skill.",
   "repository": {
     "type": "git",
@@ -45,8 +45,11 @@
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",
+    "dsh",
     "ai-tutor",
+    "ai-education",
     "learning",
+    "typescript",
     "diagnostic"
   ],
   "peerDependencies": {

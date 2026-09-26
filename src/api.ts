@@ -187,8 +187,20 @@ function nextStepOf(state: UdState, courseId: string): NextStepView | null {
 function handleOverview(state: UdState, deps: ApiDeps, res: ServerResponse): void {
   const course = currentCourse(state)
   if (course === undefined) {
-    // An empty state is a normal state, not an error: the panel says so.
-    sendJson(res, 200, { ok: true, course: null, nodes: [], focus: null, nextStep: null, lessonCount: 0 })
+    // An empty state is a normal state, not an error: the panel says so. The
+    // shape must still be complete — an omitted field reads as `undefined`,
+    // and a surface that checks `teachingBrain === false` would never fire in
+    // the one state it exists for.
+    sendJson(res, 200, {
+      ok: true,
+      course: null,
+      nodes: [],
+      focus: null,
+      nextStep: null,
+      handoff: null,
+      teachingBrain: deps.teachingBrain ?? null,
+      lessonCount: 0,
+    })
     return
   }
   sendJson(res, 200, {
@@ -197,7 +209,7 @@ function handleOverview(state: UdState, deps: ApiDeps, res: ServerResponse): voi
     nodes: state.listNodes(course.id).map(nodeView),
     focus: focusOf(state, course.id),
     nextStep: nextStepOf(state, course.id),
-    teachingBrain: deps.teachingBrain ?? true,
+    teachingBrain: deps.teachingBrain ?? null,
     // The handoff for whichever node is focused, so a reload or a restart
     // rebuilds the progress line instead of showing a blank wait.
     handoff: (() => {
@@ -415,7 +427,7 @@ export interface ApiDeps {
    * Whether a teaching brain was detected. Defaults to `true` so a caller that
    * does not model one is not made to claim it is missing.
    */
-  readonly teachingBrain?: boolean
+  readonly teachingBrain?: boolean | null
 }
 
 /**

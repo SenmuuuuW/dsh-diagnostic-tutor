@@ -116,7 +116,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.0.11` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.1.0-rc.1` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -133,55 +133,69 @@ Rules this repository enforces mechanically:
 
 ## Install
 
-> **There is no npm release yet.** Install from the repository; that is the only
-> path until `v0.1.0`.
-
 **Requirements**
 
 | | |
 | --- | --- |
 | [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | verified against `0.1.7-alpha.2` |
+| the [Universal Diagnostic Tutor](https://github.com/SenmuuuuW/universal-diagnostic-tutor-skill) skill | the teaching brain. Without it the runtime loads, records and displays state, but **no lesson is ever written** |
 | Node | `^22.19.0 \|\| >=24.0.0` |
-| pnpm | for the build, and because `dsh plugin` forwards to it |
-| the [Universal Diagnostic Tutor](https://github.com/SenmuuuuW/universal-diagnostic-tutor-skill) skill | the teaching brain. Without it the runtime loads and records state, but **no lesson is ever written** — and it says so, in the log and in the panel |
 
-**Install**
+**Install the plugin**
 
 ```sh
-git clone https://github.com/SenmuuuuW/dsh-diagnostic-tutor
-cd dsh-diagnostic-tutor
-pnpm install
-pnpm build
-
-# --profile is mandatory: `dsh plugin` without it exits non-zero, because it is
-# a thin pnpm forwarder that needs a profile to forward into.
-#
-# Use an absolute path. `dsh plugin` runs pnpm inside the profile directory, so
-# a relative path would resolve against the profile, not your checkout.
-dsh plugin --profile <profile> add "$PWD"
+# `web` is a shipped profile template: it is created on first use with the
+# base and web-app bundles, so this works on a machine that has never run DSH.
+dsh plugin --profile web add dsh-diagnostic-tutor
 ```
 
-**Verify it mounted**
+Use your own profile name in place of `web` to install into an existing one.
+`--profile` is **mandatory** — without it `dsh plugin` exits non-zero, because it
+is a thin pnpm forwarder that needs a profile to forward into.
+
+For a new profile that is not one of the shipped names, create it from a
+template first:
+
+```sh
+dsh --profile mine --from-default-profile web --dump-config >/dev/null
+dsh plugin --profile mine add dsh-diagnostic-tutor
+```
+
+**Install the skill**
+
+The skill is a separate project and is not bundled here. Install it for your
+agent (see its README); this plugin detects it and stays out of the way either
+way.
+
+**Verify**
 
 ```sh
 # The plugin should appear in the merged tree, as an insert row.
-dsh --profile <profile> --dump-config | grep -A2 dsh-diagnostic-tutor
+dsh --profile web --dump-config | grep -A2 dsh-diagnostic-tutor
 ```
 
-Then start the profile with a web surface and look for **Learn** in the sidebar:
+Then start the profile and look for **Learn** in the sidebar:
 
 ```sh
-dsh <profile> --port 8399 --no-open
+dsh web --port 8399 --no-open
 ```
 
 A `--dump-config` entry only proves a loader row exists — it is not proof the
-plugin runs. For that, open the panel: a first run shows *What do you want to
-learn?*, and a profile with no skill shows the no-tutor notice instead.
+plugin runs. Opening the panel is: a first run shows *What do you want to
+learn?*.
 
-**Known install limitation.** A `github:` install also requires approving the
-package's build script in the profile's `pnpm-workspace.yaml`, which is
-permission for that code to run on your machine at install time. Prebuilt
-artifacts remove this step, and are the intent from `v0.1.0` onward.
+**Install from a tarball** — the same command with a path:
+
+```sh
+npm pack
+dsh plugin --profile web add "$PWD/dsh-diagnostic-tutor-0.1.0-rc.1.tgz"
+```
+
+**What gets installed is prebuilt.** The package ships `lib/` — the host half
+and the browser bundle — plus `cordis.patch.yml`. No build step, no clone, no
+`pnpm install`, and no `link:` dependency. The only runtime dependency is `zod`;
+every `@deepseek-ai/*` package is a **peer**, resolved from the harness itself,
+so a second copy of the DSH runtime is never pulled in.
 
 ---
 
@@ -450,9 +464,25 @@ pnpm screenshot "<dsh-url-with-token>" preview/dsh-ui.png
 ```sh
 pnpm install
 pnpm typecheck   # tsc --noEmit  (host and client)
-pnpm test        # 250 tests: unit, guard, DOM, render, real composition
+pnpm test        # 253 tests: unit, guard, DOM, render, real composition
 pnpm build       # tsc -> lib/ (host) + tsdown -> lib/client.js
 ```
+
+### Installing a checkout instead of the package
+
+Working on the plugin itself, rather than using it:
+
+```sh
+pnpm install && pnpm build
+
+# Use an absolute path. `dsh plugin` runs pnpm inside the profile directory, so
+# a relative path would resolve against the profile, not your checkout.
+dsh plugin --profile <profile> add "$PWD"
+```
+
+The profile links the directory, so `pnpm build` is enough to pick up a change.
+This is the only path that needs a clone and a build — the published package
+ships prebuilt `lib/`.
 
 `tests/harness.ts` mounts the **same storage stack the standard profiles use**
 (`systemPrompt` → `tools`, and `storage` → `storage-json` → `storage-domain`)
@@ -475,8 +505,9 @@ shows a loader row exists.
 | `v0.0.8` | handoff record, progress line, retry, and the latency measured |
 | `v0.0.9` | DSH 0.1.7 compatibility, the first real A → B, and product polish |
 | `v0.0.10` | export and delete your data |
-| `v0.0.11` | **current** — storage layout tested; `single` kept, with the reason |
-| `v0.1.0` | **first playable MVP** — packaged install, settings, i18n, math typesetting |
+| `v0.0.11` | storage layout tested; `single` kept, with the reason |
+| `v0.1.0-rc.1` | **current** — packaged install, no clone or build required |
+| `v0.1.0` | **first stable release** — settings, i18n, math typesetting |
 
 ## Trust
 
@@ -492,6 +523,34 @@ authentication. This plugin's commitments:
   **Export my data** writes one self-describing JSON file; **Delete everything**
   removes it, behind a second click, irreversibly. An undo would mean keeping a
   copy of exactly what was asked to be deleted.
+
+### Without the teaching brain
+
+Install the plugin without the skill and nothing breaks: the plugin loads, the
+panel opens, the map and the lesson surface render, and `GET /export` and
+`POST /reset` work. What does not happen is teaching — nothing writes a lesson,
+because nothing is making teaching decisions.
+
+**The plugin cannot always tell you that.** The skill registry reads the
+*global* layer unless it is given a viewing scope, and the standard web profile
+mounts the filesystem skill provider **inside a per-agent layer**. So a plugin
+at the profile root sees an empty skill catalog whether the skill is missing or
+merely mounted where it cannot look. The runtime therefore reports three states,
+not two:
+
+| `teachingBrain` | meaning | what the panel does |
+| --- | --- | --- |
+| `true` | found | nothing |
+| `false` | not found, **in a catalog that has entries** | says a tutor is needed |
+| `null` | cannot tell from this scope | says nothing |
+
+An earlier revision treated "not in my catalog" as "not installed" and showed a
+notice on that basis. In a web profile that was a confident, wrong answer — the
+notice would have appeared with the skill installed and in use. It only fires on
+`false` now.
+
+The lesson in the meantime is the honest one: if lessons never appear, check
+that the skill is installed for your agent before suspecting the runtime.
 
 ### Where your data lives, and what happens when it breaks
 
@@ -509,18 +568,21 @@ than failing the rest of the profile, and removing the offending record restores
 everything else. `GET /export` on a healthy store is the way to make sure you
 still have your data.
 
-**What is not true, and is not claimed.** The runtime declares the platform's
-record-recovery option:
+**What is not true, and is not claimed.** The platform has a record-recovery
+option, `invalidRecords: 'backup-and-skip'`, which moves a bad record aside and
+opens without it. This plugin **does not declare it**, because under the
+`single` layout the platform would ignore it: the option only runs when the
+store can move a *per-record* document aside, and here one document holds
+everything. Declaring it would read like a recovery guarantee while doing
+nothing, which is worse than not having it. So a bad record is **not** backed
+up and skipped, and this README says so rather than implying a recovery ability
+that does not run.
 
-```ts
-invalidRecords: 'backup-and-skip'
-```
+#### Storage architecture is frozen for v0.1.0
 
-It is the right intent and it currently has **no effect**. The platform only
-honours it when the store can move a *per-record* document aside, and this
-plugin uses the `single` layout — one document holding everything. So a bad
-record is **not** backed up and skipped today. This README says so rather than
-implying a recovery ability that does not run.
+Decided, and not revisited before the first release: `single` layout, no
+per-record, no id migration. The recovery strategy is the one described above —
+precise errors, nothing destroyed, export/reset, hand repair.
 
 #### Why not `per-record`
 

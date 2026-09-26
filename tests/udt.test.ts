@@ -12,6 +12,8 @@
 
 import { describe, expect, it } from 'vitest'
 
+import type SkillRegistry from '@deepseek-ai/dsh-skill'
+
 import {
   CAPABILITY_ANCHORS,
   UDT_SKILL_NAME,
@@ -86,6 +88,7 @@ describe('detectUdtSkill', () => {
   it('renders one log line without leaking a path', () => {
     const line = describeUdtStatus({
       available: true,
+      catalogVisible: true,
       name: UDT_SKILL_NAME,
       compatibility: 'compatible',
       provider: 'fixture',
@@ -96,5 +99,44 @@ describe('detectUdtSkill', () => {
     expect(line).toContain('abc123abc123')
     // Paths belong to internal diagnostics; the log line must stay path-free.
     expect(line).not.toContain('/some/private/location')
+  })
+})
+
+describe('a miss is only a finding when the catalog was readable', () => {
+  /** A registry stand-in that returns exactly the summaries given. */
+  const registry = (names: string[]): SkillRegistry =>
+    ({
+      list: () =>
+        Promise.resolve(
+          names.map((name) => ({ name, source: 'fixture', provider: 'fixture' })),
+        ),
+      get: () => Promise.resolve(undefined),
+    }) as unknown as SkillRegistry
+
+  it('does not claim absence from an empty catalog', async () => {
+    // The registry reads the global layer alone without a viewing scope, and
+    // the standard web profile mounts skills per agent — so a plugin at the
+    // profile root sees an empty catalog even when the skill is installed and
+    // the tutor is using it. Reporting that as "not installed" produced a
+    // confident, wrong answer in the panel.
+    const status = await detectUdtSkill(registry([]))
+    expect(status.available).toBe(false)
+    expect(status.catalogVisible).toBe(false)
+    expect(status.reason).toMatch(/per agent|nothing can be concluded/i)
+  })
+
+  it('does claim absence when other skills are visible but this one is not', async () => {
+    const status = await detectUdtSkill(registry(['something-else', 'another']))
+    expect(status.available).toBe(false)
+    expect(status.catalogVisible).toBe(true)
+    expect(status.reason).toMatch(/not among the 2 skills/)
+  })
+
+  it('reports a found skill as visible and compatible', async () => {
+    const status = await detectUdtSkill(registry([UDT_SKILL_NAME]))
+    // Listed, but its body cannot be loaded by this stub, so it is `unknown`
+    // rather than `compatible` — the point here is the two booleans.
+    expect(status.available).toBe(true)
+    expect(status.catalogVisible).toBe(true)
   })
 })

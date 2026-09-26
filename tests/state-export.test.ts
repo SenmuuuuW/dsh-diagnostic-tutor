@@ -271,15 +271,15 @@ describe('delete', () => {
 
 describe('a partly damaged store', () => {
   it('rejects the open, and that is a known limit of the single layout', async () => {
-    // The domain declares `invalidRecords: 'backup-and-skip'`, but the platform
-    // only honours it when the unit can move a per-record document aside, and
-    // this domain uses the default `single` layout: one `udt.json` holds every
-    // record, so there is no document to move and the option falls back to
-    // rejecting.
+    // Storage architecture is frozen: `single` layout, and the
+    // `invalidRecords: 'backup-and-skip'` declaration was removed because the
+    // platform only honours it when the store can move a per-record document
+    // aside — under `single`, one `udt.json` holds every record, so it never
+    // ran. A declaration that reads like a recovery guarantee while doing
+    // nothing is worse than no declaration.
     //
-    // This test pins the actual behaviour so the limit is visible rather than
-    // assumed away. Switching the spec to `layout: 'per-record'` would make the
-    // declared option live — see the README's damaged-store note.
+    // This test pins what actually happens, so the limit stays visible instead
+    // of being assumed away.
     const seedRun = await createHarness()
     const storeRoot = seedRun.storeRoot
     try {
@@ -332,6 +332,81 @@ describe('a partly damaged store', () => {
       expect(state.lessonCount()).toBe(1)
     } finally {
       await back.close()
+    }
+  })
+})
+
+describe('the overview always answers with a complete shape', () => {
+  it('includes teachingBrain and handoff even before any goal exists', async () => {
+    // The first-use state is exactly where a surface needs to say "no tutor is
+    // installed". Omitting the field there reads as `undefined`, so a check for
+    // `=== false` could never fire in the one state it exists for.
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const handler = guarded(
+        createApiHandler({ state, prompt: () => ({ prompted: true }), teachingBrain: false }),
+      )
+      const res = {
+        statusCode: 200,
+        headers: {} as Record<string, string>,
+        body: '',
+        setHeader(name: string, value: string) {
+          this.headers[name.toLowerCase()] = value
+        },
+        end(chunk?: string) {
+          if (chunk !== undefined) this.body += chunk
+        },
+      }
+      const req = {
+        method: 'GET',
+        url: `${API_PREFIX}/overview`,
+        headers: { host: '127.0.0.1:3080' },
+        async *[Symbol.asyncIterator]() {},
+      }
+      await handler(req as never, res as never)
+
+      const body = JSON.parse(res.body)
+      expect(body.course).toBeNull()
+      // Present, not absent: the surface must be able to read them.
+      expect('teachingBrain' in body).toBe(true)
+      expect('handoff' in body).toBe(true)
+      expect(body.teachingBrain).toBe(false)
+      expect(body.handoff).toBeNull()
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('reports an unreadable catalog as unknown, never as absent', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      // `null` is what the host sends when the scope cannot see the catalog.
+      const handler = guarded(
+        createApiHandler({ state, prompt: () => ({ prompted: true }), teachingBrain: null }),
+      )
+      const res = {
+        statusCode: 200,
+        headers: {} as Record<string, string>,
+        body: '',
+        setHeader(name: string, value: string) {
+          this.headers[name.toLowerCase()] = value
+        },
+        end(chunk?: string) {
+          if (chunk !== undefined) this.body += chunk
+        },
+      }
+      const req = {
+        method: 'GET',
+        url: `${API_PREFIX}/overview`,
+        headers: { host: '127.0.0.1:3080' },
+        async *[Symbol.asyncIterator]() {},
+      }
+      await handler(req as never, res as never)
+      expect(JSON.parse(res.body).teachingBrain).toBeNull()
+    } finally {
+      await harness.close()
     }
   })
 })
