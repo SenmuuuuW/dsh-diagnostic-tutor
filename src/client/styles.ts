@@ -83,6 +83,28 @@ const CSS = `.dt-root {
 .dt-empty { color: var(--dt-muted); font-size: 12.5px; margin: 8px 0; }
 .dt-cta-hint { margin-top: 14px; line-height: 1.6; }
 
+/* ---- panel chrome ------------------------------------------------------ */
+/* The page always says what it is and how to get back. The failure this
+   answers is concrete: a learner clicks Learn, the conversation is replaced,
+   and the first thought is "where did my chat go?". */
+.dt-root-wrap { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--dt-bg, #fff); }
+.dt-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex: none; padding: 9px 16px; border-bottom: 1px solid var(--dt-border, #e3e6ea);
+  background: var(--dt-surface, #f7f8fa);
+}
+.dt-bar-id { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.dt-bar-name { font-weight: 620; font-size: 13px; color: var(--dt-text, #1c1f23); }
+.dt-bar-sep { color: var(--dt-border-strong, #cfd4dc); }
+.dt-bar-note { color: var(--dt-muted, #6b7280); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dt-bar-back {
+  flex: none; padding: 5px 12px; border-radius: 7px;
+  border: 1px solid var(--dt-border-strong, #cfd4dc); background: var(--dt-bg, #fff);
+  color: inherit; font: inherit; font-size: 12px; font-weight: 550; cursor: pointer;
+}
+.dt-bar-back:hover { background: var(--dt-surface, #f7f8fa); }
+@media (max-width: 640px) { .dt-bar-note { display: none; } }
+
 /* ---- first use --------------------------------------------------------- */
 /* The full-page variant has no columns to fill, so the question centres. */
 .dt-root-welcome { grid-template-columns: 1fr; place-items: center; }

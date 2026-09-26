@@ -166,7 +166,7 @@ describe('the client plugin registers into the DSH slots', () => {
 
   it('exports a client plugin with the expected shape', () => {
     expect(module.name).toBe('diagnostic-tutor-client')
-    expect(module.inject).toEqual(['slots', 'layout', 'sidebarRightTabs'])
+    expect(module.inject).toEqual(['slots', 'layout', 'sidebarRightTabs', 'uiSession'])
     expect(typeof module.apply).toBe('function')
     // Same rule as the host half: a default export is never used.
     expect('default' in module).toBe(false)

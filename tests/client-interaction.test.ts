@@ -161,7 +161,15 @@ afterEach(() => {
 /** Mount the panel and let its effects settle. */
 async function mount(): Promise<void> {
   await act(async () => {
-    root.render(createElement(LearningPanel, { client: fixtureClient, initialOverview: overview }))
+    // A conversation is supplied because starting a node wakes a tutor in one;
+// without it the button is correctly disabled. See client-session.test.ts.
+    root.render(
+      createElement(LearningPanel, {
+        client: fixtureClient,
+        initialOverview: overview,
+        sessionId: 'session-under-test',
+      }),
+    )
   })
 }
 
@@ -237,7 +245,7 @@ describe('Start learning opens the learning surface', () => {
       start?.click()
     })
 
-    expect(started).toEqual(['ml:math@-'])
+    expect(started).toEqual(['ml:math@session-under-test'])
     expect(container.textContent).toContain('Why this node exists.')
     expect(container.textContent).toContain('What do you already know?')
     // The prototype is labelled as such, so it cannot be mistaken for teaching.

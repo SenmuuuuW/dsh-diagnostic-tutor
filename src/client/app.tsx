@@ -86,7 +86,22 @@ export function LearningPanel({
   // broken page. One question and the sentence that starts everything.
   if (overview?.course == null) {
     return (
-      <div className="dt-root dt-root-welcome">
+      <div className="dt-root-wrap">
+        <header className="dt-bar">
+          <div className="dt-bar-id">
+            <span className="dt-bar-name">Learning</span>
+            <span className="dt-bar-sep" aria-hidden="true">
+              ·
+            </span>
+            <span className="dt-bar-note">your conversation stays in the sidebar</span>
+          </div>
+          {onOpenChat !== undefined && (
+            <button type="button" className="dt-bar-back" onClick={onOpenChat}>
+              Back to the conversation
+            </button>
+          )}
+        </header>
+        <div className="dt-root dt-root-welcome">
         <div className="dt-welcome">
           <p className="dt-welcome-eyebrow">Universal Diagnostic Tutor</p>
           <h1 className="dt-welcome-title">What do you want to learn?</h1>
@@ -119,11 +134,32 @@ export function LearningPanel({
       )}
         </div>
       </div>
+    </div>
     )
   }
 
   return (
-    <div className="dt-root">
+    <div className="dt-root-wrap">
+      <header className="dt-bar">
+        <div className="dt-bar-id">
+          <span className="dt-bar-name">Learning</span>
+          <span className="dt-bar-sep" aria-hidden="true">
+            ·
+          </span>
+          <span className="dt-bar-note">
+            {sessionId === undefined
+              ? 'no conversation selected'
+              : 'your conversation stays in the sidebar'}
+          </span>
+        </div>
+        {onOpenChat !== undefined && (
+          <button type="button" className="dt-bar-back" onClick={onOpenChat}>
+            {/* Named plainly: the fear this button answers is "did I lose my chat?" */}
+            Back to the conversation
+          </button>
+        )}
+      </header>
+      <div className="dt-root">
       {/* ---- course + map ---- */}
       <div className="dt-pane">
         <p className="dt-eyebrow">Current course</p>
@@ -210,13 +246,31 @@ export function LearningPanel({
 
             {note !== null && <p className="dt-caption">{note}</p>}
             {error !== null && <p className="dt-empty">{error}</p>}
-            <button type="button" className="dt-primary" onClick={state.start} disabled={starting}>
+            {/* Waking a tutor means naming a conversation, so with none selected
+                the button says why it cannot work rather than appearing to. */}
+            <button
+              type="button"
+              className="dt-primary"
+              onClick={state.start}
+              disabled={starting || sessionId === undefined}
+              {...(sessionId === undefined
+                ? { title: 'Open or start a conversation first — that is where the tutor replies.' }
+                : {})}
+            >
               {starting
                 ? 'Starting…'
-                : focus !== null && focus.nodeId === selectedId
-                  ? 'Learning in progress'
-                  : 'Start learning'}
+                : sessionId === undefined
+                  ? 'Start learning'
+                  : focus !== null && focus.nodeId === selectedId
+                    ? 'Learning in progress'
+                    : 'Start learning'}
             </button>
+            {sessionId === undefined && (
+              <p className="dt-caption">
+                Open a conversation first. The tutor teaches in the chat, so a node cannot be
+                started without one.
+              </p>
+            )}
           </>
         )}
       </div>
@@ -272,6 +326,7 @@ export function LearningPanel({
         )}
         {dataNote !== null && <p className="dt-caption">{dataNote}</p>}
         <DataFooter onExport={state.exportData} onReset={state.resetAll} />
+      </div>
       </div>
     </div>
   )

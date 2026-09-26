@@ -28,8 +28,8 @@ import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
 import type { ReactNode } from 'react'
 
 import { LearningPanel } from './app.js'
-import { fetchOverview } from './api.js'
 import { LearningTab, LearningTabTitle } from './tab.jsx'
+import { useCurrentSessionId } from './use-session.js'
 import { injectStyles } from './styles.js'
 
 /** Client module name; distinct from the host plugin's name. */
@@ -41,7 +41,7 @@ export const name = 'diagnostic-tutor-client'
  * Declared here rather than in the host half because it is a *client* service:
  * the browser half runs in its own Cordis context against the page's registry.
  */
-export const inject = ['slots', 'layout', 'sidebarRightTabs']
+export const inject = ['slots', 'layout', 'sidebarRightTabs', 'uiSession']
 
 /**
  * Identifier shared by the sidebar entry and the main panel.
@@ -92,38 +92,36 @@ function PanelIcon({ size, active }: PropsRuntime<'sidebar.panellist'>): ReactNo
  * `ctx.layout.selectPanel(null)` is the documented way to show the conversation
  * again.
  *
- * `useSessions` is part of the standard kit every root-scoped slot receives, so
- * the panel can name the session it is looking at without any plumbing of its
- * own. The host needs it to reach the right agent when the learner presses
- * Start learning.
+ * The conversation it is looking at comes from the session scope adapter, not
+ * from the slot props: `main` is root-scoped, and only session-scoped seats are
+ * handed a `sessionId`. See `use-session.ts` for why that distinction matters.
  */
 function MainPanel({
-  useSessions,
+  uiSession,
   onOpenChat,
   onFocusStarted,
 }: {
-  useSessions?: ((select: (state: SessionListLike) => unknown) => unknown) | undefined
+  uiSession?: unknown
   onOpenChat?: (() => void) | undefined
   onFocusStarted?: (() => void) | undefined
 }): ReactNode {
-  const sessionId = useSessions?.((state) => state.ids[0])
+  // The conversation the learner has open — not the first row of the session
+  // list, which is a different conversation as soon as anything newer exists.
+  const sessionId = useCurrentSessionId(uiSession)
   return (
     <LearningPanel
-      {...(typeof sessionId === 'string' ? { sessionId } : {})}
+      {...(sessionId === undefined ? {} : { sessionId })}
       {...(onOpenChat === undefined ? {} : { onOpenChat })}
       {...(onFocusStarted === undefined ? {} : { onFocusStarted })}
     />
   )
 }
 
-/** The slice of the session-list snapshot this panel reads. */
-interface SessionListLike {
-  ids: string[]
-}
-
 /** Props the slot supplies; re-declared for the bound wrapper. */
 interface MainPanelProps {
-  useSessions?: ((select: (state: SessionListLike) => unknown) => unknown) | undefined
+  /** Standard root props; present but unused now that identity comes from the
+   * scope adapter. Declared so a future reader does not reintroduce a list scan. */
+  useSessions?: unknown
 }
 
 /**
@@ -150,6 +148,9 @@ export function apply(ctx: Context): void {
   // Captured once: the panel needs *actions*, and the standard props a slot
   // receives only expose reads.
   const layout = ctx.get('layout')
+  // Read, not injected as a prop: the session scope adapter is how a
+  // root-scoped seat learns which conversation is open.
+  const uiSession = ctx.get('uiSession')
 
   ctx.slots.inject('main', () =>
     ctx.slots.register(
@@ -161,6 +162,7 @@ export function apply(ctx: Context): void {
         return (
           <MainPanel
             {...props}
+            uiSession={uiSession}
             onOpenChat={() => {
               // Show the conversation, then dock: the session surface that the
               // right sidebar needs comes back with it.
@@ -225,15 +227,14 @@ export function apply(ctx: Context): void {
     ctx.slots.register({ name: 'sidebar.right.pane.tab.title', key: TAB_ID }, LearningTabTitle),
   )
 
-  // Resume: if a focus is already active — a session being picked back up —
-  // have the surface docked and waiting rather than hidden behind a click.
-  void fetchOverview()
-    .then((overview) => {
-      if (overview.course !== null && overview.focus !== null) openDockedTab()
-    })
-    .catch(() => {
-      // The API may not be mounted (a client-only page); nothing to open.
-    })
+  // The surface is NOT docked on load.
+  //
+  // An earlier version opened it whenever a focus existed, on the theory that
+  // resuming should be visible. In practice it meant installing this plugin
+  // silently added a column to the layout of anyone with learning state — the
+  // first thing a returning user sees is their window rearranged by something
+  // they did not ask for. The tab opens when the learner acts: pressing
+  // *Start learning*, or continuing to a next step.
 }
 
 export { LearningPanel } from './app.js'
