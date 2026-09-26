@@ -88,6 +88,12 @@ const CSS = `.dt-root {
    answers is concrete: a learner clicks Learn, the conversation is replaced,
    and the first thought is "where did my chat go?". */
 .dt-root-wrap { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--dt-bg, #fff); }
+.dt-root-wrap > .dt-root { flex: 1 1 auto; min-height: 0; }
+/* Rights live under the work, not in the middle of it. */
+.dt-foot {
+  flex: none; padding: 0 16px 14px; background: var(--dt-bg, #fff);
+}
+.dt-foot .dt-data { margin-top: 0; }
 .dt-bar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   flex: none; padding: 9px 16px; border-bottom: 1px solid var(--dt-border, #e3e6ea);
@@ -143,7 +149,7 @@ const CSS = `.dt-root {
 /* Quiet by default: these are rights, not calls to action. They sit below the
    teaching so they are findable without competing with it. */
 .dt-data {
-  margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--dt-border);
+  padding-top: 14px; border-top: 1px solid var(--dt-border);
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
 }
 .dt-quiet {
@@ -157,7 +163,7 @@ const CSS = `.dt-root {
 .dt-data-confirm {
   border-top-color: var(--dt-stop);
   background: color-mix(in srgb, var(--dt-stop) 6%, transparent);
-  border-radius: var(--dt-radius); padding: 12px 13px; margin-top: 26px;
+  border-radius: var(--dt-radius); padding: 12px 13px;
 }
 .dt-data-ask { margin: 0 0 10px; font-size: 12px; line-height: 1.6; }
 .dt-data-row { display: flex; gap: 8px; flex-wrap: wrap; }

@@ -17,6 +17,7 @@ import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { LearningPanel } from '../src/client/app.js'
 import { useCurrentSessionId } from '../src/client/use-session.js'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -139,5 +140,135 @@ describe('nothing here scans a session list', () => {
     expect(source).not.toMatch(/ids\[0\]/)
     expect(source).not.toMatch(/ids\.at\(0\)/)
     expect(source).toContain('useCurrentSessionId')
+  })
+})
+
+/* -------------------------------------------------------------------------- */
+/* Switching conversations                                                    */
+/* -------------------------------------------------------------------------- */
+
+describe('a session switch retargets the next action', () => {
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(() => {
+    act(() => root.unmount())
+    container.remove()
+  })
+
+  it('sends each Start learning to the session on screen at the time', async () => {
+    // The failure this guards: a panel that captured a session once, or read a
+    // list, and keeps waking that one after the learner switches.
+    const started: string[] = []
+    const client = {
+      fetchOverview: () =>
+        Promise.resolve({
+          ok: true as const,
+          course: {
+            id: 'ml',
+            title: 'Machine Learning',
+            goal: 'learn',
+            status: 'active',
+            createdAt: '2026-01-01T00:00:00.000Z',
+            updatedAt: '2026-01-01T00:00:00.000Z',
+          },
+          nodes: [
+            {
+              id: 'ml:a',
+              title: 'Node A',
+              relation: 'part-of',
+              state: 'blocked',
+              parentId: null,
+              evidenceCount: 1,
+              updatedAt: '2026-01-01T00:00:00.000Z',
+            },
+          ],
+          focus: null,
+          nextStep: null,
+          handoff: null,
+          teachingBrain: null,
+          lessonCount: 1,
+        }),
+      fetchNode: () =>
+        Promise.resolve({
+          ok: true as const,
+          node: {
+            id: 'ml:a',
+            title: 'Node A',
+            relation: 'part-of',
+            state: 'blocked',
+            parentId: null,
+            evidenceCount: 1,
+            updatedAt: '2026-01-01T00:00:00.000Z',
+            evidence: [],
+          },
+          parent: null,
+          children: [],
+          lessonExists: false,
+        }),
+      fetchLesson: () => Promise.resolve({ ok: true as const, lesson: null }),
+      startFocus: (nodeId: string, sessionId?: string) => {
+        started.push(`${nodeId}@${sessionId ?? '-'}`)
+        return Promise.resolve({ ok: true as const, focus: null, prompted: true, handoff: null })
+      },
+    }
+
+    const overview = await client.fetchOverview()
+    const render = (sessionId: string) =>
+      act(() =>
+        root.render(
+          createElement(LearningPanel, {
+            client: client as never,
+            initialOverview: overview as never,
+            sessionId,
+          }),
+        ),
+      )
+
+    /** The button only exists once the selected node's detail has loaded. */
+    const clickStart = async () => {
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        const button = [...container.querySelectorAll('button')].find((el) =>
+          (el.textContent ?? '').includes('Start learning'),
+        )
+        if (button) {
+          await act(async () => {
+            button.click()
+            await Promise.resolve()
+          })
+          return
+        }
+        await act(async () => {
+          await Promise.resolve()
+        })
+      }
+      throw new Error('Start learning never appeared')
+    }
+
+    // Conversation A.
+    render('session-a')
+    await act(async () => {
+      await Promise.resolve()
+    })
+    await clickStart()
+
+    // Learner switches to B; the same button must now target B.
+    render('session-b')
+    await clickStart()
+
+    // And back to A.
+    render('session-a')
+    await clickStart()
+
+    expect(started).toEqual(['ml:a@session-a', 'ml:a@session-b', 'ml:a@session-a'])
+    // A stale id must never appear: every call names the session that was on
+    // screen when it was made.
+    expect(started.every((call) => call.endsWith('@session-a') || call.endsWith('@session-b'))).toBe(true)
   })
 })

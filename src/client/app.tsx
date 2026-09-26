@@ -20,7 +20,7 @@
  * keep showing it as it changes.
  */
 
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 
 import { DataFooter, HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
 import { buildMapTree, flattenTree, isFilledState, relationLabel, stateExplanation } from './model.js'
@@ -77,6 +77,17 @@ export function LearningPanel({
     initialOverview,
     onStarted: onFocusStarted,
   })
+
+  // Pick something on arrival, the same way the docked tab does. Without this
+  // the middle and right panes sit empty until the learner works out that the
+  // map rows are clickable — which reads as a broken page, not an invitation.
+  const arrival = state.selectedId
+  const select = state.select
+  useEffect(() => {
+    if (arrival !== null) return
+    const first = state.overview?.nodes?.[0]?.id
+    if (first !== undefined) select(state.focus?.nodeId ?? first)
+  }, [arrival, select, state.overview, state.focus])
   const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading } =
     state
   const rows = flattenTree(buildMapTree(overview?.nodes ?? []))
