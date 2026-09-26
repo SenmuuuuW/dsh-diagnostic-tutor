@@ -194,7 +194,10 @@ export function LearningPanel({
             key={node.id}
             type="button"
             className="dt-node"
-            style={{ marginLeft: `${depth * 12}px` }}
+            // Padding, not margin: the row is `width: 100%`, so an outer
+            // margin makes it wider than its pane and pushes it off screen at
+            // narrow widths.
+            style={{ paddingLeft: `${8 + depth * 14}px` }}
             aria-current={node.id === selectedId}
             data-focused={node.id === focus?.nodeId}
             onClick={() => state.select(node.id)}
@@ -336,9 +339,13 @@ export function LearningPanel({
           </button>
         )}
         {dataNote !== null && <p className="dt-caption">{dataNote}</p>}
+      </div>
+      </div>
+      {/* Rights, not calls to action: under everything, findable, and out of
+          the way of the teaching. */}
+      <footer className="dt-foot">
         <DataFooter onExport={state.exportData} onReset={state.resetAll} />
-      </div>
-      </div>
+      </footer>
     </div>
   )
 }

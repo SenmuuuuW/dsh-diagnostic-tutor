@@ -251,3 +251,49 @@ describe('the client plugin injects its stylesheet and takes it away again', () 
     expect(document.querySelectorAll('style[data-diagnostic-tutor-style]').length).toBeLessThanOrEqual(1)
   })
 })
+
+describe('the stylesheet cannot silently lose its theme', () => {
+  const sheet = (() => {
+    const source = readFileSync('src/client/styles.ts', 'utf8')
+    const body = source.split('const CSS = `')[1]
+    if (body === undefined) throw new Error('could not find the CSS template literal')
+    return body.split('\n`\n')[0] ?? ''
+  })()
+
+  it('uses only design tokens that exist', () => {
+    // A `var(--x, #fff)` fallback that is a colour turns a typo into a theme
+    // bug: the panel keeps light cards inside a dark frame, nothing errors, and
+    // it only shows up when someone opens dark mode.
+    //
+    // Four names were wrong exactly this way — bg-elevated, bg-sunken,
+    // border-secondary, border-primary. The list below is the set this stylesheet
+    // is allowed to use, each one checked against the shipped design system
+    // (`@deepseek-ai/dsh-client-ui-theme`, design-platform.css, which defines
+    // them under `body` and `body[data-ds-dark-theme]`). Adding a token here
+    // means checking it there first; the theme package is not a dependency of
+    // this repo, so it cannot be read at test time.
+    const KNOWN = new Set([
+      'dsw-alias-bg-base',
+      'dsw-alias-bg-layer-1',
+      'dsw-alias-bg-module-platform',
+      'dsw-alias-border-l2',
+      'dsw-alias-border-l3',
+      'dsw-alias-button-primary-fill',
+      'dsw-alias-label-primary',
+      'dsw-alias-label-secondary',
+      'dsw-alias-state-error-primary',
+      'dsw-alias-state-success-primary',
+      'dsw-alias-state-warn-primary',
+    ])
+    const used = [...new Set([...sheet.matchAll(/var\(--(dsw-[a-z0-9-]+)/g)].map((m) => m[1] ?? ''))]
+    expect(used.length).toBeGreaterThan(0)
+    const unknown = used.filter((name) => !KNOWN.has(name))
+    expect(unknown, `unknown design tokens: ${unknown.join(', ')}`).toEqual([])
+  })
+
+  it('keeps backticks out of the CSS body', () => {
+    // The sheet lives in a template literal; one backtick in a comment ends it
+    // early and the file stops parsing. This has happened twice.
+    expect(sheet).not.toContain('`')
+  })
+})

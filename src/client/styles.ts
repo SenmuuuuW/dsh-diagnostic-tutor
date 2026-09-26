@@ -15,30 +15,46 @@
 /** Marker attribute so the sheet is injected exactly once, and is findable. */
 export const STYLE_ATTR = 'data-diagnostic-tutor-style'
 
-const CSS = `.dt-root {
+const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wrapper was
+   added later and declared none of them, so var(--dt-bg, #ffffff) fell back to
+   white on the toolbar and the footer while the columns went dark — a light
+   frame around a dark panel, in dark mode only. */
+.dt-root-wrap,
+.dt-root {
+  /* Token names verified against the shipped design system
+     (packages/client/ui-theme/src/styles/design-platform.css). Three of the
+     earlier names did not exist (bg-elevated, bg-sunken, border-secondary,
+     border-primary), so every one of them silently took its hardcoded light
+     fallback, and the panel kept light cards inside a dark frame. A fallback
+     that is a colour turns a typo into a theme bug. */
   --dt-bg: var(--dsw-alias-bg-base, #ffffff);
-  --dt-surface: var(--dsw-alias-bg-elevated, #f7f8fa);
-  --dt-sunken: var(--dsw-alias-bg-sunken, #f1f3f6);
-  --dt-border: var(--dsw-alias-border-secondary, #e3e6ea);
-  --dt-border-strong: var(--dsw-alias-border-primary, #cfd4dc);
+  --dt-surface: var(--dsw-alias-bg-layer-1, #f7f8fa);
+  --dt-sunken: var(--dsw-alias-bg-module-platform, #f1f3f6);
+  --dt-border: var(--dsw-alias-border-l2, #e3e6ea);
+  --dt-border-strong: var(--dsw-alias-border-l3, #cfd4dc);
   --dt-text: var(--dsw-alias-label-primary, #1c1f23);
   --dt-muted: var(--dsw-alias-label-secondary, #6b7280);
-  --dt-accent: var(--dsw-alias-brand-primary, #4f46e5);
-  --dt-good: #1f8b4c;
-  --dt-warn: #b7791f;
-  --dt-stop: #c0392b;
+  /* The brand token resolves to near-black in light mode and near-white in
+     dark, which is a foreground colour — not an accent. The button fill is the
+     one that stays a button. */
+  --dt-accent: var(--dsw-alias-button-primary-fill, #4f46e5);
+  --dt-good: var(--dsw-alias-state-success-primary, #1f8b4c);
+  --dt-warn: var(--dsw-alias-state-warn-primary, #b7791f);
+  --dt-stop: var(--dsw-alias-state-error-primary, #c0392b);
   --dt-radius: 10px;
 
-  display: grid;
-  grid-template-columns: minmax(260px, 300px) minmax(280px, 1fr) minmax(320px, 1.15fr);
-  gap: 0;
-  height: 100%;
-  min-height: 0;
   background: var(--dt-bg);
   color: var(--dt-text);
   font-size: 13px;
   line-height: 1.6;
   text-align: left;
+}
+.dt-root {
+  display: grid;
+  grid-template-columns: minmax(260px, 300px) minmax(280px, 1fr) minmax(320px, 1.15fr);
+  gap: 0;
+  height: 100%;
+  min-height: 0;
 }
 @media (max-width: 1080px) {
   .dt-root { grid-template-columns: 1fr; height: auto; }
@@ -226,7 +242,7 @@ const CSS = `.dt-root {
 /* A blocker should be findable without reading every row. */
 .dt-tab-node[data-attention] { background: rgba(192, 57, 43, .05); }
 .dt-tab-node[data-attention]:hover { background: rgba(192, 57, 43, .09); }
-.dt-tab-node-title { min-width: 0; overflow-wrap: anywhere; line-height: 1.45; }
+.dt-tab-node-title { min-width: 0; overflow-wrap: anywhere; word-break: break-word; line-height: 1.45; }
 .dt-tab-node[data-depth="0"] > .dt-tab-node-title { font-weight: 600; }
 
 .dt-dot {
@@ -269,7 +285,13 @@ const CSS = `.dt-root {
 }
 .dt-node:hover { background: var(--dt-surface); }
 .dt-node[aria-current="true"] { background: var(--dt-surface); border-color: var(--dt-border-strong); }
-.dt-node-title { min-width: 0; overflow-wrap: anywhere; }
+.dt-node-title { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+/* At narrow widths the three-column panel collapses to one, and a grid row
+   that keeps its three tracks pushes the pane sideways instead of wrapping. */
+@media (max-width: 1080px) {
+  .dt-node { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .dt-node-title { max-width: 100%; }
+}
 .dt-node-rel { display: block; color: var(--dt-muted); font-size: 11px; font-weight: 400; }
 
 /* ---- evidence ---------------------------------------------------------- */
