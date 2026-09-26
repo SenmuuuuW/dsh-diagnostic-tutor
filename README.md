@@ -9,14 +9,21 @@ learn interactively, and move to the next best step.
 
 <sub>The learning surface docked in the right sidebar, beside the conversation. The map, the lesson and the chat are on screen at once, so answering a check never means leaving the lesson.</sub>
 
-## Early development
+## Status
 
-`v0.0.x`. The learning loop works end to end — a real goal, a real diagnosis
-map, a tutor-written lesson, a check answered in the chat, recorded evidence,
-and a next step the tutor chose — but this is not a finished product. Expect
-breaking changes, and expect gaps to be documented rather than papered over.
-Not built yet, and not claimed anywhere below: PDF or document ingestion, RAG,
-flashcards, resource libraries, analytics, or course generation.
+`v0.1.0` — the first stable release, and the first one meant to be **installed
+rather than built**: `dsh plugin --profile web add dsh-diagnostic-tutor`, with
+prebuilt output and no clone, no `pnpm install`, no build step.
+
+The learning loop works end to end: a real goal in your own words, a diagnosis
+map grown one node at a time, a tutor-written lesson, a check answered in the
+chat, recorded evidence, and a next step the tutor chose — which the learner
+presses Continue to take.
+
+It is also early. The [limitations](#known-limitations) are listed rather than
+left to be discovered, and nothing below claims a capability that is not there:
+no PDF or document ingestion, no RAG, no flashcards, no resource libraries, no
+analytics, no course generation.
 
 ## Two halves, one system
 
@@ -108,6 +115,37 @@ see is a *diagnosis map*, not a syllabus.
 
 ---
 
+## Known limitations
+
+Stated plainly, because each one is a real edge a user can reach.
+
+**Math is styled, not typeset.** The tutor writes LaTeX by convention — `\(...\)`
+inline, `\[...\]` display — and the runtime sets it apart in a monospace face
+with its own background. It does **not** render it. Real typesetting needs a
+library plus fonts and CSS, and the client bundle is a single JavaScript file
+with nowhere to serve those from. This is the most visible rough edge in any
+STEM lesson.
+
+**Skill presence cannot always be detected.** The runtime reports whether the
+Universal Diagnostic Tutor skill is available, but the skill registry reads the
+*global* layer unless it is given a viewing scope, and the standard web profile
+mounts skills per agent. From a plugin at the profile root the catalog is
+therefore empty whether the skill is installed or not. The runtime says
+`cannot tell` rather than guessing, and the panel stays quiet. If lessons never
+appear, check the skill first.
+
+**Storage is one document.** Every record lives in
+`<dsh-home>/storages/udt.json`. It is readable, copyable and easy to export, and
+it is also a single point of failure: a record that no longer matches its schema
+stops the plugin from loading. Nothing is deleted when that happens, the error
+names the table and the key, and removing the record by hand restores the rest —
+but **export before you edit it**.
+
+**The tutor does not always converge.** It can judge `more-practice` on the same
+node several turns running, each time writing a fresh check. That is its pacing
+rather than the runtime's, but it decides whether a node ever finishes and the
+loop moves on.
+
 ## Compatibility
 
 A DSH profile can resolve **more than one harness version at once** (the running
@@ -116,7 +154,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.1.0-rc.1` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.1.0` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
 
@@ -163,9 +201,10 @@ dsh plugin --profile mine add dsh-diagnostic-tutor
 
 **Install the skill**
 
-The skill is a separate project and is not bundled here. Install it for your
-agent (see its README); this plugin detects it and stays out of the way either
-way.
+The skill is a separate project and is not bundled here — install it where your
+DSH agent looks for skills (see its README). The runtime works with or without
+it; without it, nothing writes a lesson. Note that the runtime cannot always
+*detect* it: see [Known limitations](#known-limitations).
 
 **Verify**
 
@@ -506,8 +545,9 @@ shows a loader row exists.
 | `v0.0.9` | DSH 0.1.7 compatibility, the first real A → B, and product polish |
 | `v0.0.10` | export and delete your data |
 | `v0.0.11` | storage layout tested; `single` kept, with the reason |
-| `v0.1.0-rc.1` | **current** — packaged install, no clone or build required |
-| `v0.1.0` | **first stable release** — settings, i18n, math typesetting |
+| `v0.1.0-rc.1` | packaged install, no clone or build required |
+| `v0.1.0` | **current** — first stable release, installable from npm |
+| `v0.2.0` | settings, i18n, math typesetting |
 
 ## Trust
 

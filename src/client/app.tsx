@@ -91,9 +91,9 @@ export function LearningPanel({
           <p className="dt-welcome-eyebrow">Universal Diagnostic Tutor</p>
           <h1 className="dt-welcome-title">What do you want to learn?</h1>
           <p className="dt-welcome-body">
-            Say it in the chat — in your own words. The tutor will ask what you already know
-            before it teaches anything. Then this page fills in: a map of what you actually
-            know, the lesson, and the evidence behind every status.
+            Works with the Universal Diagnostic Tutor skill. Start by telling the tutor what you
+            want to learn — in your own words, in the chat. Then this page fills in: a map of what
+            you actually know, the lesson, and the evidence behind every status.
           </p>
           <div className="dt-welcome-sample">
             <span className="dt-welcome-sample-label">Try</span>
@@ -102,15 +102,19 @@ export function LearningPanel({
             </span>
           </div>
           <p className="dt-welcome-note">
+            If tutoring doesn&apos;t start, make sure the UDT skill is available to your active DSH
+            agent.
+          </p>
+          <p className="dt-welcome-note">
             No account, no scores, no streak. Your goal, your map and the evidence behind it stay
             on this machine, and are yours to keep or delete.
           </p>
           <DataFooter onExport={state.exportData} onReset={state.resetAll} />
       {teachingBrain === false && (
         <p className="dt-notice">
-          <b>No tutor is installed for this workspace.</b> This panel will record and show
-          your learning state, but no lesson will be written until the Universal Diagnostic
-          Tutor skill is available.
+          <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records
+          and shows your learning state, but no lesson will be written until the skill is
+          available to your active DSH agent.
         </p>
       )}
         </div>

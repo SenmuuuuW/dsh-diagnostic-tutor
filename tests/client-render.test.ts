@@ -119,19 +119,35 @@ describe('an empty runtime is a normal state', () => {
     initialOverview: empty,
   })
 
-  it('says when nothing will teach, instead of waiting forever', () => {
-    // The runtime is useful without the skill but it cannot teach, and a
-    // learner watching an empty panel deserves the reason.
+  it('speaks up only when the skill is confidently absent', () => {
+    // `false` means: not found in a catalog that demonstrably has entries.
     const noTutor = panel({
       client: { ...client, fetchOverview: () => Promise.resolve({ ...empty, teachingBrain: false }) },
       initialOverview: { ...empty, teachingBrain: false },
     })
-    expect(noTutor).toContain('No tutor is installed for this workspace')
+    expect(noTutor).toContain('was not found')
     expect(noTutor).toContain('no lesson will be written')
   })
 
-  it('does not cry wolf when the tutor is present', () => {
-    expect(html).not.toContain('No tutor is installed')
+  it('says nothing at all when the scope cannot tell', () => {
+    // The usual case in a web profile: skills are mounted per agent, so a
+    // profile-root plugin sees an empty catalog whether or not the skill is
+    // installed. `null` must not become a warning.
+    const unknown = panel({
+      client: { ...client, fetchOverview: () => Promise.resolve({ ...empty, teachingBrain: null }) },
+      initialOverview: { ...empty, teachingBrain: null },
+    })
+    expect(unknown).not.toContain('was not found')
+    expect(unknown).not.toContain('dt-notice')
+    expect(unknown).toContain('What do you want to learn?')
+  })
+
+  it('never claims either way in the first-use copy', () => {
+    // The empty state is not the place to assert a detection result: it names
+    // what the panel works with and what to check if nothing happens.
+    expect(html).toContain('Works with the Universal Diagnostic Tutor skill')
+    expect(html).toContain('If tutoring doesn')
+    expect(html).not.toContain('dt-notice')
   })
 
   it('asks the one question that starts everything', () => {

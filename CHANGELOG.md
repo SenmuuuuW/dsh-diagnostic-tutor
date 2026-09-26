@@ -5,6 +5,52 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.1.0] — first stable release
+
+The first release meant to be installed rather than built. `dsh plugin --profile
+web add dsh-diagnostic-tutor` and the runtime is there: no clone, no
+`pnpm install`, no `pnpm build`, no `link:` dependency.
+
+### What it does
+
+A diagnosis-first learning runtime for DeepSeek Harness. The teaching lives in
+the [Universal Diagnostic Tutor](https://github.com/SenmuuuuW/universal-diagnostic-tutor-skill)
+skill; this package is the runtime that stores what the tutor decided, shows it,
+and never decides it. Goal → Diagnose → Map → Learn → Check → Decide → Next
+lesson, with the learner pressing Continue.
+
+### Closing UX
+
+The empty state no longer asserts anything about detection. It says what the
+panel works with, how to start, and what to check if nothing happens — which is
+the honest thing to say from a scope that cannot always tell whether the skill
+is installed.
+
+### Known limitations, stated rather than implied
+
+- **Skill presence cannot always be detected.** The registry reads the global
+  layer unless given a viewing scope, and the standard web profile mounts skills
+  per agent, so a profile-root plugin sees an empty catalog either way. Reported
+  as `null` — *cannot tell* — and the panel stays quiet.
+- **Math is styled, not typeset.** `\(...\)` and `\[...\]` are set apart in a
+  monospace face; they are not rendered. A real typesetter needs fonts and CSS
+  the single-file client bundle cannot serve.
+- **Storage is a single document.** `<dsh-home>/storages/udt.json` holds every
+  record. A record that fails its schema stops the plugin loading; nothing is
+  deleted, the failure names the table and key, and `GET /export` on a healthy
+  store is how you keep a copy.
+- **The tutor does not always converge.** It can judge `more-practice` on the
+  same node repeatedly, each time with a fresh check. That is its pacing, not
+  the runtime's, but it decides whether a node ever finishes.
+
+Not present, and not claimed: PDF or document ingestion, RAG, flashcards,
+resource libraries, analytics, course generation.
+
+### Tests
+
+256 across twenty-one files.
+
+
 ## [0.1.0-rc.1] — packaging and clean install
 
 The first release meant to be installed rather than built. Two storage decisions
