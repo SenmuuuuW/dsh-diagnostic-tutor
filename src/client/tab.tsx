@@ -61,7 +61,9 @@ function CompactMap({
             data-depth={depth > 0 ? Math.min(depth, 3) : undefined}
             data-attention={node.state === 'blocked' || node.state === 'weak' ? 'true' : undefined}
             aria-current={node.id === selectedId}
-            data-focused={node.id === focusNodeId}
+            // Undefined, not false: see the panel — a boolean lands in the DOM
+            // as the string "false", which still matches [data-focused].
+            data-focused={node.id === focusNodeId ? 'true' : undefined}
             onClick={() => onSelect(node.id)}
           >
             <span className={`dt-dot dt-state-${node.state}`} data-filled={node.state === 'confirmed'} />
@@ -139,14 +141,17 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
             No account, no scores, no streak. Your goal, your map and the evidence behind it
             stay on this machine, and are yours to keep or delete.
           </p>
+          {/* The warning belongs with the copy it qualifies, not under the
+              data controls — Export and Delete are about state, not about the
+              missing skill. */}
+          {teachingBrain === false && (
+            <p className="dt-notice">
+              <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records
+              and shows your learning state, but no lesson will be written until the skill is
+              available to your active DSH agent.
+            </p>
+          )}
           <DataFooter onExport={state.exportData} onReset={state.resetAll} />
-      {teachingBrain === false && (
-        <p className="dt-notice">
-          <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records and
-          shows your learning state, but no lesson will be written until the skill is available
-          to your active DSH agent.
-        </p>
-      )}
         </div>
       </div>
     )
@@ -174,9 +179,15 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
             {detail.parent !== null && <span className="dt-now-rel">in {detail.parent.title}</span>}
           </div>
           <p className="dt-now-note">{stateExplanation(detail.node.state)}</p>
+          {/* One filled control per column.
+              When the tutor has recorded a recommendation, that recommendation
+              is the learner's next move and owns the primary weight; starting
+              or resuming this node is the fallback, so it steps down rather
+              than competing. Without a recommendation it is the only action
+              there is, and stays primary. */}
           <button
             type="button"
-            className="dt-primary dt-now-action"
+            className={nextStep === null ? 'dt-primary dt-now-action' : 'dt-secondary dt-now-action'}
             onClick={state.start}
             disabled={starting || shownId === null}
           >

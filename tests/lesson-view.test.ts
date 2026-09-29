@@ -179,3 +179,37 @@ describe('the lesson keeps its shape', () => {
     expect(html.toLowerCase()).not.toContain('score')
   })
 })
+
+describe('math arrives as an expression, not as its delimiters', () => {
+  it('keeps an inline expression whose own text contains parentheses', () => {
+    // A real lesson line: the old pattern stopped at the first close paren,
+    // matched nothing, and printed the delimiters and the expression as source.
+    const html = render(text('矩阵那一层：\\((m,n)\\cdot(n,p)\\)，内维相等就能乘。'))
+    expect(html).toContain('dt-math')
+    expect(html).not.toContain('\\(')
+    expect(html).not.toContain('\\)')
+    expect(html).toContain('(m,n)\\cdot(n,p)')
+  })
+
+  it('reads a display block that spans lines', () => {
+    // Also a real one: a matrix, with the delimiters on their own lines. A
+    // line-at-a-time classifier saw four ordinary lines and printed every
+    // backslash and ampersand in them.
+    const html = render(
+      text('形状是\n\n\\[X=\\begin{bmatrix}\n1 & 2 \\\\\n3 & 4\n\\end{bmatrix}\\]\n\n就这么多。'),
+    )
+    expect(html).toContain('dt-math-block')
+    expect(html).not.toContain('\\[')
+    expect(html).not.toContain('\\]')
+    expect(html).toContain('\\begin{bmatrix}')
+    // The prose on either side is untouched.
+    expect(html).toContain('形状是')
+    expect(html).toContain('就这么多。')
+  })
+
+  it('does not swallow the lesson when a delimiter is never closed', () => {
+    const html = render(text('开头 \\[ 少了收尾\n\n后面还有一整段。'))
+    expect(html).toContain('后面还有一整段。')
+    expect(html).toContain('少了收尾')
+  })
+})

@@ -318,3 +318,47 @@ describe('unmount leaves no DOM residue', () => {
     expect(container.textContent).toBe('')
   })
 })
+
+describe('the start control steps aside once there is a recommendation', () => {
+  it('restarts rather than competes, and says which it is doing', async () => {
+    await mount()
+    await act(async () => {
+      nodeButton('Linear Algebra').click()
+    })
+
+    // Before anything is focused, starting this node is the action.
+    const detail = container.querySelector('.dt-detail')
+    const before = detail?.querySelector('button')
+    expect(before?.textContent).toContain('Start learning')
+    expect(before?.className).toContain('dt-primary')
+
+    await act(async () => {
+      before?.click()
+    })
+
+    // Now the tutor is on this node, so pressing it again means restarting,
+    // and the filled weight belongs to whatever the learner should do next.
+    const after = container.querySelector('.dt-detail button')
+    expect(after?.textContent).toContain('Restart this node')
+    expect(after?.className).not.toContain('dt-primary')
+    expect(container.querySelector('.dt-detail')?.textContent).toContain(
+      'This is the node the tutor is teaching',
+    )
+  })
+})
+
+describe('the evidence list reads like a record, not like a payload', () => {
+  it('never prints a raw ISO timestamp', async () => {
+    await mount()
+    await act(async () => {
+      nodeButton('Linear Algebra').click()
+    })
+    const evidence = container.querySelector('.dt-evidence')
+    expect(evidence?.textContent).toContain('shaky maths')
+    // The stored value is 2026-01-01T00:00:00.000Z; what a learner sees is a
+    // phrase. Both the machine form and a stray "Z" are wrong here.
+    expect(evidence?.textContent).not.toContain('T00:00:00')
+    expect(evidence?.textContent).not.toContain('Z')
+    expect(evidence?.querySelector('.dt-ev-when')?.textContent).toBeTruthy()
+  })
+})

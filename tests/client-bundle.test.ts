@@ -22,6 +22,9 @@ import * as ReactJsxRuntime from 'react/jsx-runtime'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { LearningPanel } from '../src/client/app.js'
+import { LearningTab } from '../src/client/tab.jsx'
+
 // Resolved from the project root rather than `import.meta.url`: under the
 // jsdom environment that URL is an http one, which `readFileSync` rejects.
 const ROOT = process.cwd()
@@ -279,6 +282,14 @@ describe('the stylesheet cannot silently lose its theme', () => {
       'dsw-alias-border-l2',
       'dsw-alias-border-l3',
       'dsw-alias-button-primary-fill',
+      // The design system's own pairing for a filled primary control:
+      // ui-primitives Button.module.css sets `.primary` to
+      // `background: var(--dsw-alias-button-primary-fill)` together with
+      // `color: var(--dsw-alias-label-primary-foreground)`. The pairing is the
+      // point — the fill inverts with the theme (near-black in light, near-white
+      // in dark) and only the paired foreground inverts with it. White
+      // hardcoded onto that fill is a blank button in dark mode.
+      'dsw-alias-label-primary-foreground',
       'dsw-alias-label-primary',
       'dsw-alias-label-secondary',
       'dsw-alias-state-error-primary',
@@ -295,5 +306,37 @@ describe('the stylesheet cannot silently lose its theme', () => {
     // The sheet lives in a template literal; one backtick in a comment ends it
     // early and the file stops parsing. This has happened twice.
     expect(sheet).not.toContain('`')
+  })
+
+  it('declares the tokens on every root the plugin renders', () => {
+    // This is the bug the panel and the tab each had, one release apart.
+    //
+    // A custom property that does not resolve makes the whole declaration
+    // invalid at computed-value time: `background: var(--dt-accent)` with no
+    // --dt-accent is not a fallback to some sensible default, it is no
+    // background at all. So a root element outside the token rule loses its
+    // entire appearance silently — no error, no warning, and on a light page
+    // nothing looks obviously wrong until a white button lands on white.
+    //
+    // The docked tab shipped that way: `.dt-root-wrap` and `.dt-root` were in
+    // the selector list, `.dt-tab` was not, and the tab had no card surfaces,
+    // no borders, and an invisible primary button in light mode.
+    //
+    // The roots are discovered by rendering the two surfaces the plugin mounts,
+    // so a new surface cannot quietly opt out of the token layer.
+    const roots = [LearningPanel, LearningTab].map((component) => {
+      const html = renderToStaticMarkup(createElement(component as never, {}))
+      const first = /^<div class="([^"]+)"/.exec(html)?.[1] ?? ''
+      return first.split(' ')[0] ?? ''
+    })
+    expect(roots.filter(Boolean), `could not find the rendered roots: ${roots.join(', ')}`).toHaveLength(2)
+
+    const tokenRule = /([^{}]*)\{[^{}]*--dt-bg:/.exec(sheet)?.[1] ?? ''
+    const declared = new Set([...tokenRule.matchAll(/\.(dt-[a-z0-9-]+)/g)].map((m) => m[1] ?? ''))
+    const missing = roots.filter((root) => !declared.has(root))
+    expect(
+      missing,
+      `these roots render outside the token rule and will lose all their styling: ${missing.join(', ')}`,
+    ).toEqual([])
   })
 })

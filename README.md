@@ -492,18 +492,52 @@ Machine Learning            [goal, unconfirmed]
 └─ Python                   [prerequisite, unconfirmed]
 ```
 
+Two query parameters reach the states that are otherwise awkward to produce on
+demand — `?scenario=` (`first-use`, `map`, `handoff`, `next`, `stay`, `noskill`,
+`long`) and `?surface=tab` for the docked right-sidebar tab. Both are also
+switches in the page's own toolbar, and the theme toggle sets the same
+`body[data-ds-dark-theme]` attribute DSH does. The page carries the real DSH
+design tokens for the same reason: with hardcoded fallbacks in their place, a
+token that resolves to near-white in dark mode looks perfectly fine locally.
+
 To capture the panel from a *live* profile instead:
 
 ```sh
 pnpm screenshot "<dsh-url-with-token>" preview/dsh-ui.png
 ```
 
+### Auditing the presentation
+
+```sh
+pnpm preview                                                     # in one shell
+pnpm audit:ui http://127.0.0.1:8391/?scenario=next                # in another
+pnpm audit:ui "<dsh-url-with-token>" /tmp/audit --surface=tab
+```
+
+It measures, at each width this project targets and in both themes: the contrast
+of every control's own text against its own fill, class names in the DOM that no
+rule matches, how many controls carry primary weight in one view, tap targets
+under 28px, type under 10.5px, and anything spilling or clipped. It prints a
+table, writes `findings.json`, and saves screenshots — it does not fail the run,
+so a human can disagree with it.
+
+That is not a substitute for looking. It is what makes looking affordable: the
+docked tab's invisible primary button and the dark-mode 1.05:1 controls were
+both found by it, in a live profile, in seconds.
+
+What the surfaces look like now, captured from a live profile:
+
+| | light | dark |
+| --- | --- | --- |
+| full panel | ![panel, light](preview/ui-polish/panel-light-1440.png) | ![panel, dark](preview/ui-polish/panel-dark-1440.png) |
+| docked tab | ![tab, light](preview/ui-polish/tab-light-400.png) | ![tab, dark](preview/ui-polish/tab-dark-400.png) |
+
 ## Development
 
 ```sh
 pnpm install
 pnpm typecheck   # tsc --noEmit  (host and client)
-pnpm test        # 253 tests: unit, guard, DOM, render, real composition
+pnpm test        # 278 tests: unit, guard, DOM, render, real composition
 pnpm build       # tsc -> lib/ (host) + tsdown -> lib/client.js
 ```
 

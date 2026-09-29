@@ -23,11 +23,27 @@
 import { useEffect, type ReactNode } from 'react'
 
 import { DataFooter, HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
-import { buildMapTree, flattenTree, isFilledState, relationLabel, stateExplanation } from './model.js'
+import {
+  buildMapTree,
+  flattenTree,
+  formatWhen,
+  isFilledState,
+  relationLabel,
+  stateExplanation,
+} from './model.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
 
 export type { PanelClient } from './use-learning.js'
+
+/** A node state as one chip: the mark, and the word. Never a number. */
+function StateChip({ state }: { state: string }): ReactNode {
+  return (
+    <span className={`dt-tab-state dt-state-${state}`}>
+      {state}
+    </span>
+  )
+}
 
 export interface LearningPanelProps {
   /** Defaults to the real HTTP client. */
@@ -92,6 +108,9 @@ export function LearningPanel({
     state
   const rows = flattenTree(buildMapTree(overview?.nodes ?? []))
   const confirmed = (overview?.nodes ?? []).filter((node) => node.state === 'confirmed').length
+  // "Already learning this one" is a statement about the tutor's focus, not
+  // about what the learner has selected.
+  const isFocused = focus !== null && focus.nodeId === selectedId
 
   // First use, same as the docked tab: a blank three-column page reads as a
   // broken page. One question and the sentence that starts everything.
@@ -135,14 +154,17 @@ export function LearningPanel({
             No account, no scores, no streak. Your goal, your map and the evidence behind it stay
             on this machine, and are yours to keep or delete.
           </p>
+          {/* The warning belongs with the copy it qualifies, not under the
+              data controls — Export and Delete are about state, not about the
+              missing skill. */}
+          {teachingBrain === false && (
+            <p className="dt-notice">
+              <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records
+              and shows your learning state, but no lesson will be written until the skill is
+              available to your active DSH agent.
+            </p>
+          )}
           <DataFooter onExport={state.exportData} onReset={state.resetAll} />
-      {teachingBrain === false && (
-        <p className="dt-notice">
-          <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records
-          and shows your learning state, but no lesson will be written until the skill is
-          available to your active DSH agent.
-        </p>
-      )}
         </div>
       </div>
     </div>
@@ -198,8 +220,16 @@ export function LearningPanel({
             // margin makes it wider than its pane and pushes it off screen at
             // narrow widths.
             style={{ paddingLeft: `${8 + depth * 14}px` }}
+            // Depth and attention as data, so the stylesheet draws the guide
+            // and the blocker tint without measuring anything — the same two
+            // attributes the docked tab has always set.
+            data-depth={depth > 0 ? Math.min(depth, 3) : undefined}
+            data-attention={node.state === 'blocked' || node.state === 'weak' ? 'true' : undefined}
             aria-current={node.id === selectedId}
-            data-focused={node.id === focus?.nodeId}
+            // Undefined rather than false: React stringifies a boolean onto a
+            // data-* attribute, so `data-focused={false}` renders
+            // data-focused="false" — which every [data-focused] rule matches.
+            data-focused={node.id === focus?.nodeId ? 'true' : undefined}
             onClick={() => state.select(node.id)}
           >
             <span className={`dt-dot dt-state-${node.state}`} data-filled={isFilledState(node.state)} />
@@ -209,7 +239,7 @@ export function LearningPanel({
                 {relationLabel(node.relation)} · {node.evidenceCount} evidence
               </span>
             </span>
-            <span className={`dt-state dt-state-${node.state}`}>{node.state}</span>
+            <StateChip state={node.state} />
           </button>
         ))}
         <p className="dt-caption">
@@ -220,9 +250,15 @@ export function LearningPanel({
       {/* ---- node detail ---- */}
       <div className="dt-pane dt-detail">
         {detail === null ? (
-          <p className="dt-empty">
-            {loading ? 'Loading…' : 'Pick a node on the map to see why it is there.'}
-          </p>
+          <div className="dt-empty-state">
+            <p className="dt-empty-title">
+              {loading ? 'Loading your map…' : 'Nothing selected'}
+            </p>
+            <p className="dt-empty">
+              Pick a node on the map and this column shows what is recorded against it, and why it
+              is in that state.
+            </p>
+          </div>
         ) : (
           <>
             <p className="dt-eyebrow">Selected node</p>
@@ -247,12 +283,12 @@ export function LearningPanel({
               <ul className="dt-evidence">
                 {detail.node.evidence.map((entry, index) => (
                   <li key={index}>
-                    <div className="kind">
-                      {entry.kind}
-                      {entry.readiness !== undefined && ` · ${entry.readiness}`}
-                    </div>
-                    {entry.note !== undefined && <div>{entry.note}</div>}
-                    <div className="when">{entry.at}</div>
+                    <span className="dt-ev-kind">{entry.kind.replace(/-/g, ' ')}</span>
+                    {entry.readiness !== undefined && (
+                      <span className="dt-ev-readiness">{entry.readiness.replace(/-/g, ' ')}</span>
+                    )}
+                    {entry.note !== undefined && <span className="dt-ev-note">{entry.note}</span>}
+                    <span className="dt-ev-when">{formatWhen(entry.at)}</span>
                   </li>
                 ))}
               </ul>
@@ -261,10 +297,15 @@ export function LearningPanel({
             {note !== null && <p className="dt-caption">{note}</p>}
             {error !== null && <p className="dt-empty">{error}</p>}
             {/* Waking a tutor means naming a conversation, so with none selected
-                the button says why it cannot work rather than appearing to. */}
+                the button says why it cannot work rather than appearing to.
+
+                When this node is already the focus, the button is no longer the
+                next thing to do — the teaching is. It stays (re-waking the
+                tutor is a real action) but drops out of the primary weight, so
+                the filled control on screen belongs to whatever comes next. */}
             <button
               type="button"
-              className="dt-primary"
+              className={isFocused ? 'dt-secondary' : 'dt-primary'}
               onClick={state.start}
               disabled={starting || sessionId === undefined}
               {...(sessionId === undefined
@@ -275,10 +316,15 @@ export function LearningPanel({
                 ? 'Starting…'
                 : sessionId === undefined
                   ? 'Start learning'
-                  : focus !== null && focus.nodeId === selectedId
-                    ? 'Learning in progress'
+                  : isFocused
+                    ? 'Restart this node'
                     : 'Start learning'}
             </button>
+            {isFocused && !starting && (
+              <p className="dt-caption">
+                This is the node the tutor is teaching. The lesson is on the right.
+              </p>
+            )}
             {sessionId === undefined && (
               <p className="dt-caption">
                 Open a conversation first. The tutor teaches in the chat, so a node cannot be
@@ -305,17 +351,18 @@ export function LearningPanel({
               </p>
             </>
           ) : (
-            <p className="dt-empty">
-              Choose a node and press <b>Start learning</b>. The teaching appears here, and the
-              conversation stays in the chat.
-            </p>
+            <div className="dt-empty-state">
+              <p className="dt-empty-title">Nothing is being taught yet</p>
+              <p className="dt-empty">
+                Choose a node on the map and press <b>Start learning</b>. The teaching appears
+                here, and the conversation stays in the chat.
+              </p>
+            </div>
           )
         ) : (
           <>
-            <h2>{lesson.title}</h2>
-            <div style={{ marginTop: 14 }}>
-              <LessonBody blocks={lesson.blocks} />
-            </div>
+            <h2 className="dt-lesson-title">{lesson.title}</h2>
+            <LessonBody blocks={lesson.blocks} />
           </>
         )}
         {handoff !== null && lesson === null && focus !== null && (
@@ -328,8 +375,18 @@ export function LearningPanel({
             onContinue={() => state.continueTo(nextStep.targetNodeId ?? nextStep.fromNodeId)}
           />
         )}
+        {/* One filled control per column. When the tutor has recorded a next
+            step, that step is what the learner should press; answering in the
+            chat is the way back to the conversation, which is navigation
+            rather than a recommendation, so it steps down. With no
+            recommendation it is the only thing left to do, and takes the
+            primary weight. */}
         {onOpenChat !== undefined && (
-          <button type="button" className="dt-primary" onClick={onOpenChat}>
+          <button
+            type="button"
+            className={nextStep === null && lesson !== null ? 'dt-primary' : 'dt-secondary'}
+            onClick={onOpenChat}
+          >
             Answer in the chat
           </button>
         )}

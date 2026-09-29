@@ -14,6 +14,8 @@ import {
   STATE_ORDER,
   buildMapTree,
   flattenTree,
+  formatDuration,
+  formatWhen,
   isFilledState,
   relationLabel,
   stateExplanation,
@@ -104,5 +106,47 @@ describe('vocabulary the panel speaks', () => {
     expect(relationLabel('prerequisite')).toBe('prerequisite')
     expect(relationLabel('related')).toBe('related')
     expect(relationLabel('something-new')).toBe('something-new')
+  })
+})
+
+describe('formatDuration', () => {
+  it('counts seconds while a wait is still a wait', () => {
+    expect(formatDuration(0)).toBe('')
+    expect(formatDuration(900)).toBe('1s')
+    expect(formatDuration(17_400)).toBe('17s')
+  })
+
+  it('changes unit once the number stops meaning anything', () => {
+    // The handoff line printed "Lesson ready 119803s" from a restored record.
+    // Thirty-three hours is not a duration anyone reads as seconds.
+    expect(formatDuration(94_000)).toBe('1m 34s')
+    expect(formatDuration(120_000)).toBe('2m')
+    expect(formatDuration(119_803_000)).toBe('33h 16m')
+  })
+})
+
+describe('formatWhen', () => {
+  const now = Date.parse('2026-03-10T12:00:00.000Z')
+
+  it('reads recent observations as elapsed time, not as a timestamp', () => {
+    expect(formatWhen('2026-03-10T11:59:50.000Z', now)).toBe('just now')
+    expect(formatWhen('2026-03-10T11:58:00.000Z', now)).toBe('2 minutes ago')
+    expect(formatWhen('2026-03-10T09:00:00.000Z', now)).toBe('3 hours ago')
+    expect(formatWhen('2026-03-09T12:00:00.000Z', now)).toBe('yesterday')
+    expect(formatWhen('2026-03-06T12:00:00.000Z', now)).toBe('4 days ago')
+  })
+
+  it('falls back to a date once "days ago" stops being useful', () => {
+    // Exact wording is locale-dependent; what matters is that it is a date and
+    // not the raw record.
+    const old = formatWhen('2025-12-01T12:00:00.000Z', now)
+    expect(old).toContain('2025')
+    expect(old).not.toContain('T')
+    expect(old).not.toContain('Z')
+  })
+
+  it('does not invent a future for a clock-skewed record, and never throws', () => {
+    expect(formatWhen('2026-03-10T12:00:30.000Z', now)).toBe('just now')
+    expect(formatWhen('not a date', now)).toBe('not a date')
   })
 })

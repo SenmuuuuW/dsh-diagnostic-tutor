@@ -95,6 +95,7 @@
     "preview": "node preview/serve.mjs",
     "pretest": "tsdown",
     "screenshot": "node scripts/screenshot.mjs",
+    "audit:ui": "node scripts/ui-audit.mjs",
     "loop": "node scripts/learning-loop.mjs",
     "handoff": "node scripts/handoff-e2e.mjs"
   },

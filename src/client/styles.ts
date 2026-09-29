@@ -15,12 +15,23 @@
 /** Marker attribute so the sheet is injected exactly once, and is findable. */
 export const STYLE_ATTR = 'data-diagnostic-tutor-style'
 
-const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wrapper was
-   added later and declared none of them, so var(--dt-bg, #ffffff) fell back to
-   white on the toolbar and the footer while the columns went dark — a light
-   frame around a dark panel, in dark mode only. */
+const CSS = `/* The tokens are declared on every root the plugin renders: the panel's
+   wrapper, the panel grid, and the docked tab.
+
+   Each of the three was added for the same reason, one at a time. The wrapper
+   was added later and declared none of them, so var(--dt-bg, #ffffff) fell back
+   to white on the toolbar and the footer while the columns went dark — a light
+   frame around a dark panel, in dark mode only. The tab was never added at all,
+   and it is the surface the learner actually keeps open beside the chat: every
+   var(--dt-*) inside it resolved to nothing, so the docked tab had no card
+   surfaces, no borders and no primary button. A custom property that does not
+   resolve makes the whole declaration invalid at computed-value time, which is
+   a silent, total loss of styling rather than a visible fallback.
+
+   So: anything that renders as a root of the plugin belongs in this list. */
 .dt-root-wrap,
-.dt-root {
+.dt-root,
+.dt-tab {
   /* Token names verified against the shipped design system
      (packages/client/ui-theme/src/styles/design-platform.css). Three of the
      earlier names did not exist (bg-elevated, bg-sunken, border-secondary,
@@ -38,9 +49,40 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
      dark, which is a foreground colour — not an accent. The button fill is the
      one that stays a button. */
   --dt-accent: var(--dsw-alias-button-primary-fill, #4f46e5);
+  /* …and the fill needs the design system's own foreground, because the fill
+     inverts with the theme and a hardcoded #fff does not. White on near-white
+     is a blank button: that is what the primary control was in dark mode. */
+  --dt-on-accent: var(--dsw-alias-label-primary-foreground, #ffffff);
+  /* Accent used as a card edge rather than as ink. A full-strength accent
+     border is a black outline in light mode and a white one in dark, which
+     shouts louder than the content it frames. */
+  --dt-accent-line: color-mix(in srgb, var(--dt-accent) 38%, var(--dt-border));
   --dt-good: var(--dsw-alias-state-success-primary, #1f8b4c);
   --dt-warn: var(--dsw-alias-state-warn-primary, #b7791f);
   --dt-stop: var(--dsw-alias-state-error-primary, #c0392b);
+
+  /* ---------------------------------------------------------------------
+     The seven state colours.
+
+     These are a reading palette, not a decoration: the state word is the only
+     thing that says how far a node has come, so it has to be legible at the
+     10.5–12px it is actually set in. The design system's own success and warn
+     tokens are green-500 and amber-500 in BOTH themes, which is 2.2:1 and
+     2.1:1 on a white panel — the confirmed and weak labels were the two
+     hardest things on the map to read in light mode, which is precisely
+     backwards.
+
+     So the palette is per theme: darker inks in light, brighter inks in dark.
+     Every value below is at least 5:1 against its own panel background.
+     --------------------------------------------------------------------- */
+  --dt-st-unconfirmed: #5f6672;
+  --dt-st-explained: #2563eb;
+  --dt-st-practiced: #4f46e5;
+  --dt-st-checked: #0f766e;
+  --dt-st-weak: #b45309;
+  --dt-st-blocked: #c0392b;
+  --dt-st-confirmed: #15803d;
+
   --dt-radius: 10px;
 
   background: var(--dt-bg);
@@ -49,9 +91,24 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
   line-height: 1.6;
   text-align: left;
 }
+
+/* The dark half of the state palette. Declared on the theme attribute itself
+   rather than on the roots, so it also reaches the preview's own legend — and
+   it only ever defines --dt-* names, so it cannot leak into the host's
+   styling. DSH switches themes with this attribute; it is not a media query. */
+body[data-ds-dark-theme] {
+  --dt-st-unconfirmed: #9aa3b2;
+  --dt-st-explained: #7aa2f7;
+  --dt-st-practiced: #a5a0f0;
+  --dt-st-checked: #4fd1c5;
+  --dt-st-weak: #f0a94a;
+  --dt-st-blocked: #f2706f;
+  --dt-st-confirmed: #4ade80;
+}
+
 .dt-root {
   display: grid;
-  grid-template-columns: minmax(260px, 300px) minmax(280px, 1fr) minmax(320px, 1.15fr);
+  grid-template-columns: minmax(272px, 320px) minmax(280px, 1fr) minmax(320px, 1.15fr);
   gap: 0;
   height: 100%;
   min-height: 0;
@@ -99,6 +156,21 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 .dt-empty { color: var(--dt-muted); font-size: 12.5px; margin: 8px 0; }
 .dt-cta-hint { margin-top: 14px; line-height: 1.6; }
 
+/* A region that has nothing in it yet.
+
+   Pane three is empty on every arrival, and a bare grey sentence in a large
+   white column reads as a failure rather than as a place waiting to be filled.
+   A dashed frame says "reserved" instead, and costs nothing when it is
+   replaced by the lesson. */
+.dt-empty-state {
+  border: 1px dashed var(--dt-border-strong); border-radius: var(--dt-radius);
+  padding: 14px 15px; margin-top: 10px; background: color-mix(in srgb, var(--dt-surface) 55%, transparent);
+}
+.dt-empty-state .dt-empty { margin: 0; color: var(--dt-text); }
+.dt-empty-state .dt-caption { margin-top: 6px; }
+.dt-empty-state .dt-primary { margin-top: 12px; }
+.dt-empty-title { font-size: 12.5px; font-weight: 620; margin: 0 0 5px; color: var(--dt-text); }
+
 /* ---- panel chrome ------------------------------------------------------ */
 /* The page always says what it is and how to get back. The failure this
    answers is concrete: a learner clicks Learn, the conversation is replaced,
@@ -120,7 +192,7 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 .dt-bar-sep { color: var(--dt-border-strong, #cfd4dc); }
 .dt-bar-note { color: var(--dt-muted, #6b7280); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dt-bar-back {
-  flex: none; padding: 5px 12px; border-radius: 7px;
+  flex: none; min-height: 28px; padding: 5px 12px; border-radius: 7px;
   border: 1px solid var(--dt-border-strong, #cfd4dc); background: var(--dt-bg, #fff);
   color: inherit; font: inherit; font-size: 12px; font-weight: 550; cursor: pointer;
 }
@@ -139,7 +211,7 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 }
 .dt-welcome-body { margin: 0 0 18px; color: var(--dt-muted); font-size: 13px; line-height: 1.65; }
 .dt-welcome-sample {
-  border: 1px solid var(--dt-accent); border-radius: var(--dt-radius);
+  border: 1px solid var(--dt-accent-line); border-radius: var(--dt-radius);
   background: var(--dt-surface); padding: 11px 13px;
 }
 .dt-welcome-sample-label {
@@ -155,8 +227,8 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 /* Shown when nothing will teach: honest, actionable, and not a crash. */
 .dt-notice {
   margin: 16px 0 0; padding: 11px 13px; border-radius: var(--dt-radius);
-  border: 1px solid var(--dt-warn);
-  background: color-mix(in srgb, var(--dt-warn) 8%, var(--dt-bg));
+  border: 1px solid color-mix(in srgb, var(--dt-st-weak) 55%, var(--dt-border));
+  background: color-mix(in srgb, var(--dt-st-weak) 8%, var(--dt-bg));
   color: var(--dt-text); font-size: 12px; line-height: 1.6;
 }
 .dt-notice b { font-weight: 640; }
@@ -169,7 +241,7 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
   display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
 }
 .dt-quiet {
-  padding: 4px 10px; border-radius: 7px; border: 1px solid var(--dt-border);
+  min-height: 28px; padding: 4px 10px; border-radius: 7px; border: 1px solid var(--dt-border);
   background: transparent; color: var(--dt-muted);
   font: inherit; font-size: 11.5px; cursor: pointer;
 }
@@ -184,8 +256,8 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 .dt-data-ask { margin: 0 0 10px; font-size: 12px; line-height: 1.6; }
 .dt-data-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .dt-danger {
-  padding: 5px 12px; border-radius: 7px; border: 1px solid var(--dt-stop);
-  background: var(--dt-stop); color: #fff;
+  min-height: 28px; padding: 5px 12px; border-radius: 7px; border: 1px solid transparent;
+  background: var(--dt-stop); color: var(--dt-on-accent);
   font: inherit; font-size: 11.5px; font-weight: 550; cursor: pointer;
 }
 .dt-danger:disabled { opacity: .55; cursor: default; }
@@ -198,12 +270,12 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
   background: var(--dt-surface);
 }
 /* The state is the headline fact about the node, so it colours the card edge. */
-.dt-now[data-state="blocked"] { border-left: 3px solid var(--dt-stop); }
-.dt-now[data-state="weak"] { border-left: 3px solid var(--dt-warn); }
-.dt-now[data-state="confirmed"] { border-left: 3px solid var(--dt-good); }
-.dt-now[data-state="checked"] { border-left: 3px solid #0f8f8f; }
-.dt-now[data-state="practiced"] { border-left: 3px solid #5b53d6; }
-.dt-now[data-state="explained"] { border-left: 3px solid #2f6feb; }
+.dt-now[data-state="blocked"] { border-left: 3px solid var(--dt-st-blocked); }
+.dt-now[data-state="weak"] { border-left: 3px solid var(--dt-st-weak); }
+.dt-now[data-state="confirmed"] { border-left: 3px solid var(--dt-st-confirmed); }
+.dt-now[data-state="checked"] { border-left: 3px solid var(--dt-st-checked); }
+.dt-now[data-state="practiced"] { border-left: 3px solid var(--dt-st-practiced); }
+.dt-now[data-state="explained"] { border-left: 3px solid var(--dt-st-explained); }
 .dt-now[data-state="unconfirmed"] { border-left: 3px solid var(--dt-border-strong); }
 
 .dt-now-eyebrow { color: var(--dt-muted); }
@@ -214,11 +286,22 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 .dt-now-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 9px; }
 .dt-now-rel { color: var(--dt-muted); font-size: 11.5px; }
 .dt-now-note { margin: 0; color: var(--dt-muted); font-size: 12px; line-height: 1.6; }
-.dt-now-action { margin-top: 13px; width: 100%; }
+/* Scoped to the card so it wins over the shared button styles: the card's
+   control is full-width whatever weight it is currently carrying. */
+.dt-now .dt-now-action { margin-top: 13px; width: 100%; }
 
 /* ---- diagnosis map ----------------------------------------------------- */
+/* One row style for both surfaces.
+ *
+ * The full panel and the docked tab draw the same map from the same tree, and
+ * they used to draw it differently: the tab had depth guides, a tinted state
+ * chip and a blocker tint, and the panel — the surface with the most room to
+ * show them — had none of it. Two presentations of one structure is how a
+ * learner learns that the map means different things in different places, so
+ * the row is defined once here and the panel borrows it. */
 .dt-tree { display: flex; flex-direction: column; gap: 1px; }
-.dt-tab-node {
+.dt-tab-node,
+.dt-node {
   display: grid; grid-template-columns: auto 1fr auto;
   align-items: center; gap: 8px; width: 100%;
   padding: 6px 8px; margin: 0; border-radius: 7px;
@@ -228,22 +311,53 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 }
 /* Depth as a drawn guide rather than only as indentation: a nested node should
    read as nested at a glance. */
-.dt-tab-node[data-depth]::before {
+.dt-tab-node[data-depth]::before,
+.dt-node[data-depth]::before {
   content: ''; position: absolute; left: 4px; top: 0; bottom: 0;
   width: 1px; background: var(--dt-border);
 }
-.dt-tab-node[data-depth="2"]::before { left: 18px; }
-.dt-tab-node[data-depth="3"]::before { left: 32px; }
-.dt-tab-node:hover { background: var(--dt-surface); }
-.dt-tab-node[aria-current="true"] {
+.dt-tab-node[data-depth="2"]::before,
+.dt-node[data-depth="2"]::before { left: 18px; }
+.dt-tab-node[data-depth="3"]::before,
+.dt-node[data-depth="3"]::before { left: 32px; }
+.dt-tab-node:hover,
+.dt-node:hover { background: var(--dt-surface); }
+.dt-tab-node[aria-current="true"],
+.dt-node[aria-current="true"] {
   background: var(--dt-surface); border-color: var(--dt-border-strong);
   border-left-color: var(--dt-accent);
 }
 /* A blocker should be findable without reading every row. */
-.dt-tab-node[data-attention] { background: rgba(192, 57, 43, .05); }
-.dt-tab-node[data-attention]:hover { background: rgba(192, 57, 43, .09); }
-.dt-tab-node-title { min-width: 0; overflow-wrap: anywhere; word-break: break-word; line-height: 1.45; }
-.dt-tab-node[data-depth="0"] > .dt-tab-node-title { font-weight: 600; }
+.dt-tab-node[data-attention],
+.dt-node[data-attention] { background: color-mix(in srgb, var(--dt-st-blocked) 7%, transparent); }
+.dt-tab-node[data-attention]:hover,
+.dt-node[data-attention]:hover { background: color-mix(in srgb, var(--dt-st-blocked) 12%, transparent); }
+/* A blocker that is merely selected should still look like a blocker. */
+.dt-tab-node[data-attention][aria-current="true"],
+.dt-node[data-attention][aria-current="true"] {
+  background: color-mix(in srgb, var(--dt-st-blocked) 10%, var(--dt-surface));
+}
+/* Where the learner actually is.
+ *
+ * [data-focused] was computed and rendered by both surfaces from the start and
+ * had no rule at all, so the one fact the map exists to answer — which node am
+ * I working on — was the one fact it did not show. It reads as a marker rather
+ * than as a selection: the selected row is where the detail pane is looking,
+ * the focused row is where the tutor is teaching. */
+.dt-tab-node[data-focused]:not([aria-current="true"]),
+.dt-node[data-focused]:not([aria-current="true"]) { background: color-mix(in srgb, var(--dt-accent) 6%, transparent); }
+.dt-tab-node[data-focused]::after,
+.dt-node[data-focused]::after {
+  content: ''; position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 60%; border-radius: 2px; background: var(--dt-accent);
+}
+/* The marker sits where the state column ends, so the row keeps its width. */
+.dt-tab-node[data-focused] > .dt-tab-state,
+.dt-node[data-focused] > .dt-tab-state { margin-right: 9px; }
+.dt-tab-node-title,
+.dt-node-title { min-width: 0; overflow-wrap: anywhere; word-break: break-word; line-height: 1.45; }
+.dt-tab-node[data-depth="0"] > .dt-tab-node-title,
+.dt-node[data-depth="0"] > .dt-node-title { font-weight: 600; }
 
 .dt-dot {
   width: 8px; height: 8px; border-radius: 50%;
@@ -251,13 +365,15 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 }
 .dt-dot[data-filled="true"] { background: currentColor; }
 
-.dt-state-unconfirmed { color: #8b93a1; }
-.dt-state-explained   { color: #2f6feb; }
-.dt-state-practiced   { color: #5b53d6; }
-.dt-state-checked     { color: #0f8f8f; }
-.dt-state-weak        { color: var(--dt-warn); }
-.dt-state-blocked     { color: var(--dt-stop); }
-.dt-state-confirmed   { color: var(--dt-good); }
+/* Each falls back to its light value, so a state word rendered outside the
+   panel's own subtree — the preview's legend — is still the right colour. */
+.dt-state-unconfirmed { color: var(--dt-st-unconfirmed, #5f6672); }
+.dt-state-explained   { color: var(--dt-st-explained, #2563eb); }
+.dt-state-practiced   { color: var(--dt-st-practiced, #4f46e5); }
+.dt-state-checked     { color: var(--dt-st-checked, #0f766e); }
+.dt-state-weak        { color: var(--dt-st-weak, #b45309); }
+.dt-state-blocked     { color: var(--dt-st-blocked, #c0392b); }
+.dt-state-confirmed   { color: var(--dt-st-confirmed, #15803d); }
 
 /* A tinted chip scans far better than coloured words alone. */
 .dt-tab-state {
@@ -276,23 +392,20 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
   border: 1px solid var(--dt-border); border-radius: 999px; padding: 1px 8px;
 }
 .dt-why { margin: 0 0 14px; color: var(--dt-muted); font-size: 12.5px; line-height: 1.6; }
-.dt-node {
-  display: grid; grid-template-columns: auto 1fr auto;
-  align-items: center; gap: 8px; width: 100%;
-  padding: 6px 8px; margin: 1px 0; border-radius: 7px;
-  border: 1px solid transparent; background: transparent;
-  color: inherit; font: inherit; text-align: left; cursor: pointer;
-}
-.dt-node:hover { background: var(--dt-surface); }
-.dt-node[aria-current="true"] { background: var(--dt-surface); border-color: var(--dt-border-strong); }
-.dt-node-title { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+/* The map row itself is defined once, under "diagnosis map" above. */
 /* At narrow widths the three-column panel collapses to one, and a grid row
    that keeps its three tracks pushes the pane sideways instead of wrapping. */
 @media (max-width: 1080px) {
   .dt-node { grid-template-columns: auto minmax(0, 1fr) auto; }
   .dt-node-title { max-width: 100%; }
 }
-.dt-node-rel { display: block; color: var(--dt-muted); font-size: 11px; font-weight: 400; }
+/* One line, truncated rather than wrapped: the relation line is a caption on
+   the title, and at the map's width it used to break after "1" and leave the
+   word "evidence" alone on a third line, which reads as a layout fault. */
+.dt-node-rel {
+  display: block; color: var(--dt-muted); font-size: 11px; font-weight: 400;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 
 /* ---- evidence ---------------------------------------------------------- */
 /* Compact on purpose: this is a record, not a reading surface. One row per
@@ -318,21 +431,36 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
   overflow: hidden;
 }
+/* When it happened, in the units a person reads rather than in ISO 8601. */
+.dt-ev-when {
+  grid-column: 1 / -1; color: var(--dt-muted); font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ---- buttons ----------------------------------------------------------- */
+/* One filled control per view, and its foreground comes from the theme.
+   a hardcoded white on a fill that inverts with the theme is what made the primary
+   button a blank white pill in dark mode. */
 .dt-primary {
-  padding: 7px 14px; border-radius: 8px; border: 1px solid transparent;
-  background: var(--dt-accent); color: #fff;
+  min-height: 32px; padding: 7px 14px; border-radius: 8px; border: 1px solid transparent;
+  background: var(--dt-accent); color: var(--dt-on-accent);
   font: inherit; font-weight: 550; cursor: pointer;
 }
-.dt-primary:hover { filter: brightness(1.07); }
-.dt-primary:disabled { opacity: .5; cursor: default; filter: none; }
+.dt-primary:hover:not(:disabled) { filter: brightness(1.07); }
+/* A disabled control should read as unavailable, not as a pressed black pill
+   with unreadable text on it. */
+.dt-primary:disabled {
+  cursor: default; filter: none;
+  background: var(--dt-sunken); color: var(--dt-muted);
+  border-color: var(--dt-border);
+}
 .dt-secondary {
   margin-top: 8px; padding: 6px 12px; border-radius: 8px;
-  border: 1px solid var(--dt-border); background: transparent;
+  border: 1px solid var(--dt-border-strong); background: transparent;
   color: inherit; font: inherit; font-size: 12px; cursor: pointer;
 }
 .dt-secondary:hover { background: var(--dt-surface); }
+.dt-secondary:disabled { opacity: .55; cursor: default; }
 
 /* ---- lesson ------------------------------------------------------------ */
 .dt-lesson { margin-top: 20px; }
@@ -345,10 +473,11 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
   padding-bottom: 10px; margin-bottom: 14px;
   border-bottom: 1px solid var(--dt-border);
 }
-.dt-lesson-title { font-size: 15px; font-weight: 650; margin: 0; letter-spacing: -.01em; line-height: 1.35; }
+.dt-lesson-title { font-size: 15px; font-weight: 650; margin: 0 0 10px; letter-spacing: -.01em; line-height: 1.35; }
+.dt-lesson-head .dt-lesson-title { margin: 0; }
 .dt-tab-lesson-title { font-weight: 600; }
 .dt-origin {
-  flex: none; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase;
+  flex: none; font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
   color: var(--dt-muted); border: 1px solid var(--dt-border);
   border-radius: 999px; padding: 1px 7px;
 }
@@ -359,6 +488,12 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 .dt-block-md { margin: 0 0 11px; line-height: 1.66; max-width: 62ch; }
 .dt-block-md:last-child { margin-bottom: 0; }
 .dt-block-md strong { font-weight: 640; }
+/* Emphasis the teaching brain writes as *…*. It arrives inline with the prose,
+   so it has to be styled rather than stripped: left alone it prints its own
+   asterisks, which is the one thing that makes a lesson look like source. */
+.dt-block-md em, .dt-block-example em, .dt-check-body em { font-style: italic; }
+.dt-block-text { margin-bottom: 18px; }
+.dt-block-text:last-child { margin-bottom: 0; }
 
 /* Headings the teaching brain writes inline as ### become real headings. */
 .dt-md-h2 {
@@ -383,6 +518,25 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 
 .dt-block-label {
   color: var(--dt-accent); margin-bottom: 7px;
+}
+
+/* Inline code.
+
+   The teaching brain writes identifiers and shapes as inline code far more often
+   than it writes display math, and only the math had a treatment — so the
+   most common inline token in a programming lesson was the one that looked
+   like an accident. Same frame as .dt-math, because to a reader they are the
+   same kind of thing: a literal. */
+.dt-block-md code, .dt-block-example code, .dt-check-body code, .dt-caption code,
+.dt-block-diagram code, .dt-takeaway code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .92em; padding: 1px 4px; border-radius: 4px;
+  background: var(--dt-sunken); border: 1px solid var(--dt-border);
+  /* Wrapping, not nowrap. A lesson writes whole expressions inline — measured
+     against a real one, an expression like np.array([[1, 2, 3]]) pushed straight out of the
+     pane and the check block clipped it. A chip that cannot wrap is a chip
+     that has to fit, and inline code never has to fit. */
+  overflow-wrap: anywhere;
 }
 
 /* Worked example: a distinct panel, because it is a different kind of reading
@@ -414,13 +568,13 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 /* Check: this is the moment the lesson hands over to the learner, so it gets
    the strongest treatment on the surface. */
 .dt-block-check {
-  border: 1px solid var(--dt-accent); border-radius: var(--dt-radius);
+  border: 1px solid var(--dt-accent-line); border-radius: var(--dt-radius);
   background: color-mix(in srgb, var(--dt-accent) 5%, var(--dt-bg));
   padding: 0; overflow: hidden;
 }
 .dt-check-head {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 9px 14px; background: var(--dt-accent); color: #fff;
+  padding: 9px 14px; background: var(--dt-accent); color: var(--dt-on-accent);
 }
 .dt-check-tag {
   font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 650;
@@ -441,7 +595,7 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 .dt-math {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: .95em; padding: 0 3px; border-radius: 4px;
-  background: var(--dt-sunken); white-space: nowrap;
+  background: var(--dt-sunken); overflow-wrap: anywhere;
 }
 .dt-math-block {
   margin: 0 0 12px; padding: 11px 13px; overflow-x: auto;
@@ -474,7 +628,7 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 .dt-handoff-time, .dt-handoff-try, .dt-handoff-detail { color: var(--dt-muted); font-size: 11px; }
 .dt-handoff-detail { flex-basis: 100%; }
 .dt-handoff-retry {
-  margin-left: auto; padding: 3px 10px; border-radius: 6px;
+  margin-left: auto; min-height: 28px; padding: 3px 10px; border-radius: 6px;
   border: 1px solid var(--dt-border); background: transparent;
   color: inherit; font: inherit; font-size: 11px; cursor: pointer;
 }
@@ -486,7 +640,7 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
    surface: what just finished, where it sends you, why, and one button. */
 .dt-next {
   margin: 20px 0 4px; padding: 14px 15px 15px; border-radius: var(--dt-radius);
-  border: 1px solid var(--dt-accent);
+  border: 1px solid var(--dt-accent-line);
   background: color-mix(in srgb, var(--dt-accent) 6%, var(--dt-bg));
   box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
 }
@@ -496,7 +650,7 @@ const CSS = `/* The tokens are declared on BOTH the wrapper and the grid. The wr
 }
 .dt-next-arrow { font-size: 12px; }
 .dt-next-from { margin: 0 0 8px; color: var(--dt-muted); font-size: 11.5px; }
-.dt-next-tick { color: var(--dt-good); margin-right: 5px; }
+.dt-next-tick { color: var(--dt-st-confirmed); margin-right: 5px; }
 .dt-next-target {
   margin: 0 0 10px; font-size: 14.5px; line-height: 1.4; letter-spacing: -.01em;
 }

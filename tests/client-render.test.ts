@@ -161,6 +161,74 @@ describe('an empty runtime is a normal state', () => {
   })
 })
 
+describe('one filled control per column', () => {
+  // Three filled buttons competed in the panel: the detail pane's start
+  // control, the recommendation's Continue, and the door back to the chat.
+  // Which one to press is not a style question, and leaving it to the learner
+  // is the same as not answering it.
+  const withNext = {
+    ...overview,
+    focus: {
+      courseId: 'ml',
+      nodeId: 'ml:math:la',
+      nodeTitle: 'Linear Algebra',
+      startedAt: NOW,
+      status: 'active',
+    },
+    nextStep: {
+      fromNodeId: 'ml:math:la',
+      fromNodeTitle: 'Linear Algebra',
+      targetNodeId: 'ml:math:calc',
+      targetNodeTitle: 'Calculus',
+      action: 'advance',
+      reason: 'Shapes are stable; the derivative is next.',
+      createdAt: NOW,
+    },
+  }
+
+  it('gives the recommendation the primary weight when there is one', () => {
+    const html = panel({
+      client,
+      initialOverview: withNext,
+      sessionId: 's1',
+      onOpenChat: () => {},
+    })
+    const primaries = [...html.matchAll(/class="dt-primary[^"]*"[^>]*>([^<]*)</g)].map((m) => m[1] ?? '')
+    expect(primaries).toHaveLength(1)
+    expect(primaries[0]).toContain('Continue')
+  })
+
+  it('demotes the door back to the chat once a recommendation exists', () => {
+    // Navigating to the conversation is not a recommendation, so it must not
+    // wear the same weight as the thing the tutor just told the learner to do.
+    const html = panel({ client, initialOverview: withNext, sessionId: 's1', onOpenChat: () => {} })
+    const door = /<button[^>]*class="([^"]*)"[^>]*>\s*Answer in the chat/.exec(html)?.[1] ?? ''
+    expect(door).toContain('dt-secondary')
+  })
+})
+
+describe('the map says which node the tutor is on', () => {
+  const focused = {
+    ...overview,
+    focus: {
+      courseId: 'ml',
+      nodeId: 'ml:math:la',
+      nodeTitle: 'Linear Algebra',
+      startedAt: NOW,
+      status: 'active',
+    },
+  }
+
+  it('marks the focused row, and only that row', () => {
+    // data-focused had no rule for as long as it existed, so the one fact the
+    // map is for was the one fact it did not show.
+    const html = panel({ client, initialOverview: focused })
+    expect([...html.matchAll(/data-focused="true"/g)]).toHaveLength(1)
+    // A boolean would render as the string "false" and match every rule.
+    expect(html).not.toContain('data-focused="false"')
+  })
+})
+
 describe('block renderers', () => {
   const blocks: Block[] = [
     { id: 'a', type: 'text', content: { md: 'First paragraph.\n\nSecond **paragraph**.' } },
