@@ -45,6 +45,17 @@ class FakeResponse {
   }
 }
 
+
+/**
+ * The conversation these tests act as.
+ *
+ * `/overview` reports learning state only to the conversation it belongs to, so
+ * every read has to name one. Before this, one course-wide focus was shown to
+ * whoever asked, which is how a lesson started in one conversation appeared
+ * under another.
+ */
+const SESSION = 'session-under-test'
+
 interface RequestInit {
   method?: string
   url?: string
@@ -465,16 +476,16 @@ describe('API over real persisted state', () => {
       const state = await openState(harness)
       const goalId = await seedGoal(state, 'Machine Learning', 'learn ml')
 
-      expect((await call(state, { path: '/overview' })).json.focus).toBeNull()
+      expect((await call(state, { path: `/overview?sessionId=${SESSION}` })).json.focus).toBeNull()
 
       await call(state, {
         method: 'POST',
         path: '/focus',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ nodeId: goalId }),
+        body: JSON.stringify({ nodeId: goalId, sessionId: SESSION }),
       })
 
-      const after = await call(state, { path: '/overview' })
+      const after = await call(state, { path: `/overview?sessionId=${SESSION}` })
       expect(after.json.focus).toMatchObject({ nodeId: goalId, nodeTitle: 'Machine Learning' })
     } finally {
       await harness.close()

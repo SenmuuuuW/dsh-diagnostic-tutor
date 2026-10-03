@@ -33,6 +33,17 @@ const NOW = '2026-01-01T00:00:00.000Z'
 /* Wiring: tools + API over one state handle                                  */
 /* -------------------------------------------------------------------------- */
 
+
+/**
+ * The conversation these tests act as.
+ *
+ * `/overview` reports learning state only to the conversation it belongs to, so
+ * every read has to name one. Before this, one course-wide focus was shown to
+ * whoever asked, which is how a lesson started in one conversation appeared
+ * under another.
+ */
+const SESSION = 'session-under-test'
+
 interface Wired {
   state: UdState
   /** Invoke a tool exactly as the runtime would. */
@@ -171,7 +182,7 @@ describe('Start learning', () => {
 
       const { status, json } = await wired.api('/focus', {
         method: 'POST',
-        body: { nodeId: mathId, sessionId: 'sess-1' },
+        body: { nodeId: mathId, sessionId: SESSION },
       })
 
       expect(status).toBe(200)
@@ -180,11 +191,11 @@ describe('Start learning', () => {
 
       // Real state, readable by both sides.
       expect(wired.state.activeFocus()?.node.id).toBe(mathId)
-      expect((await wired.api('/overview')).json.focus).toMatchObject({ nodeId: mathId })
+      expect((await wired.api(`/overview?sessionId=${SESSION}`)).json.focus).toMatchObject({ nodeId: mathId })
 
       // The tutor was told which node and asked to teach — not handed teaching.
       expect(wired.prompts).toHaveLength(1)
-      expect(wired.prompts[0]?.sessionId).toBe('sess-1')
+      expect(wired.prompts[0]?.sessionId).toBe(SESSION)
       expect(wired.prompts[0]?.text).toContain('Math Foundations')
     } finally {
       await harness.close()
@@ -198,7 +209,7 @@ describe('Start learning', () => {
       await seed(state)
       const wired = await wire(harness, state)
 
-      const { status } = await wired.api('/focus', { method: 'POST', body: { nodeId: 'ghost' } })
+      const { status } = await wired.api('/focus', { method: 'POST', body: { nodeId: 'ghost', sessionId: SESSION } })
       expect(status).toBe(404)
       expect(wired.state.activeFocus()).toBeUndefined()
     } finally {
@@ -218,7 +229,7 @@ describe('udt_lesson_update', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
 
       // No lessonId given: it binds to the focus.
       const written = await wired.tool('udt_lesson_update', {
@@ -254,7 +265,7 @@ describe('udt_lesson_update', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
 
       await wired.tool('udt_lesson_update', { blocks: [textBlock('a', 'First unit.')] })
       const second = await wired.tool('udt_lesson_update', {
@@ -284,7 +295,7 @@ describe('udt_lesson_update', () => {
         wired.tool('udt_lesson_update', { blocks: [textBlock('a', 'x')] }),
       ).rejects.toThrow(/no nodeId/)
 
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
       await expect(
         wired.tool('udt_lesson_update', { nodeId: 'ghost', blocks: [textBlock('a', 'x')] }),
       ).rejects.toThrow(/no node/)
@@ -302,7 +313,7 @@ describe('udt_lesson_update', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
 
       // An example with no steps, at index 1.
       await expect(
@@ -341,7 +352,7 @@ describe('udt_lesson_update', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
 
       const tooMany = Array.from({ length: MAX_BLOCKS_PER_UPDATE + 1 }, (_, index) =>
         textBlock(`b${index}`, 'x'),
@@ -385,7 +396,7 @@ describe('the check loop', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
 
       // The learner answered; the tutor records what it observed.
       const recorded = await wired.tool('udt_map_update', {
@@ -458,7 +469,7 @@ describe('the check loop', () => {
       })
       expect(added.addedNodeIds).toHaveLength(1)
 
-      const overview = await wired.api('/overview')
+      const overview = await wired.api(`/overview?sessionId=${SESSION}`)
       const nodes = overview.json.nodes as { title: string; state: string; parentId: string }[]
       const found = nodes.find((node) => node.title === 'Matrix shapes')
       expect(found?.state).toBe('unconfirmed')
@@ -490,7 +501,7 @@ describe('durability', () => {
       const state = await openUdState(first.ctx.get('storageDomain')!)
       const { mathId } = await seed(state)
       const wired = await wire(first, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
       await wired.tool('udt_lesson_update', {
         blocks: [textBlock('intro', 'Vectors first.'), checkBlock('check', 'Shape of x?')],
       })

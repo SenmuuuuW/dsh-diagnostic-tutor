@@ -163,6 +163,21 @@ export const FocusSchema = z.object({
   updatedAt: z.string(),
   /** Set when the status becomes `ended`; absent while the focus is active. */
   endedAt: z.string().optional(),
+  /**
+   * The conversation this focus belongs to.
+   *
+   * Learning state is per-conversation, not per-course. A learner can be
+   * working on one node in one conversation and a different node in another,
+   * and a focus that does not say which one it is cannot be shown to either
+   * without risking showing the wrong one — which is exactly what happened:
+   * starting a node in conversation B silently replaced A's, and returning to A
+   * showed B's lesson under A's chat.
+   *
+   * Optional because records written before this field existed have no
+   * conversation to claim. Such a focus belongs to nobody and is shown to
+   * nobody; the evidence and lessons it produced are untouched.
+   */
+  sessionId: z.string().optional(),
   /** The recommendation produced when this focus ended. */
   nextStepId: z.string().optional(),
 })
@@ -396,7 +411,7 @@ export interface UdState {
    * @param now - ISO timestamp.
    * @returns the stored focus.
    */
-  startFocus(courseId: CourseKey, nodeId: NodeKey, now: string): Promise<FocusRecord>
+  startFocus(courseId: CourseKey, nodeId: NodeKey, now: string, sessionId?: string): Promise<FocusRecord>
   /** Mark the course's focus as ended. No-op when there is none. */
   endFocus(courseId: CourseKey, now: string): Promise<void>
   /**
@@ -618,7 +633,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
 
     readFocus: (courseId) => focus.get(courseId),
 
-    async startFocus(courseId, nodeId, now) {
+    async startFocus(courseId, nodeId, now, sessionId) {
       const course = courses.get(courseId)
       if (!course) throw new Error(`no course "${courseId}"`)
       const node = nodes.get(nodeId)
@@ -626,7 +641,14 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       if (node.courseId !== courseId) {
         throw new Error(`node "${nodeId}" belongs to course "${node.courseId}", not "${courseId}"`)
       }
-      const record: FocusRecord = { courseId, nodeId, startedAt: now, status: 'active', updatedAt: now }
+      const record: FocusRecord = {
+        courseId,
+        nodeId,
+        startedAt: now,
+        status: 'active',
+        updatedAt: now,
+        ...(sessionId === undefined || sessionId.length === 0 ? {} : { sessionId }),
+      }
       await focus.put(courseId, record)
       return record
     },

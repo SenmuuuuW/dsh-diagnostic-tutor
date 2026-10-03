@@ -120,6 +120,17 @@ describe('going quiet is derived, never stored', () => {
 /* Integration: the API over real state                                       */
 /* -------------------------------------------------------------------------- */
 
+
+/**
+ * The conversation these tests act as.
+ *
+ * `/overview` reports learning state only to the conversation it belongs to, so
+ * every read has to name one. Before this, one course-wide focus was shown to
+ * whoever asked, which is how a lesson started in one conversation appeared
+ * under another.
+ */
+const SESSION = 'session-under-test'
+
 interface Wired {
   state: UdState
   handoffs: () => Promise<HandoffRecord[]>
@@ -233,8 +244,8 @@ describe('pressing Continue', () => {
       const { bId } = await seed(state)
       const wired = await wire(harness, state)
 
-      await wired.api('/focus', { method: 'POST', body: { nodeId: bId } })
-      const second = await wired.api('/focus', { method: 'POST', body: { nodeId: bId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: bId, sessionId: SESSION } })
+      const second = await wired.api('/focus', { method: 'POST', body: { nodeId: bId, sessionId: SESSION } })
 
       expect(second.json.deduped).toBe(true)
       expect(state.readHandoff(bId)?.attempts).toBe(1)
@@ -253,7 +264,7 @@ describe('pressing Continue', () => {
       const { bId } = await seed(state)
       const wired = await wire(harness, state, { prompted: false, reason: 'no live agent' })
 
-      const { json } = await wired.api('/focus', { method: 'POST', body: { nodeId: bId } })
+      const { json } = await wired.api('/focus', { method: 'POST', body: { nodeId: bId, sessionId: SESSION } })
       expect(json.prompted).toBe(false)
       expect((json.handoff as { phase: string }).phase).toBe('failed')
 
@@ -272,7 +283,7 @@ describe('pressing Continue', () => {
       const state = await openUdState(first.ctx.get('storageDomain')!)
       bId = (await seed(state)).bId
       const wired = await wire(first, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: bId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: bId, sessionId: SESSION } })
     } finally {
       await first.close({ keepStore: true })
     }
@@ -281,7 +292,7 @@ describe('pressing Continue', () => {
     try {
       const state = await openUdState(second.ctx.get('storageDomain')!)
       const wired = await wire(second, state)
-      const overview = await wired.api('/overview')
+      const overview = await wired.api(`/overview?sessionId=${SESSION}`)
       expect(overview.json.handoff).toMatchObject({ targetNodeId: bId, phase: 'tutor-requested' })
       expect(state.readHandoff(bId)?.attempts).toBe(1)
     } finally {
@@ -297,10 +308,10 @@ describe('the tutor answers', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { aId, bId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: bId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: bId, sessionId: SESSION } })
 
       // The tutor's own write is what moves it on — nothing else can.
-      await wired.api('/focus', { method: 'POST', body: { nodeId: aId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: aId, sessionId: SESSION } })
       expect(state.readHandoff(bId)?.status).toBe('prompted')
     } finally {
       await harness.close()
@@ -313,18 +324,18 @@ describe('the tutor answers', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { bId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: bId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: bId, sessionId: SESSION } })
 
       // Simulate what udt_lesson_update does on success.
       const record = state.readHandoff(bId)!
       await state.writeHandoff(withLesson(record, new Date().toISOString()))
 
-      const overview = await wired.api('/overview')
+      const overview = await wired.api(`/overview?sessionId=${SESSION}`)
       expect(overview.json.handoff).toMatchObject({ targetNodeId: bId, phase: 'lesson-ready' })
 
       const observed = await wired.api('/handoff/observed', {
         method: 'POST',
-        body: { nodeId: bId },
+        body: { nodeId: bId, sessionId: SESSION },
       })
       expect(observed.status).toBe(200)
       expect(state.readHandoff(bId)?.observedAt).toBeTruthy()
@@ -339,9 +350,9 @@ describe('the tutor answers', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { bId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: bId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: bId, sessionId: SESSION } })
 
-      expect((await wired.api('/handoff/observed', { method: 'POST', body: { nodeId: 'ghost' } })).status).toBe(404)
+      expect((await wired.api('/handoff/observed', { method: 'POST', body: { nodeId: 'ghost', sessionId: SESSION } })).status).toBe(404)
       expect((await wired.api('/handoff/observed', { method: 'POST', body: {} })).status).toBe(400)
     } finally {
       await harness.close()

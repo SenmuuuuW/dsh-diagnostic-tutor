@@ -53,9 +53,20 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 }
 
-/** The current course and its whole diagnosis map. */
-export function fetchOverview(): Promise<OverviewResponse> {
-  return request<OverviewResponse>('/overview')
+/**
+ * The current course and its whole diagnosis map.
+ *
+ * The conversation is named because learning state belongs to one: the course,
+ * the map and the lessons are shared, but where *this* conversation has got to
+ * is not. Without it the server cannot tell whose focus to report and would
+ * have to guess — which is how a lesson started in one conversation appeared
+ * under another.
+ *
+ * @param sessionId - the conversation asking, when one is open.
+ */
+export function fetchOverview(sessionId?: string): Promise<OverviewResponse> {
+  const query = sessionId === undefined || sessionId.length === 0 ? '' : `?sessionId=${encodeURIComponent(sessionId)}`
+  return request<OverviewResponse>(`/overview${query}`)
 }
 
 /** One node, its evidence, its parent and its children. */

@@ -34,6 +34,17 @@ import type { TestHarness } from './harness.js'
 
 const NOW = '2026-01-01T00:00:00.000Z'
 
+
+/**
+ * The conversation these tests act as.
+ *
+ * `/overview` reports learning state only to the conversation it belongs to, so
+ * every read has to name one. Before this, one course-wide focus was shown to
+ * whoever asked, which is how a lesson started in one conversation appeared
+ * under another.
+ */
+const SESSION = 'session-under-test'
+
 interface Wired {
   tool(name: string, args: Record<string, unknown>): Promise<Record<string, unknown>>
   api(
@@ -125,7 +136,7 @@ async function seed(state: UdState): Promise<{ a: string; b: string }> {
 
 /** Open a focus. This is also what clears an earlier decision. */
 async function focusOn(wired: Wired, nodeId: string): Promise<void> {
-  const started = await wired.api('/focus', { method: 'POST', body: { nodeId } })
+  const started = await wired.api('/focus', { method: 'POST', body: { nodeId, sessionId: SESSION } })
   expect(started.status).toBe(200)
 }
 
@@ -167,7 +178,7 @@ describe('a stay keeps the focus and still shows the card', () => {
         expect(focus?.nextStepId).toBe(a)
 
         // And the learner can see it.
-        const overview = await wired.api('/overview')
+        const overview = await wired.api(`/overview?sessionId=${SESSION}`)
         expect(overview.json.nextStep).toMatchObject({
           fromNodeId: a,
           targetNodeId: null,
@@ -202,7 +213,7 @@ describe('a move ends the focus and still shows the card', () => {
         // Nothing is active, so nothing advances on its own.
         expect(state.activeFocus()).toBeUndefined()
 
-        const overview = await wired.api('/overview')
+        const overview = await wired.api(`/overview?sessionId=${SESSION}`)
         expect(overview.json.focus).toBeNull()
         expect(overview.json.nextStep).toMatchObject({
           fromNodeId: a,
@@ -220,12 +231,12 @@ describe('acting on a decision consumes it', () => {
     await withStore(async ({ state, wired, a, b }) => {
       await focusOn(wired, a)
       await wired.tool('udt_decide_next', { action: 'advance', targetNodeId: b, reason: 'Onwards.' })
-      expect((await wired.api('/overview')).json.nextStep).not.toBeNull()
+      expect((await wired.api(`/overview?sessionId=${SESSION}`)).json.nextStep).not.toBeNull()
 
       // Continuing opens a new focus — which is exactly what clears the pointer.
       await focusOn(wired, b)
 
-      const overview = await wired.api('/overview')
+      const overview = await wired.api(`/overview?sessionId=${SESSION}`)
       expect(overview.json.nextStep).toBeNull()
       expect(state.readFocus('ml')?.nextStepId).toBeUndefined()
       expect(overview.json.focus).toMatchObject({ nodeId: b })
@@ -237,11 +248,11 @@ describe('acting on a decision consumes it', () => {
       await focusOn(wired, a)
       await wired.tool('udt_decide_next', { action: 'advance', targetNodeId: b, reason: 'Onwards.' })
       await focusOn(wired, b)
-      expect((await wired.api('/overview')).json.nextStep).toBeNull()
+      expect((await wired.api(`/overview?sessionId=${SESSION}`)).json.nextStep).toBeNull()
 
       await wired.tool('udt_decide_next', { action: 'more-practice', reason: 'Stay here.' })
 
-      expect((await wired.api('/overview')).json.nextStep).toMatchObject({
+      expect((await wired.api(`/overview?sessionId=${SESSION}`)).json.nextStep).toMatchObject({
         fromNodeId: b,
         targetNodeId: null,
         action: 'more-practice',
@@ -277,12 +288,79 @@ describe('the invariant, stated directly', () => {
 
         expect(state.readNextStep(decided.fromNodeId as string), `${input.action}: record`).toBeDefined()
 
-        const overview = await wired.api('/overview')
+        const overview = await wired.api(`/overview?sessionId=${SESSION}`)
         expect(
           overview.json.nextStep,
           `action "${input.action}" was recorded but the card would not render`,
         ).not.toBeNull()
       }
+    })
+  })
+})
+
+/* -------------------------------------------------------------------------- */
+/* Whose learning state is this?                                              */
+/* -------------------------------------------------------------------------- */
+
+describe('learning state belongs to a conversation, not to a course', () => {
+  it('never shows one conversation the node another one is working on', async () => {
+    // The bug this exists for, found in a real journey: A started a node, the
+    // learner switched to B and started a different one, and coming back to A
+    // showed B's lesson under A's chat. The focus was keyed by course, so B's
+    // Start learning had silently replaced A's — and because a focus did not
+    // record which conversation it belonged to, the panel had no way to tell.
+    await withStore(async ({ state, wired, a, b }) => {
+      await wired.api('/focus', { method: 'POST', body: { nodeId: a, sessionId: 'session-A' } })
+      const forA = await wired.api('/overview?sessionId=session-A')
+      expect(forA.json.focus).toMatchObject({ nodeId: a })
+
+      // B starts a different node. One focus per course, so this replaces it.
+      await wired.api('/focus', { method: 'POST', body: { nodeId: b, sessionId: 'session-B' } })
+
+      const bSees = await wired.api('/overview?sessionId=session-B')
+      expect(bSees.json.focus).toMatchObject({ nodeId: b })
+
+      // A must not be shown B's node — nor its lesson, nor its handoff.
+      const aSees = await wired.api('/overview?sessionId=session-A')
+      expect(aSees.json.focus, 'A was shown B\'s focus').toBeNull()
+      expect(aSees.json.nextStep).toBeNull()
+      expect(aSees.json.handoff).toBeNull()
+
+      // The shared half is still shared: the course and the map are knowledge,
+      // not a conversation's position in it.
+      expect(aSees.json.course).toMatchObject({ id: 'ml' })
+      expect((aSees.json.nodes as unknown[]).length).toBeGreaterThan(0)
+      void state
+    })
+  })
+
+  it('keeps a decision private to the conversation that earned it', async () => {
+    await withStore(async ({ wired, a, b }) => {
+      await wired.api('/focus', { method: 'POST', body: { nodeId: a, sessionId: 'session-A' } })
+      await wired.tool('udt_decide_next', { action: 'advance', targetNodeId: b, reason: 'Onwards.' })
+
+      expect((await wired.api('/overview?sessionId=session-A')).json.nextStep).not.toBeNull()
+      expect((await wired.api('/overview?sessionId=session-B')).json.nextStep).toBeNull()
+    })
+  })
+
+  it('shows nothing to a caller that does not say which conversation it is', async () => {
+    // Not a fallback to "the last focus": guessing is what produced the bug.
+    await withStore(async ({ wired, a }) => {
+      await wired.api('/focus', { method: 'POST', body: { nodeId: a, sessionId: 'session-A' } })
+      const anonymous = await wired.api('/overview')
+      expect(anonymous.json.focus).toBeNull()
+      expect(anonymous.json.nextStep).toBeNull()
+    })
+  })
+
+  it('shows nothing for a focus that predates the field', async () => {
+    // Records written before a focus carried a conversation belong to nobody,
+    // so they are shown to nobody. Their evidence and lessons are untouched.
+    await withStore(async ({ state, wired, a }) => {
+      await state.startFocus('ml', a, NOW)
+      const view = await wired.api('/overview?sessionId=session-A')
+      expect(view.json.focus).toBeNull()
     })
   })
 })

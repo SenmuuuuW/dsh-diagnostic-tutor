@@ -24,7 +24,7 @@ import * as realApi from './api.js'
 
 /** The calls the surfaces make; injectable so preview and tests can fake them. */
 export interface PanelClient {
-  fetchOverview(): Promise<OverviewResponse>
+  fetchOverview(sessionId?: string): Promise<OverviewResponse>
   fetchNode(nodeId: string): Promise<NodeDetailResponse>
   fetchLesson(nodeId: string): Promise<LessonResponse>
   startFocus(nodeId: string, sessionId?: string): Promise<FocusResponse>
@@ -111,6 +111,13 @@ export function useLearning(options: {
 }): LearningState {
   const { client, sessionId, initialOverview, onStarted } = options
 
+  // The polling callbacks are created once, so reading the prop directly would
+  // pin whichever conversation was open when they were built. A ref keeps every
+  // re-read asking about the conversation the learner is in NOW — the same
+  // mistake, in a different place, as reading a session list once at startup.
+  const sessionIdRef = useRef<string | undefined>(sessionId)
+  sessionIdRef.current = sessionId
+
   const [overview, setOverview] = useState<OverviewResponse | null>(initialOverview ?? null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<NodeDetailResponse | null>(null)
@@ -135,7 +142,7 @@ export function useLearning(options: {
     if (initialOverview !== undefined) return
     let live = true
     client
-      .fetchOverview()
+      .fetchOverview(sessionIdRef.current)
       .then((data) => {
         if (live) setOverview(data)
       })
@@ -180,7 +187,7 @@ export function useLearning(options: {
         // this the panel would never see its own focus, and the polling effect
         // below — which keys off it — would never start.
         const [nextOverview, nextLesson] = await Promise.all([
-          client.fetchOverview(),
+          client.fetchOverview(sessionIdRef.current),
           client.fetchLesson(result.focus.nodeId),
         ])
         setOverview(nextOverview)
@@ -204,7 +211,7 @@ export function useLearning(options: {
   const refresh = useCallback(
     () =>
       client
-        .fetchOverview()
+        .fetchOverview(sessionIdRef.current)
         .then((data) => {
           setOverview(data)
           setError(null)
@@ -244,7 +251,7 @@ export function useLearning(options: {
     const tick = async (): Promise<void> => {
       try {
         const [nextOverview, nextLesson] = await Promise.all([
-          client.fetchOverview(),
+          client.fetchOverview(sessionIdRef.current),
           client.fetchLesson(nodeId),
         ])
         if (!live) return

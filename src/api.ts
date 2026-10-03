@@ -184,7 +184,29 @@ function nextStepOf(state: UdState, courseId: string): NextStepView | null {
   }
 }
 
-function handleOverview(state: UdState, deps: ApiDeps, res: ServerResponse): void {
+/**
+ * The focus this conversation is working on, or nothing.
+ *
+ * Learning state belongs to a conversation, not to a course. The course and its
+ * map and its lessons are shared knowledge and stay visible to everyone; where
+ * *this* conversation has got to is not. A focus carrying a different
+ * conversation's id — or none at all, which means it predates the field — is
+ * not this panel's to show, so it reports nothing rather than someone else's
+ * lesson under the learner's chat.
+ *
+ * @param state - the runtime.
+ * @param courseId - the course being viewed.
+ * @param sessionId - the conversation asking, when it said.
+ * @returns the focus record, or undefined.
+ */
+function focusBelongingTo(state: UdState, courseId: string, sessionId: string | undefined): FocusRecord | undefined {
+  const focus = state.readFocus(courseId)
+  if (focus === undefined) return undefined
+  if (sessionId === undefined || focus.sessionId !== sessionId) return undefined
+  return focus
+}
+
+function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undefined, res: ServerResponse): void {
   const course = currentCourse(state)
   if (course === undefined) {
     // An empty state is a normal state, not an error: the panel says so. The
@@ -203,19 +225,18 @@ function handleOverview(state: UdState, deps: ApiDeps, res: ServerResponse): voi
     })
     return
   }
+  const mine = focusBelongingTo(state, course.id, sessionId)
   sendJson(res, 200, {
     ok: true,
     course: courseView(course),
     nodes: state.listNodes(course.id).map(nodeView),
-    focus: focusOf(state, course.id),
-    nextStep: nextStepOf(state, course.id),
+    focus: mine === undefined ? null : focusOf(state, course.id),
+    // A decision is attached to a focus, so it follows the same rule.
+    nextStep: mine === undefined ? null : nextStepOf(state, course.id),
     teachingBrain: deps.teachingBrain ?? null,
     // The handoff for whichever node is focused, so a reload or a restart
     // rebuilds the progress line instead of showing a blank wait.
-    handoff: (() => {
-      const focus = state.readFocus(course.id)
-      return focus === undefined ? null : handoffFor(state, focus.nodeId, Date.now())
-    })(),
+    handoff: mine === undefined ? null : handoffFor(state, mine.nodeId, Date.now()),
     lessonCount: state.lessonCount(),
   })
 }
@@ -344,7 +365,7 @@ async function handleStartFocus(
 
   let focus: FocusRecord
   try {
-    focus = await state.startFocus(course.id, nodeId, now.toISOString())
+    focus = await state.startFocus(course.id, nodeId, now.toISOString(), sessionId)
   } catch (error) {
     // Covers an unknown node and a node from another course alike.
     return fail(res, 404, 'no-such-node', (error as Error).message)
@@ -444,7 +465,9 @@ export function createApiHandler(deps: ApiDeps) {
     const route = url.pathname.slice(API_PREFIX.length) || '/'
     const course = currentCourse(state)
 
-    if (method === 'GET' && route === '/overview') return handleOverview(state, deps, res)
+    if (method === 'GET' && route === '/overview') {
+      return handleOverview(state, deps, url.searchParams.get('sessionId') ?? undefined, res)
+    }
     if (method === 'GET' && route === '/export') return handleExport(state, res)
     if (method === 'POST' && route === '/reset') return await handleReset(state, res)
     if (method === 'GET' && route === '/node') {

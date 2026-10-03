@@ -25,6 +25,17 @@ import type { TestHarness } from './harness.js'
 
 const NOW = '2026-01-01T00:00:00.000Z'
 
+
+/**
+ * The conversation these tests act as.
+ *
+ * `/overview` reports learning state only to the conversation it belongs to, so
+ * every read has to name one. Before this, one course-wide focus was shown to
+ * whoever asked, which is how a lesson started in one conversation appeared
+ * under another.
+ */
+const SESSION = 'session-under-test'
+
 interface Wired {
   state: UdState
   tool(name: string, args: Record<string, unknown>): Promise<Record<string, unknown>>
@@ -148,7 +159,7 @@ describe('a move ends the focus and carries the recommendation', () => {
       const { mathId, laId } = await seed(state)
       const wired = await wire(harness, state)
 
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
       const decided = await wired.tool('udt_decide_next', {
         action: 'step-down',
         targetNodeId: laId,
@@ -166,7 +177,7 @@ describe('a move ends the focus and carries the recommendation', () => {
       // Nothing is active, so nothing auto-advances.
       expect(state.activeFocus()).toBeUndefined()
 
-      const overview = await wired.api('/overview')
+      const overview = await wired.api(`/overview?sessionId=${SESSION}`)
       expect(overview.json.focus).toBeNull()
       expect(overview.json.nextStep).toMatchObject({
         fromNodeId: mathId,
@@ -187,7 +198,7 @@ describe('a move ends the focus and carries the recommendation', () => {
       const { mathId, laId } = await seed(state)
       const wired = await wire(harness, state)
 
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
       await wired.tool('udt_decide_next', {
         action: 'advance',
         targetNodeId: laId,
@@ -197,11 +208,11 @@ describe('a move ends the focus and carries the recommendation', () => {
       // Still nothing focused: the recommendation is an offer, not a jump.
       expect(state.activeFocus()).toBeUndefined()
 
-      await wired.api('/focus', { method: 'POST', body: { nodeId: laId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: laId, sessionId: SESSION } })
 
       expect(state.activeFocus()?.node.id).toBe(laId)
       // Acting on it clears it: a new focus writes a fresh record.
-      expect((await wired.api('/overview')).json.nextStep).toBeNull()
+      expect((await wired.api(`/overview?sessionId=${SESSION}`)).json.nextStep).toBeNull()
     } finally {
       await harness.close()
     }
@@ -216,7 +227,7 @@ describe('staying keeps the focus open', () => {
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
 
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
       const decided = await wired.tool('udt_decide_next', {
         action: 'more-practice',
         reason: 'The idea is there but the manipulation is not yet reliable.',
@@ -227,7 +238,7 @@ describe('staying keeps the focus open', () => {
       expect(state.readFocus('ml')?.status).toBe('active')
       expect(state.activeFocus()?.node.id).toBe(mathId)
 
-      const overview = await wired.api('/overview')
+      const overview = await wired.api(`/overview?sessionId=${SESSION}`)
       expect(overview.json.focus).toMatchObject({ nodeId: mathId })
       expect(overview.json.nextStep).toMatchObject({ targetNodeId: null, action: 'more-practice' })
     } finally {
@@ -242,7 +253,7 @@ describe('staying keeps the focus open', () => {
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
 
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
       const decided = await wired.tool('udt_decide_next', {
         action: 'review-first',
         reason: 'One locally repairable gap — worth fixing here.',
@@ -260,7 +271,7 @@ describe('staying keeps the focus open', () => {
       const { mathId, laId } = await seed(state)
       const wired = await wire(harness, state)
 
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
       const decided = await wired.tool('udt_decide_next', {
         action: 'review-first',
         targetNodeId: laId,
@@ -281,7 +292,7 @@ describe('the runtime validates the shape and never supplies a target', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
 
       await expect(
         wired.tool('udt_decide_next', { action: 'advance', reason: 'move on' }),
@@ -299,7 +310,7 @@ describe('the runtime validates the shape and never supplies a target', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { mathId, laId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
 
       await expect(
         wired.tool('udt_decide_next', {
@@ -319,7 +330,7 @@ describe('the runtime validates the shape and never supplies a target', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
 
       await expect(
         wired.tool('udt_decide_next', { action: 'advance', targetNodeId: 'ghost', reason: 'x' }),
@@ -351,7 +362,7 @@ describe('the runtime validates the shape and never supplies a target', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
 
       await expect(
         wired.tool('udt_decide_next', { action: 'advance', targetNodeId: mathId, reason: 'x' }),
@@ -369,7 +380,7 @@ describe('the runtime validates the shape and never supplies a target', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { mathId, laId } = await seed(state)
       const wired = await wire(harness, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
 
       await wired.tool('udt_decide_next', {
         action: 'advance',
@@ -394,7 +405,7 @@ describe('a decision survives a restart', () => {
       const state = await openUdState(first.ctx.get('storageDomain')!)
       const { mathId, laId } = await seed(state)
       const wired = await wire(first, state)
-      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId } })
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
       await wired.tool('udt_decide_next', {
         action: 'step-down',
         targetNodeId: laId,
@@ -410,7 +421,7 @@ describe('a decision survives a restart', () => {
       const wired = await wire(second, state)
 
       expect(state.readFocus('ml')?.status).toBe('ended')
-      const overview = await wired.api('/overview')
+      const overview = await wired.api(`/overview?sessionId=${SESSION}`)
       expect(overview.json.focus).toBeNull()
       expect(overview.json.nextStep).toMatchObject({
         targetNodeId: 'ml:la',
