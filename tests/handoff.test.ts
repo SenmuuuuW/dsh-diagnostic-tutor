@@ -72,7 +72,11 @@ describe('the timing chain', () => {
       toLesson: 95_000,
       toObserved: 97_000,
     })
-    expect(view.elapsedMs).toBe(97_000)
+    // The wait ended when the lesson arrived, at 95s. The two seconds between
+    // that and the surface rendering it are the surface's, not the learner's —
+    // and this assertion used to include them, which is the same mistake that
+    // let a finished handoff advertise "Lesson ready 33h 16m".
+    expect(view.elapsedMs).toBe(95_000)
   })
 
   it('keeps only the first activity and the first sighting', () => {

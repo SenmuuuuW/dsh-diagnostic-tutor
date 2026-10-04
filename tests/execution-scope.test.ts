@@ -20,6 +20,16 @@ import { describe, expect, it } from 'vitest'
 
 import { API_PREFIX, createApiHandler } from '../src/api.js'
 import { executionKey, focusKey, handoffKey, isLegacyExecutionKey, nextStepKey } from '../src/execution-key.js'
+import {
+  STALL_AFTER_MS,
+  beginHandoff,
+  handoffView,
+  withFocusRecorded,
+  withLesson,
+  withObserved,
+  withPromptFailure,
+  withPrompted,
+} from '../src/handoff.js'
 import { newNode, openUdState } from '../src/state.js'
 import type { UdState } from '../src/state.js'
 import { registerTools } from '../src/tools.js'
@@ -379,5 +389,79 @@ describe('the observed report names its conversation', () => {
     } finally {
       await harness.close()
     }
+  })
+})
+
+/* -------------------------------------------------------------------------- */
+/* How long did the learner wait?                                             */
+/* -------------------------------------------------------------------------- */
+
+describe('elapsed time measures the wait, and stops when the wait does', () => {
+  const T = (s: number) => new Date(Date.UTC(2026, 0, 1, 0, 0, s)).toISOString()
+
+  it('keeps growing while the tutor is still working', () => {
+    let record = beginHandoff({ courseId: 'ml', fromNodeId: 'ml:a', targetNodeId: 'ml:b', now: T(0), sessionId: A })
+    record = withFocusRecorded(record, T(1))
+    record = withPrompted(record, T(2))
+
+    const early = handoffView(record, Date.parse(T(10)), false)
+    const later = handoffView(record, Date.parse(T(40)), false)
+    expect(early.elapsedMs).toBe(10_000)
+    expect(later.elapsedMs).toBe(40_000)
+  })
+
+  it('freezes once the lesson arrives, however long ago that was', () => {
+    // The real symptom: a handoff that finished in under a minute showed as
+    // "Lesson ready 33h 16m", because elapsed kept counting from the request.
+    let record = beginHandoff({ courseId: 'ml', fromNodeId: 'ml:a', targetNodeId: 'ml:b', now: T(0), sessionId: A })
+    record = withFocusRecorded(record, T(1))
+    record = withPrompted(record, T(2))
+    record = withLesson(record, T(30))
+
+    const justAfter = handoffView(record, Date.parse(T(31)), true)
+    const aDayLater = handoffView(record, Date.parse(T(30)) + 33 * 3600_000, true)
+    expect(justAfter.elapsedMs).toBe(30_000)
+    expect(aDayLater.elapsedMs).toBe(30_000)
+    expect(aDayLater.phase).toBe('lesson-ready')
+  })
+
+  it('is not moved by the surface noticing afterwards', () => {
+    // observedAt records when a tab rendered it, which is not part of the wait.
+    let record = beginHandoff({ courseId: 'ml', fromNodeId: 'ml:a', targetNodeId: 'ml:b', now: T(0), sessionId: A })
+    record = withPrompted(record, T(2))
+    record = withLesson(record, T(30))
+    const beforeObserved = handoffView(record, Date.parse(T(45)), true)
+
+    const observed = withObserved(record, T(45))
+    const afterObserved = handoffView(observed, Date.parse(T(90)), true)
+    expect(afterObserved.elapsedMs).toBe(beforeObserved.elapsedMs)
+    expect(afterObserved.elapsedMs).toBe(30_000)
+  })
+
+  it('freezes at the failure, and does not grow while it sits there', () => {
+    let record = beginHandoff({ courseId: 'ml', fromNodeId: 'ml:a', targetNodeId: 'ml:b', now: T(0), sessionId: A })
+    record = withPromptFailure(record, T(4), 'no agent')
+    expect(handoffView(record, Date.parse(T(5)), false).elapsedMs).toBe(4_000)
+    expect(handoffView(record, Date.parse(T(400)), false).elapsedMs).toBe(4_000)
+  })
+
+  it('still derives stalled from the current time', () => {
+    // A stalled handoff has not finished — that is the whole point of it — so
+    // its elapsed time keeps running and the phase flips on the real timeout.
+    let record = beginHandoff({ courseId: 'ml', fromNodeId: 'ml:a', targetNodeId: 'ml:b', now: T(0), sessionId: A })
+    record = withPrompted(record, T(2))
+
+    expect(handoffView(record, Date.parse(T(100)), false).phase).toBe('tutor-requested')
+    const stalled = handoffView(record, Date.parse(T(2)) + STALL_AFTER_MS + 1000, false)
+    expect(stalled.phase).toBe('stalled')
+    expect(stalled.elapsedMs).toBeGreaterThan(STALL_AFTER_MS)
+  })
+
+  it('is zero, not growing, for a lesson that already existed', () => {
+    // No lessonAt to freeze at: the handoff was satisfied the moment it was
+    // asked, so the honest elapsed time is nothing.
+    const record = beginHandoff({ courseId: 'ml', fromNodeId: 'ml:a', targetNodeId: 'ml:b', now: T(0), sessionId: A })
+    const view = handoffView(record, Date.parse(T(500)), true)
+    expect(view.elapsedMs).toBe(0)
   })
 })
