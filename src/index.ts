@@ -183,15 +183,19 @@ export async function apply(ctx: Context): Promise<void> {
   // handoff asked in, so a busy conversation elsewhere cannot make a quiet
   // handoff look alive.
   ctx.on('session/event', (session, event) => {
-    const handoff = state.activeHandoff()
+    // The event says which conversation produced it, so the handoff is looked
+    // up in that conversation rather than in the course at large. A busy
+    // conversation elsewhere cannot make a quiet handoff look alive — and two
+    // conversations working on the same target keep separate records.
+    const sessionId = String(session.id)
+    const handoff = state.activeHandoff(sessionId)
     if (handoff === undefined || handoff.status !== 'prompted') return
-    if (handoff.sessionId !== undefined && String(session.id) !== handoff.sessionId) return
     void event
     // Atomic, and re-checked inside the transform: the lesson write races this
     // listener, and a plain read-modify-write here would clobber a handoff that
     // had already become ready.
     void state
-      .updateHandoff(handoff.targetNodeId, (current) =>
+      .updateHandoff(sessionId, handoff.targetNodeId, (current) =>
         current.status === 'prompted' ? withActivity(current, new Date().toISOString()) : current,
       )
       .catch(() => {})

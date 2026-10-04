@@ -372,7 +372,7 @@ describe('API over real persisted state', () => {
           method: 'POST',
           path: '/focus',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ nodeId: goalId, sessionId: 'sess-1' }),
+          body: JSON.stringify({ nodeId: goalId, sessionId: SESSION }),
         },
         prompts,
       )
@@ -382,12 +382,12 @@ describe('API over real persisted state', () => {
       expect(json.focus).toMatchObject({ nodeId: goalId, nodeTitle: 'Machine Learning', status: 'active' })
 
       // The focus is real state, not just a response field.
-      expect(state.activeFocus()?.node.id).toBe(goalId)
+      expect(state.activeFocus(SESSION)?.node.id).toBe(goalId)
 
       // And the tutor was woken in the right session, with a message that names
       // the node and asks for teaching — not with teaching already in it.
       expect(prompts).toHaveLength(1)
-      expect(prompts[0]?.sessionId).toBe('sess-1')
+      expect(prompts[0]?.sessionId).toBe(SESSION)
       expect(prompts[0]?.text).toContain('Machine Learning')
       expect(prompts[0]?.text).toContain('Learning Surface')
     } finally {
@@ -409,7 +409,7 @@ describe('API over real persisted state', () => {
           method: 'POST',
           path: '/focus',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ nodeId: goalId }),
+          body: JSON.stringify({ nodeId: goalId, sessionId: SESSION }),
         },
         [],
         { prompted: false, reason: 'that session has no live agent' },
@@ -417,7 +417,7 @@ describe('API over real persisted state', () => {
 
       expect(json.prompted).toBe(false)
       expect(json.promptReason).toBe('that session has no live agent')
-      expect(state.activeFocus()?.node.id).toBe(goalId)
+      expect(state.activeFocus(SESSION)?.node.id).toBe(goalId)
     } finally {
       await harness.close()
     }
@@ -435,7 +435,7 @@ describe('API over real persisted state', () => {
         method: 'POST',
         path: '/focus',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ nodeId: 'ghost' }),
+        body: JSON.stringify({ nodeId: 'ghost', sessionId: SESSION }),
       })
       expect(missing.status).toBe(404)
 
@@ -445,7 +445,7 @@ describe('API over real persisted state', () => {
         method: 'POST',
         path: '/focus',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ nodeId: other }),
+        body: JSON.stringify({ nodeId: other, sessionId: SESSION }),
       })
       expect(foreign.status).toBe(404)
     } finally {

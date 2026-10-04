@@ -87,7 +87,7 @@ async function wire(harness: TestHarness, state?: UdState): Promise<Wired> {
     async tool(name, args) {
       const definition = registered.get(name)
       if (!definition) throw new Error(`tool "${name}" is not registered`)
-      return (await definition.execute(args, {})) as Record<string, unknown>
+      return (await definition.execute(args, { agent: { id: SESSION } })) as Record<string, unknown>
     },
     async api(path, init = {}) {
       const url = `${API_PREFIX}${path}`
@@ -190,7 +190,7 @@ describe('Start learning', () => {
       expect(json.focus).toMatchObject({ nodeId: mathId, nodeTitle: 'Math Foundations' })
 
       // Real state, readable by both sides.
-      expect(wired.state.activeFocus()?.node.id).toBe(mathId)
+      expect(wired.state.activeFocus(SESSION)?.node.id).toBe(mathId)
       expect((await wired.api(`/overview?sessionId=${SESSION}`)).json.focus).toMatchObject({ nodeId: mathId })
 
       // The tutor was told which node and asked to teach — not handed teaching.
@@ -211,7 +211,7 @@ describe('Start learning', () => {
 
       const { status } = await wired.api('/focus', { method: 'POST', body: { nodeId: 'ghost', sessionId: SESSION } })
       expect(status).toBe(404)
-      expect(wired.state.activeFocus()).toBeUndefined()
+      expect(wired.state.activeFocus(SESSION)).toBeUndefined()
     } finally {
       await harness.close()
     }
@@ -521,7 +521,7 @@ describe('durability', () => {
       const wired = await wire(second, state)
 
       // The focus survives, so the panel resumes where it left off.
-      expect(state.activeFocus()?.node.id).toBe('ml:math')
+      expect(state.activeFocus(SESSION)?.node.id).toBe('ml:math')
 
       const lesson = (await wired.api('/lesson?nodeId=ml%3Amath')).json.lesson as {
         blocks: { type: string }[]

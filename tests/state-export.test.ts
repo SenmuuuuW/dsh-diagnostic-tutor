@@ -91,13 +91,13 @@ async function seed(state: UdState): Promise<{ nodeId: string }> {
     now: NOW,
   })
   for (const record of [goal, node]) await state.writeNode(record)
-  await state.startFocus('ml', node.id, NOW)
+  await state.startFocus('ml', node.id, NOW, SESSION)
   await state.decideNext({
     courseId: 'ml',
     fromNodeId: node.id,
     action: 'more-practice',
     reason: 'Practise the manipulation.',
-    now: NOW,
+    now: NOW, sessionId: SESSION,
   })
   await state.writeLesson({
     id: `${node.id}:lesson`,
@@ -155,6 +155,7 @@ describe('export', () => {
         attempts: 1,
         requestedAt: NOW,
         updatedAt: NOW,
+        sessionId: SESSION,
       })
       const wired = wire(harness, state)
 

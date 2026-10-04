@@ -150,8 +150,8 @@ function currentCourse(state: UdState): CourseRecord | undefined {
 }
 
 /** The active focus for one course, joined with its node, as a view. */
-function focusOf(state: UdState, courseId: string): FocusView | null {
-  const focus = state.readFocus(courseId)
+function focusOf(state: UdState, sessionId: string, courseId: string): FocusView | null {
+  const focus = state.readFocus(sessionId, courseId)
   if (focus === undefined || focus.status !== 'active') return null
   const node = state.readNode(focus.nodeId)
   if (node === undefined) return null
@@ -166,10 +166,10 @@ function focusOf(state: UdState, courseId: string): FocusView | null {
  * fresh record without `nextStepId`, so acting on a recommendation clears it
  * without anything having to remember that it did.
  */
-function nextStepOf(state: UdState, courseId: string): NextStepView | null {
-  const focus = state.readFocus(courseId)
+function nextStepOf(state: UdState, sessionId: string, courseId: string): NextStepView | null {
+  const focus = state.readFocus(sessionId, courseId)
   if (focus?.nextStepId === undefined) return null
-  const step = state.readNextStep(focus.nextStepId)
+  const step = state.readNextStep(sessionId, focus.nextStepId)
   if (step === undefined) return null
   const from = state.readNode(step.fromNodeId)
   const target = step.targetNodeId === undefined ? undefined : state.readNode(step.targetNodeId)
@@ -200,10 +200,10 @@ function nextStepOf(state: UdState, courseId: string): NextStepView | null {
  * @returns the focus record, or undefined.
  */
 function focusBelongingTo(state: UdState, courseId: string, sessionId: string | undefined): FocusRecord | undefined {
-  const focus = state.readFocus(courseId)
-  if (focus === undefined) return undefined
-  if (sessionId === undefined || focus.sessionId !== sessionId) return undefined
-  return focus
+  // No conversation named means no conversation's state: guessing is what let
+  // one conversation's lesson appear under another's chat.
+  if (sessionId === undefined || sessionId.length === 0) return undefined
+  return state.readFocus(sessionId, courseId)
 }
 
 function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undefined, res: ServerResponse): void {
@@ -230,13 +230,13 @@ function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undef
     ok: true,
     course: courseView(course),
     nodes: state.listNodes(course.id).map(nodeView),
-    focus: mine === undefined ? null : focusOf(state, course.id),
+    focus: mine === undefined ? null : focusOf(state, sessionId ?? '', course.id),
     // A decision is attached to a focus, so it follows the same rule.
-    nextStep: mine === undefined ? null : nextStepOf(state, course.id),
+    nextStep: mine === undefined ? null : nextStepOf(state, sessionId ?? '', course.id),
     teachingBrain: deps.teachingBrain ?? null,
     // The handoff for whichever node is focused, so a reload or a restart
     // rebuilds the progress line instead of showing a blank wait.
-    handoff: mine === undefined ? null : handoffFor(state, mine.nodeId, Date.now()),
+    handoff: mine === undefined ? null : handoffFor(state, sessionId ?? '', mine.nodeId, Date.now()),
     lessonCount: state.lessonCount(),
   })
 }
@@ -292,8 +292,8 @@ function handleNode(
 const HANDOFF_DEDUPE_MS = 3000
 
 /** Build the handoff view, which is what a surface renders. */
-function handoffFor(state: UdState, nodeId: string, nowMs: number): HandoffView | null {
-  const record = state.readHandoff(nodeId)
+function handoffFor(state: UdState, sessionId: string, nodeId: string, nowMs: number): HandoffView | null {
+  const record = state.readHandoff(sessionId, nodeId)
   if (record === undefined) return null
   return handoffView(record, nowMs, state.lessonForNode(nodeId) !== undefined)
 }
@@ -328,12 +328,15 @@ async function handleStartFocus(
   const nodeId = stringField(body, 'nodeId')
   if (nodeId === undefined) return fail(res, 400, 'missing-node-id')
   const sessionId = stringField(body, 'sessionId')
+  // Required: a focus that cannot say whose it is cannot be shown to anyone,
+  // so accepting one would create state nobody could ever see.
+  if (sessionId === undefined) return fail(res, 400, 'missing-session-id')
 
   const node = state.readNode(nodeId)
   if (node === undefined || node.courseId !== course.id) return fail(res, 404, 'no-such-node')
 
   const now = new Date()
-  const previous = state.readHandoff(nodeId)
+  const previous = state.readHandoff(sessionId, nodeId)
 
   // Double-click protection: the same target, still in flight and recent, is
   // the same handoff. Not an error — just nothing new to do.
@@ -342,12 +345,12 @@ async function handleStartFocus(
     previous.status !== 'failed' &&
     now.getTime() - Date.parse(previous.requestedAt) < HANDOFF_DEDUPE_MS
   ) {
-    const focus = state.readFocus(course.id)
+    const focus = state.readFocus(sessionId, course.id)
     sendJson(res, 200, {
       ok: true,
       focus: focus === undefined ? null : focusView(focus, node),
       prompted: previous.promptedAt !== undefined,
-      handoff: handoffFor(state, nodeId, now.getTime()),
+      handoff: handoffFor(state, sessionId, nodeId, now.getTime()),
       deduped: true,
     })
     return
@@ -355,10 +358,10 @@ async function handleStartFocus(
 
   let handoff = beginHandoff({
     courseId: course.id,
-    fromNodeId: previous?.fromNodeId ?? state.readFocus(course.id)?.nodeId ?? nodeId,
+    fromNodeId: previous?.fromNodeId ?? state.readFocus(sessionId, course.id)?.nodeId ?? nodeId,
     targetNodeId: nodeId,
     now: now.toISOString(),
-    ...(sessionId === undefined ? {} : { sessionId }),
+    sessionId,
     ...(previous === undefined ? {} : { previous }),
   })
   await state.writeHandoff(handoff)
@@ -384,7 +387,7 @@ async function handleStartFocus(
     focus: focusView(focus, node),
     prompted: outcome.prompted,
     ...(outcome.reason === undefined ? {} : { promptReason: outcome.reason }),
-    handoff: handoffFor(state, nodeId, Date.now()),
+    handoff: handoffFor(state, sessionId, nodeId, Date.now()),
   })
 }
 
@@ -429,12 +432,14 @@ async function handleObserved(
   if (body === undefined) return fail(res, 400, 'bad-body')
   const nodeId = stringField(body, 'nodeId')
   if (nodeId === undefined) return fail(res, 400, 'missing-node-id')
+  const sessionId = stringField(body, 'sessionId')
+  if (sessionId === undefined) return fail(res, 400, 'missing-session-id')
 
-  const record = state.readHandoff(nodeId)
+  const record = state.readHandoff(sessionId, nodeId)
   if (record === undefined) return fail(res, 404, 'no-handoff')
 
   await state.writeHandoff(withObserved(record, new Date().toISOString()))
-  sendJson(res, 200, { ok: true, handoff: handoffFor(state, nodeId, Date.now()) })
+  sendJson(res, 200, { ok: true, handoff: handoffFor(state, sessionId, nodeId, Date.now()) })
 }
 
 export interface ApiDeps {

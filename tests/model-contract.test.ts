@@ -125,6 +125,9 @@ describe('the message source this plugin declares', () => {
 /* 2. Node identity                                                           */
 /* -------------------------------------------------------------------------- */
 
+/** The conversation these tests act as. */
+const SESSION = 'session-under-test'
+
 interface Wired {
   state: UdState
   tool(name: string, args: Record<string, unknown>): Promise<Record<string, unknown>>
@@ -146,7 +149,7 @@ async function wire(harness: Awaited<ReturnType<typeof createHarness>>, state: U
     async tool(name, args) {
       const definition = registered.get(name)
       if (!definition) throw new Error(`tool "${name}" is not registered`)
-      return (await definition.execute(args, {})) as Record<string, unknown>
+      return (await definition.execute(args, { agent: { id: SESSION } })) as Record<string, unknown>
     },
   }
 }
@@ -207,7 +210,7 @@ describe('nodes are identified by id, never by title', () => {
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
 
-      await state.startFocus('ml', mathId, NOW)
+      await state.startFocus('ml', mathId, NOW, SESSION)
       await wired.tool('udt_decide_next', {
         action: 'more-practice',
         reason: 'The rule is there but applying it is not.',
@@ -236,7 +239,7 @@ describe('nodes are identified by id, never by title', () => {
       const goalId = 'ml:goal'
       const wired = await wire(harness, state)
 
-      await state.startFocus('ml', mathId, NOW)
+      await state.startFocus('ml', mathId, NOW, SESSION)
       await wired.tool('udt_decide_next', {
         action: 'review-first',
         targetNodeId: goalId,

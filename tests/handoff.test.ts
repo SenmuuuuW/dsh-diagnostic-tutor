@@ -37,7 +37,7 @@ const at = (seconds: number): string => new Date(Date.parse(NOW) + seconds * 100
 /* -------------------------------------------------------------------------- */
 
 function chain(): HandoffRecord {
-  let record = beginHandoff({ courseId: 'ml', fromNodeId: 'ml:a', targetNodeId: 'ml:b', now: at(0) })
+  let record = beginHandoff({ courseId: 'ml', fromNodeId: 'ml:a', targetNodeId: 'ml:b', now: at(0), sessionId: SESSION })
   record = withFocusRecorded(record, at(1))
   record = withPrompted(record, at(2))
   return record
@@ -221,13 +221,13 @@ describe('pressing Continue', () => {
       const { bId } = await seed(state)
       const wired = await wire(harness, state)
 
-      const { json } = await wired.api('/focus', { method: 'POST', body: { nodeId: bId, sessionId: 's1' } })
+      const { json } = await wired.api('/focus', { method: 'POST', body: { nodeId: bId, sessionId: SESSION } })
       expect(json.prompted).toBe(true)
 
-      const handoff = state.readHandoff(bId)
+      const handoff = state.readHandoff(SESSION, bId)
       expect(handoff?.status).toBe('prompted')
       expect(handoff?.attempts).toBe(1)
-      expect(handoff?.sessionId).toBe('s1')
+      expect(handoff?.sessionId).toBe(SESSION)
       expect(handoff?.focusRecordedAt).toBeTruthy()
       expect(handoff?.promptedAt).toBeTruthy()
       // The view carries the target, so a retry asks for the right node.
@@ -248,10 +248,10 @@ describe('pressing Continue', () => {
       const second = await wired.api('/focus', { method: 'POST', body: { nodeId: bId, sessionId: SESSION } })
 
       expect(second.json.deduped).toBe(true)
-      expect(state.readHandoff(bId)?.attempts).toBe(1)
+      expect(state.readHandoff(SESSION, bId)?.attempts).toBe(1)
       // And exactly one focus exists — the domain is keyed by course.
       expect(state.listCourses()).toHaveLength(1)
-      expect(state.activeFocus()?.node.id).toBe(bId)
+      expect(state.activeFocus(SESSION)?.node.id).toBe(bId)
     } finally {
       await harness.close()
     }
@@ -269,7 +269,7 @@ describe('pressing Continue', () => {
       expect((json.handoff as { phase: string }).phase).toBe('failed')
 
       // The focus stands: a failed wake is about the wait, not the place.
-      expect(state.activeFocus()?.node.id).toBe(bId)
+      expect(state.activeFocus(SESSION)?.node.id).toBe(bId)
     } finally {
       await harness.close()
     }
@@ -294,7 +294,7 @@ describe('pressing Continue', () => {
       const wired = await wire(second, state)
       const overview = await wired.api(`/overview?sessionId=${SESSION}`)
       expect(overview.json.handoff).toMatchObject({ targetNodeId: bId, phase: 'tutor-requested' })
-      expect(state.readHandoff(bId)?.attempts).toBe(1)
+      expect(state.readHandoff(SESSION, bId)?.attempts).toBe(1)
     } finally {
       await second.close()
     }
@@ -312,7 +312,7 @@ describe('the tutor answers', () => {
 
       // The tutor's own write is what moves it on — nothing else can.
       await wired.api('/focus', { method: 'POST', body: { nodeId: aId, sessionId: SESSION } })
-      expect(state.readHandoff(bId)?.status).toBe('prompted')
+      expect(state.readHandoff(SESSION, bId)?.status).toBe('prompted')
     } finally {
       await harness.close()
     }
@@ -327,7 +327,7 @@ describe('the tutor answers', () => {
       await wired.api('/focus', { method: 'POST', body: { nodeId: bId, sessionId: SESSION } })
 
       // Simulate what udt_lesson_update does on success.
-      const record = state.readHandoff(bId)!
+      const record = state.readHandoff(SESSION, bId)!
       await state.writeHandoff(withLesson(record, new Date().toISOString()))
 
       const overview = await wired.api(`/overview?sessionId=${SESSION}`)
@@ -338,7 +338,7 @@ describe('the tutor answers', () => {
         body: { nodeId: bId, sessionId: SESSION },
       })
       expect(observed.status).toBe(200)
-      expect(state.readHandoff(bId)?.observedAt).toBeTruthy()
+      expect(state.readHandoff(SESSION, bId)?.observedAt).toBeTruthy()
     } finally {
       await harness.close()
     }

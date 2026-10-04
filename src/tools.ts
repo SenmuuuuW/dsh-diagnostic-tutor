@@ -52,6 +52,25 @@ export interface ToolsHost {
   tools: { register(definition: ToolDefinition): unknown }
 }
 
+/**
+ * The conversation a tool call belongs to.
+ *
+ * `udt_decide_next` is called by the model, which has no idea which
+ * conversation it is running in — but the harness does: every execution carries
+ * the agent on whose behalf it runs, and an agent is session-backed, so
+ * `agent.id` IS the session id. Without this the decision would be stored
+ * course-wide and one conversation's decision would overwrite another's, which
+ * is the bug this keying exists to fix.
+ *
+ * @param exec - the execution context the registry hands the tool.
+ * @returns the session id, or undefined when the call has no agent.
+ */
+function sessionOf(exec: unknown): string | undefined {
+  const agent = (exec as { agent?: { id?: unknown } } | undefined)?.agent
+  const id = agent?.id
+  return typeof id === 'string' && id.length > 0 ? id : undefined
+}
+
 /* -------------------------------------------------------------------------- */
 /* Helpers                                                                    */
 /* -------------------------------------------------------------------------- */
@@ -153,7 +172,7 @@ interface StatusValue {
  * location and version are internal diagnostics and must not become text a
  * model can echo back to a learner.
  */
-function statusValue(state: UdState): StatusValue {
+function statusValue(state: UdState, sessionId: string | undefined): StatusValue {
   const snapshot = state.snapshot()
   const value: StatusValue = {
     domain: snapshot.domain,
@@ -171,7 +190,7 @@ function statusValue(state: UdState): StatusValue {
   // The focus is how the tutor learns which node the learner asked to work on.
   // It is reported here rather than in a tool of its own: it is one fact about
   // the runtime, not a separate concern.
-  const focused = state.activeFocus()
+  const focused = sessionId === undefined ? undefined : state.activeFocus(sessionId)
   if (focused !== undefined) {
     value.focus = {
       courseId: focused.course.id,
@@ -184,8 +203,19 @@ function statusValue(state: UdState): StatusValue {
 
   // A recommendation the learner has not acted on yet. Reported so the tutor
   // can see its own last decision instead of re-deciding from scratch.
-  const courseId = focused?.course.id ?? state.readLearner().activeCourseId
-  const pending = courseId === undefined ? undefined : state.latestNextStep(courseId)
+  //
+  // Read from the focus RECORD, not from the active focus: a decision that
+  // names a target ends the focus, so keying this off `activeFocus` would hide
+  // the recommendation in exactly the case it matters most — the tutor having
+  // just said where to go next.
+  const focusRecord =
+    sessionId === undefined || activeCourseId === undefined
+      ? undefined
+      : state.readFocus(sessionId, activeCourseId)
+  const pending =
+    sessionId === undefined || focusRecord?.nextStepId === undefined
+      ? undefined
+      : state.readNextStep(sessionId, focusRecord.nextStepId)
   if (pending !== undefined) {
     const from = state.readNode(pending.fromNodeId)
     const target = pending.targetNodeId === undefined ? undefined : state.readNode(pending.targetNodeId)
@@ -293,7 +323,7 @@ function udtStatusTool(state: UdState): ToolDefinition {
         },
       ],
     },
-    execute: () => Promise.resolve(statusValue(state)),
+    execute: (_args, exec) => Promise.resolve(statusValue(state, sessionOf(exec))),
     presentCall: () => ({
       card: 'generic',
       title: 'Read learning-runtime status',
@@ -881,7 +911,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
         },
       ],
     },
-    execute: async (args) => {
+    execute: async (args, exec) => {
       const input = args as {
         nodeId?: string
         title?: string
@@ -890,7 +920,8 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       }
       const mode = input.mode ?? 'append'
 
-      const focused = state.activeFocus()
+      const sessionId = sessionOf(exec)
+      const focused = sessionId === undefined ? undefined : state.activeFocus(sessionId)
       const courseId = focused?.course.id ?? state.readLearner().activeCourseId
       if (courseId === undefined) {
         throw new Error('no active course; record a goal and start learning on a node first')
@@ -955,8 +986,8 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       // waiting on it is now ready, and its timing chain closes.
       // Atomic and monotonic: a lesson can only move a handoff forward, never
       // back, so a late activity event cannot undo it.
-      if (state.readHandoff(nodeId) !== undefined) {
-        await state.updateHandoff(nodeId, (current) => withLesson(current, now))
+      if (sessionId !== undefined && state.readHandoff(sessionId, nodeId) !== undefined) {
+        await state.updateHandoff(sessionId, nodeId, (current) => withLesson(current, now))
       }
 
       return {
@@ -1058,14 +1089,18 @@ function udtDecideNextTool(state: UdState): ToolDefinition {
         },
       ],
     },
-    execute: async (args) => {
+    execute: async (args, exec) => {
       const input = args as {
         fromNodeId?: string
         action: Readiness
         targetNodeId?: string
         reason: string
       }
-      const focused = state.activeFocus()
+      const sessionId = sessionOf(exec)
+      if (sessionId === undefined) {
+        throw new Error('this call has no conversation; a decision must be recorded in one')
+      }
+      const focused = state.activeFocus(sessionId)
       const courseId = focused?.course.id ?? state.readLearner().activeCourseId
       if (courseId === undefined) {
         throw new Error('no active course; record a goal and start learning on a node first')
@@ -1098,6 +1133,7 @@ function udtDecideNextTool(state: UdState): ToolDefinition {
         ...(input.targetNodeId === undefined ? {} : { targetNodeId: input.targetNodeId }),
         reason: input.reason,
         now: nowIso(),
+        sessionId,
       })
 
       return {

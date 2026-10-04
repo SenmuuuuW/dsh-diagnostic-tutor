@@ -57,6 +57,7 @@ import { LessonSchema } from './lesson.js'
 import type { LessonKey, LessonRecord } from './lesson.js'
 import { HandoffSchema } from './handoff.js'
 import type { HandoffKey, HandoffRecord } from './handoff.js'
+import { focusKey, handoffKey, isLegacyExecutionKey, nextStepKey } from './execution-key.js'
 
 /* -------------------------------------------------------------------------- */
 /* Records                                                                    */
@@ -268,6 +269,26 @@ export const UDT_DOMAIN_NAME = 'udt'
  * ship a migration in the same release.
  */
 export const UDT_DOMAIN_VERSION = 1
+
+/**
+ * Legacy keys seen during reads, so a support dump can explain the orphans.
+ *
+ * Records written before execution state was session-scoped are left on disk
+ * untouched. They are never read, because a record that cannot say which
+ * conversation it belongs to cannot be shown to one without risking showing it
+ * to the wrong one. Logged once per table: a poll every two seconds would
+ * otherwise fill the log with the same line.
+ */
+const legacySeen = new Set<string>()
+
+function logIgnoredLegacy(table: string, key: string): void {
+  if (legacySeen.has(table)) return
+  legacySeen.add(table)
+  console.debug(
+    `[diagnostic-tutor] ignoring pre-session-scoped record in "${table}" (key "${key}"): ` +
+    'it predates per-conversation state and is not attributed to any conversation',
+  )
+}
 export const COURSES_TABLE = 'courses'
 export const NODES_TABLE = 'nodes'
 export const LESSONS_TABLE = 'lessons'
@@ -398,7 +419,7 @@ export interface UdState {
 
   /* focus ------------------------------------------------------------------ */
   /** The recorded focus for one course, if any. */
-  readFocus(courseId: CourseKey): FocusRecord | undefined
+  readFocus(sessionId: string, courseId: CourseKey): FocusRecord | undefined
   /**
    * Record that learning is starting on one node of one course.
    *
@@ -412,8 +433,8 @@ export interface UdState {
    * @returns the stored focus.
    */
   startFocus(courseId: CourseKey, nodeId: NodeKey, now: string, sessionId?: string): Promise<FocusRecord>
-  /** Mark the course's focus as ended. No-op when there is none. */
-  endFocus(courseId: CourseKey, now: string): Promise<void>
+  /** Mark this conversation's focus as ended. No-op when there is none. */
+  endFocus(sessionId: string, courseId: CourseKey, now: string): Promise<void>
   /**
    * Record the tutor's decision about where to go next.
    *
@@ -435,11 +456,10 @@ export interface UdState {
     targetNodeId?: NodeKey
     reason: string
     now: string
+    sessionId: string
   }): Promise<{ nextStep: NextStepRecord; focus: FocusRecord }>
-  /** The most recent recommendation recorded for a course, if any. */
-  latestNextStep(courseId: CourseKey): NextStepRecord | undefined
-  /** A recommendation by key. */
-  readNextStep(id: NextStepKey): NextStepRecord | undefined
+  /** A recommendation by the conversation that reached it. */
+  readNextStep(sessionId: string, fromNodeId: NodeKey): NextStepRecord | undefined
   /** Every recommendation, for export. */
   listNextSteps(): NextStepRecord[]
   /** Every lesson, for export. */
@@ -465,7 +485,7 @@ export interface UdState {
   resetState(now: string): Promise<void>
 
   /* handoffs --------------------------------------------------------------- */
-  readHandoff(targetNodeId: HandoffKey): HandoffRecord | undefined
+  readHandoff(sessionId: string, targetNodeId: HandoffKey): HandoffRecord | undefined
   /** Insert or replace one handoff. */
   writeHandoff(record: HandoffRecord): Promise<HandoffRecord>
   /**
@@ -481,15 +501,16 @@ export interface UdState {
    * @returns the stored record.
    */
   updateHandoff(
+    sessionId: string,
     targetNodeId: HandoffKey,
     transform: (record: HandoffRecord) => HandoffRecord,
   ): Promise<HandoffRecord>
-  /** The handoff for whichever node is currently focused, if any. */
-  activeHandoff(): HandoffRecord | undefined
+  /** The handoff for whichever node this conversation is currently focused on. */
+  activeHandoff(sessionId: string): HandoffRecord | undefined
   /** Every handoff, for diagnostics and tests. */
   listHandoffs(): HandoffRecord[]
-  /** The focus of the learner's active course, joined with its course and node. */
-  activeFocus(): { focus: FocusRecord; course: CourseRecord; node: NodeRecord } | undefined
+  /** This conversation's focus, joined with its course and node. */
+  activeFocus(sessionId: string): { focus: FocusRecord; course: CourseRecord; node: NodeRecord } | undefined
 
   /* lessons ---------------------------------------------------------------- */
   readLesson(id: LessonKey): LessonRecord | undefined
@@ -631,9 +652,22 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       return { course, nodes: listNodesFor(courseId) }
     },
 
-    readFocus: (courseId) => focus.get(courseId),
+    readFocus: (sessionId, courseId) => {
+      const record = focus.get(focusKey(sessionId, courseId))
+      if (record !== undefined) return record
+      // A record under the bare course key predates session scoping. It cannot
+      // say whose it is, so it is not returned to anyone — see
+      // execution-key.ts. Left where it is; never migrated on a guess.
+      if (focus.get(courseId) !== undefined) {
+        logIgnoredLegacy('focus', courseId)
+      }
+      return undefined
+    },
 
     async startFocus(courseId, nodeId, now, sessionId) {
+      if (sessionId === undefined || sessionId.length === 0) {
+        throw new Error('a focus must name the conversation it belongs to')
+      }
       const course = courses.get(courseId)
       if (!course) throw new Error(`no course "${courseId}"`)
       const node = nodes.get(nodeId)
@@ -641,25 +675,22 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       if (node.courseId !== courseId) {
         throw new Error(`node "${nodeId}" belongs to course "${node.courseId}", not "${courseId}"`)
       }
-      const record: FocusRecord = {
-        courseId,
-        nodeId,
-        startedAt: now,
-        status: 'active',
-        updatedAt: now,
-        ...(sessionId === undefined || sessionId.length === 0 ? {} : { sessionId }),
-      }
-      await focus.put(courseId, record)
+      const record: FocusRecord = { courseId, nodeId, startedAt: now, status: 'active', updatedAt: now, sessionId }
+      await focus.put(focusKey(sessionId, courseId), record)
       return record
     },
 
-    async endFocus(courseId, now) {
-      const current = focus.get(courseId)
+    async endFocus(sessionId, courseId, now) {
+      const key = focusKey(sessionId, courseId)
+      const current = focus.get(key)
       if (!current || current.status === 'ended') return
-      await focus.put(courseId, { ...current, status: 'ended', endedAt: now, updatedAt: now })
+      await focus.put(key, { ...current, status: 'ended', endedAt: now, updatedAt: now })
     },
 
     async decideNext(input) {
+      if (input.sessionId === undefined || input.sessionId.length === 0) {
+        throw new Error('a decision must name the conversation it was reached in')
+      }
       const course = courses.get(input.courseId)
       if (!course) throw new Error(`no course "${input.courseId}"`)
       const from = nodes.get(input.fromNodeId)
@@ -686,17 +717,18 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
         createdAt: input.now,
         ...(input.targetNodeId === undefined ? {} : { targetNodeId: input.targetNodeId }),
       }
-      await nextSteps.put(input.fromNodeId, nextStep)
+      await nextSteps.put(nextStepKey(input.sessionId, input.fromNodeId), nextStep)
 
       // A move ends the focus; staying keeps it, because the learner has not
       // moved and the panel must not say they have.
       const moves = endsFocus(input.action, input.targetNodeId !== undefined)
-      const current = focus.get(input.courseId) ?? {
+      const current = focus.get(focusKey(input.sessionId, input.courseId)) ?? {
         courseId: input.courseId,
         nodeId: input.fromNodeId,
         startedAt: input.now,
         status: 'active' as const,
         updatedAt: input.now,
+        sessionId: input.sessionId,
       }
       const nextFocus: FocusRecord = moves
         ? {
@@ -707,19 +739,17 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
             updatedAt: input.now,
           }
         : { ...current, status: 'active', nextStepId: input.fromNodeId, updatedAt: input.now }
-      await focus.put(input.courseId, nextFocus)
+      await focus.put(focusKey(input.sessionId, input.courseId), nextFocus)
 
       return { nextStep, focus: nextFocus }
     },
 
-    latestNextStep(courseId) {
-      return [...nextSteps.entries()]
-        .map(([, record]) => record)
-        .filter((record) => record.courseId === courseId)
-        .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0]
+    readNextStep: (sessionId, fromNodeId) => {
+      const record = nextSteps.get(nextStepKey(sessionId, fromNodeId))
+      if (record !== undefined) return record
+      if (nextSteps.get(fromNodeId) !== undefined) logIgnoredLegacy('next_steps', fromNodeId)
+      return undefined
     },
-
-    readNextStep: (id) => nextSteps.get(id),
 
     listNextSteps: () => [...nextSteps.entries()].map(([, record]) => record),
     listLessons: () => [...lessons.entries()].map(([, record]) => record),
@@ -749,32 +779,41 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       await learner.set({ initializedAt: UNINITIALIZED, updatedAt: now })
     },
 
-    readHandoff: (targetNodeId) => handoffs.get(targetNodeId),
+    readHandoff: (sessionId, targetNodeId) => {
+      const record = handoffs.get(handoffKey(sessionId, targetNodeId))
+      if (record !== undefined) return record
+      if (handoffs.get(targetNodeId) !== undefined) logIgnoredLegacy('handoffs', targetNodeId)
+      return undefined
+    },
 
     async writeHandoff(record) {
-      await handoffs.put(record.targetNodeId, record)
+      if (record.sessionId === undefined || record.sessionId.length === 0) {
+        throw new Error('a handoff must name the conversation it was requested in')
+      }
+      await handoffs.put(handoffKey(record.sessionId, record.targetNodeId), record)
       return record
     },
 
-    async updateHandoff(targetNodeId, transform) {
-      const current = handoffs.get(targetNodeId)
-      if (current === undefined) throw new Error(`no handoff for "${targetNodeId}"`)
-      return handoffs.update(targetNodeId, (record) => transform(record))
+    async updateHandoff(sessionId, targetNodeId, transform) {
+      const key = handoffKey(sessionId, targetNodeId)
+      const current = handoffs.get(key)
+      if (current === undefined) throw new Error(`no handoff for "${targetNodeId}" in this conversation`)
+      return handoffs.update(key, (record) => transform(record))
     },
 
     listHandoffs: () => [...handoffs.entries()].map(([, record]) => record),
 
-    activeHandoff() {
+    activeHandoff(sessionId) {
       const courseId = learner.get().activeCourseId
-      const record = courseId === undefined ? undefined : focus.get(courseId)
+      const record = courseId === undefined ? undefined : focus.get(focusKey(sessionId, courseId))
       if (record === undefined) return undefined
-      return handoffs.get(record.nodeId)
+      return handoffs.get(handoffKey(sessionId, record.nodeId))
     },
 
-    activeFocus() {
+    activeFocus(sessionId) {
       const courseId = learner.get().activeCourseId
       if (courseId === undefined) return undefined
-      const record = focus.get(courseId)
+      const record = focus.get(focusKey(sessionId, courseId))
       if (record === undefined || record.status !== 'active') return undefined
       const course = courses.get(courseId)
       const node = nodes.get(record.nodeId)

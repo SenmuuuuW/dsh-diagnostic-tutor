@@ -24,7 +24,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { API_PREFIX, createApiHandler } from '../src/api.js'
-import { newNode, openUdState } from '../src/state.js'
+import { FOCUS_TABLE, newNode, openUdState, udtDomain } from '../src/state.js'
 import type { UdState } from '../src/state.js'
 import { registerTools } from '../src/tools.js'
 import type { ToolsHost } from '../src/tools.js'
@@ -53,7 +53,7 @@ interface Wired {
   ): Promise<{ status: number; json: Record<string, unknown> }>
 }
 
-function wire(harness: TestHarness, state: UdState): Wired {
+function wire(harness: TestHarness, state: UdState, asSession: string = SESSION): Wired {
   const registered = new Map<string, { execute: (a: unknown, e: unknown) => Promise<unknown> }>()
   const host: ToolsHost = {
     tools: {
@@ -70,7 +70,7 @@ function wire(harness: TestHarness, state: UdState): Wired {
     async tool(name, args) {
       const definition = registered.get(name)
       if (!definition) throw new Error(`tool "${name}" is not registered`)
-      return (await definition.execute(args, {})) as Record<string, unknown>
+      return (await definition.execute(args, { agent: { id: asSession } })) as Record<string, unknown>
     },
     async api(path, init = {}) {
       const body = init.body === undefined ? undefined : JSON.stringify(init.body)
@@ -142,13 +142,13 @@ async function focusOn(wired: Wired, nodeId: string): Promise<void> {
 
 /** Run one case against a freshly seeded store. */
 async function withStore(
-  body: (ctx: { state: UdState; wired: Wired; a: string; b: string }) => Promise<void>,
+  body: (ctx: { state: UdState; wired: Wired; harness: TestHarness; a: string; b: string }) => Promise<void>,
 ): Promise<void> {
   const harness = await createHarness()
   try {
     const state = await openUdState(harness.ctx.get('storageDomain')!)
     const { a, b } = await seed(state)
-    await body({ state, wired: wire(harness, state), a, b })
+    await body({ state, wired: wire(harness, state), harness, a, b })
   } finally {
     await harness.close()
   }
@@ -169,7 +169,7 @@ describe('a stay keeps the focus and still shows the card', () => {
         expect(decided.focusEnded).toBe(false)
 
         // The focus continues…
-        const focus = state.readFocus('ml')
+        const focus = state.readFocus(SESSION, 'ml')
         expect(focus?.status).toBe('active')
         expect(focus?.endedAt).toBeUndefined()
         expect(focus?.nodeId).toBe(a)
@@ -206,12 +206,12 @@ describe('a move ends the focus and still shows the card', () => {
         expect(decided.targetNodeId).toBe(b)
         expect(decided.focusEnded).toBe(true)
 
-        const focus = state.readFocus('ml')
+        const focus = state.readFocus(SESSION, 'ml')
         expect(focus?.status).toBe('ended')
         expect(focus?.endedAt).toBeTruthy()
         expect(focus?.nextStepId).toBe(a)
         // Nothing is active, so nothing advances on its own.
-        expect(state.activeFocus()).toBeUndefined()
+        expect(state.activeFocus(SESSION)).toBeUndefined()
 
         const overview = await wired.api(`/overview?sessionId=${SESSION}`)
         expect(overview.json.focus).toBeNull()
@@ -238,7 +238,7 @@ describe('acting on a decision consumes it', () => {
 
       const overview = await wired.api(`/overview?sessionId=${SESSION}`)
       expect(overview.json.nextStep).toBeNull()
-      expect(state.readFocus('ml')?.nextStepId).toBeUndefined()
+      expect(state.readFocus(SESSION, 'ml')?.nextStepId).toBeUndefined()
       expect(overview.json.focus).toMatchObject({ nodeId: b })
     })
   })
@@ -286,7 +286,7 @@ describe('the invariant, stated directly', () => {
           ...input,
         })
 
-        expect(state.readNextStep(decided.fromNodeId as string), `${input.action}: record`).toBeDefined()
+        expect(state.readNextStep(SESSION, decided.fromNodeId as string), `${input.action}: record`).toBeDefined()
 
         const overview = await wired.api(`/overview?sessionId=${SESSION}`)
         expect(
@@ -320,11 +320,11 @@ describe('learning state belongs to a conversation, not to a course', () => {
       const bSees = await wired.api('/overview?sessionId=session-B')
       expect(bSees.json.focus).toMatchObject({ nodeId: b })
 
-      // A must not be shown B's node — nor its lesson, nor its handoff.
+      // A gets its OWN position back — not B's, and not nothing. This is the
+      // difference between hiding the wrong answer and storing the right one.
       const aSees = await wired.api('/overview?sessionId=session-A')
-      expect(aSees.json.focus, 'A was shown B\'s focus').toBeNull()
-      expect(aSees.json.nextStep).toBeNull()
-      expect(aSees.json.handoff).toBeNull()
+      expect(aSees.json.focus, 'A must see its own focus').toMatchObject({ nodeId: a })
+      expect(aSees.json.focus, 'A was shown B\'s focus').not.toMatchObject({ nodeId: b })
 
       // The shared half is still shared: the course and the map are knowledge,
       // not a conversation's position in it.
@@ -335,11 +335,12 @@ describe('learning state belongs to a conversation, not to a course', () => {
   })
 
   it('keeps a decision private to the conversation that earned it', async () => {
-    await withStore(async ({ wired, a, b }) => {
-      await wired.api('/focus', { method: 'POST', body: { nodeId: a, sessionId: 'session-A' } })
-      await wired.tool('udt_decide_next', { action: 'advance', targetNodeId: b, reason: 'Onwards.' })
+    await withStore(async ({ state, wired, harness, a, b }) => {
+      const asA = wire(harness, state, 'session-A')
+      await asA.api('/focus', { method: 'POST', body: { nodeId: a, sessionId: 'session-A' } })
+      await asA.tool('udt_decide_next', { action: 'advance', targetNodeId: b, reason: 'Onwards.' })
 
-      expect((await wired.api('/overview?sessionId=session-A')).json.nextStep).not.toBeNull()
+      expect((await asA.api('/overview?sessionId=session-A')).json.nextStep).not.toBeNull()
       expect((await wired.api('/overview?sessionId=session-B')).json.nextStep).toBeNull()
     })
   })
@@ -354,13 +355,77 @@ describe('learning state belongs to a conversation, not to a course', () => {
     })
   })
 
-  it('shows nothing for a focus that predates the field', async () => {
-    // Records written before a focus carried a conversation belong to nobody,
-    // so they are shown to nobody. Their evidence and lessons are untouched.
-    await withStore(async ({ state, wired, a }) => {
-      await state.startFocus('ml', a, NOW)
-      const view = await wired.api('/overview?sessionId=session-A')
-      expect(view.json.focus).toBeNull()
+  it('leaves a pre-session-scoped record on disk, and shows it to nobody', async () => {
+    // Records written before execution state was per-conversation are keyed by
+    // the bare course id. They are not migrated, not deleted, and not
+    // attributed to a conversation on a guess — so no conversation sees them.
+    //
+    // Built across two harnesses on one store root: the first seeds and closes
+    // keeping the store, the second writes the legacy record before anything
+    // opens the domain, then reads over it exactly as a restart would.
+    const first = await createHarness()
+    const storeRoot = first.storeRoot
+    let nodeId = ''
+    try {
+      const seeded = await openUdState(first.ctx.get('storageDomain')!)
+      nodeId = (await seed(seeded)).a
+    } finally {
+      await first.close({ keepStore: true })
+    }
+
+    const second = await createHarness({ storeRoot })
+    try {
+      const facility = second.ctx.get('storageDomain')!
+      const raw = await facility.open(udtDomain)
+      await raw.table(FOCUS_TABLE).put('ml', {
+        courseId: 'ml',
+        nodeId,
+        startedAt: NOW,
+        status: 'active',
+        updatedAt: NOW,
+      })
+      await raw.close()
+
+      const state = await openUdState(facility)
+      const wired = wire(second, state)
+
+      for (const who of ['session-A', 'session-B']) {
+        const view = await wired.api(`/overview?sessionId=${who}`)
+        expect(view.json.focus, `${who} was shown an unattributed focus`).toBeNull()
+      }
+      // Still on disk, untouched — nothing migrated it and nothing deleted it.
+      expect(state.listFocus().some((record) => record.courseId === 'ml')).toBe(true)
+    } finally {
+      await second.close()
+    }
+  })
+
+  it('keeps two conversations on the same node apart', async () => {
+    // The exact shape of the real failure: same course, same node, two
+    // conversations, and neither may see or overwrite the other.
+    await withStore(async ({ state, wired, harness, a, b }) => {
+      const asA = wire(harness, state, 'session-A')
+      const asB = wire(harness, state, 'session-B')
+
+      await asA.api('/focus', { method: 'POST', body: { nodeId: a, sessionId: 'session-A' } })
+      await asB.api('/focus', { method: 'POST', body: { nodeId: a, sessionId: 'session-B' } })
+
+      // Both are on the same node — and each has its own record.
+      expect(state.readFocus('session-A', 'ml')?.nodeId).toBe(a)
+      expect(state.readFocus('session-B', 'ml')?.nodeId).toBe(a)
+
+      // A decides; B must be untouched, on the same node.
+      await asA.tool('udt_decide_next', { action: 'advance', targetNodeId: b, reason: 'A moves.' })
+      await asB.tool('udt_decide_next', { action: 'more-practice', reason: 'B stays.' })
+
+      expect(state.readNextStep('session-A', a)?.action).toBe('advance')
+      expect(state.readNextStep('session-B', a)?.action).toBe('more-practice')
+
+      const aSees = await asA.api('/overview?sessionId=session-A')
+      const bSees = await asB.api('/overview?sessionId=session-B')
+      expect(aSees.json.nextStep, 'A must see its own decision').toMatchObject({ action: 'advance' })
+      expect(bSees.json.nextStep, 'B must see its own decision').toMatchObject({ action: 'more-practice' })
+      void wired
     })
   })
 })
