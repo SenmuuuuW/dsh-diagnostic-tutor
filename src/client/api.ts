@@ -126,11 +126,19 @@ export function resetState(): Promise<{ ok: true; reset: true }> {
  * The last leg of the timing chain: everything before it is measured on the
  * host, and this is the only part only the browser can answer.
  */
-export function reportObserved(nodeId: string): Promise<{ handoff: HandoffView | null }> {
+export function reportObserved(
+  nodeId: string,
+  sessionId: string,
+): Promise<{ handoff: HandoffView | null }> {
+  // The conversation is required, and it is required for a reason: a handoff
+  // belongs to one, so a report that named only the node would be ambiguous the
+  // moment two conversations wait on the same target. The host rejects it, and
+  // rightly — but this call used to omit it and quietly collected a 400 on
+  // every lesson's first render.
   return request<{ handoff: HandoffView | null }>('/handoff/observed', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ nodeId }),
+    body: JSON.stringify({ nodeId, sessionId }),
   })
 }
 

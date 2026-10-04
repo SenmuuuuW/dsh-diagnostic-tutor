@@ -272,3 +272,124 @@ describe('a session switch retargets the next action', () => {
     expect(started.every((call) => call.endsWith('@session-a') || call.endsWith('@session-b'))).toBe(true)
   })
 })
+
+/* -------------------------------------------------------------------------- */
+/* Requests that must name the conversation                                   */
+/* -------------------------------------------------------------------------- */
+
+describe('the observed report carries the conversation', () => {
+  const realFetch = globalThis.fetch
+  let calls: { url: string; body: unknown }[]
+
+  beforeEach(() => {
+    calls = []
+    globalThis.fetch = (async (url: string, init?: { body?: string }) => {
+      calls.push({ url: String(url), body: init?.body === undefined ? undefined : JSON.parse(init.body) })
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers({ 'content-type': 'application/json' }),
+        json: async () => ({ ok: true, handoff: null }),
+        text: async () => '{"ok":true,"handoff":null}',
+      }
+    }) as never
+  })
+
+  afterEach(() => {
+    globalThis.fetch = realFetch
+  })
+
+  it('includes sessionId in the body', async () => {
+    // The bug this exists for: the host made sessionId required and the client
+    // kept sending only the node, so every lesson's first render collected a
+    // 400 and the handoff never recorded being seen. The host tests pin the
+    // contract; this pins the client actually meeting it.
+    const { reportObserved } = await import('../src/client/api.js')
+    await reportObserved('ml:a', 'session-abc')
+
+    expect(calls).toHaveLength(1)
+    expect(calls[0]?.url).toContain('/handoff/observed')
+    expect(calls[0]?.body).toEqual({ nodeId: 'ml:a', sessionId: 'session-abc' })
+  })
+
+  it('is not sent at all when no conversation is open', async () => {
+    // Nothing to report: the handoff belongs to a conversation.
+    const { LearningPanel } = await import('../src/client/app.js')
+    const client = {
+      fetchOverview: () => Promise.resolve(REPORT_OVERVIEW),
+      fetchNode: () =>
+        Promise.resolve({
+          ok: true as const,
+          node: {
+            id: 'ml:a',
+            title: 'Node A',
+            relation: 'part-of',
+            state: 'unconfirmed',
+            parentId: null,
+            evidenceCount: 0,
+            updatedAt: '2026-01-01T00:00:00.000Z',
+            evidence: [],
+          },
+          parent: null,
+          children: [],
+          lessonExists: true,
+        }),
+      fetchLesson: () =>
+        Promise.resolve({
+          ok: true as const,
+          lesson: { id: 'l', nodeId: 'ml:a', courseId: 'ml', title: 'T', blocks: [], createdAt: 'x', updatedAt: 'x' },
+        }),
+      startFocus: () => Promise.resolve({ ok: true as const, focus: null, prompted: true, handoff: null }),
+      reportObserved: (...args: unknown[]) => {
+        observed.push(args)
+        return Promise.resolve({})
+      },
+    }
+    const observed: unknown[][] = []
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const root = createRoot(container)
+
+    // No sessionId: the panel has no conversation to report about.
+    await act(async () => {
+      root.render(createElement(LearningPanel, { client: client as never, initialOverview: REPORT_OVERVIEW as never }))
+    })
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(observed).toEqual([])
+    act(() => root.unmount())
+    container.remove()
+  })
+})
+
+/** The minimum overview the panel needs to reach its lesson path. */
+const REPORT_OVERVIEW = {
+  ok: true as const,
+  course: {
+    id: 'ml',
+    title: 'Machine Learning',
+    goal: 'learn',
+    status: 'active',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  },
+  nodes: [
+    {
+      id: 'ml:a',
+      title: 'Node A',
+      relation: 'part-of',
+      state: 'unconfirmed',
+      parentId: null,
+      evidenceCount: 0,
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    },
+  ],
+  focus: { courseId: 'ml', nodeId: 'ml:a', nodeTitle: 'Node A', startedAt: 'x', status: 'active' },
+  nextStep: null,
+  handoff: null,
+  teachingBrain: null,
+  lessonCount: 1,
+}

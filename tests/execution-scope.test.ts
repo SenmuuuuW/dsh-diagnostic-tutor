@@ -335,3 +335,49 @@ describe('nothing here touches the shared half', () => {
     }
   })
 })
+
+describe('the observed report names its conversation', () => {
+  it('accepts a report that names one, and marks that conversation ready', async () => {
+    const { harness, state, wired, x } = await seeded()
+    try {
+      await start(wired, x, A)
+      const res = await wired.api('/handoff/observed', {
+        method: 'POST',
+        body: { nodeId: x, sessionId: A },
+      })
+      expect(res.status).toBe(200)
+      expect(state.readHandoff(A, x)?.observedAt).toBeTruthy()
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('refuses one that does not, rather than guessing whose it is', async () => {
+    // The client used to send only the node, and collected a 400 on every
+    // lesson's first render. The host was right to refuse; the client was
+    // wrong to ask, and the two are pinned together here.
+    const { harness, wired, x } = await seeded()
+    try {
+      await start(wired, x, A)
+      const res = await wired.api('/handoff/observed', { method: 'POST', body: { nodeId: x } })
+      expect(res.status).toBe(400)
+      expect(JSON.stringify(res.json)).toContain('missing-session-id')
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('marks only the conversation that reported it', async () => {
+    const { harness, state, wired, x } = await seeded()
+    try {
+      await start(wired, x, A)
+      await start(wired, x, B)
+      await wired.api('/handoff/observed', { method: 'POST', body: { nodeId: x, sessionId: A } })
+
+      expect(state.readHandoff(A, x)?.observedAt).toBeTruthy()
+      expect(state.readHandoff(B, x)?.observedAt).toBeUndefined()
+    } finally {
+      await harness.close()
+    }
+  })
+})

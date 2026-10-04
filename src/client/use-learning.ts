@@ -29,7 +29,7 @@ export interface PanelClient {
   fetchLesson(nodeId: string): Promise<LessonResponse>
   startFocus(nodeId: string, sessionId?: string): Promise<FocusResponse>
   /** Optional: only the real client can report it. */
-  reportObserved?(nodeId: string): Promise<unknown>
+  reportObserved?(nodeId: string, sessionId: string): Promise<unknown>
   /** Optional: only the real client can save a file. */
   downloadExport?(): Promise<string>
   /** Optional: only the real client can delete state. */
@@ -263,9 +263,14 @@ export function useLearning(options: {
 
         // Tell the host the lesson reached a screen. Reported once per node, so
         // the timing chain records the first sighting rather than every poll.
-        if (nextLesson.lesson !== null && observedRef.current !== nodeId) {
+        //
+        // Only when a conversation is open: the report is about that
+        // conversation's wait, and without one there is nothing to report —
+        // sending it anyway would be a request that can only be refused.
+        const observedIn = sessionIdRef.current
+        if (nextLesson.lesson !== null && observedIn !== undefined && observedRef.current !== nodeId) {
           observedRef.current = nodeId
-          void client.reportObserved?.(nodeId)?.catch(() => {})
+          void client.reportObserved?.(nodeId, observedIn)?.catch(() => {})
         }
       } catch {
         // A failed poll is not worth surfacing; the next one may succeed.
