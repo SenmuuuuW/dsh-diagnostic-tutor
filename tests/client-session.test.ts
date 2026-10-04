@@ -393,3 +393,133 @@ const REPORT_OVERVIEW = {
   teachingBrain: null,
   lessonCount: 1,
 }
+
+/* -------------------------------------------------------------------------- */
+/* Where Learn sends the learner                                              */
+/* -------------------------------------------------------------------------- */
+
+describe('the sidebar action opens the tab, never the main column', () => {
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(() => {
+    act(() => root.unmount())
+    container.remove()
+  })
+
+  it('says why, and does nothing else, when no conversation is open', async () => {
+    const { LearnAction, NO_SESSION_NOTICE } = await import('../src/client/index.js')
+    const opened: number[] = []
+
+    await act(async () => {
+      root.render(
+        createElement(LearnAction, {
+          wide: true,
+          uiSession: undefined,
+          onOpen: () => opened.push(1),
+        }),
+      )
+    })
+
+    const button = container.querySelector('button')
+    expect(button?.textContent).toContain('Learn')
+    await act(async () => {
+      button?.click()
+    })
+
+    // No surface opened…
+    expect(opened).toEqual([])
+    // …and the reason is on screen rather than implied by a dead button.
+    expect(container.textContent).toContain(NO_SESSION_NOTICE)
+  })
+
+  it('opens the docked tab when a conversation is open', async () => {
+    const { LearnAction } = await import('../src/client/index.js')
+    const scope = adapter('session-abc')
+    const opened: number[] = []
+
+    await act(async () => {
+      root.render(
+        createElement(LearnAction, {
+          wide: true,
+          uiSession: { adapter: scope },
+          onOpen: () => opened.push(1),
+        }),
+      )
+    })
+
+    await act(async () => {
+      container.querySelector('button')?.click()
+    })
+    expect(opened).toEqual([1])
+  })
+})
+
+describe('the docked tab offers the full view without taking it', () => {
+  it('renders the control only when the surface can actually open it', async () => {
+    const { LearningTab } = await import('../src/client/tab.jsx')
+    const client = {
+      fetchOverview: () => Promise.resolve(REPORT_OVERVIEW),
+      fetchNode: () =>
+        Promise.resolve({
+          ok: true as const,
+          node: {
+            id: 'ml:a',
+            title: 'Node A',
+            relation: 'part-of',
+            state: 'unconfirmed',
+            parentId: null,
+            evidenceCount: 0,
+            updatedAt: '2026-01-01T00:00:00.000Z',
+            evidence: [],
+          },
+          parent: null,
+          children: [],
+          lessonExists: false,
+        }),
+      fetchLesson: () => Promise.resolve({ ok: true as const, lesson: null }),
+      startFocus: () => Promise.resolve({ ok: true as const, focus: null, prompted: true, handoff: null }),
+    }
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const root = createRoot(container)
+
+    await act(async () => {
+      root.render(createElement(LearningTab, { client: client as never, initialOverview: REPORT_OVERVIEW as never }))
+    })
+    await act(async () => {
+      await Promise.resolve()
+    })
+    // No handler: there is nothing to open, so nothing is offered.
+    expect(container.textContent).not.toContain('Open full view')
+
+    const opened: number[] = []
+    await act(async () => {
+      root.render(
+        createElement(LearningTab, {
+          client: client as never,
+          initialOverview: REPORT_OVERVIEW as never,
+          onOpenFullView: () => opened.push(1),
+        }),
+      )
+    })
+    const expand = [...container.querySelectorAll('button')].find((b) =>
+      (b.textContent ?? '').includes('Open full view'),
+    )
+    expect(expand, 'the tab must offer the full view').toBeDefined()
+
+    await act(async () => {
+      expand?.click()
+    })
+    expect(opened).toEqual([1])
+
+    act(() => root.unmount())
+    container.remove()
+  })
+})

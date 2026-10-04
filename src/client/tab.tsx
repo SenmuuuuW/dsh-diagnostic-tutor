@@ -86,6 +86,13 @@ export interface LearningTabProps {
   sessionId?: string | undefined
   /** Pre-supplied state, so the preview and tests skip the first fetch. */
   initialOverview?: OverviewResponse | undefined
+  /**
+   * Opens the full panel in the main column.
+   *
+   * Offered, never taken: the docked tab is the everyday surface, and giving up
+   * the chat to see more of the map is the learner's call.
+   */
+  onOpenFullView?: (() => void) | undefined
 }
 
 /**
@@ -94,7 +101,7 @@ export interface LearningTabProps {
  * @param props - injectable client and the session the tab belongs to.
  * @returns the stacked node / map / lesson column.
  */
-export function LearningTab({ client, sessionId, initialOverview }: LearningTabProps): ReactNode {
+export function LearningTab({ client, sessionId, initialOverview, onOpenFullView }: LearningTabProps): ReactNode {
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview })
   const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading, select } =
     state
@@ -206,7 +213,16 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
       {/* Always present, even before it has content: the surface names its three
           regions so a first-time learner can see what will fill them. */}
       <section className="dt-lesson">
-        <p className="dt-tab-section">Learning surface</p>
+        <p className="dt-tab-section">
+          Learning surface
+          {onOpenFullView !== undefined && (
+            // Secondary on purpose. Everything here works without it; it only
+            // trades the chat for a wider map.
+            <button type="button" className="dt-tab-expand" onClick={onOpenFullView}>
+              Open full view
+            </button>
+          )}
+        </p>
         {handoff !== null && (
           <HandoffLine handoff={handoff} onRetry={() => state.continueTo(handoff.targetNodeId)} />
         )}

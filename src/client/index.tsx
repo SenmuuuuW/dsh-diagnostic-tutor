@@ -27,6 +27,8 @@ import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client'
 import type { ReactNode } from 'react'
 
+import { useState } from 'react'
+
 import { LearningPanel } from './app.js'
 import { LearningTab, LearningTabTitle } from './tab.jsx'
 import { useCurrentSessionId } from './use-session.js'
@@ -44,12 +46,65 @@ export const name = 'diagnostic-tutor-client'
 export const inject = ['slots', 'layout', 'sidebarRightTabs', 'uiSession']
 
 /**
- * Identifier shared by the sidebar entry and the main panel.
+ * The key the full Learning Panel registers under in `main`.
  *
- * These two must match — the sidebar's list `id` is what the layout uses to
- * select the `main` key — so they are derived from one constant.
+ * Nothing selects it by default. It is reached only by pressing *Open full
+ * view* from the docked tab, because taking over the main column is a decision
+ * the learner should make rather than one the sidebar makes for them.
  */
 export const PANEL_ID = 'diagnostic-tutor'
+
+/** What the sidebar says when there is no conversation to learn in. */
+export const NO_SESSION_NOTICE = 'Open or create a conversation to start learning.'
+
+/**
+ * The sidebar's Learn entry.
+ *
+ * It opens the docked tab and never the main column. The conversation is where
+ * the teaching happens, so a control that made it disappear was answering a
+ * question — "show me my learning" — with an answer nobody asked for.
+ *
+ * With no conversation open there is nothing to dock beside, so it says so
+ * rather than opening an empty surface: the tutor teaches in the chat, and a
+ * panel with no chat next to it has nowhere to teach.
+ */
+export function LearnAction({
+  wide,
+  uiSession,
+  onOpen,
+}: {
+  wide: boolean
+  uiSession: unknown
+  onOpen: () => void
+}): ReactNode {
+  const sessionId = useCurrentSessionId(uiSession)
+  const [notice, setNotice] = useState<string | null>(null)
+
+  return (
+    <div className="dt-learn-wrap">
+      <button
+        type="button"
+        className="dt-learn"
+        aria-label={wide ? undefined : 'Learn'}
+        title={sessionId === undefined ? NO_SESSION_NOTICE : 'Learn'}
+        onClick={() => {
+          if (sessionId === undefined) {
+            // Not a disabled button with no explanation: the reason is the
+            // whole message, and it is short enough to just say.
+            setNotice(NO_SESSION_NOTICE)
+            return
+          }
+          setNotice(null)
+          onOpen()
+        }}
+      >
+        <PanelIcon size={16} />
+        {wide && <span className="dt-learn-label">Learn</span>}
+      </button>
+      {wide && notice !== null && <p className="dt-learn-notice">{notice}</p>}
+    </div>
+  )
+}
 
 /**
  * The docked tab's identity.
@@ -61,8 +116,8 @@ export const PANEL_ID = 'diagnostic-tutor'
  */
 export const TAB_ID = 'diagnostic-tutor'
 
-/** The sidebar icon: a small node graph, drawn inline so it needs no assets. */
-function PanelIcon({ size, active }: PropsRuntime<'sidebar.panellist'>): ReactNode {
+/** The mark: a small node graph, drawn inline so it needs no assets. */
+function PanelIcon({ size, active = false }: { size: number; active?: boolean }): ReactNode {
   return (
     <svg
       width={size}
@@ -133,24 +188,43 @@ export function apply(ctx: Context): void {
   // The sheet is injected once and removed with the plugin.
   ctx.effect(() => injectStyles())
 
-  ctx.slots.inject('sidebar.panellist', () =>
-    ctx.slots.register(
-      {
-        name: 'sidebar.panellist',
-        id: PANEL_ID,
-        order: 40,
-        label: 'Learn',
-      },
-      PanelIcon,
-    ),
-  )
-
   // Captured once: the panel needs *actions*, and the standard props a slot
   // receives only expose reads.
   const layout = ctx.get('layout')
   // Read, not injected as a prop: the session scope adapter is how a
   // root-scoped seat learns which conversation is open.
   const uiSession = ctx.get('uiSession')
+
+  /**
+   * `PANEL_ID` as the layout names it.
+   *
+   * `MainPanelId` is a compile-time-only brand — the value is the same string
+   * at runtime — so a plugin that owns the id constant can name it here instead
+   * of depending on the brand package. Derived from the service rather than
+   * imported, so this file still pulls in no `@deepseek-ai/*` value.
+   */
+  type PanelRef = Parameters<NonNullable<typeof layout>['selectPanel']>[0]
+  const panelRef = PANEL_ID as unknown as PanelRef
+
+  // ---------------------------------------------------------------------------
+  // The sidebar entry.
+  //
+  // This is a `sidebar.footer.action`, NOT a `sidebar.panellist` entry, and the
+  // difference is the whole point. A panellist `id` is documented as the
+  // "matching main panel key" and the shell's click handler is
+  // `layout.selectPanel(id)` — so a panellist entry CANNOT do anything except
+  // replace the main column. Putting Learn there is what made pressing it
+  // replace the conversation, which reads as the chat having been lost.
+  //
+  // This action opens the docked tab instead and leaves the main column alone.
+  // ---------------------------------------------------------------------------
+  ctx.slots.inject('sidebar.footer.action', () =>
+    ctx.slots.register({ name: 'sidebar.footer.action', id: 'diagnostic-tutor-learn', order: 40 }, function BoundLearn(props: {
+      wide: boolean
+    }): ReactNode {
+      return <LearnAction wide={props.wide} uiSession={uiSession} onOpen={openDockedTab} />
+    }),
+  )
 
   ctx.slots.inject('main', () =>
     ctx.slots.register(
@@ -221,7 +295,20 @@ export function apply(ctx: Context): void {
   }
 
   ctx.slots.inject('sidebar.right.pane.tab', () =>
-    ctx.slots.register({ name: 'sidebar.right.pane.tab', key: TAB_ID }, LearningTab),
+    ctx.slots.register({ name: 'sidebar.right.pane.tab', key: TAB_ID }, function BoundTab(
+      props: PropsRuntime<'sidebar.right.pane.tab'>,
+    ): ReactNode {
+      return (
+        <LearningTab
+          {...props}
+          onOpenFullView={() => {
+            // Show the full panel, which means giving up the main column. The
+            // tab stays docked, so the way back is the panel's own header.
+            layout?.selectPanel(panelRef)
+          }}
+        />
+      )
+    }),
   )
   ctx.slots.inject('sidebar.right.pane.tab.title', () =>
     ctx.slots.register({ name: 'sidebar.right.pane.tab.title', key: TAB_ID }, LearningTabTitle),

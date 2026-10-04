@@ -175,20 +175,22 @@ describe('the client plugin registers into the DSH slots', () => {
     expect('default' in module).toBe(false)
   })
 
-  it('registers a sidebar entry, a main panel, and a docked tab under one id', () => {
+  it('puts Learn in an action seat, not a panel seat, and keeps the full view reachable', () => {
     const { ctx, recorded } = fakeClientContext()
     ;(module.apply as (c: unknown) => void)(ctx)
 
     const bySlot = (name: string) => recorded.registrations.filter((entry) => entry.options.name === name)
-    const sidebar = bySlot('sidebar.panellist')[0]
-    const main = bySlot('main')[0]
 
-    expect(sidebar, 'no sidebar.panellist registration').toBeDefined()
-    expect(main, 'no main registration').toBeDefined()
-    // The sidebar list id is what addresses the main panel key; if these ever
-    // drift apart, the icon opens nothing.
-    expect(sidebar?.options.id).toBe(main?.options.key)
-    expect(sidebar?.options.label).toBe('Learn')
+    // The regression this pins: Learn used to be a `sidebar.panellist` entry,
+    // and a panellist id is contractually the "matching main panel key" whose
+    // click the shell wires to `layout.selectPanel(id)`. So pressing Learn
+    // replaced the conversation — which reads as the chat having been lost.
+    expect(bySlot('sidebar.panellist'), 'Learn must not be a main-panel switch').toHaveLength(0)
+    expect(bySlot('sidebar.footer.action')[0], 'no Learn action registered').toBeDefined()
+
+    // The full panel still exists; it is simply reached on purpose, from the
+    // docked tab's "Open full view", rather than by the sidebar.
+    expect(bySlot('main')[0], 'the full panel must still be registered').toBeDefined()
 
     // The docked tab: a declared type, plus a body and a title registered under
     // the type's own id, because that is the key the seats dispatch on.

@@ -171,6 +171,25 @@ body[data-ds-dark-theme] {
 .dt-empty-state .dt-primary { margin-top: 12px; }
 .dt-empty-title { font-size: 12.5px; font-weight: 620; margin: 0 0 5px; color: var(--dt-text); }
 
+/* ---- the sidebar's Learn action ---------------------------------------- */
+/* It sits at the sidebar foot, above Settings, because that is the only
+   action-shaped seat the sidebar offers — a panellist entry is contractually a
+   main-panel switch, which is what used to replace the conversation. */
+.dt-learn-wrap { display: flex; flex-direction: column; gap: 4px; width: 100%; }
+.dt-learn {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 7px 9px; border: 0; border-radius: 8px; background: transparent;
+  color: inherit; font: inherit; font-size: 13px; text-align: left; cursor: pointer;
+}
+.dt-learn:hover { background: var(--dt-surface); }
+.dt-learn svg { flex: none; }
+.dt-learn-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+/* The reason a press did nothing, said where the press happened. */
+.dt-learn-notice {
+  margin: 0; padding: 0 9px 4px; font-size: 11.5px; line-height: 1.45;
+  color: var(--dt-muted);
+}
+
 /* ---- panel chrome ------------------------------------------------------ */
 /* The page always says what it is and how to get back. The failure this
    answers is concrete: a learner clicks Learn, the conversation is replaced,
@@ -197,6 +216,13 @@ body[data-ds-dark-theme] {
   color: inherit; font: inherit; font-size: 12px; font-weight: 550; cursor: pointer;
 }
 .dt-bar-back:hover { background: var(--dt-surface, #f7f8fa); }
+/* Secondary: everything in the tab works without it. */
+.dt-tab-expand {
+  float: right; padding: 2px 8px; border-radius: 6px;
+  border: 1px solid var(--dt-border); background: var(--dt-bg);
+  color: var(--dt-muted); font: inherit; font-size: 11.5px; cursor: pointer;
+}
+.dt-tab-expand:hover { color: var(--dt-text); border-color: var(--dt-border-strong); }
 @media (max-width: 640px) { .dt-bar-note { display: none; } }
 
 /* ---- first use --------------------------------------------------------- */
