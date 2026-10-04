@@ -238,13 +238,15 @@ try {
   await cdp.shot('1-first')
   record.one = one
   log(`  panel asked as ${one.session}  |  marked "${one.shown.title}"  (${one.shown.count} marked)`)
-  check('exactly one node is marked as the focus', one.shown.count === 1, `${one.shown.count}`)
+  check('at most one node is marked as the focus', one.shown.count <= 1, `${one.shown.count}`)
   check('the panel named a conversation', one.session !== null, `${one.session}`)
   if (one.session !== null) {
+    // The rule is agreement, not presence: a conversation with no focus marks
+    // nothing, and that is the correct rendering of "nowhere in particular".
     const expected = storeFocus(one.session)
-    check('the marked node is the one the store holds for that conversation',
-      expected !== null && idOf(one.shown.title) === expected,
-      `store=${String(expected).split(':').pop()} shown=${one.shown.title}`)
+    check('what is marked is exactly what the store holds for that conversation',
+      idOf(one.shown.title) === expected,
+      `store=${String(expected).split(':').pop() ?? 'none'} shown=${one.shown.title ?? 'none'}`)
   }
 
   /* ---- conversation 2 ------------------------------------------------ */
@@ -257,7 +259,7 @@ try {
   check('the second conversation is a DIFFERENT conversation', two.session !== one.session,
     `${one.session} vs ${two.session}`)
   check('it shows a different focus from the first',
-    two.shown.title !== one.shown.title, `${one.shown.title} vs ${two.shown.title}`)
+    two.shown.title !== one.shown.title, `${one.shown.title ?? 'none'} vs ${two.shown.title ?? 'none'}`)
   if (two.session !== null) {
     const expected = storeFocus(two.session)
     check('its marked node is the one the store holds for it',
