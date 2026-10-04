@@ -16,7 +16,8 @@
 
 import { spawn } from 'node:child_process'
 import { mkdir, mkdtemp } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
+import { readFileSync } from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -34,7 +35,33 @@ await mkdir(outDir, { recursive: true })
 const t0 = Date.now()
 const log = (m) => console.log(`[${((Date.now() - t0) / 1000).toFixed(0).padStart(4)}s] ${m}`)
 const apiBase = new URL(url).origin
-const overview = async () => (await fetch(`${apiBase}/diagnostic-tutor/api/overview`)).json()
+const storePath = join(homedir(), '.dsh', 'storages', 'udt.json')
+
+/**
+ * The conversation this run is acting as.
+ *
+ * `/overview` reports execution state only to the conversation it belongs to,
+ * so every read has to name one. The panel picks it up from the slot adapter;
+ * this side reads it back from the handoff that POST /focus just wrote.
+ */
+let sessionId = null
+const overview = async () =>
+  (
+    await fetch(
+      `${apiBase}/diagnostic-tutor/api/overview${sessionId === null ? '' : `?sessionId=${encodeURIComponent(sessionId)}`}`,
+    )
+  ).json()
+
+/** The newest handoff's conversation — the one just asked. */
+function sessionFromStore() {
+  try {
+    const doc = JSON.parse(readFileSync(storePath, 'utf8'))
+    const records = Object.values(doc.tables.handoffs ?? {})
+    return records.map((r) => r.sessionId).filter(Boolean).at(-1) ?? null
+  } catch {
+    return null
+  }
+}
 
 class Cdp {
   #socket
@@ -197,16 +224,19 @@ try {
   log('pressed Start learning (once, and never again)')
   await sleep(4000)
 
+  sessionId = sessionFromStore()
+  log(`conversation: ${sessionId}`)
   const nodeA = (await overview()).focus?.nodeId ?? null
   record.fromNodeId = nodeA
   log(`focus = ${nodeA}`)
 
   // The lesson has to exist before answering it.
-  for (let a = 0; a < 150; a += 1) {
-    const l = (await fetch(`${apiBase}/diagnostic-tutor/api/lesson?nodeId=${encodeURIComponent(nodeA)}`)).json
-    void l
-    const body = await (await fetch(`${apiBase}/diagnostic-tutor/api/lesson?nodeId=${encodeURIComponent(nodeA)}`)).json()
-    if (body.lesson !== null) { record.lessonTitle = body.lesson.title; break }
+  for (let a = 0; a < 300; a += 1) {
+    const res = await fetch(`${apiBase}/diagnostic-tutor/api/lesson?nodeId=${encodeURIComponent(nodeA)}`)
+    if (res.ok) {
+      const body = await res.json()
+      if (body.lesson != null) { record.lessonTitle = body.lesson.title; break }
+    }
     await sleep(2000)
   }
   log(`lesson: ${record.lessonTitle ?? '(none)'}`)
