@@ -106,6 +106,12 @@ export function LearningPanel({
   }, [arrival, select, state.overview, state.focus])
   const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading } =
     state
+
+  // The focused node's title and state, read from the map rather than fetched:
+  // the panel already holds every node, and the focus is one of them.
+  const focusNode = focus === null ? undefined : overview?.nodes?.find((n) => n.id === focus.nodeId)
+  const focusNodeTitle = focusNode?.title ?? null
+  const focusNodeState = focusNode?.state ?? null
   const rows = flattenTree(buildMapTree(overview?.nodes ?? []))
   const confirmed = (overview?.nodes ?? []).filter((node) => node.state === 'confirmed').length
   // "Already learning this one" is a statement about the tutor's focus, not
@@ -195,11 +201,60 @@ export function LearningPanel({
       <div className="dt-root">
       {/* ---- course + map ---- */}
       <div className="dt-pane">
-        <p className="dt-eyebrow">Current course</p>
+        {/* Two layers, because they have two owners. The course and its map
+            belong to the learner and every conversation shares them; where
+            THIS conversation has got to belongs to this conversation alone.
+            One heading over both is what made a brand-new chat look as though
+            it had become the learner's old machine-learning session. */}
+        <p className="dt-eyebrow">Your learning</p>
         <h1 className="dt-course-title">{overview?.course?.title ?? 'No goal yet'}</h1>
         {overview?.course != null && (
-          <p className="dt-goal">
-            <b>Goal:</b> {overview.course.goal}
+          <>
+            <p className="dt-shared">Shared across conversations</p>
+            <p className="dt-goal">
+              <b>Goal:</b> {overview.course.goal}
+            </p>
+          </>
+        )}
+
+        <p className="dt-eyebrow dt-eyebrow-here">This conversation</p>
+        {focus === null ? (
+          <p className="dt-here-empty">
+            No learning focus yet. Pick a node below to start learning here.
+          </p>
+        ) : (
+          <p className="dt-here-focus">
+            <span className="dt-here-node">{focusNodeTitle ?? focus.nodeId}</span>
+            {focusNodeState !== null && (
+              <span className={`dt-tab-state dt-state-${focusNodeState}`}>{focusNodeState}</span>
+            )}
+          </p>
+        )}
+        {/* Waking a tutor means naming a conversation, and it starts the node
+            the learner has selected — so it lives under THIS CONVERSATION, not
+            under the shared course. */}
+        {/* One filled control per screen. When the tutor has recorded a
+            recommendation, that recommendation is the next move and owns the
+            primary weight; starting a node is the fallback and steps down. */}
+        <button
+          type="button"
+          className={nextStep === null ? 'dt-primary dt-here-action' : 'dt-secondary dt-here-action'}
+          onClick={state.start}
+          disabled={starting || selectedId === null || sessionId === undefined}
+          {...(sessionId === undefined
+            ? { title: 'Open or create a conversation first — that is where the tutor replies.' }
+            : {})}
+        >
+          {starting
+            ? 'Starting…'
+            : focus !== null && focus.nodeId === selectedId
+              ? 'Learning in progress'
+              : 'Start learning'}
+        </button>
+        {sessionId === undefined && (
+          <p className="dt-caption">
+            Open a conversation first. The tutor teaches in the chat, so a node cannot be started
+            without one.
           </p>
         )}
 
@@ -296,39 +351,13 @@ export function LearningPanel({
 
             {note !== null && <p className="dt-caption">{note}</p>}
             {error !== null && <p className="dt-empty">{error}</p>}
-            {/* Waking a tutor means naming a conversation, so with none selected
-                the button says why it cannot work rather than appearing to.
-
-                When this node is already the focus, the button is no longer the
-                next thing to do — the teaching is. It stays (re-waking the
-                tutor is a real action) but drops out of the primary weight, so
-                the filled control on screen belongs to whatever comes next. */}
-            <button
-              type="button"
-              className={isFocused ? 'dt-secondary' : 'dt-primary'}
-              onClick={state.start}
-              disabled={starting || sessionId === undefined}
-              {...(sessionId === undefined
-                ? { title: 'Open or start a conversation first — that is where the tutor replies.' }
-                : {})}
-            >
-              {starting
-                ? 'Starting…'
-                : sessionId === undefined
-                  ? 'Start learning'
-                  : isFocused
-                    ? 'Restart this node'
-                    : 'Start learning'}
-            </button>
-            {isFocused && !starting && (
+            {/* Starting belongs to THIS CONVERSATION, so the control lives in
+                that block on the left rather than here. Keeping a second one
+                next to the teaching would put two primary-weight controls on
+                one screen and leave the learner guessing which starts what. */}
+            {isFocused && (
               <p className="dt-caption">
                 This is the node the tutor is teaching. The lesson is on the right.
-              </p>
-            )}
-            {sessionId === undefined && (
-              <p className="dt-caption">
-                Open a conversation first. The tutor teaches in the chat, so a node cannot be
-                started without one.
               </p>
             )}
           </>

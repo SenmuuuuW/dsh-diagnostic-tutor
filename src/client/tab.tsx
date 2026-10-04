@@ -117,6 +117,12 @@ export function LearningTab({ client, sessionId, initialOverview, onOpenFullView
 
   const shownId = focus?.nodeId ?? selectedId
 
+  // Read from the map rather than fetched: the tab already holds every node,
+  // and the focused one is among them.
+  const focusNode = focus === null ? undefined : overview?.nodes?.find((n) => n.id === focus.nodeId)
+  const focusNodeTitle = focusNode?.title ?? null
+  const focusNodeState = focusNode?.state ?? null
+
   const hasCourse = overview?.course != null
   const rows = overview?.nodes ?? []
 
@@ -166,48 +172,57 @@ export function LearningTab({ client, sessionId, initialOverview, onOpenFullView
 
   return (
     <div className="dt-tab">
-      {/* ---- now learning ---- */}
-      {detail === null ? (
-        // The header frame stays even before the first fetch lands, so the
-        // surface never looks like an empty box on a slow connection.
-        <header className="dt-now">
-          <p className="dt-now-eyebrow">Now learning</p>
-          <p className="dt-empty">
-            {loading ? 'Loading…' : 'Pick a node on the map below to begin.'}
+      {/* ---- two layers, two owners ----
+          The course and its map belong to the learner and every conversation
+          shares them. Where THIS conversation has got to belongs to this
+          conversation alone. One heading over both is what made a brand-new
+          chat look as though it had become the learner's old session: the
+          course's goal node sat under a label reading "now learning", and a
+          conversation that had never started anything appeared to be in the
+          middle of one. */}
+      <header className="dt-here">
+        <p className="dt-eyebrow">Your learning</p>
+        <h2 className="dt-here-course">{overview?.course?.title ?? 'No goal yet'}</h2>
+        {overview?.course != null && <p className="dt-shared">Shared across conversations</p>}
+
+        <p className="dt-eyebrow dt-eyebrow-here">This conversation</p>
+        {focus === null ? (
+          <p className="dt-here-empty">
+            No learning focus yet. Pick a node below to start learning here.
           </p>
-        </header>
-      ) : (
-        <header className="dt-now" data-state={detail.node.state}>
-          <p className="dt-now-eyebrow">Now learning</p>
-          <h2 className="dt-now-title">{detail.node.title}</h2>
-          <div className="dt-now-meta">
-            <span className={`dt-tab-state dt-state-${detail.node.state}`}>{detail.node.state}</span>
-            <span className="dt-now-rel">{relationLabel(detail.node.relation)}</span>
-            {detail.parent !== null && <span className="dt-now-rel">in {detail.parent.title}</span>}
-          </div>
-          <p className="dt-now-note">{stateExplanation(detail.node.state)}</p>
-          {/* One filled control per column.
-              When the tutor has recorded a recommendation, that recommendation
-              is the learner's next move and owns the primary weight; starting
-              or resuming this node is the fallback, so it steps down rather
-              than competing. Without a recommendation it is the only action
-              there is, and stays primary. */}
-          <button
-            type="button"
-            className={nextStep === null ? 'dt-primary dt-now-action' : 'dt-secondary dt-now-action'}
-            onClick={state.start}
-            disabled={starting || shownId === null}
-          >
-            {starting
-              ? 'Starting…'
-              : focus !== null && focus.nodeId === shownId
-                ? 'Keep going'
-                : 'Start learning'}
-          </button>
-          {note !== null && <p className="dt-caption">{note}</p>}
-          {error !== null && <p className="dt-empty">{error}</p>}
-        </header>
-      )}
+        ) : (
+          <p className="dt-here-focus">
+            <span className="dt-here-node">{focusNodeTitle ?? focus.nodeId}</span>
+            {focusNodeState !== null && (
+              <span className={`dt-tab-state dt-state-${focusNodeState}`}>{focusNodeState}</span>
+            )}
+          </p>
+        )}
+
+        {/* One filled control per column. When the tutor has recorded a
+            recommendation, that recommendation is the next move and owns the
+            primary weight; starting a node is the fallback and steps down. */}
+        <button
+          type="button"
+          className={nextStep === null ? 'dt-primary dt-here-action' : 'dt-secondary dt-here-action'}
+          onClick={state.start}
+          disabled={starting || shownId === null}
+        >
+          {starting
+            ? 'Starting…'
+            : focus !== null && focus.nodeId === shownId
+              ? 'Learning in progress'
+              : 'Start learning'}
+        </button>
+        {focus === null && (
+          <p className="dt-caption">
+            Starting records a focus for this conversation only. Your map and lessons stay shared.
+          </p>
+        )}
+        {loading && detail === null && <p className="dt-caption">Loading…</p>}
+        {note !== null && <p className="dt-caption">{note}</p>}
+        {error !== null && <p className="dt-empty">{error}</p>}
+      </header>
 
       {/* ---- the teaching ---- */}
       {/* Always present, even before it has content: the surface names its three

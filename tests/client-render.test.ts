@@ -73,7 +73,7 @@ describe('the panel shows the product, not a dashboard', () => {
   const html = panel({ client, initialOverview: overview })
 
   it('names the three panes in order', () => {
-    const course = html.indexOf('Current course')
+    const course = html.indexOf('Your learning')
     const surface = html.indexOf('Learning surface')
     expect(course).toBeGreaterThanOrEqual(0)
     // The detail pane shows its empty prompt before the first selection.

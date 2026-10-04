@@ -171,6 +171,26 @@ body[data-ds-dark-theme] {
 .dt-empty-state .dt-primary { margin-top: 12px; }
 .dt-empty-title { font-size: 12.5px; font-weight: 620; margin: 0 0 5px; color: var(--dt-text); }
 
+/* ---- the two layers ---------------------------------------------------- */
+/* Shared knowledge on top, this conversation's position below. They have two
+   owners, so they get two headings — one heading over both is what made a new
+   chat look like the learner's old session. */
+.dt-eyebrow-here { margin-top: 18px; }
+.dt-shared {
+  margin: 2px 0 0; font-size: 11.5px; color: var(--dt-muted);
+}
+.dt-here { display: block; }
+.dt-here-course { margin: 2px 0 0; font-size: 17px; font-weight: 620; line-height: 1.3; }
+.dt-here-empty {
+  margin: 6px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--dt-muted);
+}
+.dt-here-focus {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 0;
+  font-size: 13px;
+}
+.dt-here-node { font-weight: 600; overflow-wrap: anywhere; }
+.dt-here-action { margin-top: 12px; width: 100%; }
+
 /* ---- the sidebar's Learn action ---------------------------------------- */
 /* It sits at the sidebar foot, above Settings, because that is the only
    action-shaped seat the sidebar offers — a panellist entry is contractually a

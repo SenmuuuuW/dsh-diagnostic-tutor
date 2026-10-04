@@ -141,7 +141,7 @@ describe('the tab shows the whole runtime in one column', () => {
       createElement(LearningTab, { client, initialOverview: staticOverview() }),
     )
 
-    expect(html).toContain('Now learning')
+    expect(html).toContain('Your learning')
     expect(html).toContain('Diagnosis map')
     expect(html).toContain('Learning surface')
     // Every node, including the ones the full panel would show in its own column.
@@ -241,18 +241,38 @@ describe('the tab follows the runtime', () => {
 
   it('picks a node on arrival rather than showing an empty panel', async () => {
     await mount()
-    expect(container.querySelector('.dt-now')).not.toBeNull()
+    expect(container.querySelector('.dt-here')).not.toBeNull()
     expect(container.textContent).toContain('Machine Learning')
   })
 
-  it('switches the shown node when another is clicked', async () => {
+  it('moves the selection when another node is clicked, without claiming a focus', async () => {
+    // The header reports THIS CONVERSATION's focus, and nothing has started
+    // one — so clicking around the map moves the selection and must not make
+    // the header claim the conversation is now learning that node.
     await mount()
     const rows = [...container.querySelectorAll<HTMLButtonElement>('.dt-tab-node')]
     const linear = rows.find((row) => row.textContent?.includes('Linear Algebra'))
     await act(async () => {
       linear?.click()
     })
-    expect(container.querySelector('.dt-now-title')?.textContent).toBe('Linear Algebra')
+
+    expect(linear?.getAttribute('aria-current')).toBe('true')
+    expect(container.textContent).toContain('No learning focus yet')
+    expect(container.querySelector('.dt-here-focus')).toBeNull()
+  })
+
+  it('does not let a new conversation look like an old session', async () => {
+    // The reported confusion: a brand-new chat opened Learn, saw the learner's
+    // existing course under a heading reading "now learning", and looked as
+    // though that chat had become the old machine-learning session.
+    await mount()
+    const text = container.textContent ?? ''
+    expect(text).toContain('Your learning')
+    expect(text).toContain('Shared across conversations')
+    expect(text).toContain('This conversation')
+    expect(text).toContain('No learning focus yet')
+    // The map is still shared, and still shown.
+    expect(container.querySelectorAll('.dt-tab-node').length).toBeGreaterThan(0)
   })
 
   it('starts learning and opens the tutor-written lesson', async () => {

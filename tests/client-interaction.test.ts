@@ -319,31 +319,43 @@ describe('unmount leaves no DOM residue', () => {
   })
 })
 
-describe('the start control steps aside once there is a recommendation', () => {
-  it('restarts rather than competes, and says which it is doing', async () => {
+describe('starting belongs to this conversation, not to the shared course', () => {
+  it('keeps the control out of the node detail and says what it is doing', async () => {
     await mount()
     await act(async () => {
       nodeButton('Linear Algebra').click()
     })
 
-    // Before anything is focused, starting this node is the action.
-    const detail = container.querySelector('.dt-detail')
-    const before = detail?.querySelector('button')
-    expect(before?.textContent).toContain('Start learning')
-    expect(before?.className).toContain('dt-primary')
+    // The control lives under THIS CONVERSATION, not beside the node's
+    // evidence: waking a tutor names a conversation, so it belongs to one.
+    const here = container.querySelector('.dt-here-action')
+    expect(here, 'no start control in the conversation block').toBeDefined()
+    expect(here?.textContent).toContain('Start learning')
+    expect(here?.className).toContain('dt-primary')
+    expect(container.querySelector('.dt-detail')?.querySelector('.dt-here-action')).toBeNull()
 
     await act(async () => {
-      before?.click()
+      ;(here as HTMLButtonElement | null)?.click()
     })
 
-    // Now the tutor is on this node, so pressing it again means restarting,
-    // and the filled weight belongs to whatever the learner should do next.
-    const after = container.querySelector('.dt-detail button')
-    expect(after?.textContent).toContain('Restart this node')
-    expect(after?.className).not.toContain('dt-primary')
+    // Now this conversation is on this node, so the control says so rather
+    // than offering to start what has already started.
+    const after = container.querySelector('.dt-here-action')
+    expect(after?.textContent).toContain('Learning in progress')
     expect(container.querySelector('.dt-detail')?.textContent).toContain(
       'This is the node the tutor is teaching',
     )
+  })
+
+  it('says a conversation has no focus rather than borrowing one', async () => {
+    // The bug this pins: a brand-new conversation showed the course's goal node
+    // under a heading that read as "what THIS chat is learning", so a chat that
+    // had never started anything looked like the learner's old session.
+    await mount()
+    const here = container.querySelector('.dt-here-action')?.parentElement?.textContent ?? ''
+    expect(here).toContain('This conversation')
+    expect(container.textContent).toContain('No learning focus yet')
+    expect(container.textContent).toContain('Shared across conversations')
   })
 })
 
