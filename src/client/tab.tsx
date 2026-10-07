@@ -170,11 +170,15 @@ export function LearningTab({ client, sessionId, initialOverview, onOpenFullView
         </header>
 
         <section className="dt-lesson">
-          <p className="dt-tab-section">This conversation</p>
-          <p className="dt-empty">
-            Nothing selected yet. Open a project above, or start something new — either way the
-            tutor teaches in the chat, beside this panel.
-          </p>
+          {/* "Start something new" is a STATE, not a form. Pressing it clears
+              this conversation's project so the next thing the tutor hears
+              becomes one — there is no wizard, because the chat is the input.
+              It cannot put the cursor in the composer: DSH 0.2.0-rc.2 keeps
+              that helper inside ui-commands and exposes no service for it, and
+              a DOM query for the box would be the kind of selector hack this
+              plugin does not do. So it says where to go instead. */}
+          <p className="dt-tab-section">Start something new</p>
+          <p className="dt-empty">Tell the tutor what you want to learn in Chat.</p>
           <button type="button" className="dt-secondary dt-here-action" onClick={() => state.openProject()}>
             + Start something new
           </button>

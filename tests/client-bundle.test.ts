@@ -300,6 +300,14 @@ describe('the stylesheet cannot silently lose its theme', () => {
       'dsw-alias-state-error-primary',
       'dsw-alias-state-success-primary',
       'dsw-alias-state-warn-primary',
+      // Added for the sidebar row, which reproduces the shipped .panelRow
+      // rather than approximating it. Each one was read out of the app's own
+      // theme bundle before being used; the same rule as above applies.
+      'dsw-radius-md',
+      'dsw-alias-interactive-bg-hover',
+      'dsw-focus-ring-width',
+      'dsw-focus-ring-color',
+      'dsw-alias-state-business-primary',
     ])
     const used = [...new Set([...sheet.matchAll(/var\(--(dsw-[a-z0-9-]+)/g)].map((m) => m[1] ?? ''))]
     expect(used.length).toBeGreaterThan(0)

@@ -327,3 +327,58 @@ describe('the tab follows the runtime', () => {
     expect(container.textContent).toBe('')
   })
 })
+
+describe('the library is where a conversation starts', () => {
+  it('cannot auto-open a project, and says what it is showing instead', async () => {
+    // The reported confusion was a brand-new chat landing inside the learner's
+    // old project. The library is what replaces that, so it has to be what
+    // renders when the conversation has chosen nothing — and it must not fetch
+    // its way into a course.
+    const empty = {
+      ok: true as const,
+      course: null,
+      nodes: [],
+      focus: null,
+      nextStep: null,
+      handoff: null,
+      teachingBrain: null,
+      lessonCount: 4,
+      library: [
+        { id: 'ml', title: 'Machine Learning', goal: 'learn ml', confirmed: 1, total: 7, updatedAt: 'x' },
+        { id: 'calc', title: 'Calculus', goal: 'brush up', confirmed: 4, total: 12, updatedAt: 'y' },
+      ],
+    }
+    const stub = {
+      fetchOverview: () => Promise.resolve(empty),
+      fetchNode: () => Promise.resolve({ ok: true as const, node: null, parent: null, children: [], lessonExists: false }),
+      fetchLesson: () => Promise.resolve({ ok: true as const, lesson: null }),
+      startFocus: () => Promise.resolve({ ok: true as const, focus: null, prompted: true, handoff: null }),
+    }
+
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const r = createRoot(host)
+    await act(async () => {
+      r.render(createElement(LearningTab, { client: stub as never, initialOverview: empty as never }))
+    })
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    const text = host.textContent ?? ''
+    expect(text).toContain('Your learning')
+    // Both projects are cards, and neither has been opened.
+    expect(text).toContain('Machine Learning')
+    expect(text).toContain('Calculus')
+    expect(text).toContain('1 of 7 confirmed')
+    expect(text).toContain('4 of 12 confirmed')
+    expect(text).toContain('Continue')
+    expect(text).toContain('Start something new')
+    expect(text).toContain('Tell the tutor what you want to learn in Chat.')
+    // No map: the map belongs to a project, and none is open.
+    expect(host.querySelectorAll('.dt-tab-node').length).toBe(0)
+
+    act(() => r.unmount())
+    host.remove()
+  })
+})

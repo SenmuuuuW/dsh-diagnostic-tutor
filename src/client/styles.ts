@@ -216,6 +216,97 @@ body[data-ds-dark-theme] {
 .dt-back:focus-visible { outline: 2px solid var(--dt-accent, #4f46e5); outline-offset: 2px; border-radius: 4px; }
 
 /* ---- the sidebar's Learn action ---------------------------------------- */
+/* These are not "inspired by" DSH's sidebar row; they are its values, read out
+   of the shipped stylesheet in the app bundle. The reference is .panelRow in
+   @deepseek-ai/dsh-client-ui-sidebar — the row Plugins uses:
+     border-radius var(--dsw-radius-md); min-height 36px; gap 8px;
+     margin 0 2px; padding 7px 8px; line-height 22px;
+     hover/active background var(--dsw-alias-interactive-bg-hover);
+     focus-visible outline var(--dsw-focus-ring-width) solid
+       var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary))
+       with outline-offset -2px
+   Learn cannot BE a panelRow — a panellist entry is contractually a main-panel
+   switch — so it reproduces one, in the one seat that has action semantics. */
+.dt-learn-wrap { display: flex; flex-direction: column; width: 100%; min-width: 0; }
+.dt-learn {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  margin: 0 2px;
+  padding: 7px 8px;
+  border: none;
+  border-radius: var(--dsw-radius-md);
+  background: none;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  line-height: 22px;
+  text-align: left;
+  cursor: pointer;
+}
+.dt-learn:hover { background: var(--dsw-alias-interactive-bg-hover); }
+.dt-learn:focus-visible {
+  outline: var(--dsw-focus-ring-width) solid
+    var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
+  outline-offset: -2px;
+}
+.dt-learn > svg { flex: none; }
+.dt-learn-label { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* .collapsed .panelRow is a 36px square with no margin or padding. */
+.dt-learn-wrap[data-wide='false'] .dt-learn { width: 36px; height: 36px; margin: 0; padding: 0; justify-content: center; }
+.dt-learn-wrap[data-wide='false'] .dt-learn-label { display: none; }
+/* The reason a press did nothing, said where the press happened. */
+.dt-learn-notice {
+  margin: 0; padding: 0 10px 4px; font-size: 11.5px; line-height: 1.45;
+  color: var(--dsw-alias-label-secondary);
+}
+
+/* ---- the two layers ---------------------------------------------------- */
+/* Shared knowledge on top, this conversation's position below. They have two
+   owners, so they get two headings — one heading over both is what made a new
+   chat look like the learner's old session. */
+.dt-eyebrow-here { margin-top: 18px; }
+.dt-shared {
+  margin: 2px 0 0; font-size: 11.5px; color: var(--dt-muted);
+}
+.dt-here { display: block; }
+.dt-here-course { margin: 2px 0 0; font-size: 17px; font-weight: 620; line-height: 1.3; }
+.dt-here-empty {
+  margin: 6px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--dt-muted);
+}
+.dt-here-focus {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 0;
+  font-size: 13px;
+}
+.dt-here-node { font-weight: 600; overflow-wrap: anywhere; }
+.dt-here-action { margin-top: 12px; width: 100%; }
+
+/* ---- the learning library ---------------------------------------------- */
+/* Projects, not folders: each row is something the learner is part-way
+   through, and the only two facts on it are its name and how far it got. */
+.dt-library { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.dt-project {
+  display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left;
+  padding: 10px 12px; border: 1px solid var(--dt-border); border-radius: 9px;
+  background: var(--dt-bg); color: inherit; font: inherit; cursor: pointer;
+}
+.dt-project:hover { background: var(--dt-surface); border-color: var(--dt-border-strong); }
+.dt-project:focus-visible { outline: 2px solid var(--dt-accent, #4f46e5); outline-offset: 2px; }
+.dt-project-name { font-size: 13px; font-weight: 600; }
+.dt-project-count { font-size: 11.5px; color: var(--dt-muted); }
+.dt-project-go { font-size: 11.5px; color: var(--dt-muted); margin-top: 2px; }
+.dt-project:hover .dt-project-go { color: var(--dt-text); }
+
+/* One level up. Deliberately quiet: it is an escape, not an action. */
+.dt-back {
+  display: inline-block; margin: 0 0 10px; padding: 2px 0; border: 0;
+  background: none; color: var(--dt-muted); font: inherit; font-size: 11.5px; cursor: pointer;
+}
+.dt-back:hover { color: var(--dt-text); text-decoration: underline; }
+.dt-back:focus-visible { outline: 2px solid var(--dt-accent, #4f46e5); outline-offset: 2px; border-radius: 4px; }
+
+/* ---- the sidebar's Learn action ---------------------------------------- */
 /* It sits at the sidebar foot, above Settings, because that is the only
    action-shaped seat the sidebar offers — a panellist entry is contractually a
    main-panel switch, which is what used to replace the conversation. */

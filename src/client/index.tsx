@@ -81,10 +81,15 @@ export function LearnAction({
   const [notice, setNotice] = useState<string | null>(null)
 
   return (
-    <div className="dt-learn-wrap">
+    <div className="dt-learn-wrap" data-wide={wide}>
       <button
         type="button"
         className="dt-learn"
+        // No `aria-current` and no active fill. The native row's active state
+        // is defined as "this panel is selected in the main column", and this
+        // control deliberately never selects one — borrowing the state would
+        // claim something untrue. `:focus-visible` gives keyboard users the
+        // same ring the native row shows.
         aria-label={wide ? undefined : 'Learn'}
         title={sessionId === undefined ? NO_SESSION_NOTICE : 'Learn'}
         onClick={() => {
@@ -98,8 +103,9 @@ export function LearnAction({
           onOpen()
         }}
       >
-        <PanelIcon size={16} />
-        {wide && <span className="dt-learn-label">Learn</span>}
+        {/* The panellist sizes its glyph 16 wide / 18 collapsed. */}
+        <PanelIcon size={wide ? 16 : 18} />
+        <span className="dt-learn-label">Learn</span>
       </button>
       {wide && notice !== null && <p className="dt-learn-notice">{notice}</p>}
     </div>
