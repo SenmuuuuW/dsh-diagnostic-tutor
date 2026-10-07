@@ -104,7 +104,7 @@ export function LearningPanel({
     const first = state.overview?.nodes?.[0]?.id
     if (first !== undefined) select(state.focus?.nodeId ?? first)
   }, [arrival, select, state.overview, state.focus])
-  const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading } =
+  const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading, library } =
     state
 
   // The focused node's title and state, read from the map rather than fetched:
@@ -139,6 +139,32 @@ export function LearningPanel({
         </header>
         <div className="dt-root dt-root-welcome">
         <div className="dt-welcome">
+          {/* The library first. A full view with no project open is not an
+              empty runtime — the learner's projects are real, and this is
+              where they are listed. The welcome copy below only appears when
+              there is genuinely nothing yet. */}
+          {library.length > 0 && (
+            <>
+              <p className="dt-welcome-eyebrow">Your learning</p>
+              <h1 className="dt-welcome-title">Your learning projects</h1>
+              <p className="dt-welcome-body">Shared across your conversations.</p>
+              <ul className="dt-library">
+                {library.map((project) => (
+                  <li key={project.id}>
+                    <button type="button" className="dt-project" onClick={() => state.openProject(project.id)}>
+                      <span className="dt-project-name">{project.title}</span>
+                      <span className="dt-project-count">
+                        {project.confirmed} of {project.total} confirmed
+                      </span>
+                      <span className="dt-project-go">
+                        {project.confirmed === 0 ? 'Open' : 'Continue'} →
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
           <p className="dt-welcome-eyebrow">Universal Diagnostic Tutor</p>
           <h1 className="dt-welcome-title">What do you want to learn?</h1>
           <p className="dt-welcome-body">

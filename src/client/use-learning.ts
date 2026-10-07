@@ -19,6 +19,7 @@ import type {
   NextStepView,
   NodeDetailResponse,
   OverviewResponse,
+  ProjectCardView,
 } from '../contract.js'
 import * as realApi from './api.js'
 
@@ -28,6 +29,8 @@ export interface PanelClient {
   fetchNode(nodeId: string): Promise<NodeDetailResponse>
   fetchLesson(nodeId: string): Promise<LessonResponse>
   startFocus(nodeId: string, sessionId?: string): Promise<FocusResponse>
+  /** Optional: only the real client can change which project is open. */
+  selectProject?(sessionId: string, courseId?: string): Promise<unknown>
   /** Optional: only the real client can report it. */
   reportObserved?(nodeId: string, sessionId: string): Promise<unknown>
   /** Optional: only the real client can save a file. */
@@ -44,6 +47,7 @@ export const defaultClient: PanelClient = {
   fetchNode: realApi.fetchNode,
   fetchLesson: realApi.fetchLesson,
   startFocus: realApi.startFocus,
+  selectProject: realApi.selectProject,
   reportObserved: realApi.reportObserved,
   downloadExport: realApi.downloadExport,
   resetState: realApi.resetState,
@@ -60,6 +64,10 @@ export const defaultClient: PanelClient = {
 export const POLL_INTERVAL_MS = 2000
 
 export interface LearningState {
+  /** Every Learning Project the learner has, for the library. */
+  library: ProjectCardView[]
+  /** Opens one in this conversation, or the blank slate when given none. */
+  openProject: (courseId?: string) => void
   readonly overview: OverviewResponse | null
   readonly focus: FocusView | null
   /** The tutor's recommendation, when the learner has not acted on it yet. */
@@ -285,8 +293,39 @@ export function useLearning(options: {
     }
   }, [client, focus])
 
+  /**
+   * Open a Learning Project in this conversation.
+   *
+   * Nothing is fabricated: the server records the choice and the panel re-reads,
+   * so a project with no focus here still reads "no learning focus yet". The
+   * re-read is immediate rather than waiting for the poll, because the learner
+   * just pressed something and a two-second silence reads as a dead button.
+   */
+  const openProject = useCallback(
+    (courseId?: string) => {
+      const sessionId = sessionIdRef.current
+      if (sessionId === undefined || client.selectProject === undefined) return
+      void client
+        .selectProject(sessionId, courseId)
+        .then(() => client.fetchOverview(sessionId))
+        .then((next) => {
+          setOverview(next)
+          setLesson(null)
+          setDetail(null)
+          setSelectedId(null)
+        })
+        .catch(() => {
+          // The next poll will show whatever the server actually holds.
+        })
+    },
+    [client],
+  )
+
   return {
     overview,
+    /** The learner's projects, shared like the maps themselves. */
+    library: overview?.library ?? [],
+    openProject,
     focus,
     nextStep: overview?.nextStep ?? null,
     handoff: overview?.handoff ?? null,

@@ -245,6 +245,7 @@ describe('delete', () => {
         updatedAt: NOW,
       })
       await state.activateCourse('la', NOW)
+      await state.selectProject(SESSION, 'la', NOW)
       const node = newNode({ id: 'la:goal', courseId: 'la', title: 'LA', relation: 'goal', now: NOW })
       await state.writeNode(node)
 

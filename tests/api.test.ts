@@ -295,9 +295,11 @@ describe('API over real persisted state', () => {
     const harness = await createHarness()
     try {
       const state = await openState(harness)
-      await seedGoal(state, 'Machine Learning', 'Learn ML from weak math foundations')
+      const goalId = await seedGoal(state, 'Machine Learning', 'Learn ML from weak math foundations')
+      // The map is this conversation's once it has the project open.
+      await state.selectProject(SESSION, 'machine-learning', new Date().toISOString())
 
-      const { json } = await call(state, { path: '/overview' })
+      const { json } = await call(state, { path: `/overview?sessionId=${SESSION}` })
       const course = json.course as Record<string, unknown>
       const nodes = json.nodes as Record<string, unknown>[]
 
@@ -439,15 +441,20 @@ describe('API over real persisted state', () => {
       })
       expect(missing.status).toBe(404)
 
-      // The active course is Linear Algebra, so a Machine Learning node must be
-      // refused rather than silently focused.
+      // Focusing a node from another project is now meaningful rather than
+      // refused: starting a node IS choosing its project, and there is no
+      // course-wide "active" project to contradict. What must hold is that the
+      // focus lands where the node lives.
       const foreign = await call(state, {
         method: 'POST',
         path: '/focus',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ nodeId: other, sessionId: SESSION }),
       })
-      expect(foreign.status).toBe(404)
+      expect(foreign.status).toBe(200)
+      const project = await call(state, { path: `/overview?sessionId=${SESSION}` })
+      const focused = project.json.focus as Record<string, unknown>
+      expect(focused.nodeId).toBe(other)
     } finally {
       await harness.close()
     }

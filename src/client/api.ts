@@ -69,6 +69,24 @@ export function fetchOverview(sessionId?: string): Promise<OverviewResponse> {
   return request<OverviewResponse>(`/overview${query}`)
 }
 
+/**
+ * Choose what this conversation learns.
+ *
+ * Sending no course selects "start something new": a real state, not the
+ * absence of one, and the one the learner lands in when they want the tutor to
+ * teach them something that does not exist yet.
+ *
+ * @param sessionId - the conversation making the choice.
+ * @param courseId - the project to open, or undefined for a new one.
+ */
+export function selectProject(sessionId: string, courseId?: string): Promise<unknown> {
+  return request('/project', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(courseId === undefined ? { sessionId } : { sessionId, courseId }),
+  })
+}
+
 /** One node, its evidence, its parent and its children. */
 export function fetchNode(nodeId: string): Promise<NodeDetailResponse> {
   return request<NodeDetailResponse>(`/node?id=${encodeURIComponent(nodeId)}`)

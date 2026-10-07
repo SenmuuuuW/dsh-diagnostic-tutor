@@ -459,6 +459,9 @@ describe('the check loop', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
+      // The conversation has to have the project open before its map is read:
+      // a conversation that has selected nothing sees the library, not a map.
+      await state.selectProject(SESSION, 'ml', NOW)
 
       // Diagnosis during teaching turned up a prerequisite that was not on the
       // map. Growing it is a legal, incremental act — a prerequisite must

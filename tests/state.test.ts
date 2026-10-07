@@ -17,6 +17,7 @@ import {
   LearnerProfileSchema,
   FOCUS_TABLE,
   HANDOFFS_TABLE,
+  PROJECTS_TABLE,
   LESSONS_TABLE,
   NEXT_STEPS_TABLE,
   NODES_TABLE,
@@ -45,6 +46,7 @@ describe('domain declaration', () => {
       FOCUS_TABLE,
       NEXT_STEPS_TABLE,
       HANDOFFS_TABLE,
+      PROJECTS_TABLE,
     ])
   })
 

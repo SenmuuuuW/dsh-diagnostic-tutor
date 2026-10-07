@@ -191,6 +191,30 @@ body[data-ds-dark-theme] {
 .dt-here-node { font-weight: 600; overflow-wrap: anywhere; }
 .dt-here-action { margin-top: 12px; width: 100%; }
 
+/* ---- the learning library ---------------------------------------------- */
+/* Projects, not folders: each row is something the learner is part-way
+   through, and the only two facts on it are its name and how far it got. */
+.dt-library { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.dt-project {
+  display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left;
+  padding: 10px 12px; border: 1px solid var(--dt-border); border-radius: 9px;
+  background: var(--dt-bg); color: inherit; font: inherit; cursor: pointer;
+}
+.dt-project:hover { background: var(--dt-surface); border-color: var(--dt-border-strong); }
+.dt-project:focus-visible { outline: 2px solid var(--dt-accent, #4f46e5); outline-offset: 2px; }
+.dt-project-name { font-size: 13px; font-weight: 600; }
+.dt-project-count { font-size: 11.5px; color: var(--dt-muted); }
+.dt-project-go { font-size: 11.5px; color: var(--dt-muted); margin-top: 2px; }
+.dt-project:hover .dt-project-go { color: var(--dt-text); }
+
+/* One level up. Deliberately quiet: it is an escape, not an action. */
+.dt-back {
+  display: inline-block; margin: 0 0 10px; padding: 2px 0; border: 0;
+  background: none; color: var(--dt-muted); font: inherit; font-size: 11.5px; cursor: pointer;
+}
+.dt-back:hover { color: var(--dt-text); text-decoration: underline; }
+.dt-back:focus-visible { outline: 2px solid var(--dt-accent, #4f46e5); outline-offset: 2px; border-radius: 4px; }
+
 /* ---- the sidebar's Learn action ---------------------------------------- */
 /* It sits at the sidebar foot, above Settings, because that is the only
    action-shaped seat the sidebar offers — a panellist entry is contractually a

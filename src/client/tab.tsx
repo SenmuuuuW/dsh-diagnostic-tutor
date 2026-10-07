@@ -103,7 +103,7 @@ export interface LearningTabProps {
  */
 export function LearningTab({ client, sessionId, initialOverview, onOpenFullView }: LearningTabProps): ReactNode {
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview })
-  const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading, select } =
+  const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading, select, library } =
     state
 
   // Show something on first paint: the focused node if there is one, else the
@@ -130,42 +130,66 @@ export function LearningTab({ client, sessionId, initialOverview, onOpenFullView
   // says what to do and shows the exact sentence that starts everything. No
   // wizard — the chat is the input, and the shortest path there is one line of
   // text the learner can copy.
+  // No project open in this conversation. That is the library, not a welcome
+  // screen and not somebody else's course: the projects below are the
+  // learner's, shared like the maps themselves, and opening one is this
+  // conversation's choice to make.
   if (!hasCourse) {
     return (
       <div className="dt-tab">
-        <div className="dt-welcome">
-          <p className="dt-welcome-eyebrow">Universal Diagnostic Tutor</p>
-          <h2 className="dt-welcome-title">What do you want to learn?</h2>
-          <p className="dt-welcome-body">
-            Works with the Universal Diagnostic Tutor skill. Start by telling the tutor what you
-            want to learn — in your own words, in the chat.
-          </p>
-          <div className="dt-welcome-sample">
-            <span className="dt-welcome-sample-label">Try</span>
-            <span className="dt-welcome-sample-text">
-              I want to learn machine learning. I know some Python, but my math is weak.
-            </span>
-          </div>
-          <p className="dt-welcome-note">
-            If tutoring doesn&apos;t start, make sure the UDT skill is available to your active DSH
-            agent.
-          </p>
-          <p className="dt-welcome-note">
-            No account, no scores, no streak. Your goal, your map and the evidence behind it
-            stay on this machine, and are yours to keep or delete.
-          </p>
-          {/* The warning belongs with the copy it qualifies, not under the
-              data controls — Export and Delete are about state, not about the
-              missing skill. */}
-          {teachingBrain === false && (
-            <p className="dt-notice">
-              <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records
-              and shows your learning state, but no lesson will be written until the skill is
-              available to your active DSH agent.
+        <header className="dt-here">
+          <p className="dt-eyebrow">Your learning</p>
+          {library.length === 0 ? (
+            <p className="dt-here-empty">
+              Nothing here yet. Tell the tutor what you want to learn, in the chat.
             </p>
+          ) : (
+            <>
+              <p className="dt-shared">Shared across your conversations</p>
+              <ul className="dt-library">
+                {library.map((project) => (
+                  <li key={project.id}>
+                    <button
+                      type="button"
+                      className="dt-project"
+                      onClick={() => state.openProject(project.id)}
+                    >
+                      <span className="dt-project-name">{project.title}</span>
+                      <span className="dt-project-count">
+                        {project.confirmed} of {project.total} confirmed
+                      </span>
+                      <span className="dt-project-go">
+                        {project.confirmed === 0 ? 'Open' : 'Continue'} →
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
+        </header>
+
+        <section className="dt-lesson">
+          <p className="dt-tab-section">This conversation</p>
+          <p className="dt-empty">
+            Nothing selected yet. Open a project above, or start something new — either way the
+            tutor teaches in the chat, beside this panel.
+          </p>
+          <button type="button" className="dt-secondary dt-here-action" onClick={() => state.openProject()}>
+            + Start something new
+          </button>
+        </section>
+
+        {teachingBrain === false && (
+          <p className="dt-notice">
+            <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records and
+            shows your learning state, but no lesson will be written until the skill is available to
+            your active DSH agent.
+          </p>
+        )}
+        <section className="dt-lesson">
           <DataFooter onExport={state.exportData} onReset={state.resetAll} />
-        </div>
+        </section>
       </div>
     )
   }
@@ -181,6 +205,11 @@ export function LearningTab({ client, sessionId, initialOverview, onOpenFullView
           conversation that had never started anything appeared to be in the
           middle of one. */}
       <header className="dt-here">
+        {/* One link, not a breadcrumb: there are two levels and the learner
+            only ever needs the one they are not on. */}
+        <button type="button" className="dt-back" onClick={() => state.openProject()}>
+          ← All learning
+        </button>
         <p className="dt-eyebrow">Your learning</p>
         <h2 className="dt-here-course">{overview?.course?.title ?? 'No goal yet'}</h2>
         {overview?.course != null && <p className="dt-shared">Shared across conversations</p>}

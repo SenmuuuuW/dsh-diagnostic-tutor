@@ -92,6 +92,24 @@ export interface HandoffView {
 }
 
 /** `GET /overview` — `course: null` means the learner has no goal yet. */
+/**
+ * One Learning Project as the library lists it.
+ *
+ * A project IS a course — the map, the evidence and the lessons all hang off
+ * it — and the counting here is the learner's own progress through it, shared
+ * by every conversation like the project itself.
+ */
+export interface ProjectCardView {
+  id: string
+  title: string
+  goal: string
+  /** Nodes the tutor has confirmed. */
+  confirmed: number
+  /** Nodes on the map. */
+  total: number
+  updatedAt: string
+}
+
 export interface OverviewResponse {
   ok: true
   course: CourseView | null
@@ -101,6 +119,14 @@ export interface OverviewResponse {
   nextStep: NextStepView | null
   /** The handoff for the focused node, so a reload rebuilds the progress line. */
   handoff: HandoffView | null
+  /**
+   * Every Learning Project the learner has.
+   *
+   * Learner-level and always present, whatever this conversation has open —
+   * including when it has nothing open, which is the case the library exists
+   * for.
+   */
+  library: ProjectCardView[]
   /**
    * Whether the teaching brain is installed.
    *

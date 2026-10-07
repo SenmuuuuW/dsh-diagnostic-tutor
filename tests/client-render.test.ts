@@ -47,6 +47,7 @@ const overview: OverviewResponse = {
     node('ml:python', 'Python', 'prerequisite', 'unconfirmed', 'ml:goal'),
   ],
   lessonCount: 0,
+  library: [],
 }
 
 const client = {
@@ -113,7 +114,7 @@ describe('the panel shows the product, not a dashboard', () => {
 })
 
 describe('an empty runtime is a normal state', () => {
-  const empty: OverviewResponse = { ok: true, course: null, nodes: [], focus: null, nextStep: null, handoff: null, teachingBrain: true, lessonCount: 0 }
+  const empty: OverviewResponse = { ok: true, course: null, nodes: [], focus: null, nextStep: null, handoff: null, teachingBrain: true, lessonCount: 0, library: [] }
   const html = panel({
     client: { ...client, fetchOverview: () => Promise.resolve(empty) },
     initialOverview: empty,

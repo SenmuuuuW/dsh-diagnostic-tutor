@@ -300,9 +300,13 @@ describe('a caller that names no conversation gets nothing', () => {
       expect(anonymous.json.nextStep).toBeNull()
       expect(anonymous.json.handoff).toBeNull()
 
-      // The shared half is still shared: the course and its map are knowledge.
-      expect(anonymous.json.course).toMatchObject({ id: 'ml' })
-      expect((anonymous.json.nodes as unknown[]).length).toBe(3)
+      // A caller with no conversation has no project open, so it sees the
+      // library rather than a map. The projects are still shared and still
+      // listed — what it cannot have is a position inside one.
+      expect(anonymous.json.course).toBeNull()
+      const library = anonymous.json.library as { id: string; total: number }[]
+      expect(library.map((c) => c.id)).toContain('ml')
+      expect(library.find((c) => c.id === 'ml')?.total).toBe(3)
     } finally {
       await harness.close()
     }
@@ -331,6 +335,11 @@ describe('nothing here touches the shared half', () => {
         { nodeId: x, blocks: [{ id: 'b1', type: 'text', content: { md: 'Shared teaching.' } }] },
         A,
       )
+      // Starting a node selects that project for the conversation that did it.
+      // B has started nothing, so it needs the project opened to see the map —
+      // which is the point: the map is shared, but a conversation must be in
+      // the project to look at it.
+      await state.selectProject(B, 'ml', NOW)
 
       for (const who of [A, B]) {
         const view = await wired.api(`/overview?sessionId=${who}`)

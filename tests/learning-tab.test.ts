@@ -74,6 +74,7 @@ const client: PanelClient = {
   handoff: null,
       teachingBrain: true,
       lessonCount: 1,
+  library: [],
     }),
   fetchNode: (nodeId): Promise<NodeDetailResponse> => {
     const target = nodes.find((entry) => entry.id === nodeId)
@@ -125,6 +126,7 @@ function staticOverview(): OverviewResponse {
   handoff: null,
     teachingBrain: true,
     lessonCount: 1,
+  library: [],
   }
 }
 

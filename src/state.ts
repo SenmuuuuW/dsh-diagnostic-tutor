@@ -186,6 +186,25 @@ export type FocusRecord = z.infer<typeof FocusSchema>
 export type FocusKey = string
 
 /**
+ * The Learning Project one conversation has selected.
+ *
+ * `courseId` is the project: a course record IS a learning project, and the UI
+ * calls it that. There is deliberately no separate project entity — a second
+ * one would have to be kept in step with the first, and the first already
+ * carries the map, the evidence and the lessons.
+ */
+export const ProjectSchema = z.object({
+  /** The conversation that made the choice. */
+  sessionId: z.string().min(1),
+  /** The course it chose, or absent for "start something new". */
+  courseId: z.string().min(1).optional(),
+  /** When it chose. */
+  selectedAt: z.string(),
+})
+export type ProjectRecord = z.infer<typeof ProjectSchema>
+export type ProjectKey = string
+
+/**
  * The tutor's decision about where the learner should go after this node.
  *
  * `action` is one of the skill's six readiness outcomes, reused rather than
@@ -239,6 +258,8 @@ export interface UdExport {
   readonly lessons: readonly LessonRecord[]
   readonly nextSteps: readonly NextStepRecord[]
   readonly focus: readonly FocusRecord[]
+  /** Which Learning Project each conversation had open. */
+  readonly projects: readonly ProjectRecord[]
 }
 
 export type CourseKey = string
@@ -295,6 +316,21 @@ export const LESSONS_TABLE = 'lessons'
 export const FOCUS_TABLE = 'focus'
 export const NEXT_STEPS_TABLE = 'next_steps'
 export const HANDOFFS_TABLE = 'handoffs'
+/**
+ * Which Learning Project each conversation is looking at.
+ *
+ * The projects themselves are learner-level: the course, its map, its evidence
+ * and its lessons are shared by every conversation, and this table adds nothing
+ * to them. What it records is a *choice* — which of those projects this
+ * conversation has open — and a choice belongs to the conversation that made
+ * it. Without this the runtime had to guess, and the guess was "the most
+ * recently updated course", which is how a brand-new chat opened onto the
+ * learner's old machine-learning project.
+ *
+ * Keyed by session id. A conversation with no row here has selected nothing,
+ * and that is a real state rather than a missing one.
+ */
+export const PROJECTS_TABLE = 'session_projects'
 
 /** Sentinel meaning "the global slot has never been written". */
 export const UNINITIALIZED = ''
@@ -329,6 +365,7 @@ export const udtDomain = defineDomain({
     // Keyed by target node, which is what makes "press Continue twice" one
     // handoff rather than two.
     [HANDOFFS_TABLE]: domainTable<HandoffKey, HandoffRecord>(HandoffSchema),
+    [PROJECTS_TABLE]: domainTable<ProjectKey, ProjectRecord>(ProjectSchema),
   },
 })
 
@@ -420,6 +457,24 @@ export interface UdState {
   /* focus ------------------------------------------------------------------ */
   /** The recorded focus for one course, if any. */
   readFocus(sessionId: string, courseId: CourseKey): FocusRecord | undefined
+  /**
+   * The Learning Project this conversation has selected.
+   *
+   * @returns the record, or undefined when it has chosen nothing — which is
+   *   the state every new conversation starts in.
+   */
+  readProject(sessionId: string): ProjectRecord | undefined
+  /**
+   * Record this conversation's choice.
+   *
+   * @param sessionId - the conversation.
+   * @param courseId - the project it picked, or undefined for "start
+   *   something new" — a deliberate state, not an absence of one.
+   * @param now - ISO timestamp.
+   */
+  selectProject(sessionId: string, courseId: string | undefined, now: string): Promise<ProjectRecord>
+  /** Every conversation's choice, for export. */
+  listProjects(): ProjectRecord[]
   /**
    * Record that learning is starting on one node of one course.
    *
@@ -576,6 +631,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
   const focus: KvTable<FocusKey, FocusRecord> = domain.table(FOCUS_TABLE)
   const nextSteps: KvTable<NextStepKey, NextStepRecord> = domain.table(NEXT_STEPS_TABLE)
   const handoffs: KvTable<HandoffKey, HandoffRecord> = domain.table(HANDOFFS_TABLE)
+  const projects: KvTable<ProjectKey, ProjectRecord> = domain.table(PROJECTS_TABLE)
   const learner: DomainGlobal<LearnerProfile> = domain.global
 
   const listNodesFor = (courseId: CourseKey): NodeRecord[] =>
@@ -744,6 +800,21 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       return { nextStep, focus: nextFocus }
     },
 
+    readProject: (sessionId) => projects.get(sessionId),
+
+    async selectProject(sessionId, courseId, now) {
+      if (sessionId.length === 0) throw new Error('a project choice must name a conversation')
+      const record: ProjectRecord = {
+        sessionId,
+        selectedAt: now,
+        ...(courseId === undefined ? {} : { courseId }),
+      }
+      await projects.put(sessionId, record)
+      return record
+    },
+
+    listProjects: () => [...projects.entries()].map(([, record]) => record),
+
     readNextStep: (sessionId, fromNodeId) => {
       const record = nextSteps.get(nextStepKey(sessionId, fromNodeId))
       if (record !== undefined) return record
@@ -767,13 +838,17 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
         lessons: [...lessons.entries()].map(([, record]) => record),
         nextSteps: [...nextSteps.entries()].map(([, record]) => record),
         focus: [...focus.entries()].map(([, record]) => record),
+        // Which project each conversation had open. Part of what the learner
+        // owns: it is a choice they made, and an export that dropped it would
+        // restore them to a library with nothing selected.
+        projects: [...projects.entries()].map(([, record]) => record),
       }
     },
 
     async resetState(now) {
       // Table by table, on the domain's own write chain, so a reset cannot
       // interleave with a write that is already queued.
-      for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs]) {
+      for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs, projects]) {
         for (const key of [...table.keys()]) await table.delete(key)
       }
       await learner.set({ initializedAt: UNINITIALIZED, updatedAt: now })

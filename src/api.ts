@@ -137,16 +137,128 @@ function stringField(body: Record<string, unknown>, key: string): string | undef
  * Which course the panel should show: the learner's active goal, else the most
  * recently updated one. Read-only — the panel never changes focus implicitly.
  */
-function currentCourse(state: UdState): CourseRecord | undefined {
-  const activeId = state.readLearner().activeCourseId
-  if (activeId !== undefined) {
-    const active = state.readCourse(activeId)
-    if (active !== undefined) return active
+/**
+ * The focus this conversation is working on, or nothing.
+ *
+ * Learning state belongs to a conversation, not to a course. The course and its
+ * map and its lessons are shared knowledge and stay visible to everyone; where
+ * *this* conversation has got to is not. A focus carrying a different
+ * conversation's id — or none at all, which means it predates the field — is
+ * not this panel's to show, so it reports nothing rather than someone else's
+ * lesson under the learner's chat.
+ *
+ * @param state - the runtime.
+ * @param courseId - the course being viewed.
+ * @param sessionId - the conversation asking, when it said.
+ * @returns the focus record, or undefined.
+ */
+function focusBelongingTo(state: UdState, courseId: string, sessionId: string | undefined): FocusRecord | undefined {
+  // No conversation named means no conversation's state: guessing is what let
+  // one conversation's lesson appear under another's chat.
+  if (sessionId === undefined || sessionId.length === 0) return undefined
+  return state.readFocus(sessionId, courseId)
+}
+
+/**
+ * The Learning Project this conversation has open, if any.
+ *
+ * A conversation's project is a CHOICE, and a choice belongs to the
+ * conversation. There is deliberately no fallback: the previous version fell
+ * back to the learner's most recently updated course, so a brand-new chat
+ * opened onto whatever they had last touched and looked as though it had
+ * become that project. "Nothing selected" is a state the library renders on
+ * purpose, not a gap to fill with a guess.
+ *
+ * One inference is allowed, because it is not a guess: a conversation with
+ * execution state — a focus, and therefore a decision or a handoff — has
+ * demonstrably been working somewhere, and its focus names where. That is how
+ * conversations from before this table existed keep their project.
+ *
+ * @param state - the runtime.
+ * @param sessionId - the conversation asking, when it said.
+ * @returns the course, or undefined when the conversation has selected nothing.
+ */
+function projectFor(state: UdState, sessionId: string | undefined): CourseRecord | undefined {
+  if (sessionId === undefined || sessionId.length === 0) return undefined
+
+  const chosen = state.readProject(sessionId)
+  if (chosen !== undefined) {
+    // An explicit row is authoritative, including one with no course: that is
+    // "start something new", and falling through would undo the choice.
+    return chosen.courseId === undefined ? undefined : state.readCourse(chosen.courseId)
   }
+
+  // No row. Infer only from execution state, never from the course list.
+  for (const course of state.listCourses()) {
+    if (state.readFocus(sessionId, course.id) !== undefined) return course
+  }
+  return undefined
+}
+
+/**
+ * Every Learning Project, with the numbers the library shows on a card.
+ *
+ * Learner-level, like the maps and lessons themselves: this is what the
+ * learner has, not what this conversation is doing with it.
+ */
+function libraryOf(state: UdState): {
+  id: string
+  title: string
+  goal: string
+  confirmed: number
+  total: number
+  updatedAt: string
+}[] {
   return state
     .listCourses()
-    .slice()
-    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0]
+    .map((course) => {
+      const nodes = state.listNodes(course.id)
+      return {
+        id: course.id,
+        title: course.title,
+        goal: course.goal,
+        confirmed: nodes.filter((node) => node.state === 'confirmed').length,
+        total: nodes.length,
+        updatedAt: course.updatedAt,
+      }
+    })
+    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+}
+
+function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undefined, res: ServerResponse): void {
+  const course = projectFor(state, sessionId)
+  const library = libraryOf(state)
+  if (course === undefined) {
+    // No project open in this conversation. That is the library, not an error,
+    // and not an empty runtime: the projects it lists are real and shared.
+    sendJson(res, 200, {
+      ok: true,
+      course: null,
+      nodes: [],
+      focus: null,
+      nextStep: null,
+      handoff: null,
+      teachingBrain: deps.teachingBrain ?? null,
+      lessonCount: state.lessonCount(),
+      library,
+    })
+    return
+  }
+  const mine = focusBelongingTo(state, course.id, sessionId)
+  sendJson(res, 200, {
+    ok: true,
+    course: courseView(course),
+    nodes: state.listNodes(course.id).map(nodeView),
+    focus: mine === undefined ? null : focusOf(state, sessionId ?? '', course.id),
+    // A decision is attached to a focus, so it follows the same rule.
+    nextStep: mine === undefined ? null : nextStepOf(state, sessionId ?? '', course.id),
+    teachingBrain: deps.teachingBrain ?? null,
+    // The handoff for whichever node is focused, so a reload or a restart
+    // rebuilds the progress line instead of showing a blank wait.
+    handoff: mine === undefined ? null : handoffFor(state, sessionId ?? '', mine.nodeId, Date.now()),
+    lessonCount: state.lessonCount(),
+    library,
+  })
 }
 
 /** The active focus for one course, joined with its node, as a view. */
@@ -199,70 +311,54 @@ function nextStepOf(state: UdState, sessionId: string, courseId: string): NextSt
  * @param sessionId - the conversation asking, when it said.
  * @returns the focus record, or undefined.
  */
-function focusBelongingTo(state: UdState, courseId: string, sessionId: string | undefined): FocusRecord | undefined {
-  // No conversation named means no conversation's state: guessing is what let
-  // one conversation's lesson appear under another's chat.
-  if (sessionId === undefined || sessionId.length === 0) return undefined
-  return state.readFocus(sessionId, courseId)
-}
+/**
+ * `POST /project { sessionId, courseId? }` — choose what this conversation learns.
+ *
+ * The choice is the conversation's, and that is the whole point of the route:
+ * the projects are shared, but opening one is a decision a conversation makes
+ * and keeps. Sending no `courseId` selects "start something new", which is a
+ * deliberate state — it stops the library being shown and stops any project
+ * being opened, until the tutor creates one here.
+ *
+ * Selecting never fabricates execution state. There is no focus until the
+ * learner starts a node, so switching projects shows "no learning focus yet"
+ * rather than pretending the previous project's position carried over.
+ */
+async function handleSelectProject(
+  state: UdState,
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<void> {
+  const body = await readJsonBody(req)
+  if (body === undefined) return fail(res, 400, 'bad-body')
+  const sessionId = stringField(body, 'sessionId')
+  if (sessionId === undefined) return fail(res, 400, 'missing-session-id')
 
-function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undefined, res: ServerResponse): void {
-  const course = currentCourse(state)
-  if (course === undefined) {
-    // An empty state is a normal state, not an error: the panel says so. The
-    // shape must still be complete — an omitted field reads as `undefined`,
-    // and a surface that checks `teachingBrain === false` would never fire in
-    // the one state it exists for.
-    sendJson(res, 200, {
-      ok: true,
-      course: null,
-      nodes: [],
-      focus: null,
-      nextStep: null,
-      handoff: null,
-      teachingBrain: deps.teachingBrain ?? null,
-      lessonCount: 0,
-    })
-    return
+  const courseId = stringField(body, 'courseId')
+  if (courseId !== undefined && state.readCourse(courseId) === undefined) {
+    return fail(res, 404, 'no-such-course')
   }
-  const mine = focusBelongingTo(state, course.id, sessionId)
-  sendJson(res, 200, {
-    ok: true,
-    course: courseView(course),
-    nodes: state.listNodes(course.id).map(nodeView),
-    focus: mine === undefined ? null : focusOf(state, sessionId ?? '', course.id),
-    // A decision is attached to a focus, so it follows the same rule.
-    nextStep: mine === undefined ? null : nextStepOf(state, sessionId ?? '', course.id),
-    teachingBrain: deps.teachingBrain ?? null,
-    // The handoff for whichever node is focused, so a reload or a restart
-    // rebuilds the progress line instead of showing a blank wait.
-    handoff: mine === undefined ? null : handoffFor(state, sessionId ?? '', mine.nodeId, Date.now()),
-    lessonCount: state.lessonCount(),
-  })
+
+  const record = await state.selectProject(sessionId, courseId, new Date().toISOString())
+  sendJson(res, 200, { ok: true, project: record })
 }
 
 /** `GET /lesson?nodeId=` — the lesson the tutor has written for a node, if any. */
-function handleLesson(
-  state: UdState,
-  course: CourseRecord | undefined,
-  nodeId: string,
-  res: ServerResponse,
-): void {
-  if (course === undefined) return fail(res, 404, 'no-course')
+function handleLesson(state: UdState, nodeId: string, res: ServerResponse): void {
+  // Resolved from the node, not from the caller's project: a lesson belongs to
+  // the learner, and asking for one should not depend on what this conversation
+  // happens to have open.
   const node = state.readNode(nodeId)
-  if (node === undefined || node.courseId !== course.id) return fail(res, 404, 'no-such-node')
+  if (node === undefined || state.readCourse(node.courseId) === undefined) {
+    return fail(res, 404, 'no-such-node')
+  }
   sendJson(res, 200, { ok: true, lesson: state.lessonForNode(nodeId) ?? null })
 }
 
-function handleNode(
-  state: UdState,
-  course: CourseRecord | undefined,
-  nodeId: string,
-  res: ServerResponse,
-): void {
-  if (course === undefined) return fail(res, 404, 'no-course')
+function handleNode(state: UdState, nodeId: string, res: ServerResponse): void {
   const node = state.readNode(nodeId)
-  if (node === undefined || node.courseId !== course.id) return fail(res, 404, 'no-such-node')
+  const course = node === undefined ? undefined : state.readCourse(node.courseId)
+  if (node === undefined || course === undefined) return fail(res, 404, 'no-such-node')
 
   const parent = node.parentId === undefined ? undefined : state.readNode(node.parentId)
   const children = state
@@ -317,12 +413,9 @@ function handoffFor(state: UdState, sessionId: string, nodeId: string, nowMs: nu
 async function handleStartFocus(
   state: UdState,
   deps: ApiDeps,
-  course: CourseRecord | undefined,
   req: IncomingMessage,
   res: ServerResponse,
 ): Promise<void> {
-  if (course === undefined) return fail(res, 404, 'no-course')
-
   const body = await readJsonBody(req)
   if (body === undefined) return fail(res, 400, 'bad-body')
   const nodeId = stringField(body, 'nodeId')
@@ -332,8 +425,17 @@ async function handleStartFocus(
   // so accepting one would create state nobody could ever see.
   if (sessionId === undefined) return fail(res, 400, 'missing-session-id')
 
+  // The course comes from the NODE, not from what this conversation had open.
+  // Starting a node in a project is choosing that project — the other
+  // direction is the one that must not happen, and does not: selecting a
+  // project never invents a focus.
   const node = state.readNode(nodeId)
-  if (node === undefined || node.courseId !== course.id) return fail(res, 404, 'no-such-node')
+  const course = node === undefined ? undefined : state.readCourse(node.courseId)
+  if (node === undefined || course === undefined) return fail(res, 404, 'no-such-node')
+  const chosen = state.readProject(sessionId)
+  if (chosen?.courseId !== course.id) {
+    await state.selectProject(sessionId, course.id, new Date().toISOString())
+  }
 
   const now = new Date()
   const previous = state.readHandoff(sessionId, nodeId)
@@ -468,25 +570,29 @@ export function createApiHandler(deps: ApiDeps) {
     const method = req.method ?? 'GET'
     const url = new URL(req.url ?? '/', 'http://localhost')
     const route = url.pathname.slice(API_PREFIX.length) || '/'
-    const course = currentCourse(state)
+    // Read per request, not once: a conversation's project is its own, and the
+    // route that changes it must not be answered from a value captured before.
+    const asker = url.searchParams.get('sessionId') ?? undefined
+    const course = projectFor(state, asker)
 
     if (method === 'GET' && route === '/overview') {
       return handleOverview(state, deps, url.searchParams.get('sessionId') ?? undefined, res)
     }
+    if (method === 'POST' && route === '/project') return await handleSelectProject(state, req, res)
     if (method === 'GET' && route === '/export') return handleExport(state, res)
     if (method === 'POST' && route === '/reset') return await handleReset(state, res)
     if (method === 'GET' && route === '/node') {
       const nodeId = url.searchParams.get('id')
       if (nodeId === null || nodeId.length === 0) return fail(res, 400, 'missing-id')
-      return handleNode(state, course, nodeId, res)
+      return handleNode(state, nodeId, res)
     }
     if (method === 'GET' && route === '/lesson') {
       const nodeId = url.searchParams.get('nodeId')
       if (nodeId === null || nodeId.length === 0) return fail(res, 400, 'missing-node-id')
-      return handleLesson(state, course, nodeId, res)
+      return handleLesson(state, nodeId, res)
     }
     if (method === 'POST' && route === '/focus') {
-      return handleStartFocus(state, deps, course, req, res)
+      return handleStartFocus(state, deps, req, res)
     }
     if (method === 'POST' && route === '/handoff/observed') {
       return handleObserved(state, req, res)

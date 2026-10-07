@@ -58,6 +58,7 @@ const overview: OverviewResponse = {
   handoff: null,
   teachingBrain: true,
   lessonCount: 0,
+  library: [],
 }
 
 /** Focus the fake host is currently holding; `startFocus` sets it. */

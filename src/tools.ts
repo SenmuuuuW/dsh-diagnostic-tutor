@@ -395,9 +395,10 @@ function udtGoalCreateTool(state: UdState): ToolDefinition {
         },
       ],
     },
-    execute: async (args) => {
+    execute: async (args, exec) => {
       const { title, goal } = args as { title: string; goal: string }
       const now = nowIso()
+      const sessionId = sessionOf(exec)
 
       const taken = new Set(state.listCourses().map((course) => course.id))
       const courseId = allocateId(slugify(title), taken)
@@ -417,6 +418,10 @@ function udtGoalCreateTool(state: UdState): ToolDefinition {
       })
       // Focus it (this pauses the others) and point the learner at it.
       await state.activateCourse(courseId, now)
+      // A goal created in a conversation becomes THAT conversation's project.
+      // The one automatic selection there is, and not a guess: the learner just
+      // said, here, what they want to learn.
+      if (sessionId !== undefined) await state.selectProject(sessionId, courseId, now)
 
       const goalNode = newNode({
         id: `${courseId}:goal`,

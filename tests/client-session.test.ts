@@ -194,6 +194,7 @@ describe('a session switch retargets the next action', () => {
           handoff: null,
           teachingBrain: null,
           lessonCount: 1,
+  library: [],
         }),
       fetchNode: () =>
         Promise.resolve({
@@ -392,6 +393,7 @@ const REPORT_OVERVIEW = {
   handoff: null,
   teachingBrain: null,
   lessonCount: 1,
+  library: [],
 }
 
 /* -------------------------------------------------------------------------- */
