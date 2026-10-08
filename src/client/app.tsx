@@ -120,6 +120,63 @@ export function LearningPanel({
 
   // First use, same as the docked tab: a blank three-column page reads as a
   // broken page. One question and the sentence that starts everything.
+  // Chosen to start something new: a state, not an empty runtime. It gets its
+  // own screen so pressing the control visibly does something — both this and
+  // "chosen nothing" have no course, and a surface reading only `course`
+  // renders them identically.
+  if (overview?.selection === 'new') {
+    return (
+      <div className="dt-root-wrap">
+        <header className="dt-bar">
+          <div className="dt-bar-id">
+            <span className="dt-bar-name">Start something new</span>
+            <span className="dt-bar-sep" aria-hidden="true">
+              ·
+            </span>
+            <span className="dt-bar-note">the tutor creates the project from what you say</span>
+          </div>
+          {onOpenChat !== undefined && (
+            <button type="button" className="dt-bar-back" onClick={onOpenChat}>
+              Back to the conversation
+            </button>
+          )}
+        </header>
+        <div className="dt-root dt-root-welcome">
+          <div className="dt-welcome">
+            <p className="dt-welcome-eyebrow">Start something new</p>
+            <h1 className="dt-welcome-title">Tell the tutor what you want to learn in Chat.</h1>
+            <p className="dt-welcome-body">
+              When the tutor records a goal there, it becomes this conversation&rsquo;s project.
+              Nothing is created here, and your other projects are untouched.
+            </p>
+            {library.length > 0 && (
+              <>
+                <p className="dt-section-title">Or continue one</p>
+                <ul className="dt-library">
+                  {library.map((project) => (
+                    <li key={project.id}>
+                      <button type="button" className="dt-project" onClick={() => state.openProject(project.id)}>
+                        <span className="dt-project-name">{project.title}</span>
+                        <span className="dt-project-count">
+                          {project.confirmed} of {project.total} confirmed
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {onOpenChat !== undefined && (
+              <button type="button" className="dt-primary dt-here-action" onClick={onOpenChat}>
+                Go to the chat
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (overview?.course == null) {
     return (
       <div className="dt-root-wrap">

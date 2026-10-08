@@ -124,16 +124,73 @@ export function LearningTab({ client, sessionId, initialOverview, onOpenFullView
   const focusNodeState = focusNode?.state ?? null
 
   const hasCourse = overview?.course != null
+  /**
+   * The conversation has deliberately chosen to start something new.
+   *
+   * A third state, and the reason the button used to look dead: both "chosen
+   * nothing" and "chosen new" have no course, so a surface reading only
+   * `course` renders them the same and the press appears to do nothing while
+   * the state behind it is correct.
+   */
+  const startingNew = overview?.selection === 'new'
   const rows = overview?.nodes ?? []
 
   // First use: no goal yet. A blank panel would read as a broken panel, so it
   // says what to do and shows the exact sentence that starts everything. No
   // wizard — the chat is the input, and the shortest path there is one line of
   // text the learner can copy.
-  // No project open in this conversation. That is the library, not a welcome
-  // screen and not somebody else's course: the projects below are the
-  // learner's, shared like the maps themselves, and opening one is this
-  // conversation's choice to make.
+  // Chosen: the tutor will make this conversation's project from whatever the
+  // learner says next. Nothing is created here — no empty course, no invented
+  // focus — so this state is a sentence and a way back, and nothing else.
+  if (startingNew) {
+    return (
+      <div className="dt-tab">
+        <header className="dt-here">
+          <button type="button" className="dt-back" onClick={() => state.openProject()}>
+            ← All learning
+          </button>
+          <p className="dt-eyebrow">Start something new</p>
+          <p className="dt-here-empty">Tell the tutor what you want to learn in Chat.</p>
+          <p className="dt-caption">
+            When the tutor records a goal there, it becomes this conversation&rsquo;s project. Your
+            other projects are untouched.
+          </p>
+        </header>
+        {library.length > 0 && (
+          <section className="dt-lesson">
+            <p className="dt-tab-section">Or continue one</p>
+            <ul className="dt-library">
+              {library.map((project) => (
+                <li key={project.id}>
+                  <button type="button" className="dt-project" onClick={() => state.openProject(project.id)}>
+                    <span className="dt-project-name">{project.title}</span>
+                    <span className="dt-project-count">
+                      {project.confirmed} of {project.total} confirmed
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {teachingBrain === false && (
+          <p className="dt-notice">
+            <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records and
+            shows your learning state, but no lesson will be written until the skill is available to
+            your active DSH agent.
+          </p>
+        )}
+        <section className="dt-lesson">
+          <DataFooter onExport={state.exportData} onReset={state.resetAll} />
+        </section>
+      </div>
+    )
+  }
+
+  // No project open and none chosen. That is the library, not a welcome screen
+  // and not somebody else's course: the projects below are the learner's,
+  // shared like the maps themselves, and opening one is this conversation's
+  // choice to make.
   if (!hasCourse) {
     return (
       <div className="dt-tab">
@@ -170,15 +227,10 @@ export function LearningTab({ client, sessionId, initialOverview, onOpenFullView
         </header>
 
         <section className="dt-lesson">
-          {/* "Start something new" is a STATE, not a form. Pressing it clears
-              this conversation's project so the next thing the tutor hears
-              becomes one — there is no wizard, because the chat is the input.
-              It cannot put the cursor in the composer: DSH 0.2.0-rc.2 keeps
-              that helper inside ui-commands and exposes no service for it, and
-              a DOM query for the box would be the kind of selector hack this
-              plugin does not do. So it says where to go instead. */}
-          <p className="dt-tab-section">Start something new</p>
-          <p className="dt-empty">Tell the tutor what you want to learn in Chat.</p>
+          {/* The library offers the way out of itself; the copy explaining what
+              "new" MEANS belongs to the state it leads to, not here. Showing
+              both in one place made the two states read alike, which is the
+              same failure as before in a different costume. */}
           <button type="button" className="dt-secondary dt-here-action" onClick={() => state.openProject()}>
             + Start something new
           </button>

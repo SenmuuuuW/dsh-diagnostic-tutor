@@ -44,6 +44,7 @@ const nodes = [
 
 const overview: OverviewResponse = {
   ok: true,
+  selection: 'project',
   course: {
     id: 'ml',
     title: 'Machine Learning',

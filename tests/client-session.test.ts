@@ -170,6 +170,7 @@ describe('a session switch retargets the next action', () => {
       fetchOverview: () =>
         Promise.resolve({
           ok: true as const,
+          selection: 'project',
           course: {
             id: 'ml',
             title: 'Machine Learning',
@@ -369,6 +370,7 @@ describe('the observed report carries the conversation', () => {
 /** The minimum overview the panel needs to reach its lesson path. */
 const REPORT_OVERVIEW = {
   ok: true as const,
+  selection: 'project',
   course: {
     id: 'ml',
     title: 'Machine Learning',

@@ -110,8 +110,25 @@ export interface ProjectCardView {
   updatedAt: string
 }
 
+/**
+ * What this conversation has selected.
+ *
+ * Three states, and the middle one is why this exists. A conversation that has
+ * chosen nothing and a conversation that has deliberately chosen to start
+ * something new both have no course open — and a surface that only sees
+ * `course: null` renders them identically, so pressing *Start something new*
+ * looks like a dead button while the state behind it is perfectly correct.
+ *
+ *   `none`     nothing chosen; this is the library
+ *   `new`      chosen to start something; the tutor creates the project
+ *   `project`  a course is open
+ */
+export type ProjectSelection = 'none' | 'new' | 'project'
+
 export interface OverviewResponse {
   ok: true
+  /** Which of the three states this conversation is in. */
+  selection: ProjectSelection
   course: CourseView | null
   nodes: NodeView[]
   focus: FocusView | null

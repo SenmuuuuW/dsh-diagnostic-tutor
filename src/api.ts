@@ -19,7 +19,9 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-import type { CourseView, FocusView, NextStepView, NodeView } from './contract.js'
+import type { CourseView, FocusView, NextStepView, NodeView,
+  ProjectSelection,
+} from './contract.js'
 import {
   beginHandoff,
   handoffView,
@@ -178,21 +180,33 @@ function focusBelongingTo(state: UdState, courseId: string, sessionId: string | 
  * @param sessionId - the conversation asking, when it said.
  * @returns the course, or undefined when the conversation has selected nothing.
  */
-function projectFor(state: UdState, sessionId: string | undefined): CourseRecord | undefined {
-  if (sessionId === undefined || sessionId.length === 0) return undefined
+function resolveProject(
+  state: UdState,
+  sessionId: string | undefined,
+): { selection: ProjectSelection; course?: CourseRecord } {
+  if (sessionId === undefined || sessionId.length === 0) return { selection: 'none' }
 
   const chosen = state.readProject(sessionId)
   if (chosen !== undefined) {
     // An explicit row is authoritative, including one with no course: that is
-    // "start something new", and falling through would undo the choice.
-    return chosen.courseId === undefined ? undefined : state.readCourse(chosen.courseId)
+    // "start something new", and falling through would undo the choice. The
+    // KIND is reported as well as the course, because these two are different
+    // states that look the same from the outside.
+    if (chosen.courseId === undefined) return { selection: 'new' }
+    const course = state.readCourse(chosen.courseId)
+    return course === undefined ? { selection: 'none' } : { selection: 'project', course }
   }
 
   // No row. Infer only from execution state, never from the course list.
   for (const course of state.listCourses()) {
-    if (state.readFocus(sessionId, course.id) !== undefined) return course
+    if (state.readFocus(sessionId, course.id) !== undefined) return { selection: 'project', course }
   }
-  return undefined
+  return { selection: 'none' }
+}
+
+/** The project a conversation has open, if any. */
+function projectFor(state: UdState, sessionId: string | undefined): CourseRecord | undefined {
+  return resolveProject(state, sessionId).course
 }
 
 /**
@@ -226,13 +240,14 @@ function libraryOf(state: UdState): {
 }
 
 function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undefined, res: ServerResponse): void {
-  const course = projectFor(state, sessionId)
+  const { selection, course } = resolveProject(state, sessionId)
   const library = libraryOf(state)
   if (course === undefined) {
     // No project open in this conversation. That is the library, not an error,
     // and not an empty runtime: the projects it lists are real and shared.
     sendJson(res, 200, {
       ok: true,
+      selection,
       course: null,
       nodes: [],
       focus: null,
@@ -247,6 +262,7 @@ function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undef
   const mine = focusBelongingTo(state, course.id, sessionId)
   sendJson(res, 200, {
     ok: true,
+    selection,
     course: courseView(course),
     nodes: state.listNodes(course.id).map(nodeView),
     focus: mine === undefined ? null : focusOf(state, sessionId ?? '', course.id),

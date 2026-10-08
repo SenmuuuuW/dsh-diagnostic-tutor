@@ -60,6 +60,7 @@ const client: PanelClient = {
   fetchOverview: (): Promise<OverviewResponse> =>
     Promise.resolve({
       ok: true,
+      selection: 'project',
       course: {
         id: 'ml',
         title: 'Machine Learning',
@@ -112,6 +113,7 @@ const client: PanelClient = {
 function staticOverview(): OverviewResponse {
   return {
     ok: true,
+    selection: 'project',
     course: {
       id: 'ml',
       title: 'Machine Learning',
@@ -336,6 +338,7 @@ describe('the library is where a conversation starts', () => {
     // its way into a course.
     const empty = {
       ok: true as const,
+      selection: 'none',
       course: null,
       nodes: [],
       focus: null,
@@ -374,11 +377,124 @@ describe('the library is where a conversation starts', () => {
     expect(text).toContain('4 of 12 confirmed')
     expect(text).toContain('Continue')
     expect(text).toContain('Start something new')
-    expect(text).toContain('Tell the tutor what you want to learn in Chat.')
+    // The copy explaining what 'new' MEANS belongs to the state it leads to,
+    // not to the library — showing it here made the two read alike.
+    expect(text).not.toContain('Tell the tutor what you want to learn in Chat.')
     // No map: the map belongs to a project, and none is open.
     expect(host.querySelectorAll('.dt-tab-node').length).toBe(0)
 
     act(() => r.unmount())
+    host.remove()
+  })
+})
+
+describe('Start something new actually happens', () => {
+  /** The tab, with a library and a recorder for what the press sends. */
+  async function press(initialSelection: 'none' | 'new') {
+    const calls: { sessionId: string; courseId?: string }[] = []
+    const library = [
+      { id: 'ml', title: 'Machine Learning', goal: 'learn ml', confirmed: 1, total: 7, updatedAt: 'x' },
+    ]
+    const view = (selection: 'none' | 'new'): Record<string, unknown> => ({
+      ok: true,
+      selection,
+      course: null,
+      nodes: [],
+      focus: null,
+      nextStep: null,
+      handoff: null,
+      teachingBrain: null,
+      lessonCount: 1,
+      library,
+    })
+
+    // What the server holds, which the re-read after the press reflects.
+    let serverSelection: 'none' | 'new' = initialSelection
+    const client = {
+      fetchOverview: () => Promise.resolve(view(serverSelection)),
+      fetchNode: () => Promise.resolve({ ok: true as const, node: null, parent: null, children: [], lessonExists: false }),
+      fetchLesson: () => Promise.resolve({ ok: true as const, lesson: null }),
+      startFocus: () => Promise.resolve({ ok: true as const, focus: null, prompted: true, handoff: null }),
+      selectProject: (sessionId: string, courseId?: string) => {
+        calls.push(courseId === undefined ? { sessionId } : { sessionId, courseId })
+        serverSelection = courseId === undefined ? 'new' : 'none'
+        return Promise.resolve({ ok: true })
+      },
+    }
+
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const r = createRoot(host)
+    await act(async () => {
+      r.render(
+        createElement(LearningTab, {
+          client: client as never,
+          sessionId: 'session-under-test',
+          initialOverview: view(initialSelection) as never,
+        }),
+      )
+    })
+    await act(async () => {
+      await Promise.resolve()
+    })
+    return { calls, host, root: r, view }
+  }
+
+  it('sends exactly one request, naming this conversation, and leaves the library', async () => {
+    const { calls, host, root } = await press('none')
+
+    // The library is what is on screen first.
+    expect(host.textContent).toContain('Your learning')
+    expect(host.textContent).toContain('Machine Learning')
+
+    const button = [...host.querySelectorAll('button')].find((b) =>
+      (b.textContent ?? '').includes('Start something new'),
+    )
+    expect(button, 'the control is not on screen at all').toBeDefined()
+
+    await act(async () => {
+      button?.click()
+      await Promise.resolve()
+    })
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(calls, 'the press sent nothing').toHaveLength(1)
+    expect(calls[0]?.sessionId).toBe('session-under-test')
+    // No course: the explicit "start something new" choice, not a guess.
+    expect(calls[0]?.courseId).toBeUndefined()
+
+    // And the surface actually changes — this is what "no reaction" was. The
+    // library's own header is what must be gone; the browse list below stays,
+    // because the learner may still change their mind.
+    expect(host.textContent, 'still showing the library').not.toContain('Your learning')
+    expect(host.textContent).toContain('Start something new')
+    expect(host.textContent).toContain('Tell the tutor what you want to learn in Chat.')
+    // The way back is still there.
+    expect(host.textContent).toContain('All learning')
+
+    act(() => root.unmount())
+    host.remove()
+  })
+
+  it('shows the chosen state on arrival, without needing the press', async () => {
+    // The state has to survive a reload, so it must render from the overview
+    // alone — not only as the result of a click.
+    const { host, root } = await press('new')
+    expect(host.textContent).toContain('Tell the tutor what you want to learn in Chat.')
+    expect(host.textContent).not.toContain('Your learning')
+    act(() => root.unmount())
+    host.remove()
+  })
+
+  it('stays in the library when nothing has been chosen', async () => {
+    const { host, root } = await press('none')
+    expect(host.textContent).toContain('Your learning')
+    expect(host.textContent).toContain('1 of 7 confirmed')
+    expect(host.textContent).not.toContain('Tell the tutor what you want to learn in Chat.')
+    act(() => root.unmount())
     host.remove()
   })
 })
