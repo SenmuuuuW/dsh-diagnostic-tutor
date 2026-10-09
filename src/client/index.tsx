@@ -307,6 +307,7 @@ export function apply(ctx: Context): void {
       return (
         <LearningTab
           {...props}
+          uiSession={uiSession}
           onOpenFullView={() => {
             // Show the full panel, which means giving up the main column. The
             // tab stays docked, so the way back is the panel's own header.

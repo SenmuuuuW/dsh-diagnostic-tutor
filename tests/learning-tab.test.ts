@@ -498,3 +498,175 @@ describe('Start something new actually happens', () => {
     host.remove()
   })
 })
+
+/* -------------------------------------------------------------------------- */
+/* The tab follows the visible chat, not the one it was opened in              */
+/* -------------------------------------------------------------------------- */
+
+describe('a session switch reaches an already-open tab', () => {
+  /** A live session scope, settable the way the real adapter is. */
+  function liveScope(initial: string | undefined) {
+    let key = initial
+    const listeners = new Set<() => void>()
+    let snapshot: { key?: string | undefined } = key === undefined ? {} : { key }
+    return {
+      adapter: {
+        current: {
+          getSnapshot: () => snapshot,
+          subscribe(fn: () => void) {
+            listeners.add(fn)
+            return () => listeners.delete(fn)
+          },
+        },
+      },
+      switchTo(next: string | undefined) {
+        key = next
+        snapshot = next === undefined ? {} : { key }
+        for (const fn of listeners) fn()
+      },
+    }
+  }
+
+  it('sends the action to the session that is visible NOW, not the one it opened with', async () => {
+    // The reported blocker: the tab was opened in session A, the learner
+    // switched the chat to B, and "Start something new" was written to A —
+    // because the tab was still holding the session it had been docked with.
+    const calls: { sessionId: string; courseId?: string }[] = []
+    const scope = liveScope('session-a')
+
+    const view = (selection: 'none' | 'new'): Record<string, unknown> => ({
+      ok: true,
+      selection,
+      course: null,
+      nodes: [],
+      focus: null,
+      nextStep: null,
+      handoff: null,
+      teachingBrain: null,
+      lessonCount: 0,
+      library: [{ id: 'ml', title: 'Machine Learning', goal: 'g', confirmed: 1, total: 7, updatedAt: 'x' }],
+    })
+    const client = {
+      fetchOverview: () => Promise.resolve(view('none')),
+      fetchNode: () => Promise.resolve({ ok: true as const, node: null, parent: null, children: [], lessonExists: false }),
+      fetchLesson: () => Promise.resolve({ ok: true as const, lesson: null }),
+      startFocus: () => Promise.resolve({ ok: true as const, focus: null, prompted: true, handoff: null }),
+      selectProject: (sessionId: string, courseId?: string) => {
+        calls.push(courseId === undefined ? { sessionId } : { sessionId, courseId })
+        return Promise.resolve({ ok: true })
+      },
+    }
+
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const r = createRoot(host)
+    await act(async () => {
+      r.render(
+        createElement(LearningTab, {
+          client: client as never,
+          // What the slot said when the pane was docked…
+          sessionId: 'session-a',
+          // …and the live scope, which is what must win.
+          uiSession: scope,
+          initialOverview: view('none') as never,
+        }),
+      )
+    })
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    // The learner switches the visible chat to B. The tab stays open.
+    await act(async () => {
+      scope.switchTo('session-b')
+    })
+
+    const button = [...host.querySelectorAll('button')].find((b) =>
+      (b.textContent ?? '').includes('Start something new'),
+    )
+    expect(button, 'the control is missing').toBeDefined()
+    await act(async () => {
+      button?.click()
+      await Promise.resolve()
+    })
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(calls, 'the press sent nothing').toHaveLength(1)
+    expect(calls[0]?.sessionId, 'the action went to the previous conversation').toBe('session-b')
+
+    act(() => r.unmount())
+    host.remove()
+  })
+
+  it('keeps following after several switches, with no cached id', async () => {
+    // An idle tab does not poll, so the observable is the ACTION: after each
+    // switch it must name the session that is visible at that moment, and never
+    // one it has seen before.
+    const calls: string[] = []
+    const scope = liveScope('session-a')
+    const empty = {
+      ok: true as const,
+      selection: 'none' as const,
+      course: null,
+      nodes: [],
+      focus: null,
+      nextStep: null,
+      handoff: null,
+      teachingBrain: null,
+      lessonCount: 0,
+      library: [{ id: 'ml', title: 'ML', goal: 'g', confirmed: 0, total: 1, updatedAt: 'x' }],
+    }
+    const client = {
+      fetchOverview: () => Promise.resolve(empty),
+      fetchNode: () => Promise.resolve({ ok: true as const, node: null, parent: null, children: [], lessonExists: false }),
+      fetchLesson: () => Promise.resolve({ ok: true as const, lesson: null }),
+      startFocus: () => Promise.resolve({ ok: true as const, focus: null, prompted: true, handoff: null }),
+      selectProject: (sessionId: string) => {
+        calls.push(sessionId)
+        return Promise.resolve({ ok: true })
+      },
+    }
+
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const r = createRoot(host)
+    await act(async () => {
+      r.render(
+        createElement(LearningTab, {
+          client: client as never,
+          sessionId: 'session-a',
+          uiSession: scope,
+          initialOverview: empty as never,
+        }),
+      )
+    })
+    await act(async () => {
+      await Promise.resolve()
+    })
+
+    for (const next of ['session-b', 'session-a', 'session-c'] as const) {
+      await act(async () => {
+        scope.switchTo(next)
+      })
+      const button = [...host.querySelectorAll('button')].find((b) =>
+        (b.textContent ?? '').includes('Start something new'),
+      )
+      await act(async () => {
+        button?.click()
+        await Promise.resolve()
+      })
+      await act(async () => {
+        await Promise.resolve()
+        await Promise.resolve()
+      })
+      expect(calls.at(-1), `after switching to ${next}`).toBe(next)
+    }
+    expect(calls).toEqual(['session-b', 'session-a', 'session-c'])
+
+    act(() => r.unmount())
+    host.remove()
+  })
+})

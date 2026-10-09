@@ -23,6 +23,7 @@ import { DataFooter, HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
 import { buildMapTree, flattenTree, relationLabel, stateExplanation } from './model.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
+import { useCurrentSessionId } from './use-session.js'
 
 /** The tab chip's text. */
 export function LearningTabTitle(): ReactNode {
@@ -82,8 +83,23 @@ function CompactMap({
 export interface LearningTabProps {
   /** Defaults to the real HTTP client. */
   client?: PanelClient
-  /** Injected by the session scope; the tab asks the tutor in this session. */
+  /**
+   * The session the slot says this tab belongs to.
+   *
+   * Used only when no live source is available — the preview and the tests.
+   * In the real client `uiSession` is supplied and WINS, because this prop is
+   * captured when the pane is docked and a docked pane outlives a session
+   * switch: the tab would keep asking about the conversation it was opened in
+   * while the learner looks at another one. That is exactly the bug this
+   * replaces — a `POST /project` that went to the previous conversation.
+   */
   sessionId?: string | undefined
+  /**
+   * The live session scope, read through the same adapter the sidebar entry
+   * uses. An observable, so the surface follows the visible chat by
+   * construction rather than by remembering to re-render.
+   */
+  uiSession?: unknown
   /** Pre-supplied state, so the preview and tests skip the first fetch. */
   initialOverview?: OverviewResponse | undefined
   /**
@@ -101,8 +117,19 @@ export interface LearningTabProps {
  * @param props - injectable client and the session the tab belongs to.
  * @returns the stacked node / map / lesson column.
  */
-export function LearningTab({ client, sessionId, initialOverview, onOpenFullView }: LearningTabProps): ReactNode {
-  const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview })
+export function LearningTab({
+  client,
+  sessionId,
+  uiSession,
+  initialOverview,
+  onOpenFullView,
+}: LearningTabProps): ReactNode {
+  // The live scope when there is one. `adapter.current` is a HostObservable and
+  // `useCurrentSessionId` subscribes to it, so a session switch re-renders this
+  // surface with the new id — no cache, no closure, nothing to invalidate.
+  const liveSession = useCurrentSessionId(uiSession)
+  const activeSession = uiSession === undefined ? sessionId : liveSession
+  const state = useLearning({ client: client ?? defaultClient, sessionId: activeSession, initialOverview })
   const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading, select, library } =
     state
 
