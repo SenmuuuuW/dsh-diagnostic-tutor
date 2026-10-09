@@ -418,10 +418,25 @@ function udtGoalCreateTool(state: UdState): ToolDefinition {
       })
       // Focus it (this pauses the others) and point the learner at it.
       await state.activateCourse(courseId, now)
-      // A goal created in a conversation becomes THAT conversation's project.
-      // The one automatic selection there is, and not a guess: the learner just
-      // said, here, what they want to learn.
-      if (sessionId !== undefined) await state.selectProject(sessionId, courseId, now)
+      // A goal created in a conversation becomes that conversation's project —
+      // but only when the conversation is free to adopt one.
+      //
+      // This used to bind unconditionally, which meant a goal created anywhere
+      // quietly took over the conversation it was created in, even one that was
+      // already working in a different project. Two cases may adopt:
+      //
+      //   no selection     it has never been anywhere; the goal it just asked
+      //                    for is obviously where it should land
+      //   explicit new     it asked for exactly this — "start something new"
+      //                    is a promise the next goal here becomes the project
+      //
+      // A conversation with a different project open keeps it. Creating a goal
+      // beside your work should not move you out of it.
+      if (sessionId !== undefined) {
+        const chosen = state.readProject(sessionId)
+        const mayAdopt = chosen === undefined || chosen.courseId === undefined
+        if (mayAdopt) await state.selectProject(sessionId, courseId, now)
+      }
 
       const goalNode = newNode({
         id: `${courseId}:goal`,

@@ -427,3 +427,115 @@ describe('the selection is learner data like anything else', () => {
     }
   })
 })
+
+/* -------------------------------------------------------------------------- */
+/* A new goal, and which conversation may adopt it                            */
+/* -------------------------------------------------------------------------- */
+
+describe('a goal created here becomes this conversation\'s project', () => {
+  it('binds when the conversation asked for something new', async () => {
+    const { harness, state, wired } = await seeded()
+    try {
+      // The learner pressed "Start something new" first.
+      await wired.api('/project', { method: 'POST', body: { sessionId: A } })
+      expect(state.readProject(A)?.courseId).toBeUndefined()
+
+      await wired.tool('udt_goal_create', { title: 'Microeconomics', goal: 'from zero' }, A)
+
+      const created = state.listCourses().find((c) => c.title === 'Microeconomics')
+      expect(created, 'the tutor created no course').toBeDefined()
+      // The promise "start something new" made is kept: this becomes the project.
+      expect(state.readProject(A)?.courseId).toBe(created?.id)
+      expect((await wired.api(`/overview?sessionId=${A}`)).json.selection).toBe('project')
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('binds when the conversation had never chosen anything', async () => {
+    const { harness, state, wired } = await seeded()
+    try {
+      expect(state.readProject(A)).toBeUndefined()
+      await wired.tool('udt_goal_create', { title: 'Microeconomics', goal: 'from zero' }, A)
+      const created = state.listCourses().find((c) => c.title === 'Microeconomics')
+      expect(state.readProject(A)?.courseId).toBe(created?.id)
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('does NOT take over a conversation already working in another project', async () => {
+    // The hijack the rule exists to prevent: a goal created beside your work
+    // must not move you out of it.
+    const { harness, state, wired } = await seeded()
+    try {
+      await wired.api('/project', { method: 'POST', body: { sessionId: A, courseId: 'ml' } })
+      await wired.tool('udt_goal_create', { title: 'Microeconomics', goal: 'from zero' }, A)
+
+      // The course is created — it is real work and belongs on the learner's
+      // shelf — but this conversation stays where it was.
+      expect(state.listCourses().find((c) => c.title === 'Microeconomics')).toBeDefined()
+      expect(state.readProject(A)?.courseId).toBe('ml')
+      expect((await wired.api(`/overview?sessionId=${A}`)).json.course).toMatchObject({ id: 'ml' })
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('touches no other conversation, and leaves the old project alone', async () => {
+    const { harness, state, wired } = await seeded()
+    try {
+      await wired.api('/project', { method: 'POST', body: { sessionId: B, courseId: 'ml' } })
+      await wired.api('/project', { method: 'POST', body: { sessionId: A } })
+      await wired.tool('udt_goal_create', { title: 'Microeconomics', goal: 'from zero' }, A)
+
+      const created = state.listCourses().find((c) => c.title === 'Microeconomics')
+      expect(state.readProject(A)?.courseId).toBe(created?.id)
+      expect(state.readProject(B)?.courseId).toBe('ml')
+      // The historical project is untouched and still listed for both.
+      for (const who of [A, B]) {
+        const view = await wired.api(`/overview?sessionId=${who}`)
+        expect((view.json.library as { id: string }[]).map((c) => c.id)).toContain('ml')
+      }
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('survives a reload: the binding is read back, not remembered', async () => {
+    const { harness, state, wired } = await seeded()
+    try {
+      await wired.api('/project', { method: 'POST', body: { sessionId: A } })
+      await wired.tool('udt_goal_create', { title: 'Microeconomics', goal: 'from zero' }, A)
+      const created = state.listCourses().find((c) => c.title === 'Microeconomics')
+
+      // It is in the persisted document, not in any client's memory — which is
+      // what a reload reads. The overview then reports it without the client
+      // having done anything since.
+      const persisted = state.exportState(NOW).projects.find((r) => r.sessionId === A)
+      expect(persisted?.courseId).toBe(created?.id)
+      const after = await wired.api(`/overview?sessionId=${A}`)
+      expect(after.json.selection).toBe('project')
+      expect(after.json.course).toMatchObject({ id: created?.id })
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('does not fabricate a focus on the way in', async () => {
+    const { harness, state, wired } = await seeded()
+    try {
+      await wired.api('/project', { method: 'POST', body: { sessionId: A } })
+      await wired.tool('udt_goal_create', { title: 'Microeconomics', goal: 'from zero' }, A)
+      const created = state.listCourses().find((c) => c.title === 'Microeconomics')
+
+      // A project is open; nothing has been started inside it yet.
+      expect(state.readFocus(A, created?.id ?? '')).toBeUndefined()
+      const view = await wired.api(`/overview?sessionId=${A}`)
+      expect(view.json.course).toMatchObject({ id: created?.id })
+      expect(view.json.focus, 'adopting a project invented a focus').toBeNull()
+    } finally {
+      await harness.close()
+    }
+  })
+})
