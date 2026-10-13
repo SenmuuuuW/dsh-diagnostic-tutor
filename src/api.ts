@@ -19,9 +19,7 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-import type { CourseView, FocusView, NextStepView, NodeView,
-  ProjectSelection,
-} from './contract.js'
+import type { CourseView, FocusView, NextStepView, NodeView } from './contract.js'
 import {
   beginHandoff,
   handoffView,
@@ -136,10 +134,6 @@ function stringField(body: Record<string, unknown>, key: string): string | undef
 /* -------------------------------------------------------------------------- */
 
 /**
- * Which course the panel should show: the learner's active goal, else the most
- * recently updated one. Read-only — the panel never changes focus implicitly.
- */
-/**
  * The focus this conversation is working on, or nothing.
  *
  * Learning state belongs to a conversation, not to a course. The course and its
@@ -161,52 +155,9 @@ function focusBelongingTo(state: UdState, courseId: string, sessionId: string | 
   return state.readFocus(sessionId, courseId)
 }
 
-/**
- * The Learning Project this conversation has open, if any.
- *
- * A conversation's project is a CHOICE, and a choice belongs to the
- * conversation. There is deliberately no fallback: the previous version fell
- * back to the learner's most recently updated course, so a brand-new chat
- * opened onto whatever they had last touched and looked as though it had
- * become that project. "Nothing selected" is a state the library renders on
- * purpose, not a gap to fill with a guess.
- *
- * One inference is allowed, because it is not a guess: a conversation with
- * execution state — a focus, and therefore a decision or a handoff — has
- * demonstrably been working somewhere, and its focus names where. That is how
- * conversations from before this table existed keep their project.
- *
- * @param state - the runtime.
- * @param sessionId - the conversation asking, when it said.
- * @returns the course, or undefined when the conversation has selected nothing.
- */
-function resolveProject(
-  state: UdState,
-  sessionId: string | undefined,
-): { selection: ProjectSelection; course?: CourseRecord } {
-  if (sessionId === undefined || sessionId.length === 0) return { selection: 'none' }
-
-  const chosen = state.readProject(sessionId)
-  if (chosen !== undefined) {
-    // An explicit row is authoritative, including one with no course: that is
-    // "start something new", and falling through would undo the choice. The
-    // KIND is reported as well as the course, because these two are different
-    // states that look the same from the outside.
-    if (chosen.courseId === undefined) return { selection: 'new' }
-    const course = state.readCourse(chosen.courseId)
-    return course === undefined ? { selection: 'none' } : { selection: 'project', course }
-  }
-
-  // No row. Infer only from execution state, never from the course list.
-  for (const course of state.listCourses()) {
-    if (state.readFocus(sessionId, course.id) !== undefined) return { selection: 'project', course }
-  }
-  return { selection: 'none' }
-}
-
 /** The project a conversation has open, if any. */
 function projectFor(state: UdState, sessionId: string | undefined): CourseRecord | undefined {
-  return resolveProject(state, sessionId).course
+  return state.resolveProject(sessionId).course
 }
 
 /**
@@ -240,7 +191,7 @@ function libraryOf(state: UdState): {
 }
 
 function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undefined, res: ServerResponse): void {
-  const { selection, course } = resolveProject(state, sessionId)
+  const { selection, course } = state.resolveProject(sessionId)
   const library = libraryOf(state)
   if (course === undefined) {
     // No project open in this conversation. That is the library, not an error,

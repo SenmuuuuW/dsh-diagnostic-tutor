@@ -31,8 +31,8 @@ import {
   LessonSchema,
 } from './lesson.js'
 import type { Block, LessonRecord } from './lesson.js'
-import { newNode } from './state.js'
-import type { Evidence, NodeRecord, UdState } from './state.js'
+import { newNode, PROJECT_BINDINGS, PROJECT_SELECTIONS } from './state.js'
+import type { Evidence, NodeRecord, ProjectSelection, SessionProjectResolution, UdState } from './state.js'
 import {
   EVIDENCE_KINDS,
   NODE_RELATIONS,
@@ -116,17 +116,32 @@ function violationMessage(violations: readonly Violation[]): string {
   return violations.map((entry) => `${entry.code}: ${entry.message}`).join(' | ')
 }
 
-/** Resolve the course a call refers to, defaulting to the learner's active goal. */
-function resolveCourseId(state: UdState, requested: string | undefined): string {
-  const courseId = requested ?? state.readLearner().activeCourseId
+/** Resolve an explicit shared course or this conversation's selected project. */
+function resolveCourseId(state: UdState, requested: string | undefined, project: SessionProjectResolution): string {
+  const courseId = requested ?? project.course?.id
   if (!courseId) {
     throw new Error(
-      'no course given and the learner has no active goal; call udt_goal_create first or pass courseId',
+      'no course given and this conversation has no selected project; call udt_goal_create for a new goal or pass courseId explicitly',
     )
   }
   if (!state.readCourse(courseId)) throw new Error(`no course "${courseId}"`)
   return courseId
 }
+
+/** A tool write cannot silently work outside the conversation's selected project. */
+function requireProjectMatch(project: SessionProjectResolution, courseId: string): void {
+  if (project.course !== undefined && project.course.id !== courseId) {
+    throw new Error(`this conversation selected course "${project.course.id}"; cannot write course "${courseId}" without selecting it first`)
+  }
+}
+
+const PROJECT_BINDING_PROPERTIES = {
+  projectAdopted: { type: 'boolean', required: true, description: 'Whether this write newly selected the project for this conversation.' },
+  projectBinding: {
+    type: 'string', required: true, enum: [...PROJECT_BINDINGS],
+    description: 'adopted | already-selected | not-selected | missing-session-id. Shared data can be stored without a conversation binding.',
+  },
+} as const
 
 /* -------------------------------------------------------------------------- */
 /* udt_status                                                                 */
@@ -142,7 +157,9 @@ interface StatusValue {
   courses: { id: string; title: string; status: string }[]
   preferredLanguage?: string
   mode?: string
-  activeCourseId?: string
+  selection: ProjectSelection
+  sessionAvailable: boolean
+  courseId?: string
   focus?: {
     courseId: string
     nodeId: string
@@ -174,6 +191,7 @@ interface StatusValue {
  */
 function statusValue(state: UdState, sessionId: string | undefined): StatusValue {
   const snapshot = state.snapshot()
+  const project = state.resolveProject(sessionId)
   const value: StatusValue = {
     domain: snapshot.domain,
     version: snapshot.version,
@@ -181,11 +199,13 @@ function statusValue(state: UdState, sessionId: string | undefined): StatusValue
     courseCount: snapshot.courseCount,
     nodeCount: snapshot.nodeCount,
     courses: snapshot.courses.map((course) => ({ ...course })),
+    selection: project.selection,
+    sessionAvailable: project.sessionAvailable,
   }
-  const { preferredLanguage, mode, activeCourseId } = snapshot.learner
+  const { preferredLanguage, mode } = snapshot.learner
   if (preferredLanguage !== undefined) value.preferredLanguage = preferredLanguage
   if (mode !== undefined) value.mode = mode
-  if (activeCourseId !== undefined) value.activeCourseId = activeCourseId
+  if (project.course !== undefined) value.courseId = project.course.id
 
   // The focus is how the tutor learns which node the learner asked to work on.
   // It is reported here rather than in a tool of its own: it is one fact about
@@ -209,9 +229,9 @@ function statusValue(state: UdState, sessionId: string | undefined): StatusValue
   // the recommendation in exactly the case it matters most — the tutor having
   // just said where to go next.
   const focusRecord =
-    sessionId === undefined || activeCourseId === undefined
+    sessionId === undefined || project.course === undefined
       ? undefined
-      : state.readFocus(sessionId, activeCourseId)
+      : state.readFocus(sessionId, project.course.id)
   const pending =
     sessionId === undefined || focusRecord?.nextStepId === undefined
       ? undefined
@@ -242,6 +262,10 @@ function udtStatusTool(state: UdState): ToolDefinition {
       'initialized, the learner profile, the registered learning goals and how many diagnosis-map nodes exist. ' +
       'Call this before starting a session to see whether there is existing state to continue from, and after ' +
       'changing state to confirm what was stored. ' +
+      '`courses`, counts and preferences are learner-shared; `selection`, `courseId`, focus and next step belong only to this conversation. ' +
+      '`none` means no project selected; `new` means the learner asked to start a new project: use udt_goal_create for that goal, ' +
+      'and do not reuse a historical project as the current one. `project` names the selected course. ' +
+      'If sessionAvailable is false, conversation binding is unavailable. ' +
       'Read-only: it records no teaching decision.',
     parameters: {},
     output: {
@@ -277,7 +301,9 @@ function udtStatusTool(state: UdState): ToolDefinition {
             type: 'string',
             description: 'Teaching mode preference: auto | zero-base | standard | advanced.',
           },
-          activeCourseId: { type: 'string', description: 'The learning goal currently in focus.' },
+          selection: { type: 'string', required: true, enum: [...PROJECT_SELECTIONS], description: 'This conversation\'s project selection: none | new | project.' },
+          sessionAvailable: { type: 'boolean', required: true, description: 'Whether this tool call has a reliable conversation id.' },
+          courseId: { type: 'string', description: 'Only present for selection=project: this conversation\'s selected course.' },
           focus: {
             type: 'object',
             additionalProperties: false,
@@ -317,9 +343,9 @@ function udtStatusTool(state: UdState): ToolDefinition {
       render: (_args, value) => [
         {
           type: 'text',
-          text: `Learning runtime: domain "${value.domain}" v${value.version}, ${value.courseCount} goal(s), ${value.nodeCount} map node(s), ${
-            value.initialized ? 'learner state present' : 'first run (no learner state yet)'
-          }.`,
+          // Native tool messages carry render content, not the execute value.
+          // The tutor must see the conversation selection and usable ids.
+          text: JSON.stringify(value),
         },
       ],
     },
@@ -348,6 +374,10 @@ function udtStatusTool(state: UdState): ToolDefinition {
  * active. Pausing is reversible and never touches the other goal's map.
  */
 function udtGoalCreateTool(state: UdState): ToolDefinition {
+  // ID allocation must see the preceding creation's course, and activation
+  // must finish before another creation pauses it. A failed write releases
+  // the queue so later calls can still create goals.
+  let goalWrites: Promise<unknown> = Promise.resolve()
   return defineTool({
     name: 'udt_goal_create',
     description:
@@ -356,7 +386,9 @@ function udtGoalCreateTool(state: UdState): ToolDefinition {
       'This creates ONLY the goal and the single root node of the map — it never generates a course outline, ' +
       'syllabus or list of topics. Further nodes are added later, one at a time, as diagnosis reveals ' +
       'prerequisites or blockers (see udt_map_update). ' +
-      'Creating a goal focuses it and pauses any previously active goal.',
+      'Creating a goal marks it active in the shared library and pauses any previously active goal. ' +
+      'It selects this conversation\'s project only for none/new selection; an existing project choice is preserved. ' +
+      'Read projectBinding in the result to confirm whether the conversation is bound.',
     parameters: {
       title: {
         type: 'string',
@@ -386,12 +418,13 @@ function udtGoalCreateTool(state: UdState): ToolDefinition {
             description: 'Goals that were active and are now paused.',
             items: { type: 'string' },
           },
+          ...PROJECT_BINDING_PROPERTIES,
         },
       },
       render: (_args, value) => [
         {
           type: 'text',
-          text: `Goal recorded: "${value.title}" (${value.courseId}). Map starts with its root node only.`,
+          text: JSON.stringify(value),
         },
       ],
     },
@@ -399,66 +432,55 @@ function udtGoalCreateTool(state: UdState): ToolDefinition {
       const { title, goal } = args as { title: string; goal: string }
       const now = nowIso()
       const sessionId = sessionOf(exec)
+      const project = state.resolveProject(sessionId)
 
-      const taken = new Set(state.listCourses().map((course) => course.id))
-      const courseId = allocateId(slugify(title), taken)
+      // Capture the conversation choice before waiting: a choice made while
+      // this call is queued must invalidate its eventual adoption too.
+      const result = goalWrites.then(async () => {
+        const taken = new Set(state.listCourses().map((course) => course.id))
+        const courseId = allocateId(slugify(title), taken)
 
-      const previouslyActive = state
-        .listCourses()
-        .filter((course) => course.status === 'active' && course.id !== courseId)
-        .map((course) => course.id)
+        const previouslyActive = state
+          .listCourses()
+          .filter((course) => course.status === 'active' && course.id !== courseId)
+          .map((course) => course.id)
 
-      await state.writeCourse({
-        id: courseId,
-        title,
-        goal,
-        status: 'active',
-        createdAt: now,
-        updatedAt: now,
+        await state.writeCourse({
+          id: courseId,
+          title,
+          goal,
+          status: 'active',
+          createdAt: now,
+          updatedAt: now,
+        })
+        // Focus it (this pauses the others) and point the learner at it.
+        await state.activateCourse(courseId, now)
+        const goalNode = newNode({
+          id: `${courseId}:goal`,
+          courseId,
+          title,
+          relation: 'goal',
+          // The goal node carries the learner's statement as evidence, yet stays
+          // `unconfirmed`: a goal is the frame of the map, not a mastery claim.
+          evidence: [{ kind: 'goal-stated', at: now, note: goal }],
+          now,
+        })
+        await state.writeNode(goalNode)
+        const binding = await state.adoptProject(sessionId, courseId, now, project, true)
+
+        return {
+          courseId,
+          title,
+          goal,
+          status: 'active',
+          createdAt: now,
+          goalNodeId: goalNode.id,
+          pausedCourseIds: previouslyActive,
+          ...binding,
+        }
       })
-      // Focus it (this pauses the others) and point the learner at it.
-      await state.activateCourse(courseId, now)
-      // A goal created in a conversation becomes that conversation's project —
-      // but only when the conversation is free to adopt one.
-      //
-      // This used to bind unconditionally, which meant a goal created anywhere
-      // quietly took over the conversation it was created in, even one that was
-      // already working in a different project. Two cases may adopt:
-      //
-      //   no selection     it has never been anywhere; the goal it just asked
-      //                    for is obviously where it should land
-      //   explicit new     it asked for exactly this — "start something new"
-      //                    is a promise the next goal here becomes the project
-      //
-      // A conversation with a different project open keeps it. Creating a goal
-      // beside your work should not move you out of it.
-      if (sessionId !== undefined) {
-        const chosen = state.readProject(sessionId)
-        const mayAdopt = chosen === undefined || chosen.courseId === undefined
-        if (mayAdopt) await state.selectProject(sessionId, courseId, now)
-      }
-
-      const goalNode = newNode({
-        id: `${courseId}:goal`,
-        courseId,
-        title,
-        relation: 'goal',
-        // The goal node carries the learner's statement as evidence, yet stays
-        // `unconfirmed`: a goal is the frame of the map, not a mastery claim.
-        evidence: [{ kind: 'goal-stated', at: now, note: goal }],
-        now,
-      })
-      await state.writeNode(goalNode)
-
-      return {
-        courseId,
-        title,
-        goal,
-        status: 'active',
-        createdAt: now,
-        goalNodeId: goalNode.id,
-        pausedCourseIds: previouslyActive,
-      }
+      goalWrites = result.catch(() => undefined)
+      return result
     },
     presentCall: (args) => ({
       card: 'generic',
@@ -481,9 +503,9 @@ function udtMapGetTool(state: UdState): ToolDefinition {
       'recorded against it. Use this to decide the next diagnostic step. ' +
       'A node state is one of: unconfirmed (no evidence yet), explained, practiced, checked, weak, blocked, ' +
       'confirmed. Nothing here is a progress percentage or a score. ' +
-      'Omit courseId to read the learner\'s active goal.',
+      'Omit courseId to read this conversation\'s selected project. An explicit courseId reads shared data without selecting it.',
     parameters: {
-      courseId: { type: 'string', description: 'Goal to read; defaults to the active goal.' },
+      courseId: { type: 'string', description: 'Goal to read; defaults only to this conversation\'s selected project.' },
     },
     output: {
       schema: {
@@ -536,14 +558,12 @@ function udtMapGetTool(state: UdState): ToolDefinition {
       render: (_args, value) => [
         {
           type: 'text',
-          text: `Map for "${value.title}": ${value.nodes.length} node(s) — ${value.nodes
-            .map((node) => `${node.title} [${node.state}]`)
-            .join(', ')}`,
+          text: JSON.stringify(value),
         },
       ],
     },
-    execute: (args) => {
-      const courseId = resolveCourseId(state, (args as { courseId?: string }).courseId)
+    execute: (args, exec) => {
+      const courseId = resolveCourseId(state, (args as { courseId?: string }).courseId, state.resolveProject(sessionOf(exec)))
       const map = state.readMap(courseId)
       if (!map) throw new Error(`no course "${courseId}"`)
 
@@ -593,9 +613,11 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
       'check or transfer evidence entry; explanation or practice alone never confirms.\n' +
       '• "add-evidence" — append one observation to a node. Record what happened, not how good it was.\n' +
       'A single call may add at most 8 nodes and a map holds at most 40. Never use this to plant a whole ' +
-      'syllabus: add only what the current diagnosis justifies.',
+      'syllabus: add only what the current diagnosis justifies. ' +
+      'An explicit courseId/nodeId write may select the project only when this conversation has no selection. ' +
+      'Historical writes never replace new/project selection; check projectBinding in the result.',
     parameters: {
-      courseId: { type: 'string', description: 'Goal to update; defaults to the active goal.' },
+      courseId: { type: 'string', description: 'Goal to update; defaults to this conversation\'s selected project, or the explicitly named node\'s course.' },
       op: {
         type: 'string',
         required: true,
@@ -648,19 +670,17 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
           state: { type: 'string', description: 'The node\'s state after this call.' },
           evidenceCount: { type: 'integer', description: 'Evidence entries on the node after this call.' },
           nodeCount: { type: 'integer', required: true, description: 'Total nodes in the course after this call.' },
+          ...PROJECT_BINDING_PROPERTIES,
         },
       },
       render: (_args, value) => [
         {
           type: 'text',
-          text:
-            value.op === 'add-nodes'
-              ? `Added ${value.addedNodeIds.length} node(s); the map now has ${value.nodeCount}.`
-              : `Node ${value.nodeId ?? ''} is now "${value.state ?? ''}" with ${value.evidenceCount ?? 0} evidence entr(ies).`,
+          text: JSON.stringify(value),
         },
       ],
     },
-    execute: async (args) => {
+    execute: async (args, exec) => {
       const input = args as {
         courseId?: string
         op: (typeof MAP_OPS)[number]
@@ -672,7 +692,12 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
         readiness?: Readiness
         at?: string
       }
-      const courseId = resolveCourseId(state, input.courseId)
+      const sessionId = sessionOf(exec)
+      const project = state.resolveProject(sessionId)
+      const nodeCourseId = input.op === 'add-nodes' || input.nodeId === undefined
+        ? undefined : state.readNode(input.nodeId)?.courseId
+      const courseId = resolveCourseId(state, input.courseId ?? nodeCourseId, project)
+      requireProjectMatch(project, courseId)
       const now = input.at ?? nowIso()
       const existing = state.listNodes(courseId)
 
@@ -718,6 +743,7 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
           op: input.op,
           addedNodeIds: structured.map((node) => node.id),
           nodeCount: existing.length + structured.length,
+          ...await state.adoptProject(sessionId, courseId, now, project),
         }
       }
 
@@ -745,6 +771,7 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
           state: stored.state,
           evidenceCount: stored.evidence.length,
           nodeCount: existing.length,
+          ...await state.adoptProject(sessionId, courseId, now, project),
         }
       }
 
@@ -771,6 +798,7 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
         state: stored.state,
         evidenceCount: stored.evidence.length,
         nodeCount: existing.length,
+        ...await state.adoptProject(sessionId, courseId, now, project),
       }
     },
     presentCall: (args) => ({
@@ -891,11 +919,13 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       'the blocks appear in the learner\'s surface the moment you send them, so a short first unit ' +
       'turns a silent wait into visible progress. Send more later with append.\n' +
       'Default mode "append" adds to the current lesson; use "replace" only to correct what is there.\n' +
-      'A check block has no input box: the surface displays the question and the learner answers in the chat.',
+      'A check block has no input box: the surface displays the question and the learner answers in the chat. ' +
+      'An explicit nodeId write may select its project only when this conversation has no selection. ' +
+      'It never replaces new/project selection; check projectBinding in the result.',
     parameters: {
       nodeId: {
         type: 'string',
-        description: 'Node to write for. Omit to use the learner\'s current focus (see udt_status).',
+        description: 'Node to write for. Omit to use this conversation\'s current focus (see udt_status).',
       },
       title: { type: 'string', description: 'Lesson title; defaults to the node title.' },
       mode: {
@@ -922,12 +952,13 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
           blockCount: { type: 'integer', required: true, description: 'Blocks in the lesson after this call.' },
           addedCount: { type: 'integer', required: true },
           origin: { type: 'string', required: true },
+          ...PROJECT_BINDING_PROPERTIES,
         },
       },
       render: (_args, value) => [
         {
           type: 'text',
-          text: `Learning surface updated: ${value.addedCount} block(s) ${value.mode === 'replace' ? 'replacing' : 'added to'} the lesson for "${value.nodeId}" (now ${value.blockCount}).`,
+          text: JSON.stringify(value),
         },
       ],
     },
@@ -941,20 +972,16 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       const mode = input.mode ?? 'append'
 
       const sessionId = sessionOf(exec)
+      const project = state.resolveProject(sessionId)
       const focused = sessionId === undefined ? undefined : state.activeFocus(sessionId)
-      const courseId = focused?.course.id ?? state.readLearner().activeCourseId
-      if (courseId === undefined) {
-        throw new Error('no active course; record a goal and start learning on a node first')
-      }
       const nodeId = input.nodeId ?? focused?.node.id
       if (nodeId === undefined) {
         throw new Error('no nodeId given and no learning focus is active; call udt_status to see the focus')
       }
       const node = state.readNode(nodeId)
       if (node === undefined) throw new Error(`no node "${nodeId}"`)
-      if (node.courseId !== courseId) {
-        throw new Error(`node "${nodeId}" belongs to course "${node.courseId}", not "${courseId}"`)
-      }
+      const courseId = resolveCourseId(state, node.courseId, project)
+      requireProjectMatch(project, courseId)
 
       if (!Array.isArray(input.blocks) || input.blocks.length === 0) {
         throw new Error('`blocks` must be a non-empty array')
@@ -1018,6 +1045,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
         blockCount: lesson.blocks.length,
         addedCount: parsed.length,
         origin: lesson.origin,
+        ...await state.adoptProject(sessionId, courseId, now, project),
       }
     },
     presentCall: (args) => ({
@@ -1121,9 +1149,9 @@ function udtDecideNextTool(state: UdState): ToolDefinition {
         throw new Error('this call has no conversation; a decision must be recorded in one')
       }
       const focused = state.activeFocus(sessionId)
-      const courseId = focused?.course.id ?? state.readLearner().activeCourseId
+      const courseId = state.resolveProject(sessionId).course?.id
       if (courseId === undefined) {
-        throw new Error('no active course; record a goal and start learning on a node first')
+        throw new Error('this conversation has no selected project; record a goal or select a project and start learning on a node first')
       }
       const fromNodeId = input.fromNodeId ?? focused?.node.id
       if (fromNodeId === undefined) {

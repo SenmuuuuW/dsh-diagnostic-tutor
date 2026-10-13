@@ -146,7 +146,7 @@ const AUDIT = `(() => {
      picking "whichever exists" silently audits the other one. */
   const ROOT = ${JSON.stringify(surface)} === 'tab'
     ? document.querySelector('.dt-tab')
-    : (document.querySelector('.dt-root-wrap') || document.querySelector('.dt-root') || document.querySelector('.dt-tab'));
+    : (document.querySelector('.dt-root-wrap') || document.querySelector('.dt-root'));
   if (!ROOT) return { mounted: false, rootClass: null };
 
   /* --- colour ---------------------------------------------------------- */
@@ -340,7 +340,7 @@ try {
 
   // The panel is behind a sidebar entry in DSH; in the preview it is already
   // mounted, so a miss here is not fatal.
-  const clicked = await cdp.evaluate(`(() => {
+  await cdp.evaluate(`(() => {
     const hit = [...document.querySelectorAll('button, [role=button]')]
       .find((el) => ((el.getAttribute('aria-label') || el.textContent || el.title || '').trim()) === ${JSON.stringify(PANEL_LABEL)});
     if (hit) { hit.click(); return true; }
@@ -405,8 +405,8 @@ try {
     }
   }
 
-  const mounted = await cdp.evaluate(`!!(document.querySelector('.dt-root') || document.querySelector('.dt-tab'))`)
-  if (!mounted && !clicked) throw new Error('panel never mounted')
+  const mounted = await cdp.evaluate(`!!document.querySelector(${JSON.stringify(surface === 'tab' ? '.dt-tab' : '.dt-root')})`)
+  if (!mounted) throw new Error(`${surface} never mounted`)
 
   for (const theme of ['light', 'dark']) {
     await cdp.evaluate(`(() => {
@@ -424,9 +424,8 @@ try {
       })
       await sleep(700)
       const result = await cdp.evaluate(AUDIT)
-      if (!result || result.mounted === false) {
-        console.log(`${theme}/${size.name}: panel not mounted`)
-        continue
+      if (!result || result.mounted !== true) {
+        throw new Error(`${surface} not mounted during ${theme}/${size.name} audit`)
       }
 
       const shot = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false })

@@ -258,9 +258,29 @@ With the json backend you get exactly one document, `<storage root>/udt.json`
 
 | Slot | Holds |
 | --- | --- |
-| `global` | the learner singleton — preferences, active goal, `initializedAt` |
+| `global` | the learner singleton — preferences, `initializedAt`, and the legacy shared `activeCourseId` marker |
 | `tables.courses` | one record per learning goal, in the learner's own words |
 | `tables.nodes` | the diagnosis map: `id`, `courseId`, `title`, `parentId?`, `relation`, `state`, `evidence[]` |
+
+Courses, maps, lessons and evidence are shared by the learner's conversations.
+Project selection, focus, next step and handoff belong to one conversation,
+identified by its session ID. The legacy `activeCourseId` remains in storage for
+compatibility; it does not select a project for a conversation. A fresh
+conversation starts with the library, even when historical projects exist.
+
+| Conversation selection | Project binding |
+| --- | --- |
+| `none` | A new goal, or a validated write explicitly naming a course or node in this conversation, may select its project. Reading shared data does not select it. |
+| `new` | The learner pressed **Start something new**. Only a new goal created here may bind; historical map or lesson writes leave this choice intact. |
+| `project` | The selected course is the default for tools. Creating another goal does not replace it; writes to another course require selecting that course first. |
+
+`udt_status` reports this conversation's `selection` and, only for `project`,
+its `courseId`. Goal, map and lesson writes return `projectAdopted` and
+`projectBinding`: `adopted`, `already-selected`, `not-selected`, or
+`missing-session-id`. A choice made while a write is pending takes precedence
+over that write's adoption. Without a reliable session ID, status reports
+`sessionAvailable: false`; explicit shared writes can still be stored, but their
+result is `missing-session-id` and they claim no conversation binding.
 
 Two deliberate rules:
 
@@ -294,13 +314,13 @@ route around them:
 
 ### Tools
 
-Five, and none of them decides anything about teaching.
+Six, and none of them decides anything about teaching.
 
 | Tool | Does |
 | --- | --- |
-| `udt_status` | reports the runtime: domain, version, goals, map, **and the current focus** |
-| `udt_goal_create` | records a goal and plants the map root — and nothing else |
-| `udt_map_get` | reads the map with each node's relation, state and evidence |
+| `udt_status` | reports shared goals and counts, plus this conversation's selection, focus and pending next step |
+| `udt_goal_create` | records a goal and plants only the map root; may also select it for this conversation |
+| `udt_map_get` | reads the selected project's map, or an explicitly named shared course, with each node's relation, state and evidence |
 | `udt_map_update` | `add-nodes` · `set-state` · `add-evidence` |
 | `udt_lesson_update` | writes teaching into the learning surface as blocks |
 | `udt_decide_next` | records where the learner should go next, and why |

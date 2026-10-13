@@ -42,6 +42,39 @@ export interface PanelClient {
 type LessonResponse = Awaited<ReturnType<typeof realApi.fetchLesson>>
 type FocusResponse = Awaited<ReturnType<typeof realApi.startFocus>>
 
+function requestScope(sessionId: string | undefined) {
+  return {
+    sessionId,
+    revision: 0,
+    overviewIssued: 0,
+    overviewApplied: 0,
+    detailRevision: 0,
+    detailIssued: 0,
+    detailApplied: 0,
+    pendingAction: false,
+  }
+}
+
+type RequestScope = ReturnType<typeof requestScope>
+
+function overviewRequest(scope: RequestScope) {
+  return { scope, revision: scope.revision, sequence: ++scope.overviewIssued }
+}
+
+type OverviewRequest = ReturnType<typeof overviewRequest>
+
+function orderedWrite<T>(
+  queues: Map<string | undefined, Promise<void>>,
+  scope: RequestScope,
+  write: () => Promise<T>,
+): Promise<T> {
+  const result = (queues.get(scope.sessionId) ?? Promise.resolve()).then(write)
+  // Only the writes are ordered; a slow follow-up read must not hold the next
+  // choice up, and a failed write must not prevent the next choice being sent.
+  queues.set(scope.sessionId, result.then(() => {}, () => {}))
+  return result
+}
+
 export const defaultClient: PanelClient = {
   fetchOverview: realApi.fetchOverview,
   fetchNode: realApi.fetchNode,
@@ -54,12 +87,12 @@ export const defaultClient: PanelClient = {
 }
 
 /**
- * How often the surfaces re-read state while a focus is active.
+ * How often a surface re-reads its conversation's state.
  *
  * Polling rather than a push channel: DSH exposes no generic host→client push
  * for third-party plugins, and the published UI plugins poll for the same
- * reason. The interval only runs while something is being learned, so an idle
- * surface makes no requests at all.
+ * reason. An open conversation must also refresh before it has a focus: the
+ * tutor can create or adopt its project while the surface shows the library.
  */
 export const POLL_INTERVAL_MS = 2000
 
@@ -119,14 +152,48 @@ export function useLearning(options: {
 }): LearningState {
   const { client, sessionId, initialOverview, onStarted } = options
 
-  // The polling callbacks are created once, so reading the prop directly would
-  // pin whichever conversation was open when they were built. A ref keeps every
-  // re-read asking about the conversation the learner is in NOW — the same
-  // mistake, in a different place, as reading a session list once at startup.
-  const sessionIdRef = useRef<string | undefined>(sessionId)
-  sessionIdRef.current = sessionId
+  // A request belongs to the scope that started it. Replacing this token on
+  // every switch also rejects an old A response after an A → B → A journey.
+  const scopeRef = useRef(requestScope(sessionId))
+  if (scopeRef.current.sessionId !== sessionId) scopeRef.current = requestScope(sessionId)
+  // Writes keep their order for the lifetime of the surface, even when the
+  // learner leaves a session and returns while its earlier writes are pending.
+  const writeQueuesRef = useRef(new Map<string | undefined, Promise<void>>())
 
-  const [overview, setOverview] = useState<OverviewResponse | null>(initialOverview ?? null)
+  const [snapshot, setSnapshot] = useState({
+    scope: scopeRef.current,
+    data: initialOverview ?? null,
+  })
+  // Hide the previous conversation's data on the switch render, before the
+  // effect clears the local detail and the new overview has arrived.
+  const currentScope = snapshot.scope === scopeRef.current
+  const overview = currentScope ? snapshot.data : null
+  const overviewRef = useRef(overview)
+  overviewRef.current = overview
+  const currentRequest = useCallback((request: OverviewRequest) => (
+    scopeRef.current === request.scope &&
+    request.scope.revision === request.revision &&
+    request.sequence >= request.scope.overviewApplied
+  ), [])
+  const setOverview = useCallback((request: OverviewRequest, data: OverviewResponse): boolean => {
+    if (!currentRequest(request)) return false
+    request.scope.overviewApplied = request.sequence
+    const previous = overviewRef.current
+    const projectChanged = previous?.course?.id !== data.course?.id
+    if (projectChanged) {
+      setSelectedId(null)
+    }
+    if (projectChanged || previous?.focus?.nodeId !== data.focus?.nodeId) {
+      ++request.scope.detailRevision
+      setDetail(null)
+      setLesson(null)
+      setNote(null)
+    }
+    overviewRef.current = data
+    setSnapshot({ scope: request.scope, data })
+    setLoading(false)
+    return true
+  }, [currentRequest])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detail, setDetail] = useState<NodeDetailResponse | null>(null)
   const [lesson, setLesson] = useState<LessonRecord | null>(null)
@@ -145,67 +212,115 @@ export function useLearning(options: {
   liveRef.current = liveNodeId
   /** The node whose lesson has already been reported as seen. */
   const observedRef = useRef<string | null>(null)
+  const firstLoadRef = useRef(true)
 
   useEffect(() => {
-    if (initialOverview !== undefined) return
+    if (firstLoadRef.current) {
+      firstLoadRef.current = false
+      if (initialOverview !== undefined) return
+    }
+    const scope = scopeRef.current
+    ++scope.revision
+    ++scope.detailRevision
+    scope.pendingAction = false
+    const request = overviewRequest(scope)
     let live = true
+    setSnapshot({ scope, data: null })
+    setSelectedId(null)
+    setDetail(null)
+    setLesson(null)
+    setNote(null)
+    setError(null)
+    setStarting(false)
+    setLoading(true)
+    observedRef.current = null
     client
-      .fetchOverview(sessionIdRef.current)
+      .fetchOverview(sessionId)
       .then((data) => {
-        if (live) setOverview(data)
+        if (live) setOverview(request, data)
       })
       .catch((cause: Error) => {
-        if (live) setError(cause.message)
+        if (live && currentRequest(request)) setError(cause.message)
       })
       .finally(() => {
-        if (live) setLoading(false)
+        if (live && currentRequest(request)) setLoading(false)
       })
     return () => {
       live = false
     }
-  }, [client, initialOverview])
+  }, [client, initialOverview, sessionId, setOverview, currentRequest])
 
   const select = useCallback(
     (nodeId: string) => {
+      const scope = scopeRef.current
+      const revision = ++scope.detailRevision
+      const sequence = ++scope.detailIssued
       setSelectedId(nodeId)
+      setDetail(null)
       setError(null)
       client
         .fetchNode(nodeId)
-        .then(setDetail)
-        .catch((cause: Error) => setError(cause.message))
+        .then((data) => {
+          if (
+            scopeRef.current === scope && scope.detailRevision === revision &&
+            sequence >= scope.detailApplied &&
+            overviewRef.current?.nodes.some((node) => node.id === nodeId)
+          ) {
+            scope.detailApplied = sequence
+            setDetail(data)
+          }
+        })
+        .catch((cause: Error) => {
+          if (scopeRef.current === scope && scope.detailRevision === revision) setError(cause.message)
+        })
     },
     [client],
   )
 
   const beginFocus = useCallback(
     (nodeId: string) => {
-    setStarting(true)
-    setError(null)
-    setNote(null)
-    client
-      .startFocus(nodeId, sessionId)
-      .then(async (result) => {
-        setNote(
-          result.prompted
-            ? 'Started. The tutor is teaching this node in the chat — the surface updates as it writes.'
-            : `Focus recorded, but the tutor was not woken (${result.promptReason ?? 'unknown reason'}). Say anything in the chat to continue.`,
-        )
-        // Re-read the overview rather than trusting the response: the focus
-        // lives in stored state, and the surfaces follow stored state. Without
-        // this the panel would never see its own focus, and the polling effect
-        // below — which keys off it — would never start.
-        const [nextOverview, nextLesson] = await Promise.all([
-          client.fetchOverview(sessionIdRef.current),
-          client.fetchLesson(result.focus.nodeId),
-        ])
-        setOverview(nextOverview)
-        setLesson(nextLesson.lesson)
-        onStarted?.()
-      })
-      .catch((cause: Error) => setError(cause.message))
-      .finally(() => setStarting(false))
+      const scope = scopeRef.current
+      // A user action invalidates reads made before it. Queue the writes too:
+      // two quick choices must reach the runtime in the learner's order.
+      const revision = ++scope.revision
+      ++scope.detailRevision
+      scope.pendingAction = true
+      setStarting(true)
+      setError(null)
+      setNote(null)
+      void (async () => {
+        try {
+          const result = await orderedWrite(writeQueuesRef.current, scope, () => client.startFocus(nodeId, scope.sessionId))
+          if (scopeRef.current !== scope || scope.revision !== revision) return
+          // Re-read stored focus instead of treating a write response as the
+          // current state: the tutor may already have moved to another node.
+          const request = overviewRequest(scope)
+          const [nextOverview, nextLesson] = await Promise.all([
+            client.fetchOverview(scope.sessionId),
+            client.fetchLesson(result.focus.nodeId),
+          ])
+          if (!setOverview(request, nextOverview)) return
+          if (nextOverview.focus?.nodeId !== result.focus.nodeId) {
+            setLesson(null)
+            setNote(null)
+            return
+          }
+          setNote(
+            result.prompted
+              ? 'Started. The tutor is teaching this node in the chat — the surface updates as it writes.'
+              : `Focus recorded, but the tutor was not woken (${result.promptReason ?? 'unknown reason'}). Say anything in the chat to continue.`,
+          )
+          setLesson(nextLesson.lesson)
+          onStarted?.()
+        } catch (cause) {
+          if (scopeRef.current === scope && scope.revision === revision) setError((cause as Error).message)
+        } finally {
+          if (scope.revision === revision) scope.pendingAction = false
+          if (scopeRef.current === scope && scope.revision === revision) setStarting(false)
+        }
+      })()
     },
-    [client, sessionId, onStarted],
+    [client, onStarted, setOverview],
   )
 
   const start = useCallback(() => {
@@ -217,19 +332,22 @@ export function useLearning(options: {
 
   /** Re-read everything, the same way the initial load does. */
   const refresh = useCallback(
-    () =>
-      client
-        .fetchOverview(sessionIdRef.current)
+    () => {
+      const scope = scopeRef.current
+      const request = overviewRequest(scope)
+      return client
+        .fetchOverview(scope.sessionId)
         .then((data) => {
-          setOverview(data)
+          if (!setOverview(request, data)) return null
           setError(null)
           return data
         })
         .catch((cause: Error) => {
-          setError(cause.message)
+          if (currentRequest(request)) setError(cause.message)
           return null
-        }),
-    [client],
+        })
+    },
+    [client, setOverview, currentRequest],
   )
 
   const exportData = useCallback(() => {
@@ -252,22 +370,39 @@ export function useLearning(options: {
   }, [client, refresh])
 
   useEffect(() => {
-    if (focus === null) return
-    const nodeId = focus.nodeId
+    if (focusNodeId === null) return
+    const scope = scopeRef.current
+    const nodeId = focusNodeId
     let live = true
 
     const tick = async (): Promise<void> => {
+      if (scope.pendingAction) return
+      const request = overviewRequest(scope)
       try {
         const [nextOverview, nextLesson] = await Promise.all([
-          client.fetchOverview(sessionIdRef.current),
+          client.fetchOverview(sessionId),
           client.fetchLesson(nodeId),
         ])
-        if (!live) return
-        setOverview(nextOverview)
+        if (!live || !setOverview(request, nextOverview)) return
+        if (nextOverview.focus?.nodeId !== nodeId) {
+          setLesson(null)
+          return
+        }
         setLesson(nextLesson.lesson)
         // The evidence trail and the node's state are what a check changes.
         const watched = liveRef.current
-        if (watched !== null) setDetail(await client.fetchNode(watched))
+        if (watched !== null) {
+          const revision = scope.detailRevision
+          const sequence = ++scope.detailIssued
+          const nextDetail = await client.fetchNode(watched)
+          if (
+            !live || scopeRef.current !== scope || scope.revision !== request.revision ||
+            scope.detailRevision !== revision ||
+            liveRef.current !== watched || sequence < scope.detailApplied
+          ) return
+          scope.detailApplied = sequence
+          setDetail(nextDetail)
+        }
 
         // Tell the host the lesson reached a screen. Reported once per node, so
         // the timing chain records the first sighting rather than every poll.
@@ -275,7 +410,7 @@ export function useLearning(options: {
         // Only when a conversation is open: the report is about that
         // conversation's wait, and without one there is nothing to report —
         // sending it anyway would be a request that can only be refused.
-        const observedIn = sessionIdRef.current
+        const observedIn = sessionId
         if (nextLesson.lesson !== null && observedIn !== undefined && observedRef.current !== nodeId) {
           observedRef.current = nodeId
           void client.reportObserved?.(nodeId, observedIn)?.catch(() => {})
@@ -291,7 +426,26 @@ export function useLearning(options: {
       live = false
       clearInterval(timer)
     }
-  }, [client, focus])
+  }, [client, focusNodeId, sessionId, setOverview])
+
+  // The tutor writes a goal independently of this UI. Without this read, a
+  // library or "start something new" tab never sees the resulting binding.
+  useEffect(() => {
+    if (sessionId === undefined || focusNodeId !== null) return
+    const scope = scopeRef.current
+    let live = true
+    const timer = setInterval(() => {
+      if (scope.pendingAction) return
+      const request = overviewRequest(scope)
+      void client.fetchOverview(sessionId).then((data) => {
+        if (live) setOverview(request, data)
+      }).catch(() => {})
+    }, POLL_INTERVAL_MS)
+    return () => {
+      live = false
+      clearInterval(timer)
+    }
+  }, [client, focusNodeId, sessionId, setOverview])
 
   /**
    * Open a Learning Project in this conversation.
@@ -303,22 +457,33 @@ export function useLearning(options: {
    */
   const openProject = useCallback(
     (courseId?: string) => {
-      const sessionId = sessionIdRef.current
-      if (sessionId === undefined || client.selectProject === undefined) return
-      void client
-        .selectProject(sessionId, courseId)
-        .then(() => client.fetchOverview(sessionId))
-        .then((next) => {
-          setOverview(next)
+      const scope = scopeRef.current
+      const { sessionId } = scope
+      const choose = client.selectProject
+      if (sessionId === undefined || choose === undefined) return
+      const revision = ++scope.revision
+      ++scope.detailRevision
+      scope.pendingAction = true
+      setStarting(false)
+      setNote(null)
+      void (async () => {
+        try {
+          await orderedWrite(writeQueuesRef.current, scope, () => choose(sessionId, courseId))
+          if (scopeRef.current !== scope || scope.revision !== revision) return
+          const request = overviewRequest(scope)
+          const next = await client.fetchOverview(sessionId)
+          if (!setOverview(request, next)) return
           setLesson(null)
           setDetail(null)
           setSelectedId(null)
-        })
-        .catch(() => {
+        } catch {
           // The next poll will show whatever the server actually holds.
-        })
+        } finally {
+          if (scope.revision === revision) scope.pendingAction = false
+        }
+      })()
     },
-    [client],
+    [client, setOverview],
   )
 
   return {
@@ -330,13 +495,13 @@ export function useLearning(options: {
     nextStep: overview?.nextStep ?? null,
     handoff: overview?.handoff ?? null,
     teachingBrain: overview?.teachingBrain ?? null,
-    selectedId,
-    detail,
-    lesson,
-    note,
-    error,
-    starting,
-    loading,
+    selectedId: currentScope ? selectedId : null,
+    detail: currentScope ? detail : null,
+    lesson: currentScope ? lesson : null,
+    note: currentScope ? note : null,
+    error: currentScope ? error : null,
+    starting: currentScope && starting,
+    loading: !currentScope || loading,
     select,
     start,
     continueTo: beginFocus,

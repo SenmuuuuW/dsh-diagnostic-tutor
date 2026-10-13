@@ -28,7 +28,7 @@ const A = 'session-a'
 const B = 'session-b'
 
 interface Wired {
-  tool(name: string, args: Record<string, unknown>, as?: string): Promise<Record<string, unknown>>
+  tool(name: string, args: Record<string, unknown>, as?: string | null): Promise<Record<string, unknown>>
   api(
     path: string,
     init?: { method?: string; body?: unknown },
@@ -52,7 +52,8 @@ function wire(harness: TestHarness, state: UdState): Wired {
     async tool(name, args, as = A) {
       const definition = registered.get(name)
       if (!definition) throw new Error(`tool "${name}" is not registered`)
-      return (await definition.execute(args, { agent: { id: as } })) as Record<string, unknown>
+      const execution = as === null ? {} : { agent: { id: as } }
+      return (await definition.execute(args, execution)) as Record<string, unknown>
     },
     async api(path, init = {}) {
       const body = init.body === undefined ? undefined : JSON.stringify(init.body)
@@ -111,6 +112,57 @@ async function seeded(): Promise<{ harness: TestHarness; state: UdState; wired: 
 
 const libraryOf = async (wired: Wired, sessionId: string) =>
   (await wired.api(`/overview?sessionId=${sessionId}`)).json.library as { id: string; total: number }[]
+
+const HISTORICAL = '2026-10-09T00:00:00.000Z'
+const textBlock = (id: string, md: string) => ({ id, type: 'text' as const, content: { md } })
+
+/** The reported Korean case: a previous course and lesson, with no new goal. */
+async function seededHistory(): Promise<Awaited<ReturnType<typeof seeded>>> {
+  const fixture = await seeded()
+  const { state } = fixture
+  for (const [id, title] of [['ml', 'Machine Learning'], ['micro', 'Microeconomics'], ['korean', '한국어']] as const) {
+    if (state.readCourse(id) === undefined) {
+      await state.writeCourse({ id, title, goal: `learn ${title}`, status: 'paused', createdAt: HISTORICAL, updatedAt: HISTORICAL })
+      await state.writeNode(newNode({ id: `${id}:goal`, courseId: id, title, relation: 'goal', now: HISTORICAL }))
+      await state.writeNode(newNode({ id: `${id}:n1`, courseId: id, title: `${title} foundations`, relation: 'part-of', parentId: `${id}:goal`, now: HISTORICAL }))
+    }
+    const node = state.readNode(`${id}:n1`)!
+    await state.writeNode({ ...node, evidence: [{ kind: 'diagnosis', at: HISTORICAL, note: `${title} historical evidence` }] })
+    await state.writeLesson({
+      id: `${id}:n1:lesson`, courseId: id, nodeId: `${id}:n1`, title: `${title} foundations`,
+      blocks: [textBlock(`${id}-original`, `${title} original lesson`)], origin: 'tutor',
+      createdAt: HISTORICAL, updatedAt: HISTORICAL,
+    })
+  }
+  await state.activateCourse('korean', HISTORICAL)
+  return fixture
+}
+
+function writeHistorical(wired: Wired, kind: 'map' | 'lesson', as: string | null = A) {
+  return kind === 'map'
+    ? wired.tool('udt_map_update', {
+        courseId: 'korean', op: 'add-evidence', nodeId: 'korean:n1',
+        evidenceKind: 'practice', evidenceNote: 'Current conversation practiced Hangul.',
+      }, as)
+    : wired.tool('udt_lesson_update', {
+        nodeId: 'korean:n1', blocks: [textBlock('korean-resumed', 'Current Hangul teaching unit.')],
+      }, as)
+}
+
+async function expectSelection(wired: Wired, sessionId: string, selection: 'none' | 'new' | 'project', courseId?: string) {
+  const status = await wired.tool('udt_status', {}, sessionId)
+  const view = await wired.api(`/overview?sessionId=${sessionId}`)
+  expect(status).toMatchObject({ selection, sessionAvailable: true })
+  expect(status).not.toHaveProperty('activeCourseId')
+  expect(view.json.selection).toBe(selection)
+  if (courseId === undefined) {
+    expect(status).not.toHaveProperty('courseId')
+    expect(view.json.course).toBeNull()
+  } else {
+    expect(status.courseId).toBe(courseId)
+    expect(view.json.course).toMatchObject({ id: courseId })
+  }
+}
 
 describe('a fresh conversation is given nothing', () => {
   it('has no selected project even though projects exist', async () => {
@@ -534,6 +586,208 @@ describe('a goal created here becomes this conversation\'s project', () => {
       const view = await wired.api(`/overview?sessionId=${A}`)
       expect(view.json.course).toMatchObject({ id: created?.id })
       expect(view.json.focus, 'adopting a project invented a focus').toBeNull()
+    } finally {
+      await harness.close()
+    }
+  })
+})
+
+describe('session binding is separate from shared historical learning data', () => {
+  it('reports a fresh session as none even when the learner last used Korean', async () => {
+    const { harness, state, wired } = await seededHistory()
+    try {
+      expect(state.readLearner().activeCourseId).toBe('korean')
+      await expectSelection(wired, A, 'none')
+      const map = await wired.tool('udt_map_get', { courseId: 'korean' })
+      expect(map.nodes).toHaveLength(2)
+      await expectSelection(wired, A, 'none')
+      expect(state.listProjects()).toEqual([])
+      await expect(wired.tool('udt_map_get', {})).rejects.toThrow()
+      await expect(wired.tool('udt_map_update', {
+        op: 'add-nodes', nodes: [{ title: 'New Hangul gap', relation: 'part-of', parentId: 'korean:goal' }],
+      })).rejects.toThrow()
+      await expect(wired.tool('udt_lesson_update', { blocks: [textBlock('unscoped', 'A unit without a node.')] })).rejects.toThrow()
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it.each(['map', 'lesson'] as const)('adopts an explicit %s write in an unselected conversation', async (kind) => {
+    const { harness, state, wired } = await seededHistory()
+    try {
+      const result = await writeHistorical(wired, kind)
+      expect(result).toMatchObject({ projectAdopted: true, projectBinding: 'adopted', courseId: 'korean' })
+      expect(state.readProject(A)?.courseId).toBe('korean')
+      await expectSelection(wired, A, 'project', 'korean')
+      await expectSelection(wired, B, 'none')
+      const view = await wired.api(`/overview?sessionId=${A}`)
+      expect(view.json.nodes).toHaveLength(2)
+      expect(view.json.focus).toBeNull()
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('can adopt a map annotation by its explicit nodeId without the global course default', async () => {
+    const { harness, state, wired } = await seededHistory()
+    try {
+      const result = await wired.tool('udt_map_update', {
+        op: 'add-evidence', nodeId: 'ml:n1', evidenceKind: 'practice', evidenceNote: 'The learner attempted an ML problem.',
+      })
+      expect(result).toMatchObject({ courseId: 'ml', projectAdopted: true, projectBinding: 'adopted' })
+      expect(state.readLearner().activeCourseId).toBe('korean')
+      await expectSelection(wired, A, 'project', 'ml')
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('keeps Start something new after historical Korean map and lesson writes', async () => {
+    const { harness, state, wired } = await seededHistory()
+    try {
+      const before = state.exportState(HISTORICAL)
+      await wired.api('/project', { method: 'POST', body: { sessionId: A } })
+      await expectSelection(wired, A, 'new')
+      for (const kind of ['map', 'lesson'] as const) {
+        const result = await writeHistorical(wired, kind)
+        expect(result).toMatchObject({ projectAdopted: false, projectBinding: 'not-selected', courseId: 'korean' })
+        await expectSelection(wired, A, 'new')
+      }
+      expect(state.listCourses()).toEqual(before.courses)
+      expect(state.listNodes('ml')).toEqual(before.nodes.filter((node) => node.courseId === 'ml'))
+      expect(state.listNodes('micro')).toEqual(before.nodes.filter((node) => node.courseId === 'micro'))
+      expect(state.lessonForNode('ml:n1')).toEqual(before.lessons.find((lesson) => lesson.nodeId === 'ml:n1'))
+      expect(state.lessonForNode('micro:n1')).toEqual(before.lessons.find((lesson) => lesson.nodeId === 'micro:n1'))
+      expect(state.readNode('korean:n1')?.evidence[0]).toEqual(before.nodes.find((node) => node.id === 'korean:n1')?.evidence[0])
+      expect(state.lessonForNode('korean:n1')?.blocks).toEqual([
+        ...before.lessons.find((lesson) => lesson.nodeId === 'korean:n1')!.blocks,
+        textBlock('korean-resumed', 'Current Hangul teaching unit.'),
+      ])
+      const created = await wired.tool('udt_goal_create', { title: 'New Korean project', goal: 'Start a separate Korean learning project.' })
+      expect(created).toMatchObject({ projectAdopted: true, projectBinding: 'adopted' })
+      expect(created.courseId).not.toBe('korean')
+      await expectSelection(wired, A, 'project', created.courseId as string)
+      expect((await libraryOf(wired, A)).map((course) => course.id)).toEqual(expect.arrayContaining(['ml', 'micro', 'korean']))
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it.each(['map', 'lesson'] as const)('rejects an explicit foreign %s write without changing the selected project', async (kind) => {
+    const { harness, state, wired } = await seededHistory()
+    try {
+      await wired.api('/project', { method: 'POST', body: { sessionId: A, courseId: 'ml' } })
+      const before = state.exportState(HISTORICAL)
+      await expect(writeHistorical(wired, kind)).rejects.toThrow()
+      await expectSelection(wired, A, 'project', 'ml')
+      expect(state.exportState(HISTORICAL)).toEqual(before)
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('uses the selected project map and existing lesson despite a different global active course', async () => {
+    const { harness, state, wired } = await seededHistory()
+    try {
+      await state.selectProject(A, 'ml', HISTORICAL)
+      const originalLesson = state.lessonForNode('ml:n1')!
+      const map = await wired.tool('udt_map_get', {})
+      expect(map.courseId).toBe('ml')
+      expect((map.nodes as { nodeId: string }[]).map((node) => node.nodeId)).toContain('ml:n1')
+      const result = await wired.tool('udt_lesson_update', { nodeId: 'ml:n1', blocks: [textBlock('ml-continued', 'Continue the same ML lesson.')] })
+      expect(result.projectBinding).toBe('already-selected')
+      expect(state.lessonForNode('ml:n1')?.blocks).toEqual([...originalLesson.blocks, textBlock('ml-continued', 'Continue the same ML lesson.')])
+      expect(state.readLearner().activeCourseId).toBe('korean')
+      await expectSelection(wired, A, 'project', 'ml')
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('keeps A and B selected independently while their learning artifacts remain shared', async () => {
+    const { harness, state, wired } = await seededHistory()
+    try {
+      await state.selectProject(B, 'ml', HISTORICAL)
+      await state.startFocus('ml', 'ml:n1', HISTORICAL, B)
+      await writeHistorical(wired, 'lesson', A)
+      await expectSelection(wired, A, 'project', 'korean')
+      await expectSelection(wired, B, 'project', 'ml')
+      expect((await wired.tool('udt_status', {}, A))).not.toHaveProperty('focus')
+      expect((await wired.tool('udt_status', {}, B)).focus).toMatchObject({ courseId: 'ml', nodeId: 'ml:n1' })
+      const result = await wired.tool('udt_map_update', { op: 'add-evidence', nodeId: 'ml:n1', evidenceKind: 'practice' }, B)
+      expect(result).toMatchObject({ courseId: 'ml', projectBinding: 'already-selected' })
+      const created = await wired.tool('udt_goal_create', { title: 'Another goal', goal: 'A separate goal alongside Korean.' }, A)
+      expect(created).toMatchObject({ projectAdopted: false, projectBinding: 'not-selected' })
+      await expectSelection(wired, A, 'project', 'korean')
+      await expectSelection(wired, B, 'project', 'ml')
+      expect(state.readProject(B)?.courseId).toBe('ml')
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it.each(['map', 'lesson'] as const)('does not adopt on an invalid %s write', async (kind) => {
+    const { harness, state, wired } = await seededHistory()
+    try {
+      const before = state.exportState(HISTORICAL)
+      const invalid = kind === 'map'
+        ? wired.tool('udt_map_update', { courseId: 'korean', op: 'set-state', nodeId: 'korean:n1', state: 'confirmed' })
+        : wired.tool('udt_lesson_update', { nodeId: 'korean:n1', blocks: [{ id: 'bad', type: 'text', content: {} }] })
+      await expect(invalid).rejects.toThrow()
+      expect(state.exportState(HISTORICAL)).toEqual(before)
+      await expectSelection(wired, A, 'none')
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it.each([null, ''] as const)('reports a missing session for explicit writes and goal creation (%s)', async (as) => {
+    const { harness, state, wired } = await seededHistory()
+    try {
+      const status = await wired.tool('udt_status', {}, as)
+      expect(status).toMatchObject({ selection: 'none', sessionAvailable: false })
+      expect(status).not.toHaveProperty('courseId')
+      expect(status).not.toHaveProperty('activeCourseId')
+      for (const kind of ['map', 'lesson'] as const) {
+        const result = await writeHistorical(wired, kind, as)
+        expect(result).toMatchObject({ projectAdopted: false, projectBinding: 'missing-session-id' })
+      }
+      const created = await wired.tool('udt_goal_create', { title: 'Sessionless goal', goal: 'Record a shared goal without claiming a conversation.' }, as)
+      expect(created).toMatchObject({ projectAdopted: false, projectBinding: 'missing-session-id' })
+      expect(state.readCourse(created.courseId as string)).toBeDefined()
+      expect(state.listProjects()).toEqual([])
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('preserves a legacy ended focus project and its pending next step', async () => {
+    const { harness, state, wired } = await seededHistory()
+    try {
+      await state.startFocus('ml', 'ml:n1', HISTORICAL, A)
+      await state.decideNext({ courseId: 'ml', fromNodeId: 'ml:n1', targetNodeId: 'ml:n2', action: 'advance', reason: 'Continue the historical ML map.', now: HISTORICAL, sessionId: A })
+      expect(state.readProject(A)).toBeUndefined()
+      await expectSelection(wired, A, 'project', 'ml')
+      const status = await wired.tool('udt_status', {})
+      expect(status).not.toHaveProperty('focus')
+      expect(status.pendingNextStep).toMatchObject({ fromNodeId: 'ml:n1', targetNodeId: 'ml:n2' })
+      const created = await wired.tool('udt_goal_create', { title: 'A side goal', goal: 'Store an additional project.' })
+      expect(created).toMatchObject({ projectAdopted: false, projectBinding: 'not-selected' })
+      await expectSelection(wired, A, 'project', 'ml')
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('does not guess when legacy execution records name two projects in one session', async () => {
+    const { harness, state, wired } = await seededHistory()
+    try {
+      await state.startFocus('ml', 'ml:n1', HISTORICAL, A)
+      await state.startFocus('korean', 'korean:n1', HISTORICAL, A)
+      await expectSelection(wired, A, 'none')
+      expect((await wired.tool('udt_status', {}))).not.toHaveProperty('focus')
+      await expect(wired.tool('udt_map_get', {})).rejects.toThrow()
+      expect(state.readProject(A)).toBeUndefined()
     } finally {
       await harness.close()
     }

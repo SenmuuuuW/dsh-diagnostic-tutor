@@ -91,7 +91,6 @@ export interface HandoffView {
   detail?: string
 }
 
-/** `GET /overview` — `course: null` means the learner has no goal yet. */
 /**
  * One Learning Project as the library lists it.
  *
@@ -125,6 +124,7 @@ export interface ProjectCardView {
  */
 export type ProjectSelection = 'none' | 'new' | 'project'
 
+/** `GET /overview` — `course: null` means this conversation has no project open. */
 export interface OverviewResponse {
   ok: true
   /** Which of the three states this conversation is in. */
