@@ -126,13 +126,11 @@ library plus fonts and CSS, and the client bundle is a single JavaScript file
 with nowhere to serve those from. This is the most visible rough edge in any
 STEM lesson.
 
-**Skill presence cannot always be detected.** The runtime reports whether the
-Universal Diagnostic Tutor skill is available, but the skill registry reads the
-*global* layer unless it is given a viewing scope, and the standard web profile
-mounts skills per agent. From a plugin at the profile root the catalog is
-therefore empty whether the skill is installed or not. The runtime says
-`cannot tell` rather than guessing, and the panel stays quiet. If lessons never
-appear, check the skill first.
+**Skill presence requires a live Agent.** The runtime checks the open
+conversation's Agent scope on each overview, including its workspace. Before an
+Agent exists, or while discovery is empty or incomplete, it reports `cannot tell`
+and the panel stays quiet. Polling picks up later registration and Agent changes.
+If lessons never appear, check the skill first.
 
 **Storage is one document.** Every record lives in
 `<dsh-home>/storages/udt.json`. It is readable, copyable and easy to export, and
@@ -414,19 +412,20 @@ conversation rather than at load.
 
 ### Teaching-brain detection
 
-At load the plugin asks the platform's own skill registry whether the
-Universal Diagnostic Tutor skill is installed — no path is hardcoded, no skill
-root is assumed, and nothing is copied. A missing catalog, a missing skill and
-an unreadable body each degrade to a reported status rather than an error.
+Each overview asks the platform's own Agent and Skill registries whether the
+Universal Diagnostic Tutor skill is available in the requesting session's live
+Agent scope and cwd. No path is hardcoded, no skill root is assumed, and nothing
+is copied. Missing services and incomplete discovery return an inconclusive
+status; complete scoped discovery can establish presence or absence.
 
 Compatibility is probed by **capability**, not by a version string: the skill's
 maintenance contract permits only `name` and `description` in frontmatter, so
 it cannot declare a version. The result carries a short content digest as a
 version hint.
 
-Detection results stay **internal** — logged at `debug`, absent from every tool
-output. The skill forbids naming its files, versions or repository in
-learner-facing text, and this runtime will not be what leaks them.
+Paths, fingerprints and compatibility details stay **internal**, absent from
+every tool output and overview. The overview exposes only availability. The skill
+forbids naming its files, versions or repository in learner-facing text.
 
 ### How the two halves agree
 
@@ -625,18 +624,19 @@ panel opens, the map and the lesson surface render, and `GET /export` and
 `POST /reset` work. What does not happen is teaching — nothing writes a lesson,
 because nothing is making teaching decisions.
 
-**The plugin cannot always tell you that.** The skill registry reads the
-*global* layer unless it is given a viewing scope, and the standard web profile
-mounts the filesystem skill provider **inside a per-agent layer**. So a plugin
-at the profile root sees an empty skill catalog whether the skill is missing or
-merely mounted where it cannot look. The runtime therefore reports three states,
-not two:
+**Availability is checked for the conversation you have open.** On every
+`GET /overview?sessionId=…`, the plugin resolves that session's live Agent from
+DSH's Agent registry and asks the Skill registry for a complete snapshot using
+`{ scope: agent, cwd: agent.session.header.cwd }`. A root catalog containing
+Office skills cannot establish whether that Agent has a tutor. Services are
+resolved for each request, so delayed registration, removal and preset changes
+are picked up by the panel's existing polling. The runtime reports three states:
 
 | `teachingBrain` | meaning | what the panel does |
 | --- | --- | --- |
-| `true` | found | nothing |
-| `false` | not found, **in a catalog that has entries** | says a tutor is needed |
-| `null` | cannot tell from this scope | says nothing |
+| `true` | found and model-invocable in the live Agent scope | nothing |
+| `false` | unavailable after complete scoped discovery with entries | says a tutor is needed |
+| `null` | no live Agent, empty/incomplete discovery, or unsupported/unavailable service | says nothing |
 
 An earlier revision treated "not in my catalog" as "not installed" and showed a
 notice on that basis. In a web profile that was a confident, wrong answer — the

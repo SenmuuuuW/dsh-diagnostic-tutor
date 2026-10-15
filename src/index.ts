@@ -47,7 +47,7 @@ import { withActivity } from './handoff.js'
 import { promptSession } from './prompt.js'
 import { UDT_DOMAIN_NAME, openUdState } from './state.js'
 import { registerTools } from './tools.js'
-import { describeUdtStatus, detectUdtSkill } from './udt.js'
+import { teachingBrainForSession } from './udt.js'
 
 /**
  * Plugin module name. Stable kebab-case, equal to the loader row `id` in
@@ -59,11 +59,10 @@ export const name = 'diagnostic-tutor'
  * Services this plugin requires before it may load.
  *
  * Only services the standard profiles guarantee are declared here — both come
- * from `@deepseek-ai/dsh-base`. Everything optional (the skill catalog, the
- * system prompt) is resolved lazily with `ctx.get(...)`, so a profile without
- * them loses the corresponding enhancement instead of leaving the whole plugin
- * tree pending. A pending plugin prints nothing at all, which is hard to
- * diagnose.
+ * from `@deepseek-ai/dsh-base`. Optional Agent and Skill services are resolved
+ * on each availability request with `ctx.reflect.get(...)`, so a profile without
+ * them reports inconclusive availability instead of leaving the whole plugin
+ * tree pending. A pending plugin prints nothing at all, which is hard to diagnose.
  */
 export const inject = ['tools', 'storageDomain']
 
@@ -122,32 +121,6 @@ export async function apply(ctx: Context): Promise<void> {
   // Cordis awaits the returned promise before the plugin counts as unloaded.
   ctx.effect(() => () => state.close())
 
-  // Is the teaching brain present? Resolved lazily and never fatal: the
-  // runtime is useful without it, and a missing skill is a degraded mode, not
-  // an error. The result stays internal — it is logged, never surfaced to a
-  // learner through a tool, because the skill's own protocol forbids naming
-  // its files and versions in learner-facing text.
-  //
-  // Nothing is installed on the strength of it. Until v0.0.8 this gated a
-  // runtime-semantics system-prompt section that explained the storage model to
-  // a skill whose guardrails read as forbidding it; UDT v2.1's
-  // `learning_runtime_contract.md` now says all of that in the skill's own
-  // words, so the bridge was deleted rather than kept as a second voice.
-  const udt = await detectUdtSkill(ctx.get('skills'))
-  if (udt.available) {
-    ctx.logger.debug(`[diagnostic-tutor] teaching brain: ${describeUdtStatus(udt)}`)
-  } else {
-    // Not debug: without the skill nothing will ever be taught, and a learner
-    // staring at an empty panel deserves a reason in the log. The panel says
-    // the same thing in its own words; neither names the skill's files or
-    // version, because its protocol forbids that in learner-facing text.
-    ctx.logger.warn(
-      `[diagnostic-tutor] no teaching brain in this profile: ${describeUdtStatus(udt)}. ` +
-        'The runtime will record and display state, but no lesson will be written until the ' +
-        'Universal Diagnostic Tutor skill is installed for this workspace.',
-    )
-  }
-
   // Mount the browser API if this profile has a web surface.
   //
   // Resolved eagerly first: a profile's web server is mounted by the base and
@@ -162,11 +135,7 @@ export async function apply(ctx: Context): Promise<void> {
       registerApi(server as WebServerLike, {
         state,
         prompt: (sessionId, text) => promptSession(ctx, sessionId, text),
-        // Three states, because two would be a lie. `null` means this scope
-        // cannot see the catalog well enough to say — the normal case in a web
-        // profile, where skills are mounted per agent — and a surface must not
-        // turn that into "no tutor installed".
-        teachingBrain: udt.available ? true : udt.catalogVisible ? false : null,
+        teachingBrain: (sessionId) => teachingBrainForSession(ctx, sessionId),
       }),
     )
     ctx.logger.debug(`[diagnostic-tutor] browser API mounted at ${API_PREFIX}`)

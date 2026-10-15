@@ -145,12 +145,13 @@ export interface OverviewResponse {
    */
   library: ProjectCardView[]
   /**
-   * Whether the teaching brain is installed.
+   * Whether the teaching brain is available to this conversation's live Agent.
    *
-   * `true` found, `false` confidently absent, `null` **cannot tell** — the
-   * registry reads the global layer alone without a viewing scope, and the
-   * standard web profile mounts skills per agent, so an empty catalog from a
-   * root-scope plugin means nothing. A surface must only warn on `false`.
+   * Rechecked for each overview using the official Agent scope and its cwd.
+   * `true` found and model-invocable, `false` confidently unavailable in a
+   * complete scoped catalog, `null` **cannot tell** (no live Agent, empty or
+   * incomplete discovery, or unsupported service). Global Office entries
+   * cannot establish absence in an Agent scope. Surfaces only warn on `false`.
    *
    * A tri-state rather than a name or version: the skill's own protocol forbids
    * naming its files or versions in learner-facing text.

@@ -31,7 +31,7 @@ describe('detection against the installed environment', () => {
   it('finds the real skill when it is installed here', async () => {
     const { skills, fibers } = await realCatalog()
     try {
-      const status = await detectUdtSkill(skills)
+      const status = await detectUdtSkill(skills, { scope: {}, cwd: process.cwd() })
 
       if (!status.available) {
         // Not a failure: this machine simply has no copy installed. Report it

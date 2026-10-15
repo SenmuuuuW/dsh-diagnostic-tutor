@@ -5,6 +5,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed — teaching-brain detection follows the live Agent
+
+The plugin previously inspected the global Skill catalog once during activation.
+A global Office provider could make that catalog nonempty and trigger a missing
+tutor warning even when UDT was available in the conversation's Agent scope.
+Every overview now resolves the requested live Agent and queries the official
+Skill snapshot and loader with that Agent's scope and session cwd. Empty or
+incomplete discovery, missing services, unsupported snapshot APIs and Agent
+replacement during discovery return `null`; surfaces continue to warn only on
+`false`. Existing polling sees delayed registration, removal and session changes
+without plugin reload. Activation no longer logs a profile-wide absence claim.
+
+Regression tests cover real scoped catalogs with global Office entries, both
+availability states, unavailable scope, discovery errors, delayed registration,
+removal and replacement, plus exact scope/cwd propagation.
+
 ### Fixed — the docked tab had no theme at all
 
 `.dt-tab` was missing from the rule that declares the panel's design tokens. A

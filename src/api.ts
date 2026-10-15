@@ -190,7 +190,17 @@ function libraryOf(state: UdState): {
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
 }
 
-function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undefined, res: ServerResponse): void {
+async function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undefined, res: ServerResponse): Promise<void> {
+  // Availability belongs to the requesting conversation and can change while
+  // the plugin stays loaded. A failed observation is inconclusive.
+  let teachingBrain: boolean | null = null
+  try {
+    teachingBrain = typeof deps.teachingBrain === 'function'
+      ? await deps.teachingBrain(sessionId)
+      : deps.teachingBrain ?? null
+  } catch {
+    // The runtime remains readable if discovery is temporarily unavailable.
+  }
   const { selection, course } = state.resolveProject(sessionId)
   const library = libraryOf(state)
   if (course === undefined) {
@@ -204,7 +214,7 @@ function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undef
       focus: null,
       nextStep: null,
       handoff: null,
-      teachingBrain: deps.teachingBrain ?? null,
+      teachingBrain,
       lessonCount: state.lessonCount(),
       library,
     })
@@ -219,7 +229,7 @@ function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undef
     focus: mine === undefined ? null : focusOf(state, sessionId ?? '', course.id),
     // A decision is attached to a focus, so it follows the same rule.
     nextStep: mine === undefined ? null : nextStepOf(state, sessionId ?? '', course.id),
-    teachingBrain: deps.teachingBrain ?? null,
+    teachingBrain,
     // The handoff for whichever node is focused, so a reload or a restart
     // rebuilds the progress line instead of showing a blank wait.
     handoff: mine === undefined ? null : handoffFor(state, sessionId ?? '', mine.nodeId, Date.now()),
@@ -519,10 +529,10 @@ export interface ApiDeps {
    */
   readonly prompt: (sessionId: string | undefined, text: string) => FocusPromptResult
   /**
-   * Whether a teaching brain was detected. Defaults to `true` so a caller that
-   * does not model one is not made to claim it is missing.
+   * Observe availability for the requesting session on each overview. A
+   * constant is accepted by standalone callers; omitted means inconclusive.
    */
-  readonly teachingBrain?: boolean | null
+  readonly teachingBrain?: boolean | null | ((sessionId: string | undefined) => Promise<boolean | null>)
 }
 
 /**

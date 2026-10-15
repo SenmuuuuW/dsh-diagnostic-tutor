@@ -15,10 +15,12 @@
 
 import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { LearningPanel } from '../src/client/app.js'
 import { useCurrentSessionId } from '../src/client/use-session.js'
+import { useLearning, type LearningState } from '../src/client/use-learning.js'
+import type { OverviewResponse } from '../src/contract.js'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
@@ -397,6 +399,53 @@ const REPORT_OVERVIEW = {
   lessonCount: 1,
   library: [],
 }
+
+/* -------------------------------------------------------------------------- */
+/* Teaching-brain status follows the selected conversation                    */
+/* -------------------------------------------------------------------------- */
+
+describe('live teaching-brain status', () => {
+  it('refreshes on polling and ignores a previous session’s late response', async () => {
+    vi.useFakeTimers()
+    const host = document.createElement('div')
+    document.body.appendChild(host)
+    const root = createRoot(host)
+    let current!: LearningState
+    let pending!: (value: OverviewResponse) => void
+    let slow = false
+    const empty: OverviewResponse = { ...REPORT_OVERVIEW, selection: 'none', course: null, focus: null, nodes: [], teachingBrain: null }
+    const client = {
+      fetchOverview: (sessionId?: string) => {
+        if (sessionId === 'a' && slow) return new Promise<typeof empty>((resolve) => { pending = resolve })
+        return Promise.resolve({ ...empty, teachingBrain: sessionId === 'a' ? true : false })
+      },
+      fetchNode: () => Promise.resolve({ ok: true as const, node: null, parent: null, children: [], lessonExists: false }),
+      fetchLesson: () => Promise.resolve({ ok: true as const, lesson: null }),
+      startFocus: () => Promise.resolve({ ok: true as const, focus: null, prompted: true, handoff: null }),
+    }
+    function Probe({ sessionId }: { sessionId: string }): null {
+      current = useLearning({ client: client as never, sessionId, initialOverview: empty as never })
+      return null
+    }
+    try {
+      await act(async () => { root.render(createElement(Probe, { sessionId: 'a' })) })
+      expect(current.teachingBrain).toBeNull()
+      await act(async () => { await vi.advanceTimersByTimeAsync(2500) })
+      expect(current.teachingBrain).toBe(true)
+      slow = true
+      await act(async () => { await vi.advanceTimersByTimeAsync(2500) })
+      expect(pending).toBeTypeOf('function')
+      await act(async () => { root.render(createElement(Probe, { sessionId: 'b' })) })
+      expect(current.teachingBrain).toBe(false)
+      await act(async () => { pending({ ...empty, teachingBrain: true }) })
+      expect(current.teachingBrain).toBe(false)
+    } finally {
+      act(() => root.unmount())
+      host.remove()
+      vi.useRealTimers()
+    }
+  })
+})
 
 /* -------------------------------------------------------------------------- */
 /* Where Learn sends the learner                                              */

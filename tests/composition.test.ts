@@ -72,10 +72,9 @@ describe('real cordis composition', () => {
 })
 
 describe('a profile with no teaching brain', () => {
-  it('says so at a level a user will see, not at debug', async () => {
-    // The default fixture is `absent`, which is exactly a profile where the
-    // skill was never installed. Without the skill nothing will ever be taught,
-    // so silence here would leave a learner staring at a panel with no reason.
+  it('does not claim absence before a conversation scope is available', async () => {
+    // Plugin activation has no requesting Agent. A global catalog cannot
+    // establish what the later conversation will be able to discover.
     const harness = await createHarness({ udt: 'absent' })
     try {
       const warnings: string[] = []
@@ -85,7 +84,7 @@ describe('a profile with no teaching brain', () => {
 
       await harness.ctx.plugin(plugin)
 
-      expect(warnings.some((line) => line.includes('no teaching brain'))).toBe(true)
+      expect(warnings.some((line) => line.includes('no teaching brain'))).toBe(false)
       // It must not name the skill's files or version: the skill's own protocol
       // forbids that in learner-facing text, and this message is one step away.
       const warning = warnings.find((line) => line.includes('no teaching brain')) ?? ''
