@@ -112,11 +112,22 @@ export function isFilledState(state: string): boolean {
   return state === 'confirmed'
 }
 
-/** Short, non-learner-facing explanation of what a state means, for the detail pane. */
+/**
+ * Short, non-learner-facing explanation of what a state means, for the detail pane.
+ *
+ * `unconfirmed` used to read "No evidence yet — nothing has been observed for
+ * this node", which the panel then printed directly above a list headed
+ * "Evidence 3". Both sentences were about the same node and only one of them
+ * could be true. The state definition is the skill's — no evidence *that
+ * establishes the concept* — while observations of other kinds (a diagnosis,
+ * a stated goal) are recorded against a node all the time and simply do not
+ * move it. So the explanation now describes the state rather than counting
+ * what is on the page.
+ */
 export function stateExplanation(state: string): string {
   switch (state) {
     case 'unconfirmed':
-      return 'No evidence yet — nothing has been observed for this node.'
+      return 'Not established yet — nothing recorded here has moved it off this state.'
     case 'explained':
       return 'It has been explained, but that alone does not prove understanding.'
     case 'practiced':
@@ -132,6 +143,69 @@ export function stateExplanation(state: string): string {
     default:
       return 'Unknown state.'
   }
+}
+
+/**
+ * When something was recorded, in words rather than in ISO 8601.
+ *
+ * The surfaces used to print `entry.at` verbatim, so the evidence list — the
+ * part of the panel whose whole job is to make the record legible — was
+ * punctuated by `2026-09-28T05:27:53.946Z`. Milliseconds and a `Z` are for
+ * machines; a learner reading their own history wants "3 days ago", and wants
+ * the exact moment only when it is close enough to matter.
+ *
+ * Pure and clock-injectable, so the tests are not a race against the calendar.
+ *
+ * @param at - the ISO timestamp from the record.
+ * @param now - the reference instant; defaults to the current time.
+ * @returns a relative phrase for anything recent, otherwise a plain date.
+ */
+export function formatWhen(at: string, now: number = Date.now()): string {
+  const then = Date.parse(at)
+  if (Number.isNaN(then)) return at
+  const seconds = Math.round((now - then) / 1000)
+  // A clock skew between the host and the browser shows up as a negative age;
+  // "in 3 seconds" on a recorded observation is worse than saying nothing.
+  if (seconds < 45) return 'just now'
+  const minutes = Math.round(seconds / 60)
+  if (minutes < 60) return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return hours === 1 ? '1 hour ago' : `${hours} hours ago`
+  const days = Math.round(hours / 24)
+  if (days < 7) return days === 1 ? 'yesterday' : `${days} days ago`
+  const date = new Date(then)
+  const sameYear = new Date(now).getFullYear() === date.getFullYear()
+  return date.toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    ...(sameYear ? {} : { year: 'numeric' }),
+  })
+}
+
+/**
+ * A wait, in units a person reads.
+ *
+ * The handoff line counts seconds, which is right while a model turn is in
+ * flight and wrong the moment a record outlives its turn: a restored session
+ * printed "Lesson ready 119803s", which is thirty-three hours rendered as a
+ * number nobody converts. Past a minute, the unit changes.
+ *
+ * @param ms - elapsed milliseconds.
+ * @returns a short duration string, or an empty string when there is nothing
+ *   meaningful to show yet.
+ */
+export function formatDuration(ms: number): string {
+  const seconds = Math.round(ms / 1000)
+  if (seconds < 1) return ''
+  if (seconds < 60) return `${seconds}s`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) {
+    const rest = seconds % 60
+    return rest === 0 ? `${minutes}m` : `${minutes}m ${rest}s`
+  }
+  const hours = Math.floor(minutes / 60)
+  const restMinutes = minutes % 60
+  return restMinutes === 0 ? `${hours}h` : `${hours}h ${restMinutes}m`
 }
 
 /** The seven states, in the order the skill introduces them. */

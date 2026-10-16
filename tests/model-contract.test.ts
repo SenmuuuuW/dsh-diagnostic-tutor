@@ -24,6 +24,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { MessageSource } from '@deepseek-ai/dsh-llm'
+import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
 
 import { PLUGIN_SOURCE, promptSession } from '../src/prompt.js'
 import { newNode, openUdState } from '../src/state.js'
@@ -125,6 +126,9 @@ describe('the message source this plugin declares', () => {
 /* 2. Node identity                                                           */
 /* -------------------------------------------------------------------------- */
 
+/** The conversation these tests act as. */
+const SESSION = 'session-under-test'
+
 interface Wired {
   state: UdState
   tool(name: string, args: Record<string, unknown>): Promise<Record<string, unknown>>
@@ -146,7 +150,7 @@ async function wire(harness: Awaited<ReturnType<typeof createHarness>>, state: U
     async tool(name, args) {
       const definition = registered.get(name)
       if (!definition) throw new Error(`tool "${name}" is not registered`)
-      return (await definition.execute(args, {})) as Record<string, unknown>
+      return (await definition.execute(args, { agent: { id: SESSION } })) as Record<string, unknown>
     },
   }
 }
@@ -161,6 +165,7 @@ async function seed(state: UdState): Promise<{ goalId: string; mathId: string }>
     updatedAt: NOW,
   })
   await state.activateCourse('ml', NOW)
+  await state.selectProject(SESSION, 'ml', NOW)
   const goal = newNode({ id: 'ml:goal', courseId: 'ml', title: 'ML', relation: 'goal', now: NOW })
   const math = newNode({
     id: 'ml:math',
@@ -174,6 +179,38 @@ async function seed(state: UdState): Promise<{ goalId: string; mathId: string }>
   })
   for (const node of [goal, math]) await state.writeNode(node)
   return { goalId: goal.id, mathId: math.id }
+}
+
+/** RC2 native agent-loop sends output.render content, not the execute value. */
+async function nativeModelResult(
+  state: UdState,
+  name: string,
+  args: Record<string, unknown>,
+  sessionId: string | null = SESSION,
+): Promise<Record<string, unknown>> {
+  const definitions = new Map<string, ToolDefinition>()
+  registerTools({
+    tools: {
+      register(definition) {
+        definitions.set(definition.name, definition)
+        return () => {}
+      },
+    },
+  }, state)
+  const definition = definitions.get(name)
+  if (definition === undefined) throw new Error(`tool "${name}" is not registered`)
+  const execution = sessionId === null ? {} : { agent: { id: sessionId } }
+  const value = await definition.execute(args, execution as never)
+  // The registry intentionally erases each tool's concrete output type when
+  // it is stored in this map; the runtime contract still guarantees a JSON
+  // value for the renderer.
+  const content = definition.output.render(args, value as never)
+  expect(content, `${name} has no model-visible result`).toHaveLength(1)
+  const block = content[0]
+  if (block?.type !== 'text') throw new Error(`${name} did not render text for the native model`)
+  const rendered = JSON.parse(block.text) as Record<string, unknown>
+  expect(rendered, `${name} rendered only part of its canonical output`).toEqual(value)
+  return rendered
 }
 
 describe('nodes are identified by id, never by title', () => {
@@ -207,7 +244,7 @@ describe('nodes are identified by id, never by title', () => {
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
 
-      await state.startFocus('ml', mathId, NOW)
+      await state.startFocus('ml', mathId, NOW, SESSION)
       await wired.tool('udt_decide_next', {
         action: 'more-practice',
         reason: 'The rule is there but applying it is not.',
@@ -236,7 +273,7 @@ describe('nodes are identified by id, never by title', () => {
       const goalId = 'ml:goal'
       const wired = await wire(harness, state)
 
-      await state.startFocus('ml', mathId, NOW)
+      await state.startFocus('ml', mathId, NOW, SESSION)
       await wired.tool('udt_decide_next', {
         action: 'review-first',
         targetNodeId: goalId,
@@ -285,9 +322,194 @@ describe('nodes are identified by id, never by title', () => {
       expect(nodeProps).not.toHaveProperty('parentId')
 
       const statusProps = props(schemas.get('udt_status'))
+      expect(statusProps.selection).toMatchObject({ type: 'string', enum: ['none', 'new', 'project'] })
+      expect(statusProps.sessionAvailable).toMatchObject({ type: 'boolean' })
+      expect(statusProps).toHaveProperty('courseId')
+      expect(statusProps).not.toHaveProperty('activeCourseId')
       const pendingProps = props(statusProps.pendingNextStep)
       expect(pendingProps).toHaveProperty('fromNodeId')
       expect(pendingProps).toHaveProperty('targetNodeId')
+    } finally {
+      await harness.close()
+    }
+  })
+})
+
+describe('the model is told whether a write bound its conversation', () => {
+  it('promises an explicit binding result for each project-producing tool', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const schemas = new Map<string, Record<string, unknown>>()
+      const host: ToolsHost = {
+        tools: {
+          register(definition) {
+            schemas.set(definition.name, definition.output?.schema as Record<string, unknown>)
+            return () => {}
+          },
+        },
+      }
+      registerTools(host, state)
+
+      for (const name of ['udt_goal_create', 'udt_map_update', 'udt_lesson_update']) {
+        const properties = schemas.get(name)?.properties as Record<string, Record<string, unknown>>
+        expect(properties.projectAdopted, `${name} hides whether it adopted a project`).toMatchObject({ type: 'boolean' })
+        expect(properties.projectBinding, `${name} hides why no project was adopted`).toMatchObject({
+          type: 'string', enum: ['adopted', 'already-selected', 'not-selected', 'missing-session-id'],
+        })
+      }
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('reports the selected project separately from its shared learner profile', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      await seed(state)
+      const wired = await wire(harness, state)
+
+      const status = await wired.tool('udt_status', {})
+      expect(status).toMatchObject({ selection: 'project', sessionAvailable: true, courseId: 'ml' })
+      expect(status).not.toHaveProperty('activeCourseId')
+      expect(status.courses).toEqual([{ id: 'ml', title: 'Machine Learning', status: 'active' }])
+
+      await state.selectProject(SESSION, undefined, NOW)
+      const newProject = await wired.tool('udt_status', {})
+      expect(newProject).toMatchObject({ selection: 'new', sessionAvailable: true })
+      expect(newProject).not.toHaveProperty('courseId')
+      expect(newProject).not.toHaveProperty('activeCourseId')
+      expect(state.readLearner().activeCourseId).toBe('ml')
+    } finally {
+      await harness.close()
+    }
+  })
+})
+
+describe('the native model actually receives the runtime contract', () => {
+  it('renders status with the selected project, focus IDs and pending decision', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const { goalId, mathId } = await seed(state)
+      await state.startFocus('ml', mathId, NOW, SESSION)
+      const focused = await nativeModelResult(state, 'udt_status', {})
+      expect(focused.focus).toMatchObject({ courseId: 'ml', nodeId: mathId })
+      await state.decideNext({
+        courseId: 'ml', fromNodeId: mathId, targetNodeId: goalId, action: 'review-first',
+        reason: 'Review the goal first.', now: NOW, sessionId: SESSION,
+      })
+
+      const status = await nativeModelResult(state, 'udt_status', {})
+      expect(status).toMatchObject({ selection: 'project', sessionAvailable: true, courseId: 'ml' })
+      expect(status.pendingNextStep).toMatchObject({ fromNodeId: mathId, targetNodeId: goalId })
+      expect(status).not.toHaveProperty('activeCourseId')
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it.each([
+    { sessionId: 'fresh-model-session', selection: 'none', sessionAvailable: true },
+    { sessionId: SESSION, selection: 'new', sessionAvailable: true },
+    { sessionId: null, selection: 'none', sessionAvailable: false },
+  ] as const)('renders $selection with sessionAvailable=$sessionAvailable without a current course', async ({ sessionId, selection, sessionAvailable }) => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      await seed(state)
+      if (selection === 'new') await state.selectProject(SESSION, undefined, NOW)
+
+      const status = await nativeModelResult(state, 'udt_status', {}, sessionId)
+      expect(status).toMatchObject({ selection, sessionAvailable })
+      expect(status).not.toHaveProperty('courseId')
+      expect(status).not.toHaveProperty('activeCourseId')
+      expect(status.courses).toEqual([{ id: 'ml', title: 'Machine Learning', status: 'active' }])
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('renders map node IDs and parent IDs so the model can name its next write', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const { goalId, mathId } = await seed(state)
+      const map = await nativeModelResult(state, 'udt_map_get', {})
+      expect(map.courseId).toBe('ml')
+      expect(map.nodes).toEqual(expect.arrayContaining([
+        expect.objectContaining({ nodeId: goalId, title: 'ML' }),
+        expect.objectContaining({ nodeId: mathId, parentNodeId: goalId, title: 'Math Foundations' }),
+      ]))
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it.each([
+    { sessionId: 'fresh-model-session', binding: 'adopted', adopted: true },
+    { sessionId: SESSION, binding: 'adopted', adopted: true },
+    { sessionId: null, binding: 'missing-session-id', adopted: false },
+  ] as const)('renders goal creation and its actual $binding result', async ({ sessionId, binding, adopted }) => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      await seed(state)
+      await state.selectProject(SESSION, undefined, NOW)
+      const goal = await nativeModelResult(state, 'udt_goal_create', { title: 'Korean', goal: 'Learn to read Hangul.' }, sessionId)
+      expect(goal).toMatchObject({
+        courseId: 'korean', goalNodeId: 'korean:goal', projectAdopted: adopted, projectBinding: binding,
+      })
+      const status = await nativeModelResult(state, 'udt_status', {}, sessionId)
+      expect(status).toMatchObject({ selection: adopted ? 'project' : 'none', sessionAvailable: sessionId !== null })
+      if (adopted) expect(status.courseId).toBe(goal.courseId)
+      else expect(status).not.toHaveProperty('courseId')
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('renders adopted map and already-selected lesson results with their course and node IDs', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const { mathId } = await seed(state)
+      const sessionId = 'fresh-model-session'
+      const map = await nativeModelResult(state, 'udt_map_update', {
+        courseId: 'ml', op: 'add-evidence', nodeId: mathId, evidenceKind: 'practice',
+      }, sessionId)
+      expect(map).toMatchObject({ courseId: 'ml', nodeId: mathId, projectAdopted: true, projectBinding: 'adopted' })
+      const lesson = await nativeModelResult(state, 'udt_lesson_update', {
+        nodeId: mathId, blocks: [{ id: 'native-unit', type: 'text', content: { md: 'A compact teaching unit.' } }],
+      }, sessionId)
+      expect(lesson).toMatchObject({ courseId: 'ml', nodeId: mathId, projectAdopted: false, projectBinding: 'already-selected' })
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it.each([
+    { sessionId: SESSION, binding: 'not-selected' },
+    { sessionId: null, binding: 'missing-session-id' },
+  ] as const)('renders historical map and lesson writes with $binding instead of claiming a binding', async ({ sessionId, binding }) => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const { mathId } = await seed(state)
+      await state.selectProject(SESSION, undefined, NOW)
+      const map = await nativeModelResult(state, 'udt_map_update', {
+        courseId: 'ml', op: 'add-evidence', nodeId: mathId, evidenceKind: 'practice',
+      }, sessionId)
+      const lesson = await nativeModelResult(state, 'udt_lesson_update', {
+        nodeId: mathId, blocks: [{ id: 'historical-unit', type: 'text', content: { md: 'Continue a stored lesson.' } }],
+      }, sessionId)
+      for (const result of [map, lesson]) {
+        expect(result).toMatchObject({ courseId: 'ml', nodeId: mathId, projectAdopted: false, projectBinding: binding })
+      }
+      const status = await nativeModelResult(state, 'udt_status', {}, sessionId)
+      expect(status).toMatchObject({ selection: sessionId === null ? 'none' : 'new', sessionAvailable: sessionId !== null })
+      expect(status).not.toHaveProperty('courseId')
     } finally {
       await harness.close()
     }

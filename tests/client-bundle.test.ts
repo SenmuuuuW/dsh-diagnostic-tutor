@@ -22,6 +22,9 @@ import * as ReactJsxRuntime from 'react/jsx-runtime'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { LearningPanel } from '../src/client/app.js'
+import { LearningTab } from '../src/client/tab.jsx'
+
 // Resolved from the project root rather than `import.meta.url`: under the
 // jsdom environment that URL is an http one, which `readFileSync` rejects.
 const ROOT = process.cwd()
@@ -166,26 +169,28 @@ describe('the client plugin registers into the DSH slots', () => {
 
   it('exports a client plugin with the expected shape', () => {
     expect(module.name).toBe('diagnostic-tutor-client')
-    expect(module.inject).toEqual(['slots', 'layout', 'sidebarRightTabs'])
+    expect(module.inject).toEqual(['slots', 'layout', 'sidebarRightTabs', 'uiSession'])
     expect(typeof module.apply).toBe('function')
     // Same rule as the host half: a default export is never used.
     expect('default' in module).toBe(false)
   })
 
-  it('registers a sidebar entry, a main panel, and a docked tab under one id', () => {
+  it('puts Learn in an action seat, not a panel seat, and keeps the full view reachable', () => {
     const { ctx, recorded } = fakeClientContext()
     ;(module.apply as (c: unknown) => void)(ctx)
 
     const bySlot = (name: string) => recorded.registrations.filter((entry) => entry.options.name === name)
-    const sidebar = bySlot('sidebar.panellist')[0]
-    const main = bySlot('main')[0]
 
-    expect(sidebar, 'no sidebar.panellist registration').toBeDefined()
-    expect(main, 'no main registration').toBeDefined()
-    // The sidebar list id is what addresses the main panel key; if these ever
-    // drift apart, the icon opens nothing.
-    expect(sidebar?.options.id).toBe(main?.options.key)
-    expect(sidebar?.options.label).toBe('Learn')
+    // The regression this pins: Learn used to be a `sidebar.panellist` entry,
+    // and a panellist id is contractually the "matching main panel key" whose
+    // click the shell wires to `layout.selectPanel(id)`. So pressing Learn
+    // replaced the conversation — which reads as the chat having been lost.
+    expect(bySlot('sidebar.panellist'), 'Learn must not be a main-panel switch').toHaveLength(0)
+    expect(bySlot('sidebar.footer.action')[0], 'no Learn action registered').toBeDefined()
+
+    // The full panel still exists; it is simply reached on purpose, from the
+    // docked tab's "Open full view", rather than by the sidebar.
+    expect(bySlot('main')[0], 'the full panel must still be registered').toBeDefined()
 
     // The docked tab: a declared type, plus a body and a title registered under
     // the type's own id, because that is the key the seats dispatch on.
@@ -214,6 +219,7 @@ describe('the client plugin registers into the DSH slots', () => {
     // first-use state rather than an empty shell.
     const mainHtml = renderToStaticMarkup(createElement(main?.Component as never, {} as never))
     expect(mainHtml).toContain('dt-root')
+    // No project open: the panel shows the library, not a course it guessed.
     expect(mainHtml).toContain('What do you want to learn?')
 
     // The docked tab is narrow-first. With no data at all — which is what a
@@ -221,8 +227,10 @@ describe('the client plugin registers into the DSH slots', () => {
     // first-use state rather than an empty box.
     const tabHtml = renderToStaticMarkup(createElement(tab?.Component as never, {} as never))
     expect(tabHtml).toContain('dt-tab')
-    expect(tabHtml).toContain('What do you want to learn?')
-    expect(tabHtml).toContain('I want to learn machine learning.')
+    // The docked tab with no project open is the library, not a welcome.
+    expect(tabHtml).toContain('Your learning')
+    // With nothing at all it says so rather than showing an empty shell.
+    expect(tabHtml).toContain('Nothing here yet')
   })
 })
 
@@ -249,5 +257,99 @@ describe('the client plugin injects its stylesheet and takes it away again', () 
     ;(module.apply as (c: unknown) => void)(ctx)
     ;(module.apply as (c: unknown) => void)(ctx)
     expect(document.querySelectorAll('style[data-diagnostic-tutor-style]').length).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('the stylesheet cannot silently lose its theme', () => {
+  const sheet = (() => {
+    const source = readFileSync('src/client/styles.ts', 'utf8')
+    const body = source.split('const CSS = `')[1]
+    if (body === undefined) throw new Error('could not find the CSS template literal')
+    return body.split('\n`\n')[0] ?? ''
+  })()
+
+  it('uses only design tokens that exist', () => {
+    // A `var(--x, #fff)` fallback that is a colour turns a typo into a theme
+    // bug: the panel keeps light cards inside a dark frame, nothing errors, and
+    // it only shows up when someone opens dark mode.
+    //
+    // Four names were wrong exactly this way — bg-elevated, bg-sunken,
+    // border-secondary, border-primary. The list below is the set this stylesheet
+    // is allowed to use, each one checked against the shipped design system
+    // (`@deepseek-ai/dsh-client-ui-theme`, design-platform.css, which defines
+    // them under `body` and `body[data-ds-dark-theme]`). Adding a token here
+    // means checking it there first; the theme package is not a dependency of
+    // this repo, so it cannot be read at test time.
+    const KNOWN = new Set([
+      'dsw-alias-bg-base',
+      'dsw-alias-bg-layer-1',
+      'dsw-alias-bg-module-platform',
+      'dsw-alias-border-l2',
+      'dsw-alias-border-l3',
+      'dsw-alias-button-primary-fill',
+      // The design system's own pairing for a filled primary control:
+      // ui-primitives Button.module.css sets `.primary` to
+      // `background: var(--dsw-alias-button-primary-fill)` together with
+      // `color: var(--dsw-alias-label-primary-foreground)`. The pairing is the
+      // point — the fill inverts with the theme (near-black in light, near-white
+      // in dark) and only the paired foreground inverts with it. White
+      // hardcoded onto that fill is a blank button in dark mode.
+      'dsw-alias-label-primary-foreground',
+      'dsw-alias-label-primary',
+      'dsw-alias-label-secondary',
+      'dsw-alias-state-error-primary',
+      'dsw-alias-state-success-primary',
+      'dsw-alias-state-warn-primary',
+      // Added for the sidebar row, which reproduces the shipped .panelRow
+      // rather than approximating it. Each one was read out of the app's own
+      // theme bundle before being used; the same rule as above applies.
+      'dsw-radius-md',
+      'dsw-alias-interactive-bg-hover',
+      'dsw-focus-ring-width',
+      'dsw-focus-ring-color',
+      'dsw-alias-state-business-primary',
+    ])
+    const used = [...new Set([...sheet.matchAll(/var\(--(dsw-[a-z0-9-]+)/g)].map((m) => m[1] ?? ''))]
+    expect(used.length).toBeGreaterThan(0)
+    const unknown = used.filter((name) => !KNOWN.has(name))
+    expect(unknown, `unknown design tokens: ${unknown.join(', ')}`).toEqual([])
+  })
+
+  it('keeps backticks out of the CSS body', () => {
+    // The sheet lives in a template literal; one backtick in a comment ends it
+    // early and the file stops parsing. This has happened twice.
+    expect(sheet).not.toContain('`')
+  })
+
+  it('declares the tokens on every root the plugin renders', () => {
+    // This is the bug the panel and the tab each had, one release apart.
+    //
+    // A custom property that does not resolve makes the whole declaration
+    // invalid at computed-value time: `background: var(--dt-accent)` with no
+    // --dt-accent is not a fallback to some sensible default, it is no
+    // background at all. So a root element outside the token rule loses its
+    // entire appearance silently — no error, no warning, and on a light page
+    // nothing looks obviously wrong until a white button lands on white.
+    //
+    // The docked tab shipped that way: `.dt-root-wrap` and `.dt-root` were in
+    // the selector list, `.dt-tab` was not, and the tab had no card surfaces,
+    // no borders, and an invisible primary button in light mode.
+    //
+    // The roots are discovered by rendering the two surfaces the plugin mounts,
+    // so a new surface cannot quietly opt out of the token layer.
+    const roots = [LearningPanel, LearningTab].map((component) => {
+      const html = renderToStaticMarkup(createElement(component as never, {}))
+      const first = /^<div class="([^"]+)"/.exec(html)?.[1] ?? ''
+      return first.split(' ')[0] ?? ''
+    })
+    expect(roots.filter(Boolean), `could not find the rendered roots: ${roots.join(', ')}`).toHaveLength(2)
+
+    const tokenRule = /([^{}]*)\{[^{}]*--dt-bg:/.exec(sheet)?.[1] ?? ''
+    const declared = new Set([...tokenRule.matchAll(/\.(dt-[a-z0-9-]+)/g)].map((m) => m[1] ?? ''))
+    const missing = roots.filter((root) => !declared.has(root))
+    expect(
+      missing,
+      `these roots render outside the token rule and will lose all their styling: ${missing.join(', ')}`,
+    ).toEqual([])
   })
 })

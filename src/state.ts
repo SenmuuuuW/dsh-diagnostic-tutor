@@ -57,6 +57,7 @@ import { LessonSchema } from './lesson.js'
 import type { LessonKey, LessonRecord } from './lesson.js'
 import { HandoffSchema } from './handoff.js'
 import type { HandoffKey, HandoffRecord } from './handoff.js'
+import { focusKey, handoffKey, isLegacyExecutionKey, nextStepKey } from './execution-key.js'
 
 /* -------------------------------------------------------------------------- */
 /* Records                                                                    */
@@ -163,11 +164,65 @@ export const FocusSchema = z.object({
   updatedAt: z.string(),
   /** Set when the status becomes `ended`; absent while the focus is active. */
   endedAt: z.string().optional(),
+  /**
+   * The conversation this focus belongs to.
+   *
+   * Learning state is per-conversation, not per-course. A learner can be
+   * working on one node in one conversation and a different node in another,
+   * and a focus that does not say which one it is cannot be shown to either
+   * without risking showing the wrong one — which is exactly what happened:
+   * starting a node in conversation B silently replaced A's, and returning to A
+   * showed B's lesson under A's chat.
+   *
+   * Optional because records written before this field existed have no
+   * conversation to claim. Such a focus belongs to nobody and is shown to
+   * nobody; the evidence and lessons it produced are untouched.
+   */
+  sessionId: z.string().optional(),
   /** The recommendation produced when this focus ended. */
   nextStepId: z.string().optional(),
 })
 export type FocusRecord = z.infer<typeof FocusSchema>
 export type FocusKey = string
+
+/**
+ * The Learning Project one conversation has selected.
+ *
+ * `courseId` is the project: a course record IS a learning project, and the UI
+ * calls it that. There is deliberately no separate project entity — a second
+ * one would have to be kept in step with the first, and the first already
+ * carries the map, the evidence and the lessons.
+ */
+export const ProjectSchema = z.object({
+  /** The conversation that made the choice. */
+  sessionId: z.string().min(1),
+  /** The course it chose, or absent for "start something new". */
+  courseId: z.string().min(1).optional(),
+  /** When it chose. */
+  selectedAt: z.string(),
+})
+export type ProjectRecord = z.infer<typeof ProjectSchema>
+export type ProjectKey = string
+
+/** The conversation-local project state shared by the API and model tools. */
+export const PROJECT_SELECTIONS = ['none', 'new', 'project'] as const
+export type ProjectSelection = (typeof PROJECT_SELECTIONS)[number]
+
+export interface SessionProjectResolution {
+  selection: ProjectSelection
+  sessionAvailable: boolean
+  course?: CourseRecord
+  reason?: 'missing-session-id' | 'ambiguous-session-project' | 'stale-project'
+  /** In-process choice revision, used to reject a late adoption after a UI choice. */
+  revision: number
+}
+
+export const PROJECT_BINDINGS = ['adopted', 'already-selected', 'not-selected', 'missing-session-id'] as const
+export type ProjectBinding = (typeof PROJECT_BINDINGS)[number]
+export interface ProjectBindingResult {
+  projectAdopted: boolean
+  projectBinding: ProjectBinding
+}
 
 /**
  * The tutor's decision about where the learner should go after this node.
@@ -223,6 +278,8 @@ export interface UdExport {
   readonly lessons: readonly LessonRecord[]
   readonly nextSteps: readonly NextStepRecord[]
   readonly focus: readonly FocusRecord[]
+  /** Which Learning Project each conversation had open. */
+  readonly projects: readonly ProjectRecord[]
 }
 
 export type CourseKey = string
@@ -253,12 +310,47 @@ export const UDT_DOMAIN_NAME = 'udt'
  * ship a migration in the same release.
  */
 export const UDT_DOMAIN_VERSION = 1
+
+/**
+ * Legacy keys seen during reads, so a support dump can explain the orphans.
+ *
+ * Records written before execution state was session-scoped are left on disk
+ * untouched. They are never read, because a record that cannot say which
+ * conversation it belongs to cannot be shown to one without risking showing it
+ * to the wrong one. Logged once per table: a poll every two seconds would
+ * otherwise fill the log with the same line.
+ */
+const legacySeen = new Set<string>()
+
+function logIgnoredLegacy(table: string, key: string): void {
+  if (legacySeen.has(table)) return
+  legacySeen.add(table)
+  console.debug(
+    `[diagnostic-tutor] ignoring pre-session-scoped record in "${table}" (key "${key}"): ` +
+    'it predates per-conversation state and is not attributed to any conversation',
+  )
+}
 export const COURSES_TABLE = 'courses'
 export const NODES_TABLE = 'nodes'
 export const LESSONS_TABLE = 'lessons'
 export const FOCUS_TABLE = 'focus'
 export const NEXT_STEPS_TABLE = 'next_steps'
 export const HANDOFFS_TABLE = 'handoffs'
+/**
+ * Which Learning Project each conversation is looking at.
+ *
+ * The projects themselves are learner-level: the course, its map, its evidence
+ * and its lessons are shared by every conversation, and this table adds nothing
+ * to them. What it records is a *choice* — which of those projects this
+ * conversation has open — and a choice belongs to the conversation that made
+ * it. Without this the runtime had to guess, and the guess was "the most
+ * recently updated course", which is how a brand-new chat opened onto the
+ * learner's old machine-learning project.
+ *
+ * Keyed by session id. A conversation with no row here has selected nothing,
+ * and that is a real state rather than a missing one.
+ */
+export const PROJECTS_TABLE = 'session_projects'
 
 /** Sentinel meaning "the global slot has never been written". */
 export const UNINITIALIZED = ''
@@ -293,6 +385,7 @@ export const udtDomain = defineDomain({
     // Keyed by target node, which is what makes "press Continue twice" one
     // handoff rather than two.
     [HANDOFFS_TABLE]: domainTable<HandoffKey, HandoffRecord>(HandoffSchema),
+    [PROJECTS_TABLE]: domainTable<ProjectKey, ProjectRecord>(ProjectSchema),
   },
 })
 
@@ -383,7 +476,35 @@ export interface UdState {
 
   /* focus ------------------------------------------------------------------ */
   /** The recorded focus for one course, if any. */
-  readFocus(courseId: CourseKey): FocusRecord | undefined
+  readFocus(sessionId: string, courseId: CourseKey): FocusRecord | undefined
+  /**
+   * The Learning Project this conversation has selected.
+   *
+   * @returns the record, or undefined when it has chosen nothing — which is
+   *   the state every new conversation starts in.
+   */
+  readProject(sessionId: string): ProjectRecord | undefined
+  /** Resolve only this conversation's project; never use learner.activeCourseId. */
+  resolveProject(sessionId?: string): SessionProjectResolution
+  /**
+   * Record this conversation's choice.
+   *
+   * @param sessionId - the conversation.
+   * @param courseId - the project it picked, or undefined for "start
+   *   something new" — a deliberate state, not an absence of one.
+   * @param now - ISO timestamp.
+   */
+  selectProject(sessionId: string, courseId: string | undefined, now: string): Promise<ProjectRecord>
+  /** Adopt after a successful write only if the conversation's choice has not changed. */
+  adoptProject(
+    sessionId: string | undefined,
+    courseId: string,
+    now: string,
+    expected: SessionProjectResolution,
+    allowNew?: boolean,
+  ): Promise<ProjectBindingResult>
+  /** Every conversation's choice, for export. */
+  listProjects(): ProjectRecord[]
   /**
    * Record that learning is starting on one node of one course.
    *
@@ -396,9 +517,9 @@ export interface UdState {
    * @param now - ISO timestamp.
    * @returns the stored focus.
    */
-  startFocus(courseId: CourseKey, nodeId: NodeKey, now: string): Promise<FocusRecord>
-  /** Mark the course's focus as ended. No-op when there is none. */
-  endFocus(courseId: CourseKey, now: string): Promise<void>
+  startFocus(courseId: CourseKey, nodeId: NodeKey, now: string, sessionId?: string): Promise<FocusRecord>
+  /** Mark this conversation's focus as ended. No-op when there is none. */
+  endFocus(sessionId: string, courseId: CourseKey, now: string): Promise<void>
   /**
    * Record the tutor's decision about where to go next.
    *
@@ -420,11 +541,10 @@ export interface UdState {
     targetNodeId?: NodeKey
     reason: string
     now: string
+    sessionId: string
   }): Promise<{ nextStep: NextStepRecord; focus: FocusRecord }>
-  /** The most recent recommendation recorded for a course, if any. */
-  latestNextStep(courseId: CourseKey): NextStepRecord | undefined
-  /** A recommendation by key. */
-  readNextStep(id: NextStepKey): NextStepRecord | undefined
+  /** A recommendation by the conversation that reached it. */
+  readNextStep(sessionId: string, fromNodeId: NodeKey): NextStepRecord | undefined
   /** Every recommendation, for export. */
   listNextSteps(): NextStepRecord[]
   /** Every lesson, for export. */
@@ -450,7 +570,7 @@ export interface UdState {
   resetState(now: string): Promise<void>
 
   /* handoffs --------------------------------------------------------------- */
-  readHandoff(targetNodeId: HandoffKey): HandoffRecord | undefined
+  readHandoff(sessionId: string, targetNodeId: HandoffKey): HandoffRecord | undefined
   /** Insert or replace one handoff. */
   writeHandoff(record: HandoffRecord): Promise<HandoffRecord>
   /**
@@ -466,15 +586,16 @@ export interface UdState {
    * @returns the stored record.
    */
   updateHandoff(
+    sessionId: string,
     targetNodeId: HandoffKey,
     transform: (record: HandoffRecord) => HandoffRecord,
   ): Promise<HandoffRecord>
-  /** The handoff for whichever node is currently focused, if any. */
-  activeHandoff(): HandoffRecord | undefined
+  /** The handoff for whichever node this conversation is currently focused on. */
+  activeHandoff(sessionId: string): HandoffRecord | undefined
   /** Every handoff, for diagnostics and tests. */
   listHandoffs(): HandoffRecord[]
-  /** The focus of the learner's active course, joined with its course and node. */
-  activeFocus(): { focus: FocusRecord; course: CourseRecord; node: NodeRecord } | undefined
+  /** This conversation's focus, joined with its course and node. */
+  activeFocus(sessionId: string): { focus: FocusRecord; course: CourseRecord; node: NodeRecord } | undefined
 
   /* lessons ---------------------------------------------------------------- */
   readLesson(id: LessonKey): LessonRecord | undefined
@@ -540,10 +661,67 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
   const focus: KvTable<FocusKey, FocusRecord> = domain.table(FOCUS_TABLE)
   const nextSteps: KvTable<NextStepKey, NextStepRecord> = domain.table(NEXT_STEPS_TABLE)
   const handoffs: KvTable<HandoffKey, HandoffRecord> = domain.table(HANDOFFS_TABLE)
+  const projects: KvTable<ProjectKey, ProjectRecord> = domain.table(PROJECTS_TABLE)
   const learner: DomainGlobal<LearnerProfile> = domain.global
 
   const listNodesFor = (courseId: CourseKey): NodeRecord[] =>
     [...nodes.entries()].map(([, record]) => record).filter((record) => record.courseId === courseId)
+
+  const projectRevisions = new Map<string, number>()
+  let projectWrites: Promise<unknown> = Promise.resolve()
+  const withProjectWrite = <T>(write: () => Promise<T>): Promise<T> => {
+    const result = projectWrites.then(write)
+    projectWrites = result.catch(() => undefined)
+    return result
+  }
+
+  const resolveProjectFor = (sessionId?: string): SessionProjectResolution => {
+    const revision = sessionId === undefined ? 0 : projectRevisions.get(sessionId) ?? 0
+    if (sessionId === undefined || sessionId.length === 0) {
+      return { selection: 'none', sessionAvailable: false, reason: 'missing-session-id', revision }
+    }
+    const chosen = projects.get(sessionId)
+    if (chosen !== undefined) {
+      if (chosen.courseId === undefined) return { selection: 'new', sessionAvailable: true, revision }
+      const course = courses.get(chosen.courseId)
+      return course === undefined
+        ? { selection: 'none', sessionAvailable: true, reason: 'stale-project', revision }
+        : { selection: 'project', sessionAvailable: true, course, revision }
+    }
+
+    // Ended focuses still name the project a legacy conversation was working
+    // in. Multiple projects are ambiguous; a learner-global pointer is no help.
+    const candidates = [...courses.entries()]
+      .map(([, course]) => course)
+      .filter((course) => focus.get(focusKey(sessionId, course.id)) !== undefined)
+    if (candidates.length === 1) return { selection: 'project', sessionAvailable: true, course: candidates[0]!, revision }
+    if (candidates.length > 1) {
+      return { selection: 'none', sessionAvailable: true, reason: 'ambiguous-session-project', revision }
+    }
+    return { selection: 'none', sessionAvailable: true, revision }
+  }
+
+  const activeFocusFor = (sessionId: string) => {
+    const course = resolveProjectFor(sessionId).course
+    if (course === undefined) return undefined
+    const record = focus.get(focusKey(sessionId, course.id))
+    if (record === undefined || record.status !== 'active') return undefined
+    const node = nodes.get(record.nodeId)
+    return node === undefined || node.courseId !== course.id ? undefined : { focus: record, course, node }
+  }
+
+  const selectProjectFor = async (sessionId: string, courseId: string | undefined, now: string) => {
+    if (sessionId.length === 0) throw new Error('a project choice must name a conversation')
+    if (courseId !== undefined && courses.get(courseId) === undefined) throw new Error(`no course "${courseId}"`)
+    const record: ProjectRecord = {
+      sessionId,
+      selectedAt: now,
+      ...(courseId === undefined ? {} : { courseId }),
+    }
+    await projects.put(sessionId, record)
+    projectRevisions.set(sessionId, (projectRevisions.get(sessionId) ?? 0) + 1)
+    return record
+  }
 
   return {
     name: domain.name,
@@ -616,9 +794,22 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       return { course, nodes: listNodesFor(courseId) }
     },
 
-    readFocus: (courseId) => focus.get(courseId),
+    readFocus: (sessionId, courseId) => {
+      const record = focus.get(focusKey(sessionId, courseId))
+      if (record !== undefined) return record
+      // A record under the bare course key predates session scoping. It cannot
+      // say whose it is, so it is not returned to anyone — see
+      // execution-key.ts. Left where it is; never migrated on a guess.
+      if (focus.get(courseId) !== undefined) {
+        logIgnoredLegacy('focus', courseId)
+      }
+      return undefined
+    },
 
-    async startFocus(courseId, nodeId, now) {
+    async startFocus(courseId, nodeId, now, sessionId) {
+      if (sessionId === undefined || sessionId.length === 0) {
+        throw new Error('a focus must name the conversation it belongs to')
+      }
       const course = courses.get(courseId)
       if (!course) throw new Error(`no course "${courseId}"`)
       const node = nodes.get(nodeId)
@@ -626,18 +817,22 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       if (node.courseId !== courseId) {
         throw new Error(`node "${nodeId}" belongs to course "${node.courseId}", not "${courseId}"`)
       }
-      const record: FocusRecord = { courseId, nodeId, startedAt: now, status: 'active', updatedAt: now }
-      await focus.put(courseId, record)
+      const record: FocusRecord = { courseId, nodeId, startedAt: now, status: 'active', updatedAt: now, sessionId }
+      await focus.put(focusKey(sessionId, courseId), record)
       return record
     },
 
-    async endFocus(courseId, now) {
-      const current = focus.get(courseId)
+    async endFocus(sessionId, courseId, now) {
+      const key = focusKey(sessionId, courseId)
+      const current = focus.get(key)
       if (!current || current.status === 'ended') return
-      await focus.put(courseId, { ...current, status: 'ended', endedAt: now, updatedAt: now })
+      await focus.put(key, { ...current, status: 'ended', endedAt: now, updatedAt: now })
     },
 
     async decideNext(input) {
+      if (input.sessionId === undefined || input.sessionId.length === 0) {
+        throw new Error('a decision must name the conversation it was reached in')
+      }
       const course = courses.get(input.courseId)
       if (!course) throw new Error(`no course "${input.courseId}"`)
       const from = nodes.get(input.fromNodeId)
@@ -664,17 +859,18 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
         createdAt: input.now,
         ...(input.targetNodeId === undefined ? {} : { targetNodeId: input.targetNodeId }),
       }
-      await nextSteps.put(input.fromNodeId, nextStep)
+      await nextSteps.put(nextStepKey(input.sessionId, input.fromNodeId), nextStep)
 
       // A move ends the focus; staying keeps it, because the learner has not
       // moved and the panel must not say they have.
       const moves = endsFocus(input.action, input.targetNodeId !== undefined)
-      const current = focus.get(input.courseId) ?? {
+      const current = focus.get(focusKey(input.sessionId, input.courseId)) ?? {
         courseId: input.courseId,
         nodeId: input.fromNodeId,
         startedAt: input.now,
         status: 'active' as const,
         updatedAt: input.now,
+        sessionId: input.sessionId,
       }
       const nextFocus: FocusRecord = moves
         ? {
@@ -685,19 +881,38 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
             updatedAt: input.now,
           }
         : { ...current, status: 'active', nextStepId: input.fromNodeId, updatedAt: input.now }
-      await focus.put(input.courseId, nextFocus)
+      await focus.put(focusKey(input.sessionId, input.courseId), nextFocus)
 
       return { nextStep, focus: nextFocus }
     },
 
-    latestNextStep(courseId) {
-      return [...nextSteps.entries()]
-        .map(([, record]) => record)
-        .filter((record) => record.courseId === courseId)
-        .sort((left, right) => right.createdAt.localeCompare(left.createdAt))[0]
-    },
+    readProject: (sessionId) => projects.get(sessionId),
 
-    readNextStep: (id) => nextSteps.get(id),
+    resolveProject: resolveProjectFor,
+
+    selectProject: (sessionId, courseId, now) => withProjectWrite(() => selectProjectFor(sessionId, courseId, now)),
+
+    adoptProject: (sessionId, courseId, now, expected, allowNew = false) => withProjectWrite(async () => {
+      const current = resolveProjectFor(sessionId)
+      if (!current.sessionAvailable) return { projectAdopted: false, projectBinding: 'missing-session-id' }
+      if (current.course?.id === courseId) return { projectAdopted: false, projectBinding: 'already-selected' }
+      if (
+        current.revision !== expected.revision || current.selection !== expected.selection ||
+        current.reason !== undefined || current.selection === 'project' ||
+        (current.selection === 'new' && !allowNew)
+      ) return { projectAdopted: false, projectBinding: 'not-selected' }
+      await selectProjectFor(sessionId!, courseId, now)
+      return { projectAdopted: true, projectBinding: 'adopted' }
+    }),
+
+    listProjects: () => [...projects.entries()].map(([, record]) => record),
+
+    readNextStep: (sessionId, fromNodeId) => {
+      const record = nextSteps.get(nextStepKey(sessionId, fromNodeId))
+      if (record !== undefined) return record
+      if (nextSteps.get(fromNodeId) !== undefined) logIgnoredLegacy('next_steps', fromNodeId)
+      return undefined
+    },
 
     listNextSteps: () => [...nextSteps.entries()].map(([, record]) => record),
     listLessons: () => [...lessons.entries()].map(([, record]) => record),
@@ -715,50 +930,53 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
         lessons: [...lessons.entries()].map(([, record]) => record),
         nextSteps: [...nextSteps.entries()].map(([, record]) => record),
         focus: [...focus.entries()].map(([, record]) => record),
+        // Which project each conversation had open. Part of what the learner
+        // owns: it is a choice they made, and an export that dropped it would
+        // restore them to a library with nothing selected.
+        projects: [...projects.entries()].map(([, record]) => record),
       }
     },
 
     async resetState(now) {
       // Table by table, on the domain's own write chain, so a reset cannot
       // interleave with a write that is already queued.
-      for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs]) {
+      for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs, projects]) {
         for (const key of [...table.keys()]) await table.delete(key)
       }
       await learner.set({ initializedAt: UNINITIALIZED, updatedAt: now })
     },
 
-    readHandoff: (targetNodeId) => handoffs.get(targetNodeId),
+    readHandoff: (sessionId, targetNodeId) => {
+      const record = handoffs.get(handoffKey(sessionId, targetNodeId))
+      if (record !== undefined) return record
+      if (handoffs.get(targetNodeId) !== undefined) logIgnoredLegacy('handoffs', targetNodeId)
+      return undefined
+    },
 
     async writeHandoff(record) {
-      await handoffs.put(record.targetNodeId, record)
+      if (record.sessionId === undefined || record.sessionId.length === 0) {
+        throw new Error('a handoff must name the conversation it was requested in')
+      }
+      await handoffs.put(handoffKey(record.sessionId, record.targetNodeId), record)
       return record
     },
 
-    async updateHandoff(targetNodeId, transform) {
-      const current = handoffs.get(targetNodeId)
-      if (current === undefined) throw new Error(`no handoff for "${targetNodeId}"`)
-      return handoffs.update(targetNodeId, (record) => transform(record))
+    async updateHandoff(sessionId, targetNodeId, transform) {
+      const key = handoffKey(sessionId, targetNodeId)
+      const current = handoffs.get(key)
+      if (current === undefined) throw new Error(`no handoff for "${targetNodeId}" in this conversation`)
+      return handoffs.update(key, (record) => transform(record))
     },
 
     listHandoffs: () => [...handoffs.entries()].map(([, record]) => record),
 
-    activeHandoff() {
-      const courseId = learner.get().activeCourseId
-      const record = courseId === undefined ? undefined : focus.get(courseId)
-      if (record === undefined) return undefined
-      return handoffs.get(record.nodeId)
+    activeHandoff(sessionId) {
+      const active = activeFocusFor(sessionId)
+      if (active === undefined) return undefined
+      return handoffs.get(handoffKey(sessionId, active.focus.nodeId))
     },
 
-    activeFocus() {
-      const courseId = learner.get().activeCourseId
-      if (courseId === undefined) return undefined
-      const record = focus.get(courseId)
-      if (record === undefined || record.status !== 'active') return undefined
-      const course = courses.get(courseId)
-      const node = nodes.get(record.nodeId)
-      if (!course || !node) return undefined
-      return { focus: record, course, node }
-    },
+    activeFocus: activeFocusFor,
 
     readLesson: (id) => lessons.get(id),
 

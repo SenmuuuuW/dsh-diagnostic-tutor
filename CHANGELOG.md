@@ -5,6 +5,109 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed — Learning surfaces could not scroll inside DSH
+
+The docked tab relied on document scrolling, but DSH clips its bounded tab slot.
+It now has a height-bounded, border-box scroll container, so long lessons, maps,
+evidence and library lists remain reachable in both docked and expanded tabs.
+The full panel scrolls as one page when stacked; its three-column layout keeps
+independent pane scrolling, and long welcome/library views scroll in the wrapper.
+
+The preview now clips its slot too, instead of hiding the defect with document
+scrolling. `pnpm check:scroll` exercises real Chrome wheel input and checks bottom
+content visibility, slot containment and no document/horizontal overflow across
+20 viewport/theme/content combinations. It uses only local fixture data.
+
+### Fixed — teaching-brain detection follows the live Agent
+
+The plugin previously inspected the global Skill catalog once during activation.
+A global Office provider could make that catalog nonempty and trigger a missing
+tutor warning even when UDT was available in the conversation's Agent scope.
+Every overview now resolves the requested live Agent and queries the official
+Skill snapshot and loader with that Agent's scope and session cwd. Empty or
+incomplete discovery, missing services, unsupported snapshot APIs and Agent
+replacement during discovery return `null`; surfaces continue to warn only on
+`false`. Existing polling sees delayed registration, removal and session changes
+without plugin reload. Activation no longer logs a profile-wide absence claim.
+
+Regression tests cover real scoped catalogs with global Office entries, both
+availability states, unavailable scope, discovery errors, delayed registration,
+removal and replacement, plus exact scope/cwd propagation.
+
+### Fixed — the docked tab had no theme at all
+
+`.dt-tab` was missing from the rule that declares the panel's design tokens. A
+custom property that does not resolve does not fall back to a sensible default:
+it makes the whole declaration invalid at computed-value time. So the docked
+Learning tab — the surface the learner keeps open beside the chat — had no card
+surfaces, no borders, and a **primary button that was white text on nothing**,
+which on a light page is an invisible button. Measured at 1:1 contrast against
+its own background, in the real product, in light mode. `.dt-tab` is now in the
+token rule, and a test renders both surfaces and fails if any root they produce
+is missing from it.
+
+### Fixed — dark mode
+
+`--dt-accent` was bound to `--dsw-alias-button-primary-fill`, which inverts with
+the theme (near-black in light, near-white in dark), and every filled control
+paired it with a hardcoded `#fff`. In dark mode the primary button and the check
+block's header band were white on white — 1.05:1, verified in a live profile
+before and after. The stylesheet now uses the design system's own pairing,
+`--dsw-alias-label-primary-foreground`, which inverts with the fill.
+
+### Fixed — three filled buttons, one column
+
+The panel showed `Learning in progress`, `Continue`, and `Answer in the chat` at
+once, all at primary weight. Which one to press is not a style question. The
+recommendation now owns the primary weight when there is one; the door back to
+the chat and the start control step down to secondary, and the start control
+says `Restart this node` when the tutor is already on it — it was labelled with a
+state, not an action. The docked tab had the same collision.
+
+### Fixed — the map did not show where the learner is
+
+`data-focused` was computed and rendered by both maps from the first release and
+had no rule in the stylesheet, so the one question the map exists to answer was
+the one it did not show. There is now a marker on the focused row. The panel's
+map also gained the depth guides, the state chip and the blocker tint that only
+the tab had had, and `data-focused={false}` no longer renders as
+`data-focused="false"` — a boolean on a `data-*` attribute is a string, and it
+matched every row.
+
+### Fixed — reading
+
+- **Raw ISO timestamps in the evidence list.** `2026-09-28T05:27:53.946Z` is now
+  `19 hours ago`, or a date once a relative phrase stops being useful.
+- **A handoff line that counted seconds forever.** A restored record printed
+  `Lesson ready 119803s`. Past a minute the unit changes: `1m 34s`, `33h 16m`.
+- **`*emphasis*` printed its own asterisks.** The inline parser handled bold,
+  code and math but not the most ordinary thing a writer types.
+- **Inline code had no treatment while inline math did**, so the most common
+  inline token in a programming lesson was the one that looked like an accident.
+- **"No evidence yet — nothing has been observed for this node"** was printed
+  directly above a list headed `Evidence 3`. The state definition is the skill's;
+  the sentence now describes the state instead of counting the page.
+- **Contrast.** `confirmed` and `weak` were green-500 and amber-500 on white —
+  2.2:1 and 2.1:1, the two hardest labels on the map to read in light mode. The
+  seven state colours are now a per-theme palette, each at least 5:1 against its
+  own surface.
+
+### Fixed — the preview had been a blank page
+
+`preview/index.html` drove `apply()` with a stub context that had no `get()`,
+which `apply()` reaches for first. The call threw before the panel mounted, so
+the standalone preview rendered nothing. The stub now answers every service the
+entry point uses, and the page gained a scenario switch (`first-use`, `map`,
+`handoff`, `next`, `stay`, `noskill`, `long`), a theme switch, and the real DSH
+design tokens — without which a dark-mode bug is invisible locally.
+
+### Added — `scripts/ui-audit.mjs`
+
+Audits contrast, dead class names, competing primary controls, tap targets and
+clipping at each target width in both themes, and saves screenshots. It found
+the tab's invisible button, the dark-mode 1.05:1 controls, and two class names
+(`kind`, `when`) that the JSX still used after the stylesheet had moved on.
+
 ## [0.1.0] — first stable release
 
 The first release meant to be installed rather than built. `dsh plugin --profile

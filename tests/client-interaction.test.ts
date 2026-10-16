@@ -44,6 +44,7 @@ const nodes = [
 
 const overview: OverviewResponse = {
   ok: true,
+  selection: 'project',
   course: {
     id: 'ml',
     title: 'Machine Learning',
@@ -58,6 +59,7 @@ const overview: OverviewResponse = {
   handoff: null,
   teachingBrain: true,
   lessonCount: 0,
+  library: [],
 }
 
 /** Focus the fake host is currently holding; `startFocus` sets it. */
@@ -161,7 +163,15 @@ afterEach(() => {
 /** Mount the panel and let its effects settle. */
 async function mount(): Promise<void> {
   await act(async () => {
-    root.render(createElement(LearningPanel, { client: fixtureClient, initialOverview: overview }))
+    // A conversation is supplied because starting a node wakes a tutor in one;
+// without it the button is correctly disabled. See client-session.test.ts.
+    root.render(
+      createElement(LearningPanel, {
+        client: fixtureClient,
+        initialOverview: overview,
+        sessionId: 'session-under-test',
+      }),
+    )
   })
 }
 
@@ -190,7 +200,10 @@ describe('clicking a node switches the detail pane', () => {
       nodeButton('Linear Algebra').click()
     })
 
-    expect(asked).toEqual(['ml:math:la'])
+    // The panel picks something on arrival now, so the record starts with the
+    // arrival choice; the click must not ask for the same node a second time.
+    expect(asked.at(-1)).toBe('ml:math:la')
+    expect(asked.filter((id) => id === 'ml:math:la')).toHaveLength(1)
     const detail = container.querySelector('.dt-detail')
     expect(detail?.textContent).toContain('Linear Algebra')
     // Its evidence and its parent context are both shown.
@@ -207,7 +220,9 @@ describe('clicking a node switches the detail pane', () => {
       nodeButton('Python').click()
     })
 
-    expect(asked).toEqual(['ml:math', 'ml:python'])
+    // One ask per distinct selection, in order, with the arrival pick first.
+    expect(asked).toEqual([...new Set(asked)])
+    expect(asked.slice(-2)).toEqual(['ml:math', 'ml:python'])
     const current = [...container.querySelectorAll('button.dt-node[aria-current="true"]')]
     expect(current).toHaveLength(1)
     expect(current[0]?.textContent).toContain('Python')
@@ -237,7 +252,7 @@ describe('Start learning opens the learning surface', () => {
       start?.click()
     })
 
-    expect(started).toEqual(['ml:math@-'])
+    expect(started).toEqual(['ml:math@session-under-test'])
     expect(container.textContent).toContain('Why this node exists.')
     expect(container.textContent).toContain('What do you already know?')
     // The prototype is labelled as such, so it cannot be mistaken for teaching.
@@ -303,5 +318,61 @@ describe('unmount leaves no DOM residue', () => {
     act(() => root.unmount())
     expect(container.querySelector('.dt-root')).toBeNull()
     expect(container.textContent).toBe('')
+  })
+})
+
+describe('starting belongs to this conversation, not to the shared course', () => {
+  it('keeps the control out of the node detail and says what it is doing', async () => {
+    await mount()
+    await act(async () => {
+      nodeButton('Linear Algebra').click()
+    })
+
+    // The control lives under THIS CONVERSATION, not beside the node's
+    // evidence: waking a tutor names a conversation, so it belongs to one.
+    const here = container.querySelector('.dt-here-action')
+    expect(here, 'no start control in the conversation block').toBeDefined()
+    expect(here?.textContent).toContain('Start learning')
+    expect(here?.className).toContain('dt-primary')
+    expect(container.querySelector('.dt-detail')?.querySelector('.dt-here-action')).toBeNull()
+
+    await act(async () => {
+      ;(here as HTMLButtonElement | null)?.click()
+    })
+
+    // Now this conversation is on this node, so the control says so rather
+    // than offering to start what has already started.
+    const after = container.querySelector('.dt-here-action')
+    expect(after?.textContent).toContain('Learning in progress')
+    expect(container.querySelector('.dt-detail')?.textContent).toContain(
+      'This is the node the tutor is teaching',
+    )
+  })
+
+  it('says a conversation has no focus rather than borrowing one', async () => {
+    // The bug this pins: a brand-new conversation showed the course's goal node
+    // under a heading that read as "what THIS chat is learning", so a chat that
+    // had never started anything looked like the learner's old session.
+    await mount()
+    const here = container.querySelector('.dt-here-action')?.parentElement?.textContent ?? ''
+    expect(here).toContain('This conversation')
+    expect(container.textContent).toContain('No learning focus yet')
+    expect(container.textContent).toContain('Shared across conversations')
+  })
+})
+
+describe('the evidence list reads like a record, not like a payload', () => {
+  it('never prints a raw ISO timestamp', async () => {
+    await mount()
+    await act(async () => {
+      nodeButton('Linear Algebra').click()
+    })
+    const evidence = container.querySelector('.dt-evidence')
+    expect(evidence?.textContent).toContain('shaky maths')
+    // The stored value is 2026-01-01T00:00:00.000Z; what a learner sees is a
+    // phrase. Both the machine form and a stray "Z" are wrong here.
+    expect(evidence?.textContent).not.toContain('T00:00:00')
+    expect(evidence?.textContent).not.toContain('Z')
+    expect(evidence?.querySelector('.dt-ev-when')?.textContent).toBeTruthy()
   })
 })

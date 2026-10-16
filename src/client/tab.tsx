@@ -23,6 +23,7 @@ import { DataFooter, HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
 import { buildMapTree, flattenTree, relationLabel, stateExplanation } from './model.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
+import { useCurrentSessionId } from './use-session.js'
 
 /** The tab chip's text. */
 export function LearningTabTitle(): ReactNode {
@@ -61,7 +62,9 @@ function CompactMap({
             data-depth={depth > 0 ? Math.min(depth, 3) : undefined}
             data-attention={node.state === 'blocked' || node.state === 'weak' ? 'true' : undefined}
             aria-current={node.id === selectedId}
-            data-focused={node.id === focusNodeId}
+            // Undefined, not false: see the panel — a boolean lands in the DOM
+            // as the string "false", which still matches [data-focused].
+            data-focused={node.id === focusNodeId ? 'true' : undefined}
             onClick={() => onSelect(node.id)}
           >
             <span className={`dt-dot dt-state-${node.state}`} data-filled={node.state === 'confirmed'} />
@@ -80,10 +83,32 @@ function CompactMap({
 export interface LearningTabProps {
   /** Defaults to the real HTTP client. */
   client?: PanelClient
-  /** Injected by the session scope; the tab asks the tutor in this session. */
+  /**
+   * The session the slot says this tab belongs to.
+   *
+   * Used only when no live source is available — the preview and the tests.
+   * In the real client `uiSession` is supplied and WINS, because this prop is
+   * captured when the pane is docked and a docked pane outlives a session
+   * switch: the tab would keep asking about the conversation it was opened in
+   * while the learner looks at another one. That is exactly the bug this
+   * replaces — a `POST /project` that went to the previous conversation.
+   */
   sessionId?: string | undefined
+  /**
+   * The live session scope, read through the same adapter the sidebar entry
+   * uses. An observable, so the surface follows the visible chat by
+   * construction rather than by remembering to re-render.
+   */
+  uiSession?: unknown
   /** Pre-supplied state, so the preview and tests skip the first fetch. */
   initialOverview?: OverviewResponse | undefined
+  /**
+   * Opens the full panel in the main column.
+   *
+   * Offered, never taken: the docked tab is the everyday surface, and giving up
+   * the chat to see more of the map is the learner's call.
+   */
+  onOpenFullView?: (() => void) | undefined
 }
 
 /**
@@ -92,9 +117,20 @@ export interface LearningTabProps {
  * @param props - injectable client and the session the tab belongs to.
  * @returns the stacked node / map / lesson column.
  */
-export function LearningTab({ client, sessionId, initialOverview }: LearningTabProps): ReactNode {
-  const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview })
-  const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading, select } =
+export function LearningTab({
+  client,
+  sessionId,
+  uiSession,
+  initialOverview,
+  onOpenFullView,
+}: LearningTabProps): ReactNode {
+  // The live scope when there is one. `adapter.current` is a HostObservable and
+  // `useCurrentSessionId` subscribes to it, so a session switch re-renders this
+  // surface with the new id — no cache, no closure, nothing to invalidate.
+  const liveSession = useCurrentSessionId(uiSession)
+  const activeSession = uiSession === undefined ? sessionId : liveSession
+  const state = useLearning({ client: client ?? defaultClient, sessionId: activeSession, initialOverview })
+  const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading, select, library } =
     state
 
   // Show something on first paint: the focused node if there is one, else the
@@ -108,94 +144,212 @@ export function LearningTab({ client, sessionId, initialOverview }: LearningTabP
 
   const shownId = focus?.nodeId ?? selectedId
 
+  // Read from the map rather than fetched: the tab already holds every node,
+  // and the focused one is among them.
+  const focusNode = focus === null ? undefined : overview?.nodes?.find((n) => n.id === focus.nodeId)
+  const focusNodeTitle = focusNode?.title ?? null
+  const focusNodeState = focusNode?.state ?? null
+
   const hasCourse = overview?.course != null
+  /**
+   * The conversation has deliberately chosen to start something new.
+   *
+   * A third state, and the reason the button used to look dead: both "chosen
+   * nothing" and "chosen new" have no course, so a surface reading only
+   * `course` renders them the same and the press appears to do nothing while
+   * the state behind it is correct.
+   */
+  const startingNew = overview?.selection === 'new'
   const rows = overview?.nodes ?? []
 
   // First use: no goal yet. A blank panel would read as a broken panel, so it
   // says what to do and shows the exact sentence that starts everything. No
   // wizard — the chat is the input, and the shortest path there is one line of
   // text the learner can copy.
+  // Chosen: the tutor will make this conversation's project from whatever the
+  // learner says next. Nothing is created here — no empty course, no invented
+  // focus — so this state is a sentence and a way back, and nothing else.
+  if (startingNew) {
+    return (
+      <div className="dt-tab">
+        <header className="dt-here">
+          <button type="button" className="dt-back" onClick={() => state.openProject()}>
+            ← All learning
+          </button>
+          <p className="dt-eyebrow">Start something new</p>
+          <p className="dt-here-empty">Tell the tutor what you want to learn in Chat.</p>
+          <p className="dt-caption">
+            When the tutor records a goal there, it becomes this conversation&rsquo;s project. Your
+            other projects are untouched.
+          </p>
+        </header>
+        {library.length > 0 && (
+          <section className="dt-lesson">
+            <p className="dt-tab-section">Or continue one</p>
+            <ul className="dt-library">
+              {library.map((project) => (
+                <li key={project.id}>
+                  <button type="button" className="dt-project" onClick={() => state.openProject(project.id)}>
+                    <span className="dt-project-name">{project.title}</span>
+                    <span className="dt-project-count">
+                      {project.confirmed} of {project.total} confirmed
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {teachingBrain === false && (
+          <p className="dt-notice">
+            <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records and
+            shows your learning state, but no lesson will be written until the skill is available to
+            your active DSH agent.
+          </p>
+        )}
+        <section className="dt-lesson">
+          <DataFooter onExport={state.exportData} onReset={state.resetAll} />
+        </section>
+      </div>
+    )
+  }
+
+  // No project open and none chosen. That is the library, not a welcome screen
+  // and not somebody else's course: the projects below are the learner's,
+  // shared like the maps themselves, and opening one is this conversation's
+  // choice to make.
   if (!hasCourse) {
     return (
       <div className="dt-tab">
-        <div className="dt-welcome">
-          <p className="dt-welcome-eyebrow">Universal Diagnostic Tutor</p>
-          <h2 className="dt-welcome-title">What do you want to learn?</h2>
-          <p className="dt-welcome-body">
-            Works with the Universal Diagnostic Tutor skill. Start by telling the tutor what you
-            want to learn — in your own words, in the chat.
+        <header className="dt-here">
+          <p className="dt-eyebrow">Your learning</p>
+          {library.length === 0 ? (
+            <p className="dt-here-empty">
+              Nothing here yet. Tell the tutor what you want to learn, in the chat.
+            </p>
+          ) : (
+            <>
+              <p className="dt-shared">Shared across your conversations</p>
+              <ul className="dt-library">
+                {library.map((project) => (
+                  <li key={project.id}>
+                    <button
+                      type="button"
+                      className="dt-project"
+                      onClick={() => state.openProject(project.id)}
+                    >
+                      <span className="dt-project-name">{project.title}</span>
+                      <span className="dt-project-count">
+                        {project.confirmed} of {project.total} confirmed
+                      </span>
+                      <span className="dt-project-go">
+                        {project.confirmed === 0 ? 'Open' : 'Continue'} →
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </header>
+
+        <section className="dt-lesson">
+          {/* The library offers the way out of itself; the copy explaining what
+              "new" MEANS belongs to the state it leads to, not here. Showing
+              both in one place made the two states read alike, which is the
+              same failure as before in a different costume. */}
+          <button type="button" className="dt-secondary dt-here-action" onClick={() => state.openProject()}>
+            + Start something new
+          </button>
+        </section>
+
+        {teachingBrain === false && (
+          <p className="dt-notice">
+            <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records and
+            shows your learning state, but no lesson will be written until the skill is available to
+            your active DSH agent.
           </p>
-          <div className="dt-welcome-sample">
-            <span className="dt-welcome-sample-label">Try</span>
-            <span className="dt-welcome-sample-text">
-              I want to learn machine learning. I know some Python, but my math is weak.
-            </span>
-          </div>
-          <p className="dt-welcome-note">
-            If tutoring doesn&apos;t start, make sure the UDT skill is available to your active DSH
-            agent.
-          </p>
-          <p className="dt-welcome-note">
-            No account, no scores, no streak. Your goal, your map and the evidence behind it
-            stay on this machine, and are yours to keep or delete.
-          </p>
+        )}
+        <section className="dt-lesson">
           <DataFooter onExport={state.exportData} onReset={state.resetAll} />
-      {teachingBrain === false && (
-        <p className="dt-notice">
-          <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records and
-          shows your learning state, but no lesson will be written until the skill is available
-          to your active DSH agent.
-        </p>
-      )}
-        </div>
+        </section>
       </div>
     )
   }
 
   return (
     <div className="dt-tab">
-      {/* ---- now learning ---- */}
-      {detail === null ? (
-        // The header frame stays even before the first fetch lands, so the
-        // surface never looks like an empty box on a slow connection.
-        <header className="dt-now">
-          <p className="dt-now-eyebrow">Now learning</p>
-          <p className="dt-empty">
-            {loading ? 'Loading…' : 'Pick a node on the map below to begin.'}
+      {/* ---- two layers, two owners ----
+          The course and its map belong to the learner and every conversation
+          shares them. Where THIS conversation has got to belongs to this
+          conversation alone. One heading over both is what made a brand-new
+          chat look as though it had become the learner's old session: the
+          course's goal node sat under a label reading "now learning", and a
+          conversation that had never started anything appeared to be in the
+          middle of one. */}
+      <header className="dt-here">
+        {/* One link, not a breadcrumb: there are two levels and the learner
+            only ever needs the one they are not on. */}
+        <button type="button" className="dt-back" onClick={() => state.openProject()}>
+          ← All learning
+        </button>
+        <p className="dt-eyebrow">Your learning</p>
+        <h2 className="dt-here-course">{overview?.course?.title ?? 'No goal yet'}</h2>
+        {overview?.course != null && <p className="dt-shared">Shared across conversations</p>}
+
+        <p className="dt-eyebrow dt-eyebrow-here">This conversation</p>
+        {focus === null ? (
+          <p className="dt-here-empty">
+            No learning focus yet. Pick a node below to start learning here.
           </p>
-        </header>
-      ) : (
-        <header className="dt-now" data-state={detail.node.state}>
-          <p className="dt-now-eyebrow">Now learning</p>
-          <h2 className="dt-now-title">{detail.node.title}</h2>
-          <div className="dt-now-meta">
-            <span className={`dt-tab-state dt-state-${detail.node.state}`}>{detail.node.state}</span>
-            <span className="dt-now-rel">{relationLabel(detail.node.relation)}</span>
-            {detail.parent !== null && <span className="dt-now-rel">in {detail.parent.title}</span>}
-          </div>
-          <p className="dt-now-note">{stateExplanation(detail.node.state)}</p>
-          <button
-            type="button"
-            className="dt-primary dt-now-action"
-            onClick={state.start}
-            disabled={starting || shownId === null}
-          >
-            {starting
-              ? 'Starting…'
-              : focus !== null && focus.nodeId === shownId
-                ? 'Keep going'
-                : 'Start learning'}
-          </button>
-          {note !== null && <p className="dt-caption">{note}</p>}
-          {error !== null && <p className="dt-empty">{error}</p>}
-        </header>
-      )}
+        ) : (
+          <p className="dt-here-focus">
+            <span className="dt-here-node">{focusNodeTitle ?? focus.nodeId}</span>
+            {focusNodeState !== null && (
+              <span className={`dt-tab-state dt-state-${focusNodeState}`}>{focusNodeState}</span>
+            )}
+          </p>
+        )}
+
+        {/* One filled control per column. When the tutor has recorded a
+            recommendation, that recommendation is the next move and owns the
+            primary weight; starting a node is the fallback and steps down. */}
+        <button
+          type="button"
+          className={nextStep === null ? 'dt-primary dt-here-action' : 'dt-secondary dt-here-action'}
+          onClick={state.start}
+          disabled={starting || shownId === null}
+        >
+          {starting
+            ? 'Starting…'
+            : focus !== null && focus.nodeId === shownId
+              ? 'Learning in progress'
+              : 'Start learning'}
+        </button>
+        {focus === null && (
+          <p className="dt-caption">
+            Starting records a focus for this conversation only. Your map and lessons stay shared.
+          </p>
+        )}
+        {loading && detail === null && <p className="dt-caption">Loading…</p>}
+        {note !== null && <p className="dt-caption">{note}</p>}
+        {error !== null && <p className="dt-empty">{error}</p>}
+      </header>
 
       {/* ---- the teaching ---- */}
       {/* Always present, even before it has content: the surface names its three
           regions so a first-time learner can see what will fill them. */}
       <section className="dt-lesson">
-        <p className="dt-tab-section">Learning surface</p>
+        <p className="dt-tab-section">
+          Learning surface
+          {onOpenFullView !== undefined && (
+            // Secondary on purpose. Everything here works without it; it only
+            // trades the chat for a wider map.
+            <button type="button" className="dt-tab-expand" onClick={onOpenFullView}>
+              Open full view
+            </button>
+          )}
+        </p>
         {handoff !== null && (
           <HandoffLine handoff={handoff} onRetry={() => state.continueTo(handoff.targetNodeId)} />
         )}

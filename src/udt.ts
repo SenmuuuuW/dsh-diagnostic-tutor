@@ -10,21 +10,20 @@
  *     hardcoded and no skill root is assumed;
  *   - it never copies, vendors or imports the skill's logic;
  *   - it never constructs a DSH runtime object; the registry arrives from `ctx`;
- *   - if anything is missing it returns an unavailable status with a reason
- *     instead of throwing, so a profile without the skill degrades rather than
- *     crashes.
+ *   - if discovery is inconclusive it returns a status with a reason instead
+ *     of throwing, so a profile without the skill degrades gracefully.
  *
- * **Leakage rule.** `path` and `fingerprint` exist for the plugin's own
- * diagnostics and for a future state panel. They must never reach
- * learner-facing text: the skill's own protocol forbids naming its files,
- * versions or repository in a tutoring reply, and this runtime will not be the
- * thing that leaks them. Detection results are logged at `debug` and are
- * deliberately absent from every tool's output schema.
+ * **Leakage rule.** `path` and `fingerprint` are internal diagnostics. They
+ * must never reach learner-facing text: the skill's own protocol forbids
+ * naming its files, versions or repository in a tutoring reply. Only the
+ * tri-state availability reaches the overview; no detail reaches tool output.
  */
 
 import { createHash } from 'node:crypto'
 
-import type { SkillRegistry } from '@deepseek-ai/dsh-skill'
+import { symbols, type Context } from '@deepseek-ai/cordis'
+import type { Agent } from '@deepseek-ai/dsh-agent'
+import type { SkillRegistry, SkillViewOptions } from '@deepseek-ai/dsh-skill'
 
 /** The skill's canonical name, as declared in its frontmatter. */
 export const UDT_SKILL_NAME = 'universal-diagnostic-tutor'
@@ -37,18 +36,9 @@ export interface UdtSkillStatus {
   /** Whether the skill was found in the catalog. */
   readonly available: boolean
   /**
-   * Whether the catalog could be read well enough to conclude anything.
-   *
-   * `false` means the skill was not found **in a catalog that demonstrably has
-   * entries**, so its absence is a real finding. `true` means entries were
-   * visible and the search was meaningful.
-   *
-   * This distinction exists because the registry's `list()` reads **the global
-   * layer alone** unless given a viewing `scope`, and the standard web profile
-   * mounts the filesystem skill provider inside a nested agent layer. From a
-   * plugin at the profile root the catalog is therefore *empty* even when the
-   * skill is installed and the tutor is using it — a miss that says nothing.
-   * Treating that as "not installed" produced a confident, wrong answer.
+   * Whether a complete scoped discovery supports a definite negative result.
+   * An unloadable body or empty snapshot is still inconclusive. A global Office
+   * catalog proves nothing about an Agent's scoped filesystem provider.
    */
   readonly catalogVisible: boolean
   /** The name we looked for. */
@@ -93,32 +83,45 @@ function unavailable(name: string, reason: string, catalogVisible = false): UdtS
  *
  * @param skills - the skill registry taken from `ctx`, or `undefined` when the
  *   profile does not mount one.
- * @returns the detection status; never throws.
+ * @param options - the explicit Agent viewing scope and workspace to inspect.
+ * @returns the detection status; discovery and loading failures degrade gracefully.
  */
-export async function detectUdtSkill(skills: SkillRegistry | undefined): Promise<UdtSkillStatus> {
+export async function detectUdtSkill(
+  skills: SkillRegistry | undefined,
+  options: SkillViewOptions = {},
+): Promise<UdtSkillStatus> {
   if (!skills) {
     return unavailable(UDT_SKILL_NAME, 'no skill catalog is mounted in this profile')
   }
+  if (options.scope === undefined) {
+    return unavailable(UDT_SKILL_NAME, 'no Agent viewing scope is available; nothing can be concluded')
+  }
+  // Older registries cannot report incomplete provider discovery. Do not turn
+  // an unqualified list into a confident absence on those hosts.
+  if (typeof skills.snapshot !== 'function') {
+    return unavailable(UDT_SKILL_NAME, 'the skill catalog cannot report discovery completeness')
+  }
 
-  let summaries
+  let snapshot
   try {
-    summaries = await skills.list()
+    snapshot = await skills.snapshot(options)
   } catch (error) {
     return unavailable(UDT_SKILL_NAME, `skill discovery failed: ${(error as Error).message}`)
   }
+  if (!snapshot.complete) {
+    return unavailable(UDT_SKILL_NAME, 'skill discovery is incomplete; nothing can be concluded')
+  }
 
+  const summaries = snapshot.skills
   const summary = summaries.find((entry) => entry.name === UDT_SKILL_NAME)
   if (!summary) {
-    // An empty catalog proves nothing: see `catalogVisible`. Report the miss
-    // either way, but only claim absence when entries were actually visible.
+    // An empty catalog can precede provider registration. Retry next request.
     return summaries.length === 0
-      ? unavailable(
-          UDT_SKILL_NAME,
-          'no skills are visible from this profile scope; the catalog is mounted per agent ' +
-            'in some profiles, so nothing can be concluded about what is installed',
-          false,
-        )
+      ? unavailable(UDT_SKILL_NAME, 'no skills are visible yet; nothing can be concluded')
       : unavailable(UDT_SKILL_NAME, `not among the ${summaries.length} skills visible in this scope`, true)
+  }
+  if (!summary.invocation.modelInvocable) {
+    return unavailable(UDT_SKILL_NAME, 'the skill is not model-invocable in this scope', true)
   }
 
   const base = {
@@ -129,17 +132,19 @@ export async function detectUdtSkill(skills: SkillRegistry | undefined): Promise
     provider: summary.provider,
   } as const
 
-  // `list()` gives a cheap location via `resourceBase`; only a directory-based
+  // The snapshot gives a location via `resourceBase`; only a directory-based
   // provider has a path at all, and a remote provider legitimately has none.
   const listedPath =
     summary.resourceBase?.kind === 'directory' ? summary.resourceBase.path : undefined
 
   let definition
   try {
-    definition = await skills.get(UDT_SKILL_NAME)
+    definition = await skills.get(UDT_SKILL_NAME, options)
   } catch (error) {
     return {
       ...base,
+      available: false,
+      catalogVisible: false,
       compatibility: 'unknown',
       reason: `listed but its body could not be loaded: ${(error as Error).message}`,
       ...(listedPath === undefined ? {} : { path: listedPath }),
@@ -149,6 +154,8 @@ export async function detectUdtSkill(skills: SkillRegistry | undefined): Promise
   if (!definition) {
     return {
       ...base,
+      available: false,
+      catalogVisible: false,
       compatibility: 'unknown',
       reason: 'listed but its body could not be loaded',
       ...(listedPath === undefined ? {} : { path: listedPath }),
@@ -174,6 +181,45 @@ export async function detectUdtSkill(skills: SkillRegistry | undefined): Promise
     compatibility: 'compatible',
     fingerprint,
     ...(path === undefined ? {} : { path }),
+  }
+}
+
+// Cordis creates a fresh traceable proxy on service reads. Compare its
+// underlying instance, while continuing to call through the scoped proxy.
+function serviceIdentity(service: object | undefined): object | undefined {
+  return service === undefined ? undefined : Reflect.get(service, symbols.original) ?? service
+}
+
+/**
+ * Observe the exact live Agent addressed by an overview request. Optional
+ * services are resolved anew so registration, removal and rebinding are seen
+ * without reloading this plugin. Agent handles are the official scope keys.
+ */
+export async function teachingBrainForSession(
+  ctx: Context,
+  sessionId: string | undefined,
+): Promise<boolean | null> {
+  if (!sessionId) return null
+  try {
+    const agents = ctx.reflect.get('agents')
+    const skills = ctx.reflect.get('skills')
+    const key = sessionId as Agent['id']
+    if (!agents || !skills) return null
+    const agent = agents.get(key)
+    if (!agent) return null
+    const cwd = agent.session.header.cwd
+    const status = await detectUdtSkill(skills, { scope: agent, ...(cwd === undefined ? {} : { cwd }) })
+    // A provider may yield while a preset replaces the Agent or a service is
+    // rebound. Such a response no longer describes the requested live scope.
+    if (
+      serviceIdentity(ctx.reflect.get('agents')) !== serviceIdentity(agents) ||
+      agents.get(key) !== agent ||
+      serviceIdentity(ctx.reflect.get('skills')) !== serviceIdentity(skills) ||
+      agent.session.header.cwd !== cwd
+    ) return null
+    return status.available ? true : status.catalogVisible ? false : null
+  } catch {
+    return null
   }
 }
 

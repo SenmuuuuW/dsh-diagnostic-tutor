@@ -126,13 +126,11 @@ library plus fonts and CSS, and the client bundle is a single JavaScript file
 with nowhere to serve those from. This is the most visible rough edge in any
 STEM lesson.
 
-**Skill presence cannot always be detected.** The runtime reports whether the
-Universal Diagnostic Tutor skill is available, but the skill registry reads the
-*global* layer unless it is given a viewing scope, and the standard web profile
-mounts skills per agent. From a plugin at the profile root the catalog is
-therefore empty whether the skill is installed or not. The runtime says
-`cannot tell` rather than guessing, and the panel stays quiet. If lessons never
-appear, check the skill first.
+**Skill presence requires a live Agent.** The runtime checks the open
+conversation's Agent scope on each overview, including its workspace. Before an
+Agent exists, or while discovery is empty or incomplete, it reports `cannot tell`
+and the panel stays quiet. Polling picks up later registration and Agent changes.
+If lessons never appear, check the skill first.
 
 **Storage is one document.** Every record lives in
 `<dsh-home>/storages/udt.json`. It is readable, copyable and easy to export, and
@@ -258,9 +256,29 @@ With the json backend you get exactly one document, `<storage root>/udt.json`
 
 | Slot | Holds |
 | --- | --- |
-| `global` | the learner singleton — preferences, active goal, `initializedAt` |
+| `global` | the learner singleton — preferences, `initializedAt`, and the legacy shared `activeCourseId` marker |
 | `tables.courses` | one record per learning goal, in the learner's own words |
 | `tables.nodes` | the diagnosis map: `id`, `courseId`, `title`, `parentId?`, `relation`, `state`, `evidence[]` |
+
+Courses, maps, lessons and evidence are shared by the learner's conversations.
+Project selection, focus, next step and handoff belong to one conversation,
+identified by its session ID. The legacy `activeCourseId` remains in storage for
+compatibility; it does not select a project for a conversation. A fresh
+conversation starts with the library, even when historical projects exist.
+
+| Conversation selection | Project binding |
+| --- | --- |
+| `none` | A new goal, or a validated write explicitly naming a course or node in this conversation, may select its project. Reading shared data does not select it. |
+| `new` | The learner pressed **Start something new**. Only a new goal created here may bind; historical map or lesson writes leave this choice intact. |
+| `project` | The selected course is the default for tools. Creating another goal does not replace it; writes to another course require selecting that course first. |
+
+`udt_status` reports this conversation's `selection` and, only for `project`,
+its `courseId`. Goal, map and lesson writes return `projectAdopted` and
+`projectBinding`: `adopted`, `already-selected`, `not-selected`, or
+`missing-session-id`. A choice made while a write is pending takes precedence
+over that write's adoption. Without a reliable session ID, status reports
+`sessionAvailable: false`; explicit shared writes can still be stored, but their
+result is `missing-session-id` and they claim no conversation binding.
 
 Two deliberate rules:
 
@@ -294,13 +312,13 @@ route around them:
 
 ### Tools
 
-Five, and none of them decides anything about teaching.
+Six, and none of them decides anything about teaching.
 
 | Tool | Does |
 | --- | --- |
-| `udt_status` | reports the runtime: domain, version, goals, map, **and the current focus** |
-| `udt_goal_create` | records a goal and plants the map root — and nothing else |
-| `udt_map_get` | reads the map with each node's relation, state and evidence |
+| `udt_status` | reports shared goals and counts, plus this conversation's selection, focus and pending next step |
+| `udt_goal_create` | records a goal and plants only the map root; may also select it for this conversation |
+| `udt_map_get` | reads the selected project's map, or an explicitly named shared course, with each node's relation, state and evidence |
 | `udt_map_update` | `add-nodes` · `set-state` · `add-evidence` |
 | `udt_lesson_update` | writes teaching into the learning surface as blocks |
 | `udt_decide_next` | records where the learner should go next, and why |
@@ -394,19 +412,20 @@ conversation rather than at load.
 
 ### Teaching-brain detection
 
-At load the plugin asks the platform's own skill registry whether the
-Universal Diagnostic Tutor skill is installed — no path is hardcoded, no skill
-root is assumed, and nothing is copied. A missing catalog, a missing skill and
-an unreadable body each degrade to a reported status rather than an error.
+Each overview asks the platform's own Agent and Skill registries whether the
+Universal Diagnostic Tutor skill is available in the requesting session's live
+Agent scope and cwd. No path is hardcoded, no skill root is assumed, and nothing
+is copied. Missing services and incomplete discovery return an inconclusive
+status; complete scoped discovery can establish presence or absence.
 
 Compatibility is probed by **capability**, not by a version string: the skill's
 maintenance contract permits only `name` and `description` in frontmatter, so
 it cannot declare a version. The result carries a short content digest as a
 version hint.
 
-Detection results stay **internal** — logged at `debug`, absent from every tool
-output. The skill forbids naming its files, versions or repository in
-learner-facing text, and this runtime will not be what leaks them.
+Paths, fingerprints and compatibility details stay **internal**, absent from
+every tool output and overview. The overview exposes only availability. The skill
+forbids naming its files, versions or repository in learner-facing text.
 
 ### How the two halves agree
 
@@ -492,18 +511,61 @@ Machine Learning            [goal, unconfirmed]
 └─ Python                   [prerequisite, unconfirmed]
 ```
 
+Two query parameters reach the states that are otherwise awkward to produce on
+demand — `?scenario=` (`first-use`, `map`, `handoff`, `next`, `stay`, `noskill`,
+`long`, `scroll`, `library`, `new`) and `?surface=tab` for the docked right-sidebar
+tab. The scenario switch is in the page's toolbar, and the theme toggle sets the same
+`body[data-ds-dark-theme]` attribute DSH does. The page carries the real DSH
+design tokens for the same reason: with hardcoded fallbacks in their place, a
+token that resolves to near-white in dark mode looks perfectly fine locally.
+
 To capture the panel from a *live* profile instead:
 
 ```sh
 pnpm screenshot "<dsh-url-with-token>" preview/dsh-ui.png
 ```
 
+### Auditing the presentation
+
+```sh
+pnpm preview                                                     # in one shell
+pnpm audit:ui http://127.0.0.1:8391/?scenario=next                # in another
+pnpm audit:ui "<dsh-url-with-token>" /tmp/audit --surface=tab
+pnpm check:scroll http://127.0.0.1:8391/ /tmp/udt-scroll-check
+```
+
+The scroll regression requires local Chrome and runs against the built bundle.
+The preview uses a clipped, fixed-height slot like DSH, so the whole document
+cannot scroll to mask an unscrollable plugin. The check sends real wheel events
+and verifies bottom content remains visible in the tab, expanded tab, stacked
+panel, all three wide-panel panes, and long library/welcome views, in both themes.
+Only fixture data is used; no live learner state is changed. The ordinary visual
+audit alone does **not** verify scrolling.
+
+The visual audit measures, at each width this project targets and in both themes: the contrast
+of every control's own text against its own fill, class names in the DOM that no
+rule matches, how many controls carry primary weight in one view, tap targets
+under 28px, type under 10.5px, and anything spilling or clipped. It prints a
+table, writes `findings.json`, and saves screenshots — it does not fail the run,
+so a human can disagree with it.
+
+That is not a substitute for looking. It is what makes looking affordable: the
+docked tab's invisible primary button and the dark-mode 1.05:1 controls were
+both found by it, in a live profile, in seconds.
+
+What the surfaces look like now, captured from a live profile:
+
+| | light | dark |
+| --- | --- | --- |
+| full panel | ![panel, light](preview/ui-polish/panel-light-1440.png) | ![panel, dark](preview/ui-polish/panel-dark-1440.png) |
+| docked tab | ![tab, light](preview/ui-polish/tab-light-400.png) | ![tab, dark](preview/ui-polish/tab-dark-400.png) |
+
 ## Development
 
 ```sh
 pnpm install
 pnpm typecheck   # tsc --noEmit  (host and client)
-pnpm test        # 253 tests: unit, guard, DOM, render, real composition
+pnpm test        # 278 tests: unit, guard, DOM, render, real composition
 pnpm build       # tsc -> lib/ (host) + tsdown -> lib/client.js
 ```
 
@@ -571,18 +633,19 @@ panel opens, the map and the lesson surface render, and `GET /export` and
 `POST /reset` work. What does not happen is teaching — nothing writes a lesson,
 because nothing is making teaching decisions.
 
-**The plugin cannot always tell you that.** The skill registry reads the
-*global* layer unless it is given a viewing scope, and the standard web profile
-mounts the filesystem skill provider **inside a per-agent layer**. So a plugin
-at the profile root sees an empty skill catalog whether the skill is missing or
-merely mounted where it cannot look. The runtime therefore reports three states,
-not two:
+**Availability is checked for the conversation you have open.** On every
+`GET /overview?sessionId=…`, the plugin resolves that session's live Agent from
+DSH's Agent registry and asks the Skill registry for a complete snapshot using
+`{ scope: agent, cwd: agent.session.header.cwd }`. A root catalog containing
+Office skills cannot establish whether that Agent has a tutor. Services are
+resolved for each request, so delayed registration, removal and preset changes
+are picked up by the panel's existing polling. The runtime reports three states:
 
 | `teachingBrain` | meaning | what the panel does |
 | --- | --- | --- |
-| `true` | found | nothing |
-| `false` | not found, **in a catalog that has entries** | says a tutor is needed |
-| `null` | cannot tell from this scope | says nothing |
+| `true` | found and model-invocable in the live Agent scope | nothing |
+| `false` | unavailable after complete scoped discovery with entries | says a tutor is needed |
+| `null` | no live Agent, empty/incomplete discovery, or unsupported/unavailable service | says nothing |
 
 An earlier revision treated "not in my catalog" as "not installed" and showed a
 notice on that basis. In a web profile that was a confident, wrong answer — the

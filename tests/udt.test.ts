@@ -31,7 +31,7 @@ describe('detectUdtSkill', () => {
   it('reports unavailable, with a reason, when the catalog has nothing', async () => {
     const harness = await createHarness({ udt: 'absent' })
     try {
-      const status = await detectUdtSkill(harness.ctx.get('skills'))
+      const status = await detectUdtSkill(harness.ctx.get('skills'), { scope: {} })
       expect(status.available).toBe(false)
       expect(status.compatibility).toBe('unavailable')
       expect(status.reason).toBeTruthy()
@@ -53,7 +53,7 @@ describe('detectUdtSkill', () => {
   it('detects a compatible skill and fingerprints its body', async () => {
     const harness = await createHarness({ udt: 'compatible' })
     try {
-      const status = await detectUdtSkill(harness.ctx.get('skills'))
+      const status = await detectUdtSkill(harness.ctx.get('skills'), { scope: {} })
       expect(status.available).toBe(true)
       expect(status.name).toBe(UDT_SKILL_NAME)
       expect(status.compatibility).toBe('compatible')
@@ -70,7 +70,7 @@ describe('detectUdtSkill', () => {
   it('reports unknown, not compatible, when the body lacks the expected vocabulary', async () => {
     const harness = await createHarness({ udt: 'unrecognized' })
     try {
-      const status = await detectUdtSkill(harness.ctx.get('skills'))
+      const status = await detectUdtSkill(harness.ctx.get('skills'), { scope: {} })
       expect(status.available).toBe(true)
       expect(status.compatibility).toBe('unknown')
       expect(status.reason).toContain(CAPABILITY_ANCHORS[0])
@@ -102,41 +102,54 @@ describe('detectUdtSkill', () => {
   })
 })
 
-describe('a miss is only a finding when the catalog was readable', () => {
-  /** A registry stand-in that returns exactly the summaries given. */
-  const registry = (names: string[]): SkillRegistry =>
+describe('a miss needs a complete scoped catalog', () => {
+  const scope = {}
+  const registry = (names: string[], complete = true): SkillRegistry =>
     ({
-      list: () =>
-        Promise.resolve(
-          names.map((name) => ({ name, source: 'fixture', provider: 'fixture' })),
-        ),
+      snapshot: () => Promise.resolve({ complete, skills: names.map((name) => ({
+        name, source: 'fixture', provider: 'fixture',
+        invocation: { modelInvocable: true, userInvocable: true },
+      })) }),
       get: () => Promise.resolve(undefined),
     }) as unknown as SkillRegistry
 
-  it('does not claim absence from an empty catalog', async () => {
-    // The registry reads the global layer alone without a viewing scope, and
-    // the standard web profile mounts skills per agent — so a plugin at the
-    // profile root sees an empty catalog even when the skill is installed and
-    // the tutor is using it. Reporting that as "not installed" produced a
-    // confident, wrong answer in the panel.
-    const status = await detectUdtSkill(registry([]))
+  it('does not claim absence from an empty scoped catalog', async () => {
+    const status = await detectUdtSkill(registry([]), { scope })
     expect(status.available).toBe(false)
     expect(status.catalogVisible).toBe(false)
-    expect(status.reason).toMatch(/per agent|nothing can be concluded/i)
   })
 
-  it('does claim absence when other skills are visible but this one is not', async () => {
-    const status = await detectUdtSkill(registry(['something-else', 'another']))
+  it('does not infer Agent availability from a global Office catalog', async () => {
+    const status = await detectUdtSkill(registry(['office-docx', 'office-pptx', 'office-xlsx']))
+    expect(status.available).toBe(false)
+    expect(status.catalogVisible).toBe(false)
+    expect(status.reason).toContain('no Agent viewing scope')
+  })
+
+  it('can establish absence from complete scoped discovery with entries', async () => {
+    const status = await detectUdtSkill(registry(['something-else', 'another']), { scope })
     expect(status.available).toBe(false)
     expect(status.catalogVisible).toBe(true)
     expect(status.reason).toMatch(/not among the 2 skills/)
   })
 
-  it('reports a found skill as visible and compatible', async () => {
-    const status = await detectUdtSkill(registry([UDT_SKILL_NAME]))
-    // Listed, but its body cannot be loaded by this stub, so it is `unknown`
-    // rather than `compatible` — the point here is the two booleans.
-    expect(status.available).toBe(true)
-    expect(status.catalogVisible).toBe(true)
+  it('does not infer absence or presence from incomplete discovery', async () => {
+    for (const names of [['office-docx'], [UDT_SKILL_NAME]]) {
+      const status = await detectUdtSkill(registry(names, false), { scope })
+      expect(status.catalogVisible).toBe(false)
+      expect(status.available).toBe(false)
+    }
+  })
+
+  it('stays inconclusive on an older registry without snapshot', async () => {
+    const legacy = { list: () => Promise.resolve([{ name: 'office-docx' }]) } as unknown as SkillRegistry
+    expect((await detectUdtSkill(legacy, { scope })).catalogVisible).toBe(false)
+  })
+
+  it('keeps a listed but unloadable skill inconclusive', async () => {
+    const status = await detectUdtSkill(registry([UDT_SKILL_NAME]), { scope })
+    expect(status.available).toBe(false)
+    expect(status.catalogVisible).toBe(false)
+    expect(status.compatibility).toBe('unknown')
   })
 })

@@ -45,6 +45,17 @@ class FakeResponse {
   }
 }
 
+
+/**
+ * The conversation these tests act as.
+ *
+ * `/overview` reports learning state only to the conversation it belongs to, so
+ * every read has to name one. Before this, one course-wide focus was shown to
+ * whoever asked, which is how a lesson started in one conversation appeared
+ * under another.
+ */
+const SESSION = 'session-under-test'
+
 interface RequestInit {
   method?: string
   url?: string
@@ -284,9 +295,11 @@ describe('API over real persisted state', () => {
     const harness = await createHarness()
     try {
       const state = await openState(harness)
-      await seedGoal(state, 'Machine Learning', 'Learn ML from weak math foundations')
+      const goalId = await seedGoal(state, 'Machine Learning', 'Learn ML from weak math foundations')
+      // The map is this conversation's once it has the project open.
+      await state.selectProject(SESSION, 'machine-learning', new Date().toISOString())
 
-      const { json } = await call(state, { path: '/overview' })
+      const { json } = await call(state, { path: `/overview?sessionId=${SESSION}` })
       const course = json.course as Record<string, unknown>
       const nodes = json.nodes as Record<string, unknown>[]
 
@@ -361,7 +374,7 @@ describe('API over real persisted state', () => {
           method: 'POST',
           path: '/focus',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ nodeId: goalId, sessionId: 'sess-1' }),
+          body: JSON.stringify({ nodeId: goalId, sessionId: SESSION }),
         },
         prompts,
       )
@@ -371,12 +384,12 @@ describe('API over real persisted state', () => {
       expect(json.focus).toMatchObject({ nodeId: goalId, nodeTitle: 'Machine Learning', status: 'active' })
 
       // The focus is real state, not just a response field.
-      expect(state.activeFocus()?.node.id).toBe(goalId)
+      expect(state.activeFocus(SESSION)?.node.id).toBe(goalId)
 
       // And the tutor was woken in the right session, with a message that names
       // the node and asks for teaching — not with teaching already in it.
       expect(prompts).toHaveLength(1)
-      expect(prompts[0]?.sessionId).toBe('sess-1')
+      expect(prompts[0]?.sessionId).toBe(SESSION)
       expect(prompts[0]?.text).toContain('Machine Learning')
       expect(prompts[0]?.text).toContain('Learning Surface')
     } finally {
@@ -398,7 +411,7 @@ describe('API over real persisted state', () => {
           method: 'POST',
           path: '/focus',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ nodeId: goalId }),
+          body: JSON.stringify({ nodeId: goalId, sessionId: SESSION }),
         },
         [],
         { prompted: false, reason: 'that session has no live agent' },
@@ -406,7 +419,7 @@ describe('API over real persisted state', () => {
 
       expect(json.prompted).toBe(false)
       expect(json.promptReason).toBe('that session has no live agent')
-      expect(state.activeFocus()?.node.id).toBe(goalId)
+      expect(state.activeFocus(SESSION)?.node.id).toBe(goalId)
     } finally {
       await harness.close()
     }
@@ -424,19 +437,24 @@ describe('API over real persisted state', () => {
         method: 'POST',
         path: '/focus',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ nodeId: 'ghost' }),
+        body: JSON.stringify({ nodeId: 'ghost', sessionId: SESSION }),
       })
       expect(missing.status).toBe(404)
 
-      // The active course is Linear Algebra, so a Machine Learning node must be
-      // refused rather than silently focused.
+      // Focusing a node from another project is now meaningful rather than
+      // refused: starting a node IS choosing its project, and there is no
+      // course-wide "active" project to contradict. What must hold is that the
+      // focus lands where the node lives.
       const foreign = await call(state, {
         method: 'POST',
         path: '/focus',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ nodeId: other }),
+        body: JSON.stringify({ nodeId: other, sessionId: SESSION }),
       })
-      expect(foreign.status).toBe(404)
+      expect(foreign.status).toBe(200)
+      const project = await call(state, { path: `/overview?sessionId=${SESSION}` })
+      const focused = project.json.focus as Record<string, unknown>
+      expect(focused.nodeId).toBe(other)
     } finally {
       await harness.close()
     }
@@ -465,16 +483,16 @@ describe('API over real persisted state', () => {
       const state = await openState(harness)
       const goalId = await seedGoal(state, 'Machine Learning', 'learn ml')
 
-      expect((await call(state, { path: '/overview' })).json.focus).toBeNull()
+      expect((await call(state, { path: `/overview?sessionId=${SESSION}` })).json.focus).toBeNull()
 
       await call(state, {
         method: 'POST',
         path: '/focus',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ nodeId: goalId }),
+        body: JSON.stringify({ nodeId: goalId, sessionId: SESSION }),
       })
 
-      const after = await call(state, { path: '/overview' })
+      const after = await call(state, { path: `/overview?sessionId=${SESSION}` })
       expect(after.json.focus).toMatchObject({ nodeId: goalId, nodeTitle: 'Machine Learning' })
     } finally {
       await harness.close()

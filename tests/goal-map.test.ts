@@ -18,6 +18,7 @@ import { createHarness } from './harness.js'
 import type { TestHarness } from './harness.js'
 
 const STORE_FILE = 'udt.json'
+const SESSION = 'session-under-test'
 
 /** Invoke a registered tool exactly as the runtime would. */
 async function callTool(
@@ -27,7 +28,7 @@ async function callTool(
 ): Promise<Record<string, unknown>> {
   const definition = harness.ctx.get('tools')?.get(name)
   if (!definition) throw new Error(`tool "${name}" is not registered`)
-  const exec = {} as unknown as Parameters<typeof definition.execute>[1]
+  const exec = { agent: { id: SESSION } } as unknown as Parameters<typeof definition.execute>[1]
   return (await definition.execute(args, exec)) as Record<string, unknown>
 }
 
@@ -86,6 +87,8 @@ describe('goal creation', () => {
       expect(created.courseId).toBe('machine-learning')
       expect(created.status).toBe('active')
       expect(created.goalNodeId).toBe('machine-learning:goal')
+      expect(created.projectAdopted).toBe(true)
+      expect(created.projectBinding).toBe('adopted')
 
       // The point of the whole design: creating a goal produces ONE node.
       const map = await callTool(harness, 'udt_map_get', {})
@@ -100,7 +103,7 @@ describe('goal creation', () => {
     }
   })
 
-  it('focuses the new goal and pauses the previous one', async () => {
+  it('activates the new goal without replacing the conversation project', async () => {
     const harness = await createHarness()
     try {
       await harness.ctx.plugin(plugin)
@@ -110,14 +113,22 @@ describe('goal creation', () => {
         goal: 'build a project',
       })
       expect(second.pausedCourseIds).toEqual(['linear-algebra'])
+      expect(second.projectAdopted).toBe(false)
+      expect(second.projectBinding).toBe('not-selected')
 
       const status = await callTool(harness, 'udt_status', {})
       const courses = status.courses as { id: string; status: string }[]
       expect(courses.find((course) => course.id === 'linear-algebra')?.status).toBe('paused')
       expect(courses.find((course) => course.id === 'machine-learning')?.status).toBe('active')
-      expect(status.activeCourseId).toBe('machine-learning')
+      expect(status.selection).toBe('project')
+      expect(status.sessionAvailable).toBe(true)
+      expect(status.courseId).toBe('linear-algebra')
+      expect(status).not.toHaveProperty('activeCourseId')
       // Pausing keeps the first goal's map intact.
       expect((await callTool(harness, 'udt_map_get', { courseId: 'linear-algebra' })).nodes).toHaveLength(1)
+      // The default is still this conversation's selection. Both maps remain readable.
+      expect((await callTool(harness, 'udt_map_get', {})).courseId).toBe('linear-algebra')
+      expect((await callTool(harness, 'udt_map_get', { courseId: 'machine-learning' })).nodes).toHaveLength(1)
     } finally {
       await harness.close()
     }
@@ -339,7 +350,10 @@ describe('persistence', () => {
       const status = await callTool(second, 'udt_status', {})
       expect(status.courseCount).toBe(1)
       expect(status.nodeCount).toBe(2)
-      expect(status.activeCourseId).toBe('machine-learning')
+      expect(status.selection).toBe('project')
+      expect(status.sessionAvailable).toBe(true)
+      expect(status.courseId).toBe('machine-learning')
+      expect(status).not.toHaveProperty('activeCourseId')
 
       const map = await callTool(second, 'udt_map_get', {})
       expect(map.goal).toBe('build a project')

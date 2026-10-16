@@ -2,5 +2,9 @@ node_modules/
 lib/
 *.tsbuildinfo
 
+# pnpm keeps its content-addressable store here when it is told to stay local
+# (`store-dir` in .npmrc, or a CI run). 100MB of it should never be a diff.
+.pnpm-store/
+
 .DS_Store
 *.log

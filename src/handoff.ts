@@ -187,6 +187,43 @@ function offset(from: string | undefined, requestedMs: number): number | undefin
   return Number.isNaN(at) ? undefined : Math.max(0, at - requestedMs)
 }
 
+/** Parse a timestamp, or undefined when it is missing or unreadable. */
+function ms(at: string | undefined): number | undefined {
+  if (at === undefined) return undefined
+  const value = Date.parse(at)
+  return Number.isNaN(value) ? undefined : value
+}
+
+/**
+ * When this handoff stopped being a wait.
+ *
+ * A finished handoff's elapsed time is a fact about what happened, not a
+ * running total, so it has to stop at the moment the wait ended:
+ *
+ *   failed   `failedAt` — when the tutor was found to be unreachable
+ *   ready    `lessonAt` — when the teaching arrived
+ *
+ * `observedAt` is deliberately not used when `lessonAt` exists. It records when
+ * a surface happened to render the lesson, which is later and is not part of
+ * how long the learner waited; letting it win would make the number depend on
+ * whether a tab was open.
+ *
+ * When neither is present — a lesson that already existed when the handoff was
+ * requested — the record's last write is the honest answer, and it is the
+ * request itself, so the elapsed time is zero rather than a growing count.
+ *
+ * @param record - the handoff.
+ * @param finished - whether the handoff has reached a terminal state.
+ * @returns the freeze point in milliseconds, or undefined while still waiting.
+ */
+function finishedAtMs(record: HandoffRecord, finished: boolean): number | undefined {
+  if (!finished) return undefined
+  if (record.status === 'failed') {
+    return ms(record.failedAt) ?? ms(record.updatedAt)
+  }
+  return ms(record.lessonAt) ?? ms(record.updatedAt)
+}
+
 /**
  * Derive what a surface should show.
  *
@@ -213,7 +250,13 @@ export function handoffView(record: HandoffRecord, nowMs: number, hasLesson: boo
   add('toLesson', record.lessonAt)
   add('toObserved', record.observedAt)
 
-  const elapsedMs = Math.max(0, nowMs - (Number.isNaN(requested) ? nowMs : requested))
+  // Elapsed time measures the WAIT. Once the wait is over it is a fact, and a
+  // fact does not keep growing — which is what produced "Lesson ready 33h 16m"
+  // for a handoff that had finished half a minute after it was asked.
+  const finished = record.status === 'failed' || record.status === 'ready' || hasLesson
+  const startedMs = Number.isNaN(requested) ? nowMs : requested
+  const endMs = finishedAtMs(record, finished) ?? nowMs
+  const elapsedMs = Math.max(0, endMs - startedMs)
 
   const base = { targetNodeId: record.targetNodeId, elapsedMs, attempts: record.attempts, stages }
 

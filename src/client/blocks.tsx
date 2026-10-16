@@ -17,6 +17,7 @@
 import { useState, type ReactNode } from 'react'
 
 import type { Block, HandoffView, NextStepView } from '../contract.js'
+import { formatDuration } from './model.js'
 
 /** Props every renderer receives. */
 export interface BlockRenderProps<B extends Block = Block> {
@@ -26,17 +27,29 @@ export interface BlockRenderProps<B extends Block = Block> {
 type Renderer = (props: BlockRenderProps) => ReactNode
 
 /**
- * Inline formatting: `**bold**`, `` `code` ``, and inline math.
+ * Inline formatting: `**bold**`, `*italic*`, `` `code` ``, and inline math.
  *
  * Math is handled because the teaching brain writes it by convention —
- * `\(...\)` inline and `\[...\]` display are the skill's own rule — and a
+ * `\\(...\\)` inline and `\\[...\\]` display are the skill's own rule — and a
  * STEM surface that prints the delimiters verbatim is unreadable.
+ *
+ * Emphasis is handled for the same reason, and it was the more visible miss:
+ * a single asterisk is the most ordinary thing a writer types, so `*Machine
+ * Learning*` arrived in the lesson with its asterisks still attached. Bold has
+ * to be matched first — `**x**` also starts with a `*` — which the ordering of
+ * the alternation below does for free.
  *
  * This is *styling*, not typesetting: the span is set apart and given a
  * monospace face so the expression is legible. Real math rendering needs a
  * typesetter (KaTeX or MathML), which is a later decision, not a silent gap.
+ *
+ * The inline pattern is non-greedy to the closing delimiter rather than
+ * "anything but a close parenthesis", which is what it used to be and what
+ * `\\((m,n)\\cdot(n,p)\\)` — a real expression out of a real lesson — broke:
+ * the first `)` ended the candidate match, nothing matched, and the lesson
+ * printed the delimiters and the expression as source.
  */
-const INLINE_PATTERN = /(\*\*[^*]+\*\*|`[^`]+`|\\\([^)]*\\\))/g
+const INLINE_PATTERN = /(\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`]+`|\\\([\s\S]*?\\\))/g
 
 function inline(text: string): ReactNode[] {
   return text
@@ -45,6 +58,9 @@ function inline(text: string): ReactNode[] {
     .map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         return <strong key={index}>{part.slice(2, -2)}</strong>
+      }
+      if (part.length > 2 && part.startsWith('*') && part.endsWith('*')) {
+        return <em key={index}>{part.slice(1, -1)}</em>
       }
       if (part.startsWith('`') && part.endsWith('`')) return <code key={index}>{part.slice(1, -1)}</code>
       if (part.startsWith('\\(') && part.endsWith('\\)')) {
@@ -92,7 +108,27 @@ function classify(line: string): Line {
   return { kind: 'text', text: line }
 }
 
-/** Group consecutive lines into runs that render as one element. */
+/**
+ * Group consecutive lines into runs that render as one element.
+ *
+ * Display math gets a pre-pass because it is the one construct that is not
+ * line-shaped. `\\[ ... \\]` opens and closes on its own lines, and a matrix or
+ * a derivation routinely puts several lines between them — a real lesson
+ * contains
+ *
+ *     \\[X=\\begin{bmatrix}
+ *     1 & 2 \\\\
+ *     3 & 4
+ *     \\end{bmatrix}\\]
+ *
+ * and a line-at-a-time classifier sees four ordinary lines: the delimiters, the
+ * `&` alignment and the `\\\\` row breaks all print verbatim, and the matrix a
+ * learner most needs to read is the one that arrives as source.
+ *
+ * An unterminated `\\[` is deliberately *not* consumed. Printing one stray
+ * delimiter is a small blemish; swallowing the rest of a lesson into a code
+ * panel is a lost lesson.
+ */
 function toRuns(md: string): Line[][] {
   const runs: Line[][] = []
   let current: Line[] = []
@@ -102,12 +138,43 @@ function toRuns(md: string): Line[][] {
     current = []
     currentKind = null
   }
-  for (const raw of md.split(/\n/)) {
-    const line = raw.trimEnd()
+  const lines = md.split(/\n/)
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]!.trimEnd()
     if (line.trim().length === 0) {
       flush()
       continue
     }
+
+    const trimmed = line.trim()
+    if (trimmed.startsWith('\\[') && !trimmed.includes('\\]')) {
+      const span = [trimmed]
+      let cursor = index + 1
+      let closed = false
+      while (cursor < lines.length) {
+        const next = lines[cursor]!.trim()
+        span.push(next)
+        cursor += 1
+        if (next.includes('\\]')) {
+          closed = true
+          break
+        }
+      }
+      if (closed) {
+        const joined = span.join('\n')
+        const body = joined.slice(2, joined.indexOf('\\]'))
+        flush()
+        runs.push([{ kind: 'math', text: body.trim() }])
+        // Anything after the closing delimiter is prose again, not math.
+        const rest = joined.slice(joined.indexOf('\\]') + 2).trim()
+        index = cursor - 1
+        if (rest.length > 0) {
+          runs.push([{ kind: 'text', text: rest }])
+        }
+        continue
+      }
+    }
+
     const parsed = classify(line)
     // Three things join the run in progress: a wrapped prose line, and a bullet
     // or ordered step continuing a list of the same kind. Everything else —
@@ -370,7 +437,10 @@ export function NextStepCard({
  * is a statement about the wait, never about where they are.
  *
  * The elapsed time is shown because it is honest. A tutor that takes ninety
- * seconds should look like a tutor that takes ninety seconds, not like a hang.
+ * seconds should look like a tutor that takes ninety seconds, not like a hang —
+ * and a record restored from three days ago should not look like one either,
+ * which is why the unit changes once the wait is no longer a wait being
+ * watched.
  */
 export function HandoffLine({
   handoff,
@@ -380,12 +450,12 @@ export function HandoffLine({
   onRetry: () => void
 }): ReactNode {
   const retryable = handoff.phase === 'failed' || handoff.phase === 'stalled'
-  const seconds = Math.round(handoff.elapsedMs / 1000)
+  const elapsed = formatDuration(handoff.elapsedMs)
   return (
     <div className="dt-handoff" data-phase={handoff.phase}>
       <span className="dt-handoff-dot" aria-hidden="true" />
       <span className="dt-handoff-label">{handoff.label}</span>
-      <span className="dt-handoff-time">{seconds}s</span>
+      {elapsed !== '' && <span className="dt-handoff-time">{elapsed}</span>}
       {handoff.attempts > 1 && <span className="dt-handoff-try">attempt {handoff.attempts}</span>}
       {handoff.detail !== undefined && <span className="dt-handoff-detail">{handoff.detail}</span>}
       {retryable && (

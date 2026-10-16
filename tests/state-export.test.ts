@@ -21,6 +21,9 @@ import type { TestHarness } from './harness.js'
 
 const NOW = '2026-01-01T00:00:00.000Z'
 
+/** The conversation these tests act as. */
+const SESSION = 'session-under-test'
+
 interface Wired {
   state: UdState
   api(
@@ -88,13 +91,13 @@ async function seed(state: UdState): Promise<{ nodeId: string }> {
     now: NOW,
   })
   for (const record of [goal, node]) await state.writeNode(record)
-  await state.startFocus('ml', node.id, NOW)
+  await state.startFocus('ml', node.id, NOW, SESSION)
   await state.decideNext({
     courseId: 'ml',
     fromNodeId: node.id,
     action: 'more-practice',
     reason: 'Practise the manipulation.',
-    now: NOW,
+    now: NOW, sessionId: SESSION,
   })
   await state.writeLesson({
     id: `${node.id}:lesson`,
@@ -152,6 +155,7 @@ describe('export', () => {
         attempts: 1,
         requestedAt: NOW,
         updatedAt: NOW,
+        sessionId: SESSION,
       })
       const wired = wire(harness, state)
 
@@ -215,7 +219,7 @@ describe('delete', () => {
       // Back to first run, not "initialized with nothing in it".
       expect(state.readLearner().activeCourseId).toBeUndefined()
 
-      const overview = await wired.api('/overview')
+      const overview = await wired.api(`/overview?sessionId=${SESSION}`)
       expect(overview.json.course).toBeNull()
       expect(overview.json.nodes).toEqual([])
     } finally {
@@ -241,10 +245,11 @@ describe('delete', () => {
         updatedAt: NOW,
       })
       await state.activateCourse('la', NOW)
+      await state.selectProject(SESSION, 'la', NOW)
       const node = newNode({ id: 'la:goal', courseId: 'la', title: 'LA', relation: 'goal', now: NOW })
       await state.writeNode(node)
 
-      const overview = await wired.api('/overview')
+      const overview = await wired.api(`/overview?sessionId=${SESSION}`)
       expect(overview.json.course).toMatchObject({ title: 'Linear Algebra' })
       expect(overview.json.nodes).toHaveLength(1)
     } finally {

@@ -53,9 +53,38 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 }
 
-/** The current course and its whole diagnosis map. */
-export function fetchOverview(): Promise<OverviewResponse> {
-  return request<OverviewResponse>('/overview')
+/**
+ * The current course and its whole diagnosis map.
+ *
+ * The conversation is named because learning state belongs to one: the course,
+ * the map and the lessons are shared, but where *this* conversation has got to
+ * is not. Without it the server cannot tell whose focus to report and would
+ * have to guess — which is how a lesson started in one conversation appeared
+ * under another.
+ *
+ * @param sessionId - the conversation asking, when one is open.
+ */
+export function fetchOverview(sessionId?: string): Promise<OverviewResponse> {
+  const query = sessionId === undefined || sessionId.length === 0 ? '' : `?sessionId=${encodeURIComponent(sessionId)}`
+  return request<OverviewResponse>(`/overview${query}`)
+}
+
+/**
+ * Choose what this conversation learns.
+ *
+ * Sending no course selects "start something new": a real state, not the
+ * absence of one, and the one the learner lands in when they want the tutor to
+ * teach them something that does not exist yet.
+ *
+ * @param sessionId - the conversation making the choice.
+ * @param courseId - the project to open, or undefined for a new one.
+ */
+export function selectProject(sessionId: string, courseId?: string): Promise<unknown> {
+  return request('/project', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(courseId === undefined ? { sessionId } : { sessionId, courseId }),
+  })
 }
 
 /** One node, its evidence, its parent and its children. */
@@ -115,11 +144,19 @@ export function resetState(): Promise<{ ok: true; reset: true }> {
  * The last leg of the timing chain: everything before it is measured on the
  * host, and this is the only part only the browser can answer.
  */
-export function reportObserved(nodeId: string): Promise<{ handoff: HandoffView | null }> {
+export function reportObserved(
+  nodeId: string,
+  sessionId: string,
+): Promise<{ handoff: HandoffView | null }> {
+  // The conversation is required, and it is required for a reason: a handoff
+  // belongs to one, so a report that named only the node would be ambiguous the
+  // moment two conversations wait on the same target. The host rejects it, and
+  // rightly — but this call used to omit it and quietly collected a 400 on
+  // every lesson's first render.
   return request<{ handoff: HandoffView | null }>('/handoff/observed', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ nodeId }),
+    body: JSON.stringify({ nodeId, sessionId }),
   })
 }
 

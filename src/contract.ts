@@ -91,9 +91,44 @@ export interface HandoffView {
   detail?: string
 }
 
-/** `GET /overview` — `course: null` means the learner has no goal yet. */
+/**
+ * One Learning Project as the library lists it.
+ *
+ * A project IS a course — the map, the evidence and the lessons all hang off
+ * it — and the counting here is the learner's own progress through it, shared
+ * by every conversation like the project itself.
+ */
+export interface ProjectCardView {
+  id: string
+  title: string
+  goal: string
+  /** Nodes the tutor has confirmed. */
+  confirmed: number
+  /** Nodes on the map. */
+  total: number
+  updatedAt: string
+}
+
+/**
+ * What this conversation has selected.
+ *
+ * Three states, and the middle one is why this exists. A conversation that has
+ * chosen nothing and a conversation that has deliberately chosen to start
+ * something new both have no course open — and a surface that only sees
+ * `course: null` renders them identically, so pressing *Start something new*
+ * looks like a dead button while the state behind it is perfectly correct.
+ *
+ *   `none`     nothing chosen; this is the library
+ *   `new`      chosen to start something; the tutor creates the project
+ *   `project`  a course is open
+ */
+export type ProjectSelection = 'none' | 'new' | 'project'
+
+/** `GET /overview` — `course: null` means this conversation has no project open. */
 export interface OverviewResponse {
   ok: true
+  /** Which of the three states this conversation is in. */
+  selection: ProjectSelection
   course: CourseView | null
   nodes: NodeView[]
   focus: FocusView | null
@@ -102,12 +137,21 @@ export interface OverviewResponse {
   /** The handoff for the focused node, so a reload rebuilds the progress line. */
   handoff: HandoffView | null
   /**
-   * Whether the teaching brain is installed.
+   * Every Learning Project the learner has.
    *
-   * `true` found, `false` confidently absent, `null` **cannot tell** — the
-   * registry reads the global layer alone without a viewing scope, and the
-   * standard web profile mounts skills per agent, so an empty catalog from a
-   * root-scope plugin means nothing. A surface must only warn on `false`.
+   * Learner-level and always present, whatever this conversation has open —
+   * including when it has nothing open, which is the case the library exists
+   * for.
+   */
+  library: ProjectCardView[]
+  /**
+   * Whether the teaching brain is available to this conversation's live Agent.
+   *
+   * Rechecked for each overview using the official Agent scope and its cwd.
+   * `true` found and model-invocable, `false` confidently unavailable in a
+   * complete scoped catalog, `null` **cannot tell** (no live Agent, empty or
+   * incomplete discovery, or unsupported service). Global Office entries
+   * cannot establish absence in an Agent scope. Surfaces only warn on `false`.
    *
    * A tri-state rather than a name or version: the skill's own protocol forbids
    * naming its files or versions in learner-facing text.

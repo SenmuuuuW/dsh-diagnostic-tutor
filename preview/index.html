@@ -5,26 +5,105 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Universal Diagnostic Tutor — panel preview</title>
 <style>
-  html, body { margin: 0; height: 100%; background: #fff; color: #1c1f23;
+  html, body { margin: 0; height: 100%; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary);
     font-family: ui-sans-serif, system-ui, "PingFang SC", "Helvetica Neue", sans-serif; }
-  #host { height: 100%; }
-  .preview-bar {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    padding: 8px 16px; border-bottom: 1px solid #e3e6ea; background: #f7f8fa;
-    font-size: 11px; color: #6b7280;
+  /* Match DSH's bounded content slot: the plugin owns its scroll area. */
+  html, body { overflow: hidden; }
+  body { display: flex; flex-direction: column; }
+  #host { height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
+
+  /* ---------------------------------------------------------------------
+     The design tokens DSH actually ships, copied from
+     packages/client/ui-theme/src/styles/design-platform.css and reduced to
+     the ones this panel reads.
+
+     They are here rather than linked because the preview must run from a
+     checkout alone. They are here at all because a fallback that is a colour
+     turns every token mistake into a theme bug that only shows up in the real
+     app — which is exactly what happened: `--dt-accent` was bound to a token
+     that resolves to near-black in light and near-white in dark, and the
+     primary button hardcoded white text on top of it. On this page that is
+     invisible; with the real tokens it is a blank button in dark mode.
+
+     Refresh by re-reading that file when the design system moves.
+     --------------------------------------------------------------------- */
+  :root {
+    --dsw-static-neutral-bluish-00: rgb(255, 255, 255);
+    --dsw-static-neutral-bluish-50: rgb(249, 250, 251);
+    --dsw-static-neutral-bluish-60: rgb(245, 246, 247);
+    --dsw-static-neutral-bluish-100: rgb(235, 238, 242);
+    --dsw-static-neutral-bluish-300: rgb(207, 211, 214);
+    --dsw-static-neutral-bluish-700: rgb(97, 102, 107);
+    --dsw-static-neutral-bluish-750: rgb(67, 69, 74);
+    --dsw-static-neutral-bluish-800: rgb(53, 54, 56);
+    --dsw-static-neutral-bluish-875: rgb(35, 35, 36);
+    --dsw-static-neutral-bluish-950: rgb(21, 21, 23);
+    --dsw-static-neutral-bluish-1000: rgb(15, 17, 21);
+    --dsw-static-red-400: rgb(242, 90, 90);
+    --dsw-static-red-600: rgb(236, 19, 19);
+    --dsw-static-green-500: rgb(34, 197, 94);
+    --dsw-static-amber-500: rgb(245, 158, 11);
+    --dsw-static-amber-600: rgb(217, 119, 6);
+
+    --dsw-alias-bg-base: var(--dsw-static-neutral-bluish-00);
+    --dsw-alias-bg-layer-1: var(--dsw-static-neutral-bluish-00);
+    --dsw-alias-bg-module-platform: var(--dsw-static-neutral-bluish-60);
+    --dsw-alias-border-l2: rgba(0, 0, 0, 0.1);
+    --dsw-alias-border-l3: rgba(0, 0, 0, 0.12);
+    --dsw-alias-label-primary: var(--dsw-static-neutral-bluish-1000);
+    --dsw-alias-label-secondary: var(--dsw-static-neutral-bluish-700);
+    --dsw-alias-label-primary-foreground: var(--dsw-static-neutral-bluish-00);
+    --dsw-alias-brand-primary: var(--dsw-static-neutral-bluish-1000);
+    --dsw-alias-button-primary-fill: var(--dsw-alias-brand-primary);
+    --dsw-alias-button-primary-hover: var(--dsw-static-neutral-bluish-750);
+    --dsw-alias-state-error-primary: var(--dsw-static-red-600);
+    --dsw-alias-state-success-primary: var(--dsw-static-green-500);
+    --dsw-alias-state-warn-primary: var(--dsw-static-amber-500);
   }
-  .preview-bar b { color: #1c1f23; font-weight: 600; }
+  body[data-ds-dark-theme] {
+    --dsw-alias-bg-base: var(--dsw-static-neutral-bluish-950);
+    --dsw-alias-bg-layer-1: var(--dsw-static-neutral-bluish-875);
+    --dsw-alias-bg-module-platform: var(--dsw-static-neutral-bluish-800);
+    --dsw-alias-border-l2: rgba(255, 255, 255, 0.12);
+    --dsw-alias-border-l3: rgba(255, 255, 255, 0.16);
+    --dsw-alias-label-primary: var(--dsw-static-neutral-bluish-50);
+    --dsw-alias-label-secondary: var(--dsw-static-neutral-bluish-300);
+    --dsw-alias-label-primary-foreground: var(--dsw-static-neutral-bluish-1000);
+    --dsw-alias-brand-primary: var(--dsw-static-neutral-bluish-50);
+    --dsw-alias-button-primary-fill: var(--dsw-alias-brand-primary);
+    --dsw-alias-button-primary-hover: var(--dsw-static-neutral-bluish-100);
+    --dsw-alias-state-error-primary: var(--dsw-static-red-400);
+    --dsw-alias-state-success-primary: var(--dsw-static-green-500);
+    --dsw-alias-state-warn-primary: var(--dsw-static-amber-500);
+  }
+
+  .preview-bar {
+    display: flex; flex: none; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 8px 16px; border-bottom: 1px solid var(--dsw-alias-border-l2);
+    background: var(--dsw-alias-bg-module-platform);
+    font-size: 11px; color: var(--dsw-alias-label-secondary);
+  }
+  .preview-bar b { color: var(--dsw-alias-label-primary); font-weight: 600; }
+  .preview-bar select, .preview-bar button {
+    font: inherit; font-size: 11px; padding: 2px 6px; border-radius: 6px;
+    border: 1px solid var(--dsw-alias-border-l3);
+    background: var(--dsw-alias-bg-base); color: inherit;
+  }
   .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-left: auto; }
   .legend span { display: inline-flex; align-items: center; gap: 4px; }
   .legend i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; box-sizing: border-box; }
   .legend i[data-filled="true"] { background: currentColor; }
-  #app { height: calc(100% - 37px); }
+  #app { flex: 1; min-height: 0; min-width: 0; overflow: hidden; }
 </style>
 </head>
 <body>
 <div class="preview-bar">
   <b>Preview</b>
   <span>no DSH, no agent — the real built bundle over fixture data</span>
+  <label>state
+    <select id="scenario"></select>
+  </label>
+  <button type="button" id="theme">dark</button>
   <span class="legend" id="legend"></span>
 </div>
 <div id="app"><div id="host"></div></div>
@@ -59,18 +138,47 @@ window.__ModuleLoader__ = {
 (function () {
   const M = window.__capturedModule;
   const host = document.getElementById("host");
+  const params = new URLSearchParams(location.search);
+  const scenario = params.get("scenario") || "map";
+  const surface = params.get("surface") || "panel";
+
   if (!M) { host.textContent = "module load failed — run `pnpm build` first"; return; }
   if (typeof M.LearningPanel !== "function") {
     host.textContent = "bundle did not export LearningPanel: " + Object.keys(M).join(", ");
     return;
   }
 
-  /* Run the real apply() against a stub context, so the preview also exercises
-     the plugin's own entry point (style injection happens here). */
-  M.apply({
+  /* ---------------------------------------------------------------------
+     Run the real apply() against a stub context.
+
+     The stub has to answer every service apply() reaches for, and `get` is
+     the one it reaches for first: it was added to apply() after this file was
+     written, and until now the call threw before the panel was ever mounted.
+     The whole preview has been a blank page since — which is why the failure
+     is worth a real stub rather than a try/catch: a harness that silently
+     stops exercising the entry point is worse than no harness.
+
+     `get` returns undefined for everything, which is the honest answer here:
+     there is no layout service and no session scope on this page, so the
+     panel takes its no-chat, no-session path — the one that has to stand on
+     its own.
+     --------------------------------------------------------------------- */
+  const registered = [];
+  const ctx = {
     effect: (fn) => { fn(); return () => {}; },
-    slots: { inject: () => () => {}, register: () => () => {} },
-  });
+    get: () => undefined,
+    slots: {
+      inject: () => () => {},
+      register: (options, component) => { registered.push({ options, component }); return () => {}; },
+    },
+    sidebarRightTabs: { register: () => {} },
+  };
+  try {
+    M.apply(ctx);
+  } catch (error) {
+    host.textContent = "apply() threw: " + error.message;
+    return;
+  }
 
   /* Legend for the seven status terms, drawn with the panel's own classes. */
   const states = ["unconfirmed","explained","practiced","checked","weak","blocked","confirmed"];
@@ -82,8 +190,36 @@ window.__ModuleLoader__ = {
     legend.appendChild(el);
   });
 
+  /* Scenario switch. Changing it reloads rather than re-rendering: the fixture
+     client holds state, and a fresh client per state is the honest model. */
+  const select = document.getElementById("scenario");
+  (window.FIXTURE_SCENARIOS || ["map"]).forEach((name) => {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name;
+    option.selected = name === scenario;
+    select.appendChild(option);
+  });
+  select.addEventListener("change", () => {
+    const next = new URL(location.href);
+    next.searchParams.set("scenario", select.value);
+    location.href = next.toString();
+  });
+
+  /* Theme switch, using the same attribute DSH sets on <body>. */
+  const themeButton = document.getElementById("theme");
+  const setTheme = (dark) => {
+    if (dark) document.body.setAttribute("data-ds-dark-theme", "");
+    else document.body.removeAttribute("data-ds-dark-theme");
+    themeButton.textContent = dark ? "light" : "dark";
+    themeButton.dataset.theme = dark ? "dark" : "light";
+  };
+  setTheme(params.get("theme") === "dark");
+  themeButton.addEventListener("click", () => setTheme(themeButton.dataset.theme !== "dark"));
+
+  const Component = surface === "tab" ? M.LearningTab : M.LearningPanel;
   window.ReactDOM.createRoot(host).render(
-    window.React.createElement(M.LearningPanel, { client: window.createFixtureClient() })
+    window.React.createElement(Component, { client: window.createFixtureClient({ scenario }) })
   );
 })();
 </script>
