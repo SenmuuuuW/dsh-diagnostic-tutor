@@ -6,7 +6,7 @@
  * node environment. The component below it is then mostly rendering.
  */
 
-import type { NodeView } from '../contract.js'
+import type { HandoffView, LessonRecord, NodeView } from '../contract.js'
 
 /** One node plus its children, in render order. */
 export interface MapTreeNode {
@@ -143,6 +143,111 @@ export function stateExplanation(state: string): string {
     default:
       return 'Unknown state.'
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/* The conversation's own state, as both surfaces must agree on it             */
+/* -------------------------------------------------------------------------- */
+
+/** One control the conversation may offer. */
+export interface ConversationControl {
+  kind: 'start' | 'in-progress'
+  label: string
+  /**
+   * The node the control acts on.
+   *
+   * The focus when there is one: the control sits under "this conversation", so
+   * browsing the map must not silently retarget what pressing it starts.
+   */
+  nodeId: string
+}
+
+/**
+ * Which control this conversation offers, given what is actually true.
+ *
+ * There are exactly three states, and they must not overlap. The bug this
+ * function exists to end: with a recommendation pending, the surfaces showed
+ * `Start learning` **and** `Continue learning` at the same time and told the
+ * learner to press the former — while the recommendation was the move the tutor
+ * had just recorded, and starting a node the learner had not been sent to would
+ * quietly record a different focus.
+ *
+ *   - **a next step is pending** — no start control at all. The recommendation
+ *     owns the next move, and its own button is the only thing to press.
+ *   - **nothing is focused** — `Start learning`. This is the only state that may
+ *     say it: before anything has started, that is the literal next action.
+ *   - **a node is focused, no next step** — `Learning in progress`, which names
+ *     the state instead of inviting a start that has already happened.
+ *
+ * @param input.focusNodeId - the node this conversation is learning, if any.
+ * @param input.shownNodeId - the node on screen, used when nothing is focused.
+ * @param input.hasNextStep - whether the tutor recorded a recommendation.
+ * @returns the control to render, or `null` when none belongs on screen.
+ */
+export function conversationControl(input: {
+  focusNodeId: string | null
+  shownNodeId: string | null
+  hasNextStep: boolean
+}): ConversationControl | null {
+  if (input.hasNextStep) return null
+  if (input.focusNodeId !== null) {
+    return { kind: 'in-progress', label: 'Learning in progress', nodeId: input.focusNodeId }
+  }
+  if (input.shownNodeId === null) return null
+  return { kind: 'start', label: 'Start learning', nodeId: input.shownNodeId }
+}
+
+/**
+ * What the teaching region says while there is no lesson to show.
+ *
+ * A pending recommendation outranks a focus: the tutor has finished this turn
+ * and recorded where to go next, so claiming a lesson is being written would
+ * describe a turn that is not running, and `Press Start learning` would name a
+ * control that is not on the page.
+ */
+export type LessonPlaceholder = 'preparing' | 'press-start' | 'press-continue'
+
+export function lessonPlaceholder(input: {
+  focusNodeId: string | null
+  hasNextStep: boolean
+}): LessonPlaceholder {
+  if (input.hasNextStep) return 'press-continue'
+  if (input.focusNodeId !== null) return 'preparing'
+  return 'press-start'
+}
+
+/**
+ * The label on the recommendation's own button.
+ *
+ * Shared with the card that renders it, so a sentence pointing at the button
+ * cannot name a different verb: a stay says `Continue`, a move says
+ * `Continue learning`.
+ */
+export function continuationLabel(nextStep: { targetNodeId: string | null } | null): string {
+  return nextStep !== null && nextStep.targetNodeId === null ? 'Continue' : 'Continue learning'
+}
+
+/**
+ * Whether the handoff line belongs on screen.
+ *
+ * `Lesson ready` is a claim about a lesson. It was printed by the docked tab
+ * above that very lesson, and by both surfaces after the learner had moved on —
+ * the copy disagreeing with the page it sat on. The line narrates a *wait*, so
+ * it is visible only while the wait is real: something is focused and no lesson
+ * has arrived yet.
+ *
+ * A failed or stalled wait keeps its line (and its retry) even when the focus
+ * has moved: those phases are statements about the wait, never about where the
+ * learner is — the same rule the handoff record itself follows.
+ */
+export function handoffLineVisible(input: {
+  handoff: HandoffView | null
+  lesson: LessonRecord | null
+  focusNodeId: string | null
+}): boolean {
+  if (input.handoff === null || input.lesson !== null || input.focusNodeId === null) return false
+  if (input.handoff.phase === 'failed' || input.handoff.phase === 'stalled') return true
+  return input.handoff.targetNodeId === input.focusNodeId
 }
 
 /**

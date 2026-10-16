@@ -20,7 +20,16 @@ import { useEffect, useMemo, type ReactNode } from 'react'
 
 import type { NodeView, OverviewResponse } from '../contract.js'
 import { DataFooter, HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
-import { buildMapTree, flattenTree, relationLabel, stateExplanation } from './model.js'
+import {
+  buildMapTree,
+  continuationLabel,
+  conversationControl,
+  flattenTree,
+  handoffLineVisible,
+  lessonPlaceholder,
+  relationLabel,
+  stateExplanation,
+} from './model.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
 import { useCurrentSessionId } from './use-session.js'
@@ -143,6 +152,30 @@ export function LearningTab({
   }, [overview, focus, selectedId, select])
 
   const shownId = focus?.nodeId ?? selectedId
+
+  /**
+   * The conversation's control, and the state the teaching region is in.
+   *
+   * Both are derived from what is true rather than from what would look busy:
+   * with a recommendation pending there is no start control (its card owns the
+   * next move), `Start learning` exists only before anything is focused, and the
+   * handoff line narrates a wait rather than announcing a lesson that is already
+   * on the page.
+   */
+  const control = conversationControl({
+    focusNodeId: focus?.nodeId ?? null,
+    shownNodeId: shownId,
+    hasNextStep: nextStep !== null,
+  })
+  const placeholder = lessonPlaceholder({
+    focusNodeId: focus?.nodeId ?? null,
+    hasNextStep: nextStep !== null,
+  })
+  const handoffVisible = handoffLineVisible({
+    handoff,
+    lesson,
+    focusNodeId: focus?.nodeId ?? null,
+  })
 
   // Read from the map rather than fetched: the tab already holds every node,
   // and the focused one is among them.
@@ -311,22 +344,25 @@ export function LearningTab({
           </p>
         )}
 
-        {/* One filled control per column. When the tutor has recorded a
-            recommendation, that recommendation is the next move and owns the
-            primary weight; starting a node is the fallback and steps down. */}
-        <button
-          type="button"
-          className={nextStep === null ? 'dt-primary dt-here-action' : 'dt-secondary dt-here-action'}
-          onClick={state.start}
-          disabled={starting || shownId === null}
-        >
-          {starting
-            ? 'Starting…'
-            : focus !== null && focus.nodeId === shownId
-              ? 'Learning in progress'
-              : 'Start learning'}
-        </button>
-        {focus === null && (
+        {/* One control, and only one. With a recommendation pending the card
+            below owns the move and this control is not rendered at all — the
+            two used to appear together, which is a question rather than a
+            choice. `Start learning` is offered only before anything is focused;
+            once there is a focus the control names the state instead. */}
+        {control !== null && (
+          <button
+            type="button"
+            className="dt-primary dt-here-action"
+            // It acts on the node it describes. Starting used to follow the
+            // selection, so browsing the map could silently retarget a press
+            // that looked like it was about the focused node.
+            onClick={() => state.continueTo(control.nodeId)}
+            disabled={starting}
+          >
+            {starting ? 'Starting…' : control.label}
+          </button>
+        )}
+        {control?.kind === 'start' && (
           <p className="dt-caption">
             Starting records a focus for this conversation only. Your map and lessons stay shared.
           </p>
@@ -350,14 +386,18 @@ export function LearningTab({
             </button>
           )}
         </p>
-        {handoff !== null && (
+        {/* The wait line is for a wait: with the lesson on screen (or nothing
+            focused) it would be announcing what the page already shows. */}
+        {handoffVisible && handoff !== null && (
           <HandoffLine handoff={handoff} onRetry={() => state.continueTo(handoff.targetNodeId)} />
         )}
         {lesson === null ? (
           <p className="dt-empty">
-            {focus !== null
+            {placeholder === 'preparing'
               ? 'The tutor is preparing this node…'
-              : 'Press Start learning and the teaching appears here, while the chat stays open beside it.'}
+              : placeholder === 'press-continue'
+                ? `Press ${continuationLabel(nextStep)} and the teaching appears here, while the chat stays open beside it.`
+                : 'Press Start learning and the teaching appears here, while the chat stays open beside it.'}
           </p>
         ) : (
           <article className="dt-lesson-body">

@@ -25,9 +25,13 @@ import { useEffect, type ReactNode } from 'react'
 import { DataFooter, HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
 import {
   buildMapTree,
+  continuationLabel,
+  conversationControl,
   flattenTree,
   formatWhen,
+  handoffLineVisible,
   isFilledState,
+  lessonPlaceholder,
   relationLabel,
   stateExplanation,
 } from './model.js'
@@ -117,6 +121,29 @@ export function LearningPanel({
   // "Already learning this one" is a statement about the tutor's focus, not
   // about what the learner has selected.
   const isFocused = focus !== null && focus.nodeId === selectedId
+
+  /**
+   * This conversation's control, its teaching-region state, and whether the
+   * handoff line describes a wait that is still real.
+   *
+   * Derived, not re-decided per surface: the docked tab renders the same three
+   * answers from the same three functions, so the two cannot drift into telling
+   * a learner to press `Start learning` while a recommendation is pending.
+   */
+  const control = conversationControl({
+    focusNodeId: focus?.nodeId ?? null,
+    shownNodeId: selectedId,
+    hasNextStep: nextStep !== null,
+  })
+  const placeholder = lessonPlaceholder({
+    focusNodeId: focus?.nodeId ?? null,
+    hasNextStep: nextStep !== null,
+  })
+  const handoffVisible = handoffLineVisible({
+    handoff,
+    lesson,
+    focusNodeId: focus?.nodeId ?? null,
+  })
 
   // First use, same as the docked tab: a blank three-column page reads as a
   // broken page. One question and the sentence that starts everything.
@@ -313,27 +340,25 @@ export function LearningPanel({
             )}
           </p>
         )}
-        {/* Waking a tutor means naming a conversation, and it starts the node
-            the learner has selected — so it lives under THIS CONVERSATION, not
-            under the shared course. */}
-        {/* One filled control per screen. When the tutor has recorded a
-            recommendation, that recommendation is the next move and owns the
-            primary weight; starting a node is the fallback and steps down. */}
-        <button
-          type="button"
-          className={nextStep === null ? 'dt-primary dt-here-action' : 'dt-secondary dt-here-action'}
-          onClick={state.start}
-          disabled={starting || selectedId === null || sessionId === undefined}
-          {...(sessionId === undefined
-            ? { title: 'Open or create a conversation first — that is where the tutor replies.' }
-            : {})}
-        >
-          {starting
-            ? 'Starting…'
-            : focus !== null && focus.nodeId === selectedId
-              ? 'Learning in progress'
-              : 'Start learning'}
-        </button>
+        {/* Waking a tutor means naming a conversation, so it lives under THIS
+            CONVERSATION, not under the shared course — and it acts on the node
+            it describes: the focus when there is one, the selection only before
+            anything has started. With a recommendation pending it is not
+            rendered at all: the card below owns the move, and two controls for
+            one next step is how the page came to ask which one to press. */}
+        {control !== null && (
+          <button
+            type="button"
+            className="dt-primary dt-here-action"
+            onClick={() => state.continueTo(control.nodeId)}
+            disabled={starting || sessionId === undefined}
+            {...(sessionId === undefined
+              ? { title: 'Open or create a conversation first — that is where the tutor replies.' }
+              : {})}
+          >
+            {starting ? 'Starting…' : control.label}
+          </button>
+        )}
         {sessionId === undefined && (
           <p className="dt-caption">
             Open a conversation first. The tutor teaches in the chat, so a node cannot be started
@@ -454,7 +479,7 @@ export function LearningPanel({
           {lesson !== null && <span className="dt-origin">{lesson.origin}</span>}
         </div>
         {lesson === null ? (
-          focus !== null ? (
+          placeholder === 'preparing' ? (
             <>
               <p className="dt-empty">The tutor is preparing this node…</p>
               <p className="dt-caption">
@@ -465,9 +490,23 @@ export function LearningPanel({
           ) : (
             <div className="dt-empty-state">
               <p className="dt-empty-title">Nothing is being taught yet</p>
+              {/* The invitation names the action that actually exists. With a
+                  recommendation pending there is no start control to press, and
+                  a focused node whose tutor has already handed off is not a turn
+                  that is still being written. */}
               <p className="dt-empty">
-                Choose a node on the map and press <b>Start learning</b>. The teaching appears
-                here, and the conversation stays in the chat.
+                {placeholder === 'press-continue' ? (
+                  <>
+                    The tutor has recorded the next step. Press{' '}
+                    <b>{continuationLabel(nextStep)}</b> and the teaching appears here, and the
+                    conversation stays in the chat.
+                  </>
+                ) : (
+                  <>
+                    Choose a node on the map and press <b>Start learning</b>. The teaching appears
+                    here, and the conversation stays in the chat.
+                  </>
+                )}
               </p>
             </div>
           )
@@ -477,7 +516,9 @@ export function LearningPanel({
             <LessonBody blocks={lesson.blocks} />
           </>
         )}
-        {handoff !== null && lesson === null && focus !== null && (
+        {/* The wait line is for a wait: with the lesson on screen it would be
+            announcing what the page already shows. */}
+        {handoffVisible && handoff !== null && (
           <HandoffLine handoff={handoff} onRetry={() => state.continueTo(handoff.targetNodeId)} />
         )}
         {nextStep !== null && (

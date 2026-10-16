@@ -21,7 +21,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type {
   FocusResponse,
   FocusView,
+  HandoffView,
   LessonRecord,
+  NextStepView,
   NodeDetailResponse,
   NodeView,
   OverviewResponse,
@@ -66,6 +68,16 @@ const overview: OverviewResponse = {
 let activeFocus: FocusView | null = null
 
 /**
+ * What the fake host reports besides the focus.
+ *
+ * The tutor's recommendation and the handoff record are the two facts that
+ * decide which control a learner sees, so the tests below have to be able to
+ * put the surface in each of their states.
+ */
+let activeNextStep: NextStepView | null = null
+let activeHandoff: HandoffView | null = null
+
+/**
  * Blocks the "tutor" adds after the fact, to model a turn still in progress.
  * The panel should pick these up from its own polling, with no user action.
  */
@@ -93,7 +105,8 @@ const started: string[] = []
 const fixtureClient: PanelClient = {
   // Stateful, like the real host: starting a focus changes what the next
   // overview reports, which is what the panel polls for.
-  fetchOverview: () => Promise.resolve({ ...overview, focus: activeFocus }),
+  fetchOverview: () =>
+    Promise.resolve({ ...overview, focus: activeFocus, nextStep: activeNextStep, handoff: activeHandoff }),
   fetchNode: (nodeId): Promise<NodeDetailResponse> => {
     asked.push(nodeId)
     const target = nodes.find((entry) => entry.id === nodeId)
@@ -149,6 +162,8 @@ beforeEach(() => {
   askedLesson.length = 0
   started.length = 0
   activeFocus = null
+  activeNextStep = null
+  activeHandoff = null
   tutorBlocks = []
   container = document.createElement('div')
   document.body.appendChild(container)
@@ -169,6 +184,19 @@ async function mount(): Promise<void> {
       createElement(LearningPanel, {
         client: fixtureClient,
         initialOverview: overview,
+        sessionId: 'session-under-test',
+      }),
+    )
+  })
+}
+
+/** Mount the panel against a chosen overview. */
+async function mountWith(state: OverviewResponse): Promise<void> {
+  await act(async () => {
+    root.render(
+      createElement(LearningPanel, {
+        client: fixtureClient,
+        initialOverview: state,
         sessionId: 'session-under-test',
       }),
     )
@@ -358,6 +386,49 @@ describe('starting belongs to this conversation, not to the shared course', () =
     expect(here).toContain('This conversation')
     expect(container.textContent).toContain('No learning focus yet')
     expect(container.textContent).toContain('Shared across conversations')
+  })
+})
+
+describe('the conversation control matches the state it is in', () => {
+  const move: NextStepView = {
+    fromNodeId: 'ml:math',
+    fromNodeTitle: 'Math Foundations',
+    targetNodeId: 'ml:math:la',
+    targetNodeTitle: 'Linear Algebra',
+    action: 'step-down',
+    reason: 'Vectors and matrix shapes come before anything built on them.',
+    createdAt: NOW,
+  }
+
+  it('is absent while a next step is pending, and the copy names the card', async () => {
+    // The reported bug, on the surface that takes the main column: `Start
+    // learning` sat beside `Continue learning`, and the teaching region told
+    // the learner to press the one that was about to be removed.
+    await mountWith({ ...overview, nextStep: move })
+
+    expect(container.querySelector('.dt-here-action')).toBeNull()
+    expect(container.textContent).not.toContain('Start learning')
+    expect(container.textContent).toContain('Continue learning')
+    expect(container.textContent).toContain('Press Continue learning')
+  })
+
+  it('says Start learning while nothing is focused', async () => {
+    await mount()
+    const control = container.querySelector<HTMLButtonElement>('.dt-here-action')
+    expect(control?.textContent).toContain('Start learning')
+    expect(control?.className).toContain('dt-primary')
+  })
+
+  it('names the state instead of offering a start that already happened', async () => {
+    await mount()
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('.dt-here-action')?.click()
+    })
+
+    const control = container.querySelector<HTMLButtonElement>('.dt-here-action')
+    expect(control?.textContent).toContain('Learning in progress')
+    // One state, one sentence: the invite must not survive the start.
+    expect(container.textContent).not.toContain('Start learning')
   })
 })
 

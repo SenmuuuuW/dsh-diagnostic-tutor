@@ -209,6 +209,50 @@ describe('one filled control per column', () => {
   })
 })
 
+describe('the panel reports the state the conversation is really in', () => {
+  const focused: OverviewResponse = {
+    ...overview,
+    focus: {
+      courseId: 'ml',
+      nodeId: 'ml:math:la',
+      nodeTitle: 'Linear Algebra',
+      startedAt: NOW,
+      status: 'active',
+    },
+  }
+  const withNext: OverviewResponse = {
+    ...focused,
+    nextStep: {
+      fromNodeId: 'ml:math:la',
+      fromNodeTitle: 'Linear Algebra',
+      targetNodeId: 'ml:math:calc',
+      targetNodeTitle: 'Calculus',
+      action: 'advance',
+      reason: 'Shapes are stable; the derivative is next.',
+      createdAt: NOW,
+    },
+  }
+
+  it('offers no Start learning at all while a next step is pending', () => {
+    // The bug: with a recommendation recorded, the panel showed `Start
+    // learning` next to `Continue learning` and expected the learner to work
+    // out which one the tutor meant.
+    const html = panel({ client, initialOverview: withNext, sessionId: 's1', onOpenChat: () => {} })
+    expect(html).not.toContain('Start learning')
+    expect(html).toContain('Continue learning')
+  })
+
+  it('tells the learner to press the control that exists', () => {
+    const html = panel({ client, initialOverview: withNext, sessionId: 's1', onOpenChat: () => {} })
+    expect(html).toContain('Press <b>Continue learning</b>')
+  })
+
+  it('keeps Start learning for the state that has nothing focused yet', () => {
+    const html = panel({ client, initialOverview: overview, sessionId: 's1' })
+    expect(html).toContain('press <b>Start learning</b>')
+  })
+})
+
 describe('the map says which node the tutor is on', () => {
   const focused = {
     ...overview,

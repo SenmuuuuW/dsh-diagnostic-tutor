@@ -19,7 +19,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type {
   FocusView,
+  HandoffView,
   LessonRecord,
+  NextStepView,
   NodeDetailResponse,
   NodeView,
   OverviewResponse,
@@ -44,6 +46,9 @@ const nodes = [
 
 let activeFocus: FocusView | null = null
 let tutorBlocks: { id: string; type: string; content: Record<string, unknown> }[] = []
+/** The tutor's recommendation and the handoff record, when a test sets them. */
+let activeNextStep: NextStepView | null = null
+let activeHandoff: HandoffView | null = null
 
 const lesson: LessonRecord = {
   id: 'ml:math:lesson',
@@ -71,8 +76,8 @@ const client: PanelClient = {
       },
       nodes,
       focus: activeFocus,
-  nextStep: null,
-  handoff: null,
+  nextStep: activeNextStep,
+  handoff: activeHandoff,
       teachingBrain: true,
       lessonCount: 1,
   library: [],
@@ -1158,5 +1163,138 @@ describe('the open tab discovers its conversation\'s project', () => {
     })
     expect(read).not.toHaveBeenCalled()
     expect(host.querySelector('.dt-here-course')).toBeNull()
+  })
+})
+
+/**
+ * The three copies the RC showed in the wrong states.
+ *
+ * The regression: with a Next Best Step recorded, the docked tab rendered
+ * `Start learning` beside the recommendation's `Continue learning` and told the
+ * learner to press the former, while `Lesson ready` sat above the lesson it was
+ * describing.
+ */
+describe('the tab reports the state the conversation is really in', () => {
+  const focusA: FocusView = {
+    courseId: 'ml',
+    nodeId: 'ml:math',
+    nodeTitle: 'Math Foundations',
+    startedAt: NOW,
+    status: 'active',
+  }
+
+  const move: NextStepView = {
+    fromNodeId: 'ml:math',
+    fromNodeTitle: 'Math Foundations',
+    targetNodeId: 'ml:la',
+    targetNodeTitle: 'Linear Algebra',
+    action: 'step-down',
+    reason: 'Vectors and matrix shapes come before anything built on them.',
+    createdAt: NOW,
+  }
+
+  const handoff = (phase: HandoffView['phase'], targetNodeId: string, label: string): HandoffView => ({
+    targetNodeId,
+    phase,
+    label,
+    elapsedMs: 4_000,
+    attempts: 1,
+    stages: {},
+  })
+
+  let container: HTMLDivElement
+  let root: Root
+
+  beforeEach(() => {
+    activeFocus = null
+    activeNextStep = null
+    activeHandoff = null
+    tutorBlocks = []
+    container = document.createElement('div')
+    document.body.appendChild(container)
+    root = createRoot(container)
+  })
+
+  afterEach(() => {
+    act(() => root.unmount())
+    container.remove()
+    activeNextStep = null
+    activeHandoff = null
+  })
+
+  async function mount(): Promise<void> {
+    await act(async () => {
+      root.render(createElement(LearningTab, { client }))
+    })
+    await act(async () => {
+      await Promise.resolve()
+    })
+  }
+
+  it('never offers Start learning while a next step is pending', async () => {
+    // Both controls at once — the start one secondary, the recommendation's
+    // primary — is a question, not a next move.
+    activeFocus = focusA
+    activeNextStep = move
+    await mount()
+
+    expect(container.querySelector('.dt-here-action')).toBeNull()
+    expect(container.textContent).not.toContain('Start learning')
+    expect(container.textContent).toContain('Continue learning')
+  })
+
+  it('names the action that exists when nothing is focused yet', async () => {
+    activeNextStep = move
+    await mount()
+
+    expect(container.textContent).not.toContain('Start learning')
+    expect(container.textContent).toContain('Press Continue learning')
+  })
+
+  it('names the verb the recommendation itself offers', async () => {
+    // A stay's button says `Continue`; the sentence points at that button, so it
+    // has to use the same word rather than borrowing the move's label.
+    activeNextStep = { ...move, targetNodeId: null, targetNodeTitle: null, action: 'more-practice' }
+    await mount()
+
+    expect(container.textContent).toContain('Press Continue and the teaching appears here')
+  })
+
+  it('does not announce a lesson that is already on the page', async () => {
+    activeFocus = focusA
+    activeHandoff = handoff('lesson-ready', 'ml:math', 'Lesson ready')
+    await mount()
+
+    // The lesson itself arrived from the tutor, and the wait line must not be
+    // sitting above it claiming the same thing.
+    expect(container.textContent).toContain('Why this node exists.')
+    expect(container.textContent).not.toContain('Lesson ready')
+  })
+
+  it('still narrates a wait that is real', async () => {
+    // The positive control: a focus with no lesson yet is exactly when the line
+    // earns its place.
+    activeFocus = { ...focusA, nodeId: 'ml:la', nodeTitle: 'Linear Algebra' }
+    activeHandoff = handoff('tutor-working', 'ml:la', 'Tutor working…')
+    await mount()
+
+    expect(container.textContent).toContain('Tutor working…')
+    expect(container.textContent).not.toContain('Lesson ready')
+  })
+
+  it('names the state once a node is focused, and never beside Start learning', async () => {
+    await mount()
+    await act(async () => {
+      ;[...container.querySelectorAll<HTMLButtonElement>('.dt-tab-node')]
+        .find((row) => row.textContent?.includes('Math Foundations'))
+        ?.click()
+    })
+    await act(async () => {
+      container.querySelector<HTMLButtonElement>('.dt-here-action')?.click()
+      await Promise.resolve()
+    })
+
+    expect(container.querySelector('.dt-here-action')?.textContent).toContain('Learning in progress')
+    expect(container.textContent).not.toContain('Start learning')
   })
 })

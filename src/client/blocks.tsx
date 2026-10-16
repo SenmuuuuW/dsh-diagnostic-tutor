@@ -17,7 +17,7 @@
 import { useState, type ReactNode } from 'react'
 
 import type { Block, HandoffView, NextStepView } from '../contract.js'
-import { formatDuration } from './model.js'
+import { continuationLabel, formatDuration } from './model.js'
 
 /** Props every renderer receives. */
 export interface BlockRenderProps<B extends Block = Block> {
@@ -421,7 +421,9 @@ export function NextStepCard({
         <span className="dt-next-why-label">Why:</span> {nextStep.reason}
       </p>
       <button type="button" className="dt-primary" onClick={onContinue} disabled={busy === true}>
-        {busy === true ? 'Starting…' : moves ? 'Continue learning' : 'Continue'}
+        {/* The label comes from the shared rule, so a sentence elsewhere that
+            points at this button cannot name a different verb. */}
+        {busy === true ? 'Starting…' : continuationLabel(nextStep)}
       </button>
     </div>
   )

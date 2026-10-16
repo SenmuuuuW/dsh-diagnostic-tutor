@@ -5,6 +5,38 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed — the Learning UI said the wrong thing about what to do next
+
+With a Next Best Step recorded, both surfaces still offered `Start learning`: the
+panel showed it at primary weight beside `Continue learning`, and the docked tab
+showed it beside the recommendation's own button. Worse, the teaching region
+told the learner to press it — `Press Start learning and the teaching appears
+here` — while the recommendation was the move the tutor had just recorded, and
+starting a node the learner had not been sent to would quietly record a different
+focus.
+
+The control a learner sees is now derived from what is actually true rather than
+re-decided per surface. With a recommendation pending there is **no start control
+at all**: the card owns the next move. `Start learning` exists only before
+anything is focused. A focused node says `Learning in progress` instead of
+inviting a start that already happened, and the control acts on the node it
+names — the focus — so browsing the map cannot retarget a press that belongs to
+this conversation.
+
+The copies that were describing the wrong state now describe the real one.
+`Lesson ready` no longer prints above the lesson it is announcing, which the
+docked tab did for as long as the record existed; the teaching region names the
+button that is actually on the page, using that button's own verb
+(`Continue learning` for a move, `Continue` for a stay, and the recommendation
+outranks a stale "the tutor is preparing this node" once a decision is pending);
+and the empty-focus invitation appears only when nothing is focused. Both
+surfaces render all three from the same pure functions, so they cannot drift
+apart again.
+
+Regression tests pin every state — the pure helpers directly, both surfaces
+through the DOM, and a live tab test that the wait line disappears once the
+lesson is on the page. Reverting each rule in turn fails the matching test.
+
 ### Fixed — Learning surfaces could not scroll inside DSH
 
 The docked tab relied on document scrolling, but DSH clips its bounded tab slot.

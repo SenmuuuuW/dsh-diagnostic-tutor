@@ -9,14 +9,18 @@
 
 import { describe, expect, it } from 'vitest'
 
-import type { NodeView } from '../src/contract.js'
+import type { HandoffView, LessonRecord, NodeView } from '../src/contract.js'
 import {
   STATE_ORDER,
   buildMapTree,
+  conversationControl,
+  continuationLabel,
   flattenTree,
   formatDuration,
   formatWhen,
+  handoffLineVisible,
   isFilledState,
+  lessonPlaceholder,
   relationLabel,
   stateExplanation,
 } from '../src/client/model.js'
@@ -148,5 +152,115 @@ describe('formatWhen', () => {
   it('does not invent a future for a clock-skewed record, and never throws', () => {
     expect(formatWhen('2026-03-10T12:00:30.000Z', now)).toBe('just now')
     expect(formatWhen('not a date', now)).toBe('not a date')
+  })
+})
+
+/**
+ * The three answers both surfaces render from.
+ *
+ * The regression these pin: with a Next Best Step recorded, the surfaces showed
+ * `Start learning` **and** `Continue learning` at once, and the teaching region
+ * told the learner to press the control that was not there.
+ */
+describe('conversationControl', () => {
+  it('offers nothing while a next step is pending, focused or not', () => {
+    // The recommendation's own card owns the move. A second control beside it
+    // is the question this function exists to answer.
+    expect(conversationControl({ focusNodeId: 'a', shownNodeId: 'a', hasNextStep: true })).toBeNull()
+    expect(conversationControl({ focusNodeId: null, shownNodeId: 'a', hasNextStep: true })).toBeNull()
+  })
+
+  it('says Start learning only before anything is focused', () => {
+    expect(conversationControl({ focusNodeId: null, shownNodeId: 'a', hasNextStep: false })).toEqual({
+      kind: 'start',
+      label: 'Start learning',
+      nodeId: 'a',
+    })
+  })
+
+  it('names the state once a node is focused, and acts on that node', () => {
+    // Not on the node being browsed: the control sits under "this
+    // conversation", so selecting another row must not retarget the press.
+    expect(conversationControl({ focusNodeId: 'a', shownNodeId: 'b', hasNextStep: false })).toEqual({
+      kind: 'in-progress',
+      label: 'Learning in progress',
+      nodeId: 'a',
+    })
+  })
+
+  it('offers nothing when there is not even a node to start', () => {
+    expect(conversationControl({ focusNodeId: null, shownNodeId: null, hasNextStep: false })).toBeNull()
+  })
+})
+
+describe('lessonPlaceholder', () => {
+  it('prepares only while a lesson really is being written', () => {
+    expect(lessonPlaceholder({ focusNodeId: 'a', hasNextStep: false })).toBe('preparing')
+  })
+
+  it('points at the recommendation once one is pending, focused or not', () => {
+    // The tutor finished that turn and recorded where to go next, so claiming a
+    // lesson was being prepared described a turn that was not running.
+    expect(lessonPlaceholder({ focusNodeId: 'a', hasNextStep: true })).toBe('press-continue')
+    expect(lessonPlaceholder({ focusNodeId: null, hasNextStep: true })).toBe('press-continue')
+  })
+
+  it('invites a start only when there is nothing else to press', () => {
+    expect(lessonPlaceholder({ focusNodeId: null, hasNextStep: false })).toBe('press-start')
+  })
+})
+
+describe('continuationLabel', () => {
+  it('matches what the recommendation does: a move continues, a stay just continues', () => {
+    expect(continuationLabel({ targetNodeId: 'b' })).toBe('Continue learning')
+    expect(continuationLabel({ targetNodeId: null })).toBe('Continue')
+  })
+})
+
+describe('handoffLineVisible', () => {
+  const handoff = (phase: HandoffView['phase'], targetNodeId = 'a'): HandoffView => ({
+    targetNodeId,
+    phase,
+    label: phase === 'lesson-ready' ? 'Lesson ready' : 'Tutor working…',
+    elapsedMs: 4_000,
+    attempts: 1,
+    stages: {},
+  })
+
+  const aLesson: LessonRecord = {
+    id: 'a:lesson',
+    courseId: 'ml',
+    nodeId: 'a',
+    title: 'a',
+    origin: 'tutor',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+    blocks: [],
+  }
+
+  it('narrates a wait for the node this conversation is on', () => {
+    expect(handoffLineVisible({ handoff: handoff('tutor-working'), lesson: null, focusNodeId: 'a' })).toBe(true)
+  })
+
+  it('stays off the page once the lesson it describes is on it', () => {
+    // "Lesson ready" printed above that very lesson is the copy disagreeing
+    // with the page — the docked tab did exactly this.
+    expect(handoffLineVisible({ handoff: handoff('lesson-ready'), lesson: aLesson, focusNodeId: 'a' })).toBe(false)
+  })
+
+  it('stays off the page when nothing is focused', () => {
+    expect(handoffLineVisible({ handoff: handoff('tutor-working'), lesson: null, focusNodeId: null })).toBe(false)
+    expect(handoffLineVisible({ handoff: null, lesson: null, focusNodeId: 'a' })).toBe(false)
+  })
+
+  it('does not announce another node as ready', () => {
+    expect(handoffLineVisible({ handoff: handoff('lesson-ready', 'a'), lesson: null, focusNodeId: 'b' })).toBe(false)
+  })
+
+  it('keeps a failed wait reachable even after the focus moved', () => {
+    // A failure is a statement about the wait, never about where the learner
+    // is — so it keeps its line, and its retry, wherever the focus went.
+    expect(handoffLineVisible({ handoff: handoff('failed', 'a'), lesson: null, focusNodeId: 'b' })).toBe(true)
+    expect(handoffLineVisible({ handoff: handoff('stalled', 'a'), lesson: null, focusNodeId: 'b' })).toBe(true)
   })
 })
