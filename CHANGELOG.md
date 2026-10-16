@@ -5,6 +5,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed — Learning surfaces could not scroll inside DSH
+
+The docked tab relied on document scrolling, but DSH clips its bounded tab slot.
+It now has a height-bounded, border-box scroll container, so long lessons, maps,
+evidence and library lists remain reachable in both docked and expanded tabs.
+The full panel scrolls as one page when stacked; its three-column layout keeps
+independent pane scrolling, and long welcome/library views scroll in the wrapper.
+
+The preview now clips its slot too, instead of hiding the defect with document
+scrolling. `pnpm check:scroll` exercises real Chrome wheel input and checks bottom
+content visibility, slot containment and no document/horizontal overflow across
+20 viewport/theme/content combinations. It uses only local fixture data.
+
 ### Fixed — teaching-brain detection follows the live Agent
 
 The plugin previously inspected the global Skill catalog once during activation.

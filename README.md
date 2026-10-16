@@ -513,8 +513,8 @@ Machine Learning            [goal, unconfirmed]
 
 Two query parameters reach the states that are otherwise awkward to produce on
 demand — `?scenario=` (`first-use`, `map`, `handoff`, `next`, `stay`, `noskill`,
-`long`) and `?surface=tab` for the docked right-sidebar tab. Both are also
-switches in the page's own toolbar, and the theme toggle sets the same
+`long`, `scroll`, `library`, `new`) and `?surface=tab` for the docked right-sidebar
+tab. The scenario switch is in the page's toolbar, and the theme toggle sets the same
 `body[data-ds-dark-theme]` attribute DSH does. The page carries the real DSH
 design tokens for the same reason: with hardcoded fallbacks in their place, a
 token that resolves to near-white in dark mode looks perfectly fine locally.
@@ -531,9 +531,18 @@ pnpm screenshot "<dsh-url-with-token>" preview/dsh-ui.png
 pnpm preview                                                     # in one shell
 pnpm audit:ui http://127.0.0.1:8391/?scenario=next                # in another
 pnpm audit:ui "<dsh-url-with-token>" /tmp/audit --surface=tab
+pnpm check:scroll http://127.0.0.1:8391/ /tmp/udt-scroll-check
 ```
 
-It measures, at each width this project targets and in both themes: the contrast
+The scroll regression requires local Chrome and runs against the built bundle.
+The preview uses a clipped, fixed-height slot like DSH, so the whole document
+cannot scroll to mask an unscrollable plugin. The check sends real wheel events
+and verifies bottom content remains visible in the tab, expanded tab, stacked
+panel, all three wide-panel panes, and long library/welcome views, in both themes.
+Only fixture data is used; no live learner state is changed. The ordinary visual
+audit alone does **not** verify scrolling.
+
+The visual audit measures, at each width this project targets and in both themes: the contrast
 of every control's own text against its own fill, class names in the DOM that no
 rule matches, how many controls carry primary weight in one view, tap targets
 under 28px, type under 10.5px, and anything spilling or clipped. It prints a

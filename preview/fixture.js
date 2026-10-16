@@ -223,6 +223,10 @@
     },
     /** The skill is missing, so nothing will be taught. */
     noskill: { teachingBrain: false },
+    /** Long content inside a clipped DSH slot: scroll regression fixtures only. */
+    scroll: { focusNodeId: 'ml:math:la', longContent: true },
+    library: { noCourse: true, longLibrary: true },
+    new: { noCourse: true, startingNew: true, longLibrary: true },
     /** Long everything: the layout at its least forgiving. */
     long: {
       longTitles: true,
@@ -258,20 +262,37 @@
     const lessons = new Map()
 
     /** Long-name variant: the two titles that decide whether a row wraps. */
+    const baseNodes = scenario.longContent
+      ? nodes.concat(Array.from({ length: 30 }, (_, i) => node(`scroll:${i}`, `Practice topic ${i + 1}`, 'part-of', 'unconfirmed', 'ml:goal')))
+      : nodes
     const shownNodes = scenario.longTitles
-      ? nodes.map((entry) =>
+      ? baseNodes.map((entry) =>
           entry.id === 'ml:math'
             ? { ...entry, title: 'Mathematical foundations for machine learning, from notation to matrix calculus' }
             : entry.id === 'ml:math:la'
               ? { ...entry, title: 'Linear algebra: shapes, the multiplication rule, and why order matters' }
               : entry,
         )
-      : nodes
+      : baseNodes
 
     const shownCourse =
       scenario.longTitles === true
         ? { ...course, title: 'Machine Learning, end to end, from the mathematics up' }
         : course
+
+    const library = scenario.longLibrary
+      ? Array.from({ length: 30 }, (_, i) => ({ ...course, id: `library:${i}`, title: `Learning project ${i + 1}`, confirmed: 0, total: 1 }))
+      : []
+    const shownLesson = (nodeId) => {
+      const lesson = lessonFor(nodeId, shownNodes)
+      if (lesson && scenario.longContent) {
+        lesson.blocks.push(...Array.from({ length: 20 }, (_, i) => ({
+          id: `scroll:${i}`, type: 'text',
+          content: { md: `### Explanation ${i + 1}\n\nA long learning surface must remain readable as the tutor appends new blocks. Scroll through the whole lesson, including the last paragraph and the controls below it.` },
+        })))
+      }
+      return lesson
+    }
 
     if (scenario.focusNodeId !== undefined) {
       const target = shownNodes.find((entry) => entry.id === scenario.focusNodeId)
@@ -283,7 +304,7 @@
         status: 'active',
       }
       if (scenario.noLesson !== true) {
-        lessons.set(scenario.focusNodeId, lessonFor(scenario.focusNodeId, shownNodes))
+        lessons.set(scenario.focusNodeId, shownLesson(scenario.focusNodeId))
       }
     }
 
@@ -291,6 +312,8 @@
       fetchOverview: () =>
         Promise.resolve({
           ok: true,
+          selection: scenario.startingNew ? 'new' : scenario.noCourse ? 'none' : 'project',
+          library,
           course: scenario.noCourse === true ? null : shownCourse,
           nodes: scenario.noCourse === true ? [] : shownNodes,
           focus,
@@ -305,7 +328,9 @@
         if (!target) return Promise.reject(new Error('no such node'))
         return Promise.resolve({
           ok: true,
-          node: { ...target, evidence: evidence[nodeId] ?? [] },
+          node: { ...target, evidence: scenario.longContent
+            ? Array.from({ length: 24 }, (_, i) => ({ kind: 'practice', at: now, note: `Observation ${i + 1}: long evidence history remains readable inside this pane.` }))
+            : evidence[nodeId] ?? [] },
           parent: shownNodes.find((entry) => entry.id === target.parentId) ?? null,
           children: shownNodes.filter((entry) => entry.parentId === nodeId),
           lessonExists: lessons.has(nodeId),
@@ -327,7 +352,7 @@
         }
         // The tutor "writes" its unit: the preview has no agent, so the fixture
         // supplies what udt_lesson_update would have stored.
-        lessons.set(nodeId, lessonFor(nodeId, shownNodes))
+        lessons.set(nodeId, shownLesson(nodeId))
         return Promise.resolve({ ok: true, focus, prompted: true, sessionId })
       },
     }

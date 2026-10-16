@@ -97,6 +97,7 @@
     "pretest": "tsdown",
     "screenshot": "node scripts/screenshot.mjs",
     "audit:ui": "node scripts/ui-audit.mjs",
+    "check:scroll": "node scripts/scroll-check.mjs",
     "loop": "node scripts/learning-loop.mjs",
     "handoff": "node scripts/handoff-e2e.mjs"
   },

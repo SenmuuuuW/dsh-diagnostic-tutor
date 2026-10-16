@@ -7,7 +7,10 @@
 <style>
   html, body { margin: 0; height: 100%; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary);
     font-family: ui-sans-serif, system-ui, "PingFang SC", "Helvetica Neue", sans-serif; }
-  #host { height: 100%; }
+  /* Match DSH's bounded content slot: the plugin owns its scroll area. */
+  html, body { overflow: hidden; }
+  body { display: flex; flex-direction: column; }
+  #host { height: 100%; min-height: 0; min-width: 0; overflow: hidden; }
 
   /* ---------------------------------------------------------------------
      The design tokens DSH actually ships, copied from
@@ -75,7 +78,7 @@
   }
 
   .preview-bar {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    display: flex; flex: none; align-items: center; gap: 10px; flex-wrap: wrap;
     padding: 8px 16px; border-bottom: 1px solid var(--dsw-alias-border-l2);
     background: var(--dsw-alias-bg-module-platform);
     font-size: 11px; color: var(--dsw-alias-label-secondary);
@@ -90,7 +93,7 @@
   .legend span { display: inline-flex; align-items: center; gap: 4px; }
   .legend i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid currentColor; box-sizing: border-box; }
   .legend i[data-filled="true"] { background: currentColor; }
-  #app { height: calc(100% - 37px); }
+  #app { flex: 1; min-height: 0; min-width: 0; overflow: hidden; }
 </style>
 </head>
 <body>

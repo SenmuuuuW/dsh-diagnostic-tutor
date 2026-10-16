@@ -109,15 +109,18 @@ body[data-ds-dark-theme] {
 .dt-root {
   display: grid;
   grid-template-columns: minmax(272px, 320px) minmax(280px, 1fr) minmax(320px, 1.15fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 0;
   height: 100%;
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 @media (max-width: 1080px) {
-  .dt-root { grid-template-columns: 1fr; height: auto; }
+  .dt-root { grid-template-columns: 1fr; grid-template-rows: none; height: auto; overflow: visible; }
 }
 
-.dt-pane { min-width: 0; min-height: 0; overflow: auto; padding: 16px 18px 40px; }
+.dt-pane { min-width: 0; min-height: 0; overflow: auto; overscroll-behavior-y: contain; padding: 16px 18px 40px; }
 .dt-pane + .dt-pane { border-left: 1px solid var(--dt-border); }
 @media (max-width: 1080px) {
   .dt-pane + .dt-pane { border-left: 0; border-top: 1px solid var(--dt-border); }
@@ -329,8 +332,17 @@ body[data-ds-dark-theme] {
 /* The page always says what it is and how to get back. The failure this
    answers is concrete: a learner clicks Learn, the conversation is replaced,
    and the first thought is "where did my chat go?". */
-.dt-root-wrap { display: flex; flex-direction: column; height: 100%; min-height: 0; background: var(--dt-bg, #fff); }
+/* DSH bounds the slot and clips overflow. Each surface must own its scrolling. */
+.dt-root-wrap {
+  display: flex; flex-direction: column; height: 100%; min-height: 0; min-width: 0;
+  overflow: auto; overscroll-behavior-y: contain; background: var(--dt-bg, #fff);
+}
 .dt-root-wrap > .dt-root { flex: 1 1 auto; min-height: 0; }
+@media (max-width: 1080px) {
+  /* Stacked panes scroll together, including the toolbar and data controls. */
+  .dt-root-wrap > .dt-root { flex: none; }
+  .dt-pane { overflow: visible; }
+}
 /* Rights live under the work, not in the middle of it. */
 .dt-foot {
   flex: none; padding: 0 16px 14px; background: var(--dt-bg, #fff);
@@ -362,7 +374,9 @@ body[data-ds-dark-theme] {
 
 /* ---- first use --------------------------------------------------------- */
 /* The full-page variant has no columns to fill, so the question centres. */
-.dt-root-welcome { grid-template-columns: 1fr; place-items: center; }
+.dt-root-welcome { grid-template-columns: 1fr; grid-template-rows: auto; place-items: center; overflow: visible; }
+/* A long project list must grow inside the wrapper rather than shrink and clip. */
+.dt-root-wrap > .dt-root-welcome { flex: 1 0 auto; height: auto; }
 .dt-root-welcome .dt-welcome { max-width: 520px; padding: 8px 24px; }
 .dt-welcome { padding: 28px 4px 8px; }
 .dt-welcome-eyebrow { color: var(--dt-accent); }
@@ -821,7 +835,11 @@ body[data-ds-dark-theme] {
 .dt-next .dt-primary { margin-top: 14px; width: 100%; }
 
 /* ---- docked tab -------------------------------------------------------- */
-.dt-tab { padding: 14px 14px 40px; font-size: 12.5px; color: var(--dt-text); text-align: left; }
+.dt-tab {
+  box-sizing: border-box; height: 100%; min-height: 0; min-width: 0;
+  overflow: auto; overscroll-behavior-y: contain;
+  padding: 14px 14px 40px; font-size: 12.5px; color: var(--dt-text); text-align: left;
+}
 .dt-tab-head { display: flex; align-items: baseline; gap: 8px; justify-content: space-between; }
 .dt-tab-title { font-size: 15px; font-weight: 650; margin: 0; }
 .dt-tab-meta { color: var(--dt-muted); font-size: 11px; margin: 4px 0 8px; }
