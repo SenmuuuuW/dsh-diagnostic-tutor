@@ -11,9 +11,14 @@ learn interactively, and move to the next best step.
 
 ## Status
 
-`v0.1.0` — the first stable release, and the first one meant to be **installed
-rather than built**: `dsh plugin --profile web add dsh-diagnostic-tutor`, with
-prebuilt output and no clone, no `pnpm install`, no build step.
+`v0.1.1` — the current stable release. Conversation-scoped projects, focus,
+next steps and handoffs keep each learning session separate, while maps and
+lessons remain shared. The Learning UI now offers one next action and reports
+its actual state, with working scroll containers in docked and expanded views.
+
+Install the prebuilt package with
+`dsh plugin --profile web add dsh-diagnostic-tutor@0.1.1` — no clone, no
+`pnpm install`, no build step.
 
 The learning loop works end to end: a real goal in your own words, a diagnosis
 map grown one node at a time, a tutor-written lesson, a check answered in the
@@ -152,6 +157,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
+| `0.1.1` | `0.2.1-rc.2`, `0.2.0-rc.2` (test suite also on `0.1.7-alpha.2`) | `^22.19.0 \|\| >=24.0.0` |
 | `0.1.0` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
@@ -163,7 +169,10 @@ Rules this repository enforces mechanically:
   second runtime copy can be resolved. Enforced by `verbatimModuleSyntax`, and
   verified on the built artifact (it contains zero imports).
 - **No `instanceof` across package boundaries.** Take runtime objects from `ctx`.
-- Peer ranges are wide (`<0.2.0`); dev dependencies pin one exact cohort.
+- Peer ranges name the release lines this plugin was verified on. DSH ships
+  prereleases, and npm's semver only admits a prerelease when its line is named
+  in the range — so the compatibility matrix above, not the range floor, is the
+  contract. Dev dependencies pin one exact cohort for the type baseline.
 
 ---
 
@@ -173,7 +182,7 @@ Rules this repository enforces mechanically:
 
 | | |
 | --- | --- |
-| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | verified against `0.1.7-alpha.2` |
+| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | verified against `0.2.1-rc.2` |
 | the [Universal Diagnostic Tutor](https://github.com/SenmuuuuW/universal-diagnostic-tutor-skill) skill | the teaching brain. Without it the runtime loads, records and displays state, but **no lesson is ever written** |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 
@@ -225,7 +234,7 @@ learn?*.
 
 ```sh
 npm pack
-dsh plugin --profile web add "$PWD/dsh-diagnostic-tutor-0.1.0-rc.1.tgz"
+dsh plugin --profile web add "$PWD/dsh-diagnostic-tutor-0.1.1.tgz"
 ```
 
 **What gets installed is prebuilt.** The package ships `lib/` — the host half
@@ -565,7 +574,7 @@ What the surfaces look like now, captured from a live profile:
 ```sh
 pnpm install
 pnpm typecheck   # tsc --noEmit  (host and client)
-pnpm test        # 278 tests: unit, guard, DOM, render, real composition
+pnpm test        # 455 tests: unit, guard, DOM, render, real composition
 pnpm build       # tsc -> lib/ (host) + tsdown -> lib/client.js
 ```
 

@@ -3,7 +3,37 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.1] — DSH 0.2 compatibility, and one next action per surface
+
+The first stable release after v0.1.0 keeps the same runtime and fixes what the
+first real sessions exposed: conversation state leaked between chats, the next
+step was offered twice, long surfaces could not scroll, and the tutor-skill check
+looked at the wrong scope. It is verified on DSH `0.2.1-rc.2` and `0.2.0-rc.2`.
+
+### Verified
+
+- `pnpm typecheck` and `pnpm build` pass against the DSH `0.2.1-rc.2` cohort.
+- 455 tests across 27 files pass on `0.2.1-rc.2`; the same suite also passes on
+  `0.1.7-alpha.2`.
+- `pnpm audit:ui` reports no findings on the panel and the docked tab in both
+  themes; `pnpm check:scroll` passes 20 real-browser scroll cases.
+- Fresh isolated profiles on DSH `0.2.1-rc.2` and `0.2.0-rc.2`: the plugin loads,
+  **Learn** opens the docked tab, **Open full view** opens the main panel, and
+  the browser reports no console errors.
+
+### Changed — DSH 0.2 compatibility
+
+Verified against DSH `0.2.1-rc.2` (the desktop line) and `0.2.0-rc.2` (the npm
+`latest` line), and the full suite still passes on `0.1.7-alpha.2`. The host
+pinned `zod` to `4.4.3` and moved its storage-domain and tools peers onto the
+`0.2` line; the plugin now aligns its runtime `zod`, its dev cohort and its
+declared peer lines with those releases. No teaching, storage or UI logic
+changed.
+
+On a fresh isolated profile running DSH `0.2.1-rc.2`, the plugin loads, the
+sidebar **Learn** entry opens the docked tab, and **Open full view** opens the
+main panel — with no console errors. The docked tab's scroll container and the
+panel's three-column layout were checked in that host, not only in the preview.
 
 ### Fixed — the Learning UI said the wrong thing about what to do next
 
