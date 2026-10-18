@@ -223,6 +223,33 @@
     },
     /** The skill is missing, so nothing will be taught. */
     noskill: { teachingBrain: false },
+    /** Mixed states and a deeper map: the visual layer at its most useful. */
+    showcase: {
+      focusNodeId: 'ml:math:la',
+      states: {
+        'ml:goal': 'explained',
+        'ml:math': 'practiced',
+        'ml:math:la': 'checked',
+        'ml:math:calc': 'weak',
+        'ml:math:prob': 'explained',
+        'ml:python': 'confirmed',
+      },
+      extraNodes: [
+        { id: 'ml:math:la:vectors', courseId: 'ml', title: 'Vector shapes', relation: 'part-of', parentId: 'ml:math:la', state: 'practiced', evidenceCount: 3, updatedAt: now },
+        { id: 'ml:math:la:matmul', courseId: 'ml', title: 'Matrix multiplication', relation: 'part-of', parentId: 'ml:math:la', state: 'unconfirmed', evidenceCount: 0, updatedAt: now },
+        { id: 'ml:python:numpy', courseId: 'ml', title: 'NumPy arrays', relation: 'part-of', parentId: 'ml:python', state: 'explained', evidenceCount: 2, updatedAt: now },
+      ],
+      nextStep: {
+        fromNodeId: 'ml:math:la',
+        fromNodeTitle: 'Linear Algebra',
+        targetNodeId: 'ml:math:calc',
+        targetNodeTitle: 'Calculus',
+        action: 'advance',
+        reason:
+          'Shape and multiplication are stable now; the gradient is the next thing that needs the derivative.',
+        createdAt: now,
+      },
+    },
     /** Long content inside a clipped DSH slot: scroll regression fixtures only. */
     scroll: { focusNodeId: 'ml:math:la', longContent: true },
     library: { noCourse: true, longLibrary: true },
@@ -264,8 +291,8 @@
     /** Long-name variant: the two titles that decide whether a row wraps. */
     const baseNodes = scenario.longContent
       ? nodes.concat(Array.from({ length: 30 }, (_, i) => node(`scroll:${i}`, `Practice topic ${i + 1}`, 'part-of', 'unconfirmed', 'ml:goal')))
-      : nodes
-    const shownNodes = scenario.longTitles
+      : nodes.concat(scenario.extraNodes ?? [])
+    const shownNodes = (scenario.longTitles
       ? baseNodes.map((entry) =>
           entry.id === 'ml:math'
             ? { ...entry, title: 'Mathematical foundations for machine learning, from notation to matrix calculus' }
@@ -273,7 +300,10 @@
               ? { ...entry, title: 'Linear algebra: shapes, the multiplication rule, and why order matters' }
               : entry,
         )
-      : baseNodes
+      : baseNodes)
+      // Mixed-state fixtures keep the structure honest: only the state word is
+      // overridden, so the map is still the map.
+      .map((entry) => (scenario.states?.[entry.id] ? { ...entry, state: scenario.states[entry.id] } : entry))
 
     const shownCourse =
       scenario.longTitles === true

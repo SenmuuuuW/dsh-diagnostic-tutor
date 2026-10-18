@@ -3,6 +3,45 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed — the Learning surfaces now show the map, not just list it
+
+A presentation-only pass over both surfaces. Nothing about state semantics,
+stored records, teaching decisions or the copy that says what to do next
+changes; the runtime is the same one v0.1.1 shipped.
+
+- The full panel's course header is a cover card with an orbit mark, and this
+  conversation's position is its own card rather than a run of prose.
+- The diagnosis map gained a **state census bar** — one segment per state
+  present, sized by node count. It is a census of the seven state words, not a
+  progress percentage, and it never becomes a score.
+- Every map row carries a state glyph badge (a book for `explained`, a pen for
+  `practiced`, a lock for `blocked`, a seal for `confirmed`), so a row is
+  recognisable before it is read.
+- The middle column gained **Where this sits**: parent, current node and
+  children as a small selectable tree, so a node's connection is visible
+  without scanning back across the page.
+- Evidence is drawn on a rail, one marker per observation, instead of as
+  unattached lines.
+- The lesson surface gained a card treatment, type icons for worked examples and
+  diagrams, a quiet reading rail on prose, and a stronger check card.
+- Every empty place — first use, no project, no lesson, no evidence — now has a
+  line-art figure and a short explanation rather than a bare sentence; first use
+  also lists the three things that will fill the page.
+- The docked tab mirrors the same language in compact form: course cover, state
+  census, glyph rows and block marks.
+- Motion is entrance-only and turned off under `prefers-reduced-motion`.
+
+Verified: 455 tests, `pnpm typecheck`, `pnpm build`, UI audit with no findings on
+the panel, tab and first-use states in both themes, and the 20-case browser
+scroll check.
+
+### Added — a `showcase` preview scenario
+
+A mixed-state nine-node map (one per state word, plus nested children) so the
+visual layer can be reviewed without manufacturing state by hand.
+
 ## [0.1.1] — DSH 0.2 compatibility, and one next action per surface
 
 The first stable release after v0.1.0 keeps the same runtime and fixes what the

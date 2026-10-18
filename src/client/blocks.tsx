@@ -255,11 +255,31 @@ function TextBlockView({ block }: BlockRenderProps): ReactNode {
   )
 }
 
+/** A label with a small mark, so block kinds are recognisable before reading. */
+function BlockLabel({ icon, children }: { icon: ReactNode; children: ReactNode }): ReactNode {
+  return (
+    <p className="dt-block-label">
+      <span className="dt-block-label-icon" aria-hidden="true">
+        {icon}
+      </span>
+      {children}
+    </p>
+  )
+}
+
 function ExampleBlockView({ block }: BlockRenderProps): ReactNode {
   if (block.type !== 'example') return null
   return (
     <div className="dt-block dt-block-example">
-      <p className="dt-block-label">Worked example</p>
+      <BlockLabel
+        icon={
+          <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 12.5h4M6.4 14h3.2M8 2a4 4 0 0 1 2.4 7.2c-.4.3-.4.6-.4 1H6c0-.4 0-.7-.4-1A4 4 0 0 1 8 2z" />
+          </svg>
+        }
+      >
+        Worked example
+      </BlockLabel>
       <h4>{block.content.title}</h4>
       <ol>
         {block.content.steps.map((step, index) => (
@@ -278,7 +298,17 @@ function DiagramBlockView({ block }: BlockRenderProps): ReactNode {
   const isMermaid = block.content.format === 'mermaid'
   return (
     <div className="dt-block dt-block-diagram">
-      <p className="dt-block-label">Diagram</p>
+      <BlockLabel
+        icon={
+          <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round">
+            <rect x="2" y="2.5" width="4.5" height="3.5" rx="1" />
+            <rect x="9.5" y="10" width="4.5" height="3.5" rx="1" />
+            <path d="M6.5 4.2h3a2 2 0 0 1 2 2v3.8" />
+          </svg>
+        }
+      >
+        Diagram
+      </BlockLabel>
       {isMermaid && (
         <p className="dt-caption">
           Source shown as text — this build ships no <code>mermaid</code> renderer.

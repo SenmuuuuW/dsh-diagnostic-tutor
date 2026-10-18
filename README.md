@@ -522,7 +522,7 @@ Machine Learning            [goal, unconfirmed]
 
 Two query parameters reach the states that are otherwise awkward to produce on
 demand — `?scenario=` (`first-use`, `map`, `handoff`, `next`, `stay`, `noskill`,
-`long`, `scroll`, `library`, `new`) and `?surface=tab` for the docked right-sidebar
+`long`, `scroll`, `library`, `new`, `showcase`) and `?surface=tab` for the docked right-sidebar
 tab. The scenario switch is in the page's toolbar, and the theme toggle sets the same
 `body[data-ds-dark-theme]` attribute DSH does. The page carries the real DSH
 design tokens for the same reason: with hardcoded fallbacks in their place, a
