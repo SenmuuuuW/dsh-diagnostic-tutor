@@ -175,7 +175,7 @@ describe('the client plugin registers into the DSH slots', () => {
     expect('default' in module).toBe(false)
   })
 
-  it('puts Learn in an action seat, not a panel seat, and keeps the full view reachable', () => {
+  it('puts Learn in an action seat and gives the map a panel page of its own', () => {
     const { ctx, recorded } = fakeClientContext()
     ;(module.apply as (c: unknown) => void)(ctx)
 
@@ -185,12 +185,19 @@ describe('the client plugin registers into the DSH slots', () => {
     // and a panellist id is contractually the "matching main panel key" whose
     // click the shell wires to `layout.selectPanel(id)`. So pressing Learn
     // replaced the conversation — which reads as the chat having been lost.
-    expect(bySlot('sidebar.panellist'), 'Learn must not be a main-panel switch').toHaveLength(0)
+    const panellists = bySlot('sidebar.panellist')
+    expect(panellists.map((entry) => entry.options.id), 'Learn must not be a main-panel switch').not.toContain('diagnostic-tutor')
     expect(bySlot('sidebar.footer.action')[0], 'no Learn action registered').toBeDefined()
 
-    // The full panel still exists; it is simply reached on purpose, from the
-    // docked tab's "Open full view", rather than by the sidebar.
-    expect(bySlot('main')[0], 'the full panel must still be registered').toBeDefined()
+    // The map is a different job from the lesson, so it gets a page of its own
+    // and one sidebar entry that addresses it.
+    expect(panellists).toHaveLength(1)
+    expect(panellists[0]?.options.id).toBe('diagnostic-tutor-map')
+    expect(panellists[0]?.options.label).toBe('Learning map')
+
+    // Two main panels: the teaching view and the map view.
+    const mains = bySlot('main')
+    expect(mains.map((entry) => entry.options.key).sort()).toEqual(['diagnostic-tutor', 'diagnostic-tutor-map'])
 
     // The docked tab: a declared type, plus a body and a title registered under
     // the type's own id, because that is the key the seats dispatch on.
@@ -205,11 +212,16 @@ describe('the client plugin registers into the DSH slots', () => {
     expect(recorded.disposers.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('renders both surfaces when their registered components are mounted', () => {
+  it('renders every registered surface when its component is mounted', () => {
     const { ctx, recorded } = fakeClientContext()
     ;(module.apply as (c: unknown) => void)(ctx)
 
-    const main = recorded.registrations.find((entry) => entry.options.name === 'main')
+    const main = recorded.registrations.find(
+      (entry) => entry.options.name === 'main' && entry.options.key === 'diagnostic-tutor',
+    )
+    const map = recorded.registrations.find(
+      (entry) => entry.options.name === 'main' && entry.options.key === 'diagnostic-tutor-map',
+    )
     const tab = recorded.registrations.find((entry) => entry.options.name === 'sidebar.right.pane.tab')
     expect(main).toBeDefined()
     expect(tab).toBeDefined()
@@ -231,6 +243,14 @@ describe('the client plugin registers into the DSH slots', () => {
     expect(tabHtml).toContain('Your learning')
     // With nothing at all it says so rather than showing an empty shell.
     expect(tabHtml).toContain('Nothing here yet')
+
+    // The map page has its own identity in the bar, so a learner who switched
+    // to it knows which page they are on, and a way back to the teaching view.
+    expect(map).toBeDefined()
+    const mapHtml = renderToStaticMarkup(createElement(map?.Component as never, {} as never))
+    expect(mapHtml).toContain('Learning map')
+    expect(mapHtml).toContain('Nothing to map yet.')
+    expect(mapHtml).toContain('Open learning view')
   })
 })
 

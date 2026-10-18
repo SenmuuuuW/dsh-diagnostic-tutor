@@ -5,6 +5,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — the diagnosis map as its own page
+
+The map and the lesson answer different questions, and sharing one column made
+the map read as a footnote under the teaching. It now has a page of its own,
+**Learning map**, reached from a sidebar entry of its own, from the full panel's
+header, and from the docked tab's map section.
+
+The page puts the tree on the left and the selected node's evidence on the
+right, with the same state census and glyphs as the other surfaces, plus
+**Open learning view** and **Back to the conversation**. It is a second main
+panel rather than a replacement for the teaching panel, and it reads the same
+`useLearning` state: no teaching decision, stored record or next-step copy
+changes.
+
+`?surface=map` renders it in the preview. Tests pin both main panels, the single
+panellist entry (Learn stays an action seat), and the page's selection and
+navigation.
+
 ### Changed — the Learning surfaces now show the map, not just list it
 
 A presentation-only pass over both surfaces. Nothing about state semantics,

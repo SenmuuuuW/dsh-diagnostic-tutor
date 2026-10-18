@@ -21,7 +21,7 @@
  * mount at all.
  *
  * Usage:
- *   node scripts/ui-audit.mjs <url-with-token|preview-url> [outdir] [--surface=panel|tab]
+ *   node scripts/ui-audit.mjs <url-with-token|preview-url> [outdir] [--surface=panel|tab|map]
  *
  * For a live profile, pass the tokenised URL it prints. For the standalone
  * preview, `pnpm preview` then pass http://127.0.0.1:8391/.
@@ -40,7 +40,7 @@ const url = process.argv[2]
 const outDir = process.argv[3] ?? '/tmp/ui-audit'
 const surface = (process.argv.find((a) => a.startsWith('--surface=')) ?? '--surface=panel').split('=')[1]
 if (!url) {
-  console.error('usage: node scripts/ui-audit.mjs <url-with-token|preview-url> [outdir] [--surface=panel|tab]')
+  console.error('usage: node scripts/ui-audit.mjs <url-with-token|preview-url> [outdir] [--surface=panel|tab|map]')
   process.exit(2)
 }
 
@@ -146,7 +146,9 @@ const AUDIT = `(() => {
      picking "whichever exists" silently audits the other one. */
   const ROOT = ${JSON.stringify(surface)} === 'tab'
     ? document.querySelector('.dt-tab')
-    : (document.querySelector('.dt-root-wrap') || document.querySelector('.dt-root'));
+    : ${JSON.stringify(surface)} === 'map'
+      ? (document.querySelector('.dt-map-root-wrap') || document.querySelector('.dt-map-root'))
+      : (document.querySelector('.dt-root-wrap') || document.querySelector('.dt-root'));
   if (!ROOT) return { mounted: false, rootClass: null };
 
   /* --- colour ---------------------------------------------------------- */
@@ -344,7 +346,7 @@ try {
     const hit = [...document.querySelectorAll('button, [role=button]')]
       .find((el) => ((el.getAttribute('aria-label') || el.textContent || el.title || '').trim()) === ${JSON.stringify(PANEL_LABEL)});
     if (hit) { hit.click(); return true; }
-    return !!document.querySelector('.dt-root, .dt-tab');
+    return !!document.querySelector('.dt-root, .dt-tab, .dt-map-root');
   })()`)
   await sleep(3000)
 
@@ -405,7 +407,18 @@ try {
     }
   }
 
-  const mounted = await cdp.evaluate(`!!document.querySelector(${JSON.stringify(surface === 'tab' ? '.dt-tab' : '.dt-root')})`)
+  if (surface === 'map' && !(await cdp.evaluate(`!!document.querySelector('.dt-map-root')`))) {
+    // The map page is a main panel: its sidebar entry is labelled, not a tab.
+    await cdp.evaluate(`(() => {
+      const hit = [...document.querySelectorAll('button, [role=button]')]
+        .find((el) => ((el.getAttribute('aria-label') || el.textContent || el.title || '').trim()) === 'Learning map');
+      hit?.click();
+    })()`)
+    await sleep(3000)
+  }
+
+  const rootSelector = surface === 'tab' ? '.dt-tab' : surface === 'map' ? '.dt-map-root' : '.dt-root'
+  const mounted = await cdp.evaluate(`!!document.querySelector(${JSON.stringify(rootSelector)})`)
   if (!mounted) throw new Error(`${surface} never mounted`)
 
   for (const theme of ['light', 'dark']) {

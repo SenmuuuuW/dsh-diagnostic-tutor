@@ -1152,6 +1152,40 @@ button.dt-locator-item:hover { background: var(--dt-surface); border-color: var(
 .dt-tab-cover .dt-here-course { margin-top: 4px; font-size: 16px; }
 .dt-tab-cover .dt-course-orbit { width: 104px; height: 68px; opacity: .14; }
 
+/* ---- the map page ----------------------------------------------------- */
+/* The map is a reference surface and the lesson is a reading surface, so the
+   map gets the whole main column: tree on the left, the selected node's
+   evidence on the right. Same components, different amount of room. */
+.dt-bar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.dt-map-root-wrap { overflow: hidden; }
+.dt-map-root {
+  display: grid; grid-template-columns: minmax(320px, 1.15fr) minmax(300px, 1fr);
+  flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden;
+}
+.dt-map-pane {
+  min-width: 0; min-height: 0; overflow: auto; overscroll-behavior-y: contain;
+  padding: 20px 22px 40px;
+}
+.dt-map-detail {
+  min-width: 0; min-height: 0; overflow: auto; overscroll-behavior-y: contain;
+  padding: 20px 22px 40px;
+  border-left: 1px solid var(--dt-border);
+  background: color-mix(in srgb, var(--dt-surface) 45%, var(--dt-bg));
+}
+.dt-map-cover { margin-bottom: 18px; }
+.dt-map-list { display: flex; flex-direction: column; gap: 2px; margin-top: 4px; }
+.dt-map-row { border-radius: 9px; }
+.dt-map-list .dt-node { padding-top: 9px; padding-bottom: 9px; font-size: 13px; }
+.dt-map-list .dt-node-title { font-size: 13px; }
+.dt-map-list .dt-node-rel { font-size: 11px; }
+.dt-map-pane .dt-eyebrow-here { margin-top: 14px; }
+@media (max-width: 900px) {
+  .dt-map-root { grid-template-columns: 1fr; overflow: visible; }
+  .dt-map-pane, .dt-map-detail { overflow: visible; padding: 16px 18px 34px; }
+  .dt-map-detail { border-left: 0; border-top: 1px solid var(--dt-border); }
+  .dt-map-root-wrap { overflow: auto; }
+}
+
 /* ---- motion ---------------------------------------------------------- */
 /* Entrance only, and only when the system allows it: this surface is read for
    minutes at a time, so nothing loops or draws attention after arrival. */

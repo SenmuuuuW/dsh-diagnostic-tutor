@@ -30,9 +30,11 @@ import type { ReactNode } from 'react'
 import { useState } from 'react'
 
 import { LearningPanel } from './app.js'
+import { LearningMapPanel, MAP_PANEL_ID } from './map-panel.js'
 import { LearningTab, LearningTabTitle } from './tab.jsx'
 import { useCurrentSessionId } from './use-session.js'
 import { injectStyles } from './styles.js'
+import { MapPageIcon } from './visuals.jsx'
 
 /** Client module name; distinct from the host plugin's name. */
 export const name = 'diagnostic-tutor-client'
@@ -161,10 +163,12 @@ function MainPanel({
   uiSession,
   onOpenChat,
   onFocusStarted,
+  onOpenMapPage,
 }: {
   uiSession?: unknown
   onOpenChat?: (() => void) | undefined
   onFocusStarted?: (() => void) | undefined
+  onOpenMapPage?: (() => void) | undefined
 }): ReactNode {
   // The conversation the learner has open — not the first row of the session
   // list, which is a different conversation as soon as anything newer exists.
@@ -174,6 +178,7 @@ function MainPanel({
       {...(sessionId === undefined ? {} : { sessionId })}
       {...(onOpenChat === undefined ? {} : { onOpenChat })}
       {...(onFocusStarted === undefined ? {} : { onFocusStarted })}
+      {...(onOpenMapPage === undefined ? {} : { onOpenMapPage })}
     />
   )
 }
@@ -211,6 +216,25 @@ export function apply(ctx: Context): void {
    */
   type PanelRef = Parameters<NonNullable<typeof layout>['selectPanel']>[0]
   const panelRef = PANEL_ID as unknown as PanelRef
+  const mapPanelRef = MAP_PANEL_ID as unknown as PanelRef
+
+  // ---------------------------------------------------------------------------
+  // The map page's sidebar entry.
+  //
+  // A panellist id addresses a main panel, so this one replaces the main column
+  // with the diagnosis map — which is the point of a separate page. It is
+  // deliberately NOT the Learn action: Learn opens the docked tab and leaves
+  // the conversation alone, while this entry is the learner choosing to go and
+  // look at the map.
+  // ---------------------------------------------------------------------------
+  ctx.slots.inject('sidebar.panellist', () =>
+    ctx.slots.register(
+      { name: 'sidebar.panellist', id: MAP_PANEL_ID, order: 41, label: 'Learning map' },
+      function BoundMapIcon(props: { size: number; active: boolean }): ReactNode {
+        return <MapPageIcon size={props.size} active={props.active} />
+      },
+    ),
+  )
 
   // ---------------------------------------------------------------------------
   // The sidebar entry.
@@ -250,6 +274,7 @@ export function apply(ctx: Context): void {
               openDockedTab()
             }}
             onFocusStarted={() => openDockedTab()}
+            onOpenMapPage={() => layout?.selectPanel(mapPanelRef)}
           />
         )
       },
@@ -300,6 +325,28 @@ export function apply(ctx: Context): void {
     }
   }
 
+  // The map page itself. A second `main` key: the shell's panel switcher now
+  // has two destinations, the teaching view and the map view.
+  ctx.slots.inject('main', () =>
+    ctx.slots.register(
+      { name: 'main', key: MAP_PANEL_ID as unknown as NonNullable<PanelRef> },
+      function BoundMapPanel(props: MainPanelProps): ReactNode {
+        const sessionId = useCurrentSessionId(uiSession)
+        return (
+          <LearningMapPanel
+            {...props}
+            {...(sessionId === undefined ? {} : { sessionId })}
+            onOpenChat={() => {
+              layout?.selectPanel(null)
+              openDockedTab()
+            }}
+            onOpenLearning={() => layout?.selectPanel(panelRef)}
+          />
+        )
+      },
+    ),
+  )
+
   ctx.slots.inject('sidebar.right.pane.tab', () =>
     ctx.slots.register({ name: 'sidebar.right.pane.tab', key: TAB_ID }, function BoundTab(
       props: PropsRuntime<'sidebar.right.pane.tab'>,
@@ -313,6 +360,7 @@ export function apply(ctx: Context): void {
             // tab stays docked, so the way back is the panel's own header.
             layout?.selectPanel(panelRef)
           }}
+          onOpenMapPage={() => layout?.selectPanel(mapPanelRef)}
         />
       )
     }),
@@ -332,6 +380,7 @@ export function apply(ctx: Context): void {
 }
 
 export { LearningPanel } from './app.js'
+export { LearningMapPanel, MAP_PANEL_ID } from './map-panel.js'
 export { LearningTab, LearningTabTitle } from './tab.jsx'
 export { LessonBody, BlockView, BLOCK_RENDERERS } from './blocks.js'
 export type { PanelClient } from './app.js'
