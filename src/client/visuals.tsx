@@ -337,3 +337,25 @@ export function EmptyArt({ kind }: { kind: EmptyKind }): ReactNode {
     </svg>
   )
 }
+
+/** The map page's sidebar icon: a folded map, not another node graph. */
+export function MapPageIcon({ size, active = false }: { size: number; active?: boolean }): ReactNode {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={active ? 1.6 : 1.3}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M2.4 3.9l3.5-1.2 4.2 1.2 3.5-1.2v9.6l-3.5 1.2-4.2-1.2-3.5 1.2z" />
+      <path d="M5.9 2.7v9.6M10.1 3.9v9.6" opacity=".7" />
+      <circle cx="8" cy="7.4" r="1.15" />
+    </svg>
+  )
+}

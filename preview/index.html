@@ -217,7 +217,7 @@ window.__ModuleLoader__ = {
   setTheme(params.get("theme") === "dark");
   themeButton.addEventListener("click", () => setTheme(themeButton.dataset.theme !== "dark"));
 
-  const Component = surface === "tab" ? M.LearningTab : M.LearningPanel;
+  const Component = surface === "tab" ? M.LearningTab : surface === "map" ? M.LearningMapPanel : M.LearningPanel;
   window.ReactDOM.createRoot(host).render(
     window.React.createElement(Component, { client: window.createFixtureClient({ scenario }) })
   );

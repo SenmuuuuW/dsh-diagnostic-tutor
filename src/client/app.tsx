@@ -67,6 +67,14 @@ export interface LearningPanelProps {
   onOpenChat?: (() => void) | undefined
   /** Called once a focus is recorded — used to dock the side tab. */
   onFocusStarted?: (() => void) | undefined
+  /**
+   * Open the diagnosis map as its own page.
+   *
+   * The map is a reference surface, and the teaching column is for reading a
+   * lesson: they are different jobs, so the map gets a page of its own instead
+   * of sharing this one. Absent in the preview and in tests.
+   */
+  onOpenMapPage?: (() => void) | undefined
 }
 
 /** The status pill plus its mark. Never a number. */
@@ -91,6 +99,7 @@ export function LearningPanel({
   sessionId,
   onOpenChat,
   onFocusStarted,
+  onOpenMapPage,
 }: LearningPanelProps): ReactNode {
   const state = useLearning({
     client: client ?? defaultClient,
@@ -306,12 +315,19 @@ export function LearningPanel({
               : 'your conversation stays in the sidebar'}
           </span>
         </div>
-        {onOpenChat !== undefined && (
-          <button type="button" className="dt-bar-back" onClick={onOpenChat}>
-            {/* Named plainly: the fear this button answers is "did I lose my chat?" */}
-            Back to the conversation
-          </button>
-        )}
+        <div className="dt-bar-actions">
+          {onOpenMapPage !== undefined && (
+            <button type="button" className="dt-bar-back" onClick={onOpenMapPage}>
+              Learning map
+            </button>
+          )}
+          {onOpenChat !== undefined && (
+            <button type="button" className="dt-bar-back" onClick={onOpenChat}>
+              {/* Named plainly: the fear this button answers is "did I lose my chat?" */}
+              Back to the conversation
+            </button>
+          )}
+        </div>
       </header>
       <div className="dt-root">
       {/* ---- course + map ---- */}

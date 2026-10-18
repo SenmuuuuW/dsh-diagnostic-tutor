@@ -45,11 +45,13 @@ function CompactMap({
   selectedId,
   focusNodeId,
   onSelect,
+  onOpenMapPage,
 }: {
   nodes: NodeView[]
   selectedId: string | null
   focusNodeId: string | null
   onSelect: (id: string) => void
+  onOpenMapPage?: (() => void) | undefined
 }): ReactNode {
   const rows = useMemo(() => flattenTree(buildMapTree(nodes)), [nodes])
   const confirmed = nodes.filter((node) => node.state === 'confirmed').length
@@ -58,6 +60,11 @@ function CompactMap({
     <>
       <p className="dt-tab-section">
         Diagnosis map <span>{nodes.length}</span>
+        {onOpenMapPage !== undefined && (
+          <button type="button" className="dt-tab-expand" onClick={onOpenMapPage}>
+            Open map
+          </button>
+        )}
       </p>
       <StateBar nodes={nodes} />
       {rows.length === 0 && (
@@ -127,6 +134,8 @@ export interface LearningTabProps {
    * the chat to see more of the map is the learner's call.
    */
   onOpenFullView?: (() => void) | undefined
+  /** Opens the diagnosis map as its own main-column page. */
+  onOpenMapPage?: (() => void) | undefined
 }
 
 /**
@@ -141,6 +150,7 @@ export function LearningTab({
   uiSession,
   initialOverview,
   onOpenFullView,
+  onOpenMapPage,
 }: LearningTabProps): ReactNode {
   // The live scope when there is one. `adapter.current` is a HostObservable and
   // `useCurrentSessionId` subscribes to it, so a session switch re-renders this
@@ -452,6 +462,7 @@ export function LearningTab({
         selectedId={shownId}
         focusNodeId={focus?.nodeId ?? null}
         onSelect={select}
+        {...(onOpenMapPage === undefined ? {} : { onOpenMapPage })}
       />
 
       {dataNote !== null && <p className="dt-caption">{dataNote}</p>}
