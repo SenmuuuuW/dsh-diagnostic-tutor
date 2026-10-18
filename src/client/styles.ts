@@ -856,6 +856,321 @@ body[data-ds-dark-theme] {
   padding: 10px 12px; color: var(--dt-muted);
 }
 
+/* ---------------------------------------------------------------------------
+   Visual layer
+   ---------------------------------------------------------------------------
+   Everything below is presentation only: the state model, the copy and the
+   structure are the ones above. The surfaces were technically complete but
+   read thin — a white page, a flat list, and a lesson made of unstyled runs —
+   so this layer gives the same truth a shape: a cover for the course, a glyph
+   and a distribution bar for the map, a timeline for evidence, and figures for
+   the states where there is nothing to show yet.
+
+   No numbers, bars or rings represent "progress". The only bar here is a
+   census of state words: how many nodes are in each of the seven states the
+   skill defines. It answers "what does my map look like", not "how far am I".
+   --------------------------------------------------------------------------- */
+
+/* The whole surface sits on a very quiet field, so cards read as objects
+   rather than as holes in the page. Kept near the background colour on purpose:
+   a decorative wash must never compete with 12px lesson prose. */
+.dt-root-wrap,
+.dt-tab {
+  background-image:
+    radial-gradient(ellipse 60% 40% at 80% -10%, color-mix(in srgb, var(--dt-accent) 4%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 35% at 0% 0%, color-mix(in srgb, var(--dt-accent) 3%, transparent), transparent 70%);
+  background-repeat: no-repeat;
+}
+
+/* ---- the course cover ------------------------------------------------ */
+.dt-course-card {
+  position: relative; overflow: hidden;
+  margin: 0 0 14px; padding: 15px 15px 13px;
+  border: 1px solid var(--dt-border); border-radius: 13px;
+  background:
+    linear-gradient(155deg, color-mix(in srgb, var(--dt-accent) 7%, var(--dt-surface)), var(--dt-surface) 62%);
+}
+.dt-course-orbit {
+  position: absolute; right: 0; top: -18px; width: 120px; height: 78px;
+  color: var(--dt-accent); opacity: .2; pointer-events: none;
+}
+.dt-course-card > p,
+.dt-course-card > h1 { position: relative; }
+.dt-course-card .dt-eyebrow { color: var(--dt-accent); }
+.dt-course-card .dt-course-title { margin-top: 6px; font-size: 18px; }
+.dt-course-card .dt-goal { margin-bottom: 0; }
+
+/* ---- this conversation, as its own object ---------------------------- */
+.dt-here-card {
+  padding: 12px 14px 13px; margin: 0 0 4px;
+  border: 1px solid var(--dt-border); border-radius: 12px;
+  background: var(--dt-surface);
+}
+.dt-here-card .dt-eyebrow-here { margin-top: 0; }
+.dt-here-card .dt-here-empty { margin-top: 5px; }
+.dt-here-card .dt-here-action { margin-top: 11px; }
+
+/* ---- the state census ------------------------------------------------ */
+.dt-statebar { margin: 10px 0 14px; }
+.dt-statebar-track {
+  display: flex; gap: 2px; height: 8px;
+  border-radius: 999px; overflow: hidden;
+  background: var(--dt-sunken);
+}
+.dt-statebar-seg {
+  display: block; min-width: 5px; height: 100%;
+  background: currentColor; border-radius: 999px;
+  transition: filter .15s ease;
+}
+.dt-statebar-seg:hover { filter: brightness(1.12); }
+.dt-statebar-legend {
+  display: flex; flex-wrap: wrap; gap: 4px 10px;
+  list-style: none; margin: 8px 0 0; padding: 0;
+  font-size: 10.5px; color: var(--dt-muted);
+}
+.dt-statebar-legend li { display: inline-flex; align-items: center; gap: 4px; }
+.dt-statebar-legend b { font-weight: 620; color: var(--dt-text); font-variant-numeric: tabular-nums; }
+.dt-statebar-key {
+  width: 7px; height: 7px; border-radius: 2px;
+  background: currentColor; flex: none;
+}
+
+/* ---- the map rows ---------------------------------------------------- */
+/* A state mark is a small badge, not a dot: the word says which state, the
+   glyph says what kind of thing it is. */
+.dt-dot {
+  width: 24px; height: 24px; border-radius: 8px;
+  display: grid; place-items: center;
+  border: 1px solid color-mix(in srgb, currentColor 30%, var(--dt-border));
+  background: color-mix(in srgb, currentColor 10%, transparent);
+  flex: none;
+  transition: background .15s ease, transform .15s ease;
+}
+.dt-dot[data-filled="true"] { background: color-mix(in srgb, currentColor 16%, transparent); }
+.dt-glyph-svg { display: block; }
+.dt-node:hover .dt-dot,
+.dt-tab-node:hover .dt-dot { transform: scale(1.06); }
+
+.dt-node,
+.dt-tab-node {
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.dt-node { padding-top: 7px; padding-bottom: 7px; }
+.dt-node[aria-current="true"],
+.dt-tab-node[aria-current="true"] { box-shadow: inset 0 0 0 1px var(--dt-border); }
+.dt-node-title { font-size: 12.5px; }
+.dt-node-rel { margin-top: 1px; }
+
+/* The depth guide gets a node at its foot, so nesting reads as a branch
+   rather than as indentation. */
+.dt-node[data-depth]::before,
+.dt-tab-node[data-depth]::before {
+  background: linear-gradient(var(--dt-border), color-mix(in srgb, var(--dt-accent) 45%, var(--dt-border)));
+  width: 1.5px;
+}
+
+/* ---- node detail ----------------------------------------------------- */
+.dt-detail-hero { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+.dt-detail-glyph {
+  width: 42px; height: 42px; border-radius: 13px;
+  display: grid; place-items: center; flex: none;
+  border: 1px solid color-mix(in srgb, currentColor 32%, var(--dt-border));
+  background: color-mix(in srgb, currentColor 9%, transparent);
+}
+.dt-detail-glyph .dt-glyph-svg { width: 21px; height: 21px; }
+.dt-detail-hero-id { min-width: 0; }
+.dt-detail .dt-detail-hero h2 { margin: 3px 0 0; font-size: 18px; }
+.dt-detail .dt-why {
+  margin: 0 0 4px; padding: 11px 13px;
+  border: 1px solid var(--dt-border); border-radius: 11px;
+  background: var(--dt-surface);
+  color: var(--dt-text); font-size: 12.5px;
+}
+
+/* Evidence is a record, so it reads as a rail with entries on it rather than
+   as a stack of unowned lines. */
+.dt-evidence { margin-left: 2px; }
+.dt-evidence li {
+  position: relative; margin-left: 4px; padding-left: 15px;
+  border-left: 1px solid var(--dt-border);
+}
+.dt-evidence li::before {
+  content: ''; position: absolute; left: -4px; top: 11px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--dt-bg);
+  border: 1.5px solid var(--dt-accent);
+}
+.dt-evidence li:first-child::before { background: var(--dt-accent); }
+.dt-evidence li + li { margin-top: 4px; }
+
+/* ---- lesson as a reading surface ------------------------------------- */
+.dt-lesson-body {
+  border-radius: 13px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .035), 0 8px 24px -18px rgba(0, 0, 0, .35);
+}
+.dt-lesson-head {
+  margin-bottom: 16px;
+  padding: 0 0 11px;
+}
+.dt-lesson-head .dt-eyebrow { color: var(--dt-accent); }
+.dt-lesson-title { font-size: 16px; }
+
+/* Prose blocks get a quiet rail: a lesson is a sequence, and a sequence with
+   no edge reads as one long paragraph. */
+.dt-block-text { position: relative; padding-left: 13px; }
+.dt-block-text::before {
+  content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(var(--dt-border-strong), transparent);
+}
+.dt-block-label { display: flex; align-items: center; gap: 5px; }
+.dt-block-label-icon { display: inline-flex; color: var(--dt-accent); }
+.dt-block-example { border-left-color: var(--dt-accent); }
+.dt-block-example .dt-block-label { color: var(--dt-accent); }
+.dt-block-diagram .dt-pre {
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--dt-border) 60%, transparent);
+}
+.dt-block-check { box-shadow: 0 6px 18px -14px color-mix(in srgb, var(--dt-accent) 70%, transparent); }
+
+/* ---- empty places ---------------------------------------------------- */
+.dt-empty-art {
+  display: block; width: 92px; height: 80px; margin: 2px auto 10px;
+  color: var(--dt-accent); opacity: .5;
+}
+.dt-empty-state .dt-empty-art { margin-top: 0; }
+.dt-welcome > .dt-empty-art {
+  width: 84px; height: 74px; margin: 0 0 12px; opacity: .6;
+}
+.dt-tab .dt-empty-art { width: 74px; height: 64px; opacity: .45; margin-bottom: 8px; }
+.dt-here > .dt-empty-art { margin: 2px auto 6px; }
+.dt-empty-state { background: color-mix(in srgb, var(--dt-surface) 70%, transparent); }
+
+/* ---- first use: a place, not a form ---------------------------------- */
+.dt-root-welcome { position: relative; }
+.dt-root-welcome::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--dt-accent) 16%, transparent) 1px, transparent 1.6px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse 56% 46% at 50% 34%, #000, transparent 78%);
+  mask-image: radial-gradient(ellipse 56% 46% at 50% 34%, #000, transparent 78%);
+  opacity: .55;
+}
+.dt-root-welcome > * { position: relative; }
+.dt-root-welcome {
+  background-image:
+    radial-gradient(circle at 50% 12%, color-mix(in srgb, var(--dt-accent) 7%, transparent), transparent 46%),
+    radial-gradient(circle at 12% 92%, color-mix(in srgb, var(--dt-accent) 4%, transparent), transparent 40%);
+  background-repeat: no-repeat;
+}
+.dt-welcome-sample { position: relative; padding-left: 36px; }
+.dt-welcome-sample::before {
+  content: '“'; position: absolute; left: 13px; top: 2px;
+  font-size: 30px; line-height: 1; color: var(--dt-accent); opacity: .45;
+  font-family: Georgia, serif;
+}
+
+/* ---- the docked tab -------------------------------------------------- */
+.dt-tab .dt-statebar { margin: 8px 0 12px; }
+.dt-tab-section { position: relative; }
+.dt-tab .dt-lesson-body { padding: 13px 13px 4px; box-shadow: none; }
+.dt-tab .dt-block-text { padding-left: 10px; }
+.dt-tab .dt-dot { width: 21px; height: 21px; border-radius: 7px; }
+.dt-tab .dt-glyph-svg { width: 12px; height: 12px; }
+.dt-tab .dt-detail-glyph { display: none; }
+
+/* ---- the three things that fill this surface -------------------------- */
+.dt-features {
+  list-style: none; margin: 18px 0 20px; padding: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+}
+.dt-features li {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 11px 12px 12px;
+  border: 1px solid var(--dt-border); border-radius: 11px;
+  background: var(--dt-surface);
+}
+.dt-feature-icon { color: var(--dt-accent); margin-bottom: 2px; line-height: 0; }
+.dt-features b { font-size: 12px; font-weight: 620; }
+.dt-features li > span:last-child { font-size: 11px; color: var(--dt-muted); line-height: 1.45; }
+@media (max-width: 620px) { .dt-features { grid-template-columns: 1fr; } }
+
+/* ---- where this node sits -------------------------------------------- */
+.dt-locator {
+  margin: 14px 0 4px; padding: 12px 13px 13px;
+  border: 1px solid var(--dt-border); border-radius: 12px;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--dt-accent) 4%, var(--dt-surface)), var(--dt-surface) 70%);
+}
+.dt-locator .dt-eyebrow { margin-bottom: 9px; }
+.dt-locator-chain {
+  position: relative; display: flex; flex-direction: column; gap: 5px;
+  padding-left: 3px;
+}
+.dt-locator-chain::before {
+  content: ''; position: absolute; left: 15px; top: 9px; bottom: 9px; width: 1px;
+  background: linear-gradient(var(--dt-border-strong), var(--dt-border));
+}
+.dt-locator-item {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  min-width: 0; width: 100%; text-align: left;
+  padding: 5px 9px 5px 6px; border-radius: 8px;
+  border: 1px solid transparent; background: var(--dt-bg);
+  color: inherit; font: inherit; font-size: 12px;
+}
+button.dt-locator-item { cursor: pointer; }
+button.dt-locator-item:hover { background: var(--dt-surface); border-color: var(--dt-border); }
+.dt-locator-current {
+  border-color: var(--dt-border-strong);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+  font-weight: 600;
+}
+.dt-locator-glyph {
+  width: 21px; height: 21px; border-radius: 7px;
+  display: grid; place-items: center; flex: none;
+  border: 1px solid color-mix(in srgb, currentColor 30%, var(--dt-border));
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+.dt-locator-glyph .dt-glyph-svg { width: 13px; height: 13px; }
+.dt-locator-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.dt-locator-current .dt-locator-title { color: var(--dt-text); }
+.dt-locator-parent .dt-locator-title,
+.dt-locator-child .dt-locator-title { color: var(--dt-muted); }
+.dt-locator-children { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+
+/* ---- the docked tab's course cover ----------------------------------- */
+.dt-tab-cover {
+  position: relative; overflow: hidden;
+  margin: 2px 0 14px; padding: 12px 13px 11px;
+  border: 1px solid var(--dt-border); border-radius: 12px;
+  background:
+    linear-gradient(155deg, color-mix(in srgb, var(--dt-accent) 6%, var(--dt-surface)), var(--dt-surface) 62%);
+}
+.dt-tab-cover > p,
+.dt-tab-cover > h2 { position: relative; }
+.dt-tab-cover .dt-eyebrow { color: var(--dt-accent); }
+.dt-tab-cover .dt-here-course { margin-top: 4px; font-size: 16px; }
+.dt-tab-cover .dt-course-orbit { width: 104px; height: 68px; opacity: .14; }
+
+/* ---- motion ---------------------------------------------------------- */
+/* Entrance only, and only when the system allows it: this surface is read for
+   minutes at a time, so nothing loops or draws attention after arrival. */
+@media (prefers-reduced-motion: no-preference) {
+  .dt-node,
+  .dt-tab-node,
+  .dt-block,
+  .dt-lesson-body,
+  .dt-course-card,
+  .dt-here-card,
+  .dt-detail-hero {
+    animation: dt-rise .26s cubic-bezier(.2, .7, .3, 1) both;
+  }
+  @keyframes dt-rise {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
 `
 
 /**

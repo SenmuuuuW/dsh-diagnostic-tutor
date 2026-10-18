@@ -37,6 +37,7 @@ import {
 } from './model.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
+import { EmptyArt, FeatureRow, NodeLocator, StateBar, StateGlyph } from './visuals.jsx'
 
 export type { PanelClient } from './use-learning.js'
 
@@ -170,12 +171,14 @@ export function LearningPanel({
         </header>
         <div className="dt-root dt-root-welcome">
           <div className="dt-welcome">
+            <EmptyArt kind="welcome" />
             <p className="dt-welcome-eyebrow">Start something new</p>
             <h1 className="dt-welcome-title">Tell the tutor what you want to learn in Chat.</h1>
             <p className="dt-welcome-body">
               When the tutor records a goal there, it becomes this conversation&rsquo;s project.
               Nothing is created here, and your other projects are untouched.
             </p>
+            <FeatureRow />
             {library.length > 0 && (
               <>
                 <p className="dt-section-title">Or continue one</p>
@@ -223,6 +226,7 @@ export function LearningPanel({
         </header>
         <div className="dt-root dt-root-welcome">
         <div className="dt-welcome">
+          <EmptyArt kind="welcome" />
           {/* The library first. A full view with no project open is not an
               empty runtime — the learner's projects are real, and this is
               where they are listed. The welcome copy below only appears when
@@ -256,6 +260,7 @@ export function LearningPanel({
             want to learn — in your own words, in the chat. Then this page fills in: a map of what
             you actually know, the lesson, and the evidence behind every status.
           </p>
+          <FeatureRow />
           <div className="dt-welcome-sample">
             <span className="dt-welcome-sample-label">Try</span>
             <span className="dt-welcome-sample-text">
@@ -316,63 +321,79 @@ export function LearningPanel({
             THIS conversation has got to belongs to this conversation alone.
             One heading over both is what made a brand-new chat look as though
             it had become the learner's old machine-learning session. */}
-        <p className="dt-eyebrow">Your learning</p>
-        <h1 className="dt-course-title">{overview?.course?.title ?? 'No goal yet'}</h1>
-        {overview?.course != null && (
-          <>
-            <p className="dt-shared">Shared across conversations</p>
-            <p className="dt-goal">
-              <b>Goal:</b> {overview.course.goal}
-            </p>
-          </>
-        )}
+        <header className="dt-course-card">
+          {/* Decorative orbit lines: the header is the map's cover, and an
+              empty white rectangle above a list reads as missing content. */}
+          <svg className="dt-course-orbit" viewBox="0 0 120 78" aria-hidden="true" focusable="false">
+            <circle cx="98" cy="14" r="30" />
+            <circle cx="98" cy="14" r="19" strokeDasharray="2.5 4" />
+            <circle cx="98" cy="14" r="2.4" fill="currentColor" stroke="none" />
+            <circle cx="70" cy="46" r="5" strokeDasharray="2 3" />
+          </svg>
+          <p className="dt-eyebrow">Your learning</p>
+          <h1 className="dt-course-title">{overview?.course?.title ?? 'No goal yet'}</h1>
+          {overview?.course != null && (
+            <>
+              <p className="dt-shared">Shared across conversations</p>
+              <p className="dt-goal">
+                <b>Goal:</b> {overview.course.goal}
+              </p>
+            </>
+          )}
+        </header>
 
-        <p className="dt-eyebrow dt-eyebrow-here">This conversation</p>
-        {focus === null ? (
-          <p className="dt-here-empty">
-            No learning focus yet. Pick a node below to start learning here.
-          </p>
-        ) : (
-          <p className="dt-here-focus">
-            <span className="dt-here-node">{focusNodeTitle ?? focus.nodeId}</span>
-            {focusNodeState !== null && (
-              <span className={`dt-tab-state dt-state-${focusNodeState}`}>{focusNodeState}</span>
-            )}
-          </p>
-        )}
-        {/* Waking a tutor means naming a conversation, so it lives under THIS
-            CONVERSATION, not under the shared course — and it acts on the node
-            it describes: the focus when there is one, the selection only before
-            anything has started. With a recommendation pending it is not
-            rendered at all: the card below owns the move, and two controls for
-            one next step is how the page came to ask which one to press. */}
-        {control !== null && (
-          <button
-            type="button"
-            className="dt-primary dt-here-action"
-            onClick={() => state.continueTo(control.nodeId)}
-            disabled={starting || sessionId === undefined}
-            {...(sessionId === undefined
-              ? { title: 'Open or create a conversation first — that is where the tutor replies.' }
-              : {})}
-          >
-            {starting ? 'Starting…' : control.label}
-          </button>
-        )}
-        {sessionId === undefined && (
-          <p className="dt-caption">
-            Open a conversation first. The tutor teaches in the chat, so a node cannot be started
-            without one.
-          </p>
-        )}
+        <section className="dt-here-card">
+          <p className="dt-eyebrow dt-eyebrow-here">This conversation</p>
+          {focus === null ? (
+            <p className="dt-here-empty">
+              No learning focus yet. Pick a node below to start learning here.
+            </p>
+          ) : (
+            <p className="dt-here-focus">
+              <span className="dt-here-node">{focusNodeTitle ?? focus.nodeId}</span>
+              {focusNodeState !== null && (
+                <span className={`dt-tab-state dt-state-${focusNodeState}`}>{focusNodeState}</span>
+              )}
+            </p>
+          )}
+          {/* Waking a tutor means naming a conversation, so it lives under THIS
+              CONVERSATION, not under the shared course — and it acts on the node
+              it describes: the focus when there is one, the selection only before
+              anything has started. With a recommendation pending it is not
+              rendered at all: the card below owns the move, and two controls for
+              one next step is how the page came to ask which one to press. */}
+          {control !== null && (
+            <button
+              type="button"
+              className="dt-primary dt-here-action"
+              onClick={() => state.continueTo(control.nodeId)}
+              disabled={starting || sessionId === undefined}
+              {...(sessionId === undefined
+                ? { title: 'Open or create a conversation first — that is where the tutor replies.' }
+                : {})}
+            >
+              {starting ? 'Starting…' : control.label}
+            </button>
+          )}
+          {sessionId === undefined && (
+            <p className="dt-caption">
+              Open a conversation first. The tutor teaches in the chat, so a node cannot be started
+              without one.
+            </p>
+          )}
+        </section>
 
         <p className="dt-section-title">
           Diagnosis map <span>{rows.length} nodes</span>
         </p>
+        <StateBar nodes={overview?.nodes ?? []} />
         {rows.length === 0 && (
-          <p className="dt-empty">
-            Nothing on the map yet. State a goal in the chat and the runtime will record it.
-          </p>
+          <>
+            <EmptyArt kind="map" />
+            <p className="dt-empty">
+              Nothing on the map yet. State a goal in the chat and the runtime will record it.
+            </p>
+          </>
         )}
         {rows.map(({ node, depth }) => (
           <button
@@ -395,7 +416,9 @@ export function LearningPanel({
             data-focused={node.id === focus?.nodeId ? 'true' : undefined}
             onClick={() => state.select(node.id)}
           >
-            <span className={`dt-dot dt-state-${node.state}`} data-filled={isFilledState(node.state)} />
+            <span className={`dt-dot dt-state-${node.state}`} data-filled={isFilledState(node.state)}>
+              <StateGlyph state={node.state} />
+            </span>
             <span className="dt-node-title">
               {node.title}
               <span className="dt-node-rel">
@@ -414,6 +437,7 @@ export function LearningPanel({
       <div className="dt-pane dt-detail">
         {detail === null ? (
           <div className="dt-empty-state">
+            <EmptyArt kind="evidence" />
             <p className="dt-empty-title">
               {loading ? 'Loading your map…' : 'Nothing selected'}
             </p>
@@ -424,8 +448,15 @@ export function LearningPanel({
           </div>
         ) : (
           <>
-            <p className="dt-eyebrow">Selected node</p>
-            <h2>{detail.node.title}</h2>
+            <div className="dt-detail-hero">
+              <span className={`dt-detail-glyph dt-state-${detail.node.state}`} aria-hidden="true">
+                <StateGlyph state={detail.node.state} />
+              </span>
+              <div className="dt-detail-hero-id">
+                <p className="dt-eyebrow">Selected node</p>
+                <h2>{detail.node.title}</h2>
+              </div>
+            </div>
             <div className="dt-meta">
               <StateMark state={detail.node.state} />
               <span className="dt-chip">{relationLabel(detail.node.relation)}</span>
@@ -437,11 +468,29 @@ export function LearningPanel({
 
             <p className="dt-why">{stateExplanation(detail.node.state)}</p>
 
+            <NodeLocator
+              parent={
+                detail.parent === null
+                  ? null
+                  : { id: detail.parent.id, title: detail.parent.title, state: detail.parent.state }
+              }
+              node={{ id: detail.node.id, title: detail.node.title, state: detail.node.state }}
+              children={detail.children.map((child) => ({
+                id: child.id,
+                title: child.title,
+                state: child.state,
+              }))}
+              onSelect={state.select}
+            />
+
             <p className="dt-section-title">
               Evidence <span>{detail.node.evidence.length}</span>
             </p>
             {detail.node.evidence.length === 0 ? (
-              <p className="dt-empty">Nothing recorded yet.</p>
+              <>
+                <EmptyArt kind="evidence" />
+                <p className="dt-empty">Nothing recorded yet.</p>
+              </>
             ) : (
               <ul className="dt-evidence">
                 {detail.node.evidence.map((entry, index) => (
@@ -480,15 +529,17 @@ export function LearningPanel({
         </div>
         {lesson === null ? (
           placeholder === 'preparing' ? (
-            <>
+            <div className="dt-empty-state">
+              <EmptyArt kind="lesson" />
               <p className="dt-empty">The tutor is preparing this node…</p>
               <p className="dt-caption">
                 The teaching appears here as it is written, while the conversation continues in the
                 chat.
               </p>
-            </>
+            </div>
           ) : (
             <div className="dt-empty-state">
+              <EmptyArt kind="lesson" />
               <p className="dt-empty-title">Nothing is being taught yet</p>
               {/* The invitation names the action that actually exists. With a
                   recommendation pending there is no start control to press, and

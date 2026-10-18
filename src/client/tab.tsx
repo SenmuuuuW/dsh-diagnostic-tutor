@@ -33,6 +33,7 @@ import {
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
 import { useCurrentSessionId } from './use-session.js'
+import { EmptyArt, StateBar, StateGlyph } from './visuals.jsx'
 
 /** The tab chip's text. */
 export function LearningTabTitle(): ReactNode {
@@ -58,7 +59,13 @@ function CompactMap({
       <p className="dt-tab-section">
         Diagnosis map <span>{nodes.length}</span>
       </p>
-      {rows.length === 0 && <p className="dt-empty">No map yet — state a goal in the chat.</p>}
+      <StateBar nodes={nodes} />
+      {rows.length === 0 && (
+        <>
+          <EmptyArt kind="map" />
+          <p className="dt-empty">No map yet — state a goal in the chat.</p>
+        </>
+      )}
       <div className="dt-tree">
         {rows.map(({ node, depth }) => (
           <button
@@ -76,7 +83,9 @@ function CompactMap({
             data-focused={node.id === focusNodeId ? 'true' : undefined}
             onClick={() => onSelect(node.id)}
           >
-            <span className={`dt-dot dt-state-${node.state}`} data-filled={node.state === 'confirmed'} />
+            <span className={`dt-dot dt-state-${node.state}`} data-filled={node.state === 'confirmed'}>
+              <StateGlyph state={node.state} />
+            </span>
             <span className="dt-tab-node-title">{node.title}</span>
             <span className={`dt-tab-state dt-state-${node.state}`}>{node.state}</span>
           </button>
@@ -209,6 +218,7 @@ export function LearningTab({
           <button type="button" className="dt-back" onClick={() => state.openProject()}>
             ← All learning
           </button>
+          <EmptyArt kind="welcome" />
           <p className="dt-eyebrow">Start something new</p>
           <p className="dt-here-empty">Tell the tutor what you want to learn in Chat.</p>
           <p className="dt-caption">
@@ -255,6 +265,7 @@ export function LearningTab({
     return (
       <div className="dt-tab">
         <header className="dt-here">
+          <EmptyArt kind="library" />
           <p className="dt-eyebrow">Your learning</p>
           {library.length === 0 ? (
             <p className="dt-here-empty">
@@ -326,9 +337,17 @@ export function LearningTab({
         <button type="button" className="dt-back" onClick={() => state.openProject()}>
           ← All learning
         </button>
-        <p className="dt-eyebrow">Your learning</p>
-        <h2 className="dt-here-course">{overview?.course?.title ?? 'No goal yet'}</h2>
-        {overview?.course != null && <p className="dt-shared">Shared across conversations</p>}
+        <div className="dt-tab-cover">
+          <svg className="dt-course-orbit" viewBox="0 0 120 78" aria-hidden="true" focusable="false">
+            <circle cx="98" cy="14" r="30" />
+            <circle cx="98" cy="14" r="19" strokeDasharray="2.5 4" />
+            <circle cx="98" cy="14" r="2.4" fill="currentColor" stroke="none" />
+            <circle cx="70" cy="46" r="5" strokeDasharray="2 3" />
+          </svg>
+          <p className="dt-eyebrow">Your learning</p>
+          <h2 className="dt-here-course">{overview?.course?.title ?? 'No goal yet'}</h2>
+          {overview?.course != null && <p className="dt-shared">Shared across conversations</p>}
+        </div>
 
         <p className="dt-eyebrow dt-eyebrow-here">This conversation</p>
         {focus === null ? (
@@ -392,13 +411,16 @@ export function LearningTab({
           <HandoffLine handoff={handoff} onRetry={() => state.continueTo(handoff.targetNodeId)} />
         )}
         {lesson === null ? (
-          <p className="dt-empty">
-            {placeholder === 'preparing'
-              ? 'The tutor is preparing this node…'
-              : placeholder === 'press-continue'
-                ? `Press ${continuationLabel(nextStep)} and the teaching appears here, while the chat stays open beside it.`
-                : 'Press Start learning and the teaching appears here, while the chat stays open beside it.'}
-          </p>
+          <div className="dt-empty-state">
+            <EmptyArt kind="lesson" />
+            <p className="dt-empty">
+              {placeholder === 'preparing'
+                ? 'The tutor is preparing this node…'
+                : placeholder === 'press-continue'
+                  ? `Press ${continuationLabel(nextStep)} and the teaching appears here, while the chat stays open beside it.`
+                  : 'Press Start learning and the teaching appears here, while the chat stays open beside it.'}
+            </p>
+          </div>
         ) : (
           <article className="dt-lesson-body">
             <div className="dt-lesson-head">
