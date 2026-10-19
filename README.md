@@ -522,9 +522,10 @@ Machine Learning            [goal, unconfirmed]
 
 Two query parameters reach the states that are otherwise awkward to produce on
 demand — `?scenario=` (`first-use`, `map`, `handoff`, `next`, `stay`, `noskill`,
-`long`, `scroll`, `library`, `new`, `showcase`) and `?surface=tab` / `?surface=map`
-for the docked right-sidebar tab and the standalone map page. The scenario
-switch is in the page's toolbar, and the theme toggle sets the same
+`long`, `scroll`, `library`, `new`, `showcase`, `curriculum`, `path-draft`,
+`path-setup`, `path-assessment`) and `?surface=tab` / `?surface=map` for the
+docked right-sidebar tab and the standalone map page. The scenario switch is in
+the page's toolbar, and the theme toggle sets the same
 `body[data-ds-dark-theme]` attribute DSH does. The page carries the real DSH
 design tokens for the same reason: with hardcoded fallbacks in their place, a
 token that resolves to near-white in dark mode looks perfectly fine locally.
@@ -575,7 +576,7 @@ What the surfaces look like now, captured from a live profile:
 ```sh
 pnpm install
 pnpm typecheck   # tsc --noEmit  (host and client)
-pnpm test        # 455 tests: unit, guard, DOM, render, real composition
+pnpm test        # unit, guard, DOM, render, real composition
 pnpm build       # tsc -> lib/ (host) + tsdown -> lib/client.js
 ```
 

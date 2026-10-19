@@ -47,6 +47,8 @@ describe('domain declaration', () => {
       NEXT_STEPS_TABLE,
       HANDOFFS_TABLE,
       PROJECTS_TABLE,
+      'learning_paths',
+      'course_runs',
     ])
   })
 

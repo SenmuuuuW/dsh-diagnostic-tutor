@@ -134,6 +134,7 @@ window.__ModuleLoader__ = {
 </script>
 <script src="/lib/client.js"></script>
 <script src="/preview/fixture.js"></script>
+<script src="/preview/path-fixture.js"></script>
 <script>
 (function () {
   const M = window.__capturedModule;
@@ -193,7 +194,7 @@ window.__ModuleLoader__ = {
   /* Scenario switch. Changing it reloads rather than re-rendering: the fixture
      client holds state, and a fresh client per state is the honest model. */
   const select = document.getElementById("scenario");
-  (window.FIXTURE_SCENARIOS || ["map"]).forEach((name) => {
+  [...(window.FIXTURE_SCENARIOS || ["map"]), ...(window.PATH_FIXTURE_SCENARIOS || [])].forEach((name) => {
     const option = document.createElement("option");
     option.value = name;
     option.textContent = name;
@@ -217,10 +218,20 @@ window.__ModuleLoader__ = {
   setTheme(params.get("theme") === "dark");
   themeButton.addEventListener("click", () => setTheme(themeButton.dataset.theme !== "dark"));
 
-  const Component = surface === "tab" ? M.LearningTab : surface === "map" ? M.LearningMapPanel : M.LearningPanel;
-  window.ReactDOM.createRoot(host).render(
-    window.React.createElement(Component, { client: window.createFixtureClient({ scenario }) })
-  );
+  const planning = (window.PATH_FIXTURE_SCENARIOS || []).includes(scenario);
+  const pathClient = planning ? window.createPathFixture({ scenario }) : undefined;
+  const client = window.createFixtureClient({ scenario: planning ? "showcase" : scenario });
+  if (pathClient) client.pathClient = pathClient;
+  const root = window.ReactDOM.createRoot(host);
+  const render = (nextSurface) => {
+    const Component = nextSurface === "tab" ? M.LearningTab : nextSurface === "map" ? M.LearningMapPanel : M.LearningPanel;
+    root.render(window.React.createElement(Component, {
+      client,
+      ...(planning ? { pathClient, sessionId: "preview-session", onOpenChat: () => render("panel"),
+        onOpenLearning: () => render("panel"), onOpenMapPage: () => render("map") } : {}),
+    }));
+  };
+  render(surface);
 })();
 </script>
 </body>

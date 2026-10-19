@@ -45,8 +45,15 @@ async function pendingWrite(kind: Kind) {
       if (kind !== 'lesson') await wait()
       return state.writeNode(record)
     },
-    async writeLesson(record: Parameters<typeof state.writeLesson>[0]) {
+    async mutateLesson(courseId: string, nodeId: string, change: Parameters<typeof state.mutateLesson>[2]) {
+      const result = await state.mutateLesson(courseId, nodeId, (current) => {
+        const next = change(current)
+        return next
+      })
       await wait()
+      return result
+    },
+    async writeLesson(record: Parameters<typeof state.writeLesson>[0]) {
       return state.writeLesson(record)
     },
   }

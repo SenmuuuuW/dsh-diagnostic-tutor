@@ -112,6 +112,12 @@ describe('the message source this plugin declares', () => {
     expect(message.id).toBeTruthy()
   })
 
+  it('never substitutes the sole unrelated Agent for a missing requested session', () => {
+    const { ctx, sent } = captureContext([{ id: 'other' }])
+    expect(promptSession(ctx as never, 's1', 'teach this course item').prompted).toBe(false)
+    expect(sent).toHaveLength(0)
+  })
+
   it('never wakes an agent for a session it was not given', () => {
     const { ctx, sent } = captureContext([{ id: 'other' }, { id: 'another' }])
     const result = promptSession(ctx as never, 's1', 'teach me this node')

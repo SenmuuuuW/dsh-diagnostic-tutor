@@ -12,6 +12,8 @@
  * the standalone preview where no DSH theme is present.
  */
 
+import { PATH_CSS } from './path-styles.js'
+
 /** Marker attribute so the sheet is injected exactly once, and is findable. */
 export const STYLE_ATTR = 'data-diagnostic-tutor-style'
 
@@ -1218,7 +1220,7 @@ export function injectStyles(): () => void {
 
   const element = document.createElement('style')
   element.setAttribute(STYLE_ATTR, '')
-  element.textContent = CSS
+  element.textContent = CSS + PATH_CSS
   document.head.appendChild(element)
   return () => element.remove()
 }

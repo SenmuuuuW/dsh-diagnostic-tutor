@@ -41,6 +41,9 @@ import {
   targetRequirement,
 } from './vocabulary.js'
 import type { EvidenceKind, NodeRelation, NodeState, Readiness } from './vocabulary.js'
+import { planningTools } from './path-tools.js'
+import { activeAttempt } from './path.js'
+import { requireAttempt, writeCourseTeaching } from './path-runtime.js'
 
 /**
  * The slice of `ctx` this module needs.
@@ -160,6 +163,7 @@ interface StatusValue {
   selection: ProjectSelection
   sessionAvailable: boolean
   courseId?: string
+  learningPathContext?: string
   focus?: {
     courseId: string
     nodeId: string
@@ -201,6 +205,15 @@ function statusValue(state: UdState, sessionId: string | undefined): StatusValue
     courses: snapshot.courses.map((course) => ({ ...course })),
     selection: project.selection,
     sessionAvailable: project.sessionAvailable,
+  }
+  if (project.course) {
+    const path = state.readPath(project.course.id)
+    const run = sessionId ? state.readCourseRun(project.course.id, sessionId) : undefined
+    if (path || run) value.learningPathContext = JSON.stringify({
+      tool: 'udt_path_get', courseId: project.course.id, revision: path?.revision ?? 0,
+      briefRevision: path?.briefRevision ?? 0, acceptedVersion: path?.acceptedVersion ?? null,
+      activeAttempt: (() => { const entry = activeAttempt(run); return entry ? { id: entry.id, itemId: entry.itemId, version: entry.version, nodeId: entry.nodeId, status: entry.status } : null })(),
+    })
   }
   const { preferredLanguage, mode } = snapshot.learner
   if (preferredLanguage !== undefined) value.preferredLanguage = preferredLanguage
@@ -266,6 +279,7 @@ function udtStatusTool(state: UdState): ToolDefinition {
       '`none` means no project selected; `new` means the learner asked to start a new project: use udt_goal_create for that goal, ' +
       'and do not reuse a historical project as the current one. `project` names the selected course. ' +
       'If sessionAvailable is false, conversation binding is unavailable. ' +
+      'If learningPathContext exists, read udt_path_get to continue goal setup, assessment, route or active planned teaching. ' +
       'Read-only: it records no teaching decision.',
     parameters: {},
     output: {
@@ -296,6 +310,7 @@ function udtStatusTool(state: UdState): ToolDefinition {
               },
             },
           },
+          learningPathContext: { type: 'string', description: 'Stored curriculum/attempt context as JSON. Read udt_path_get before planned teaching, even when no node focus exists.' },
           preferredLanguage: { type: 'string', description: 'Learner preference, when recorded.' },
           mode: {
             type: 'string',
@@ -388,7 +403,8 @@ function udtGoalCreateTool(state: UdState): ToolDefinition {
       'prerequisites or blockers (see udt_map_update). ' +
       'Creating a goal marks it active in the shared library and pauses any previously active goal. ' +
       'It selects this conversation\'s project only for none/new selection; an existing project choice is preserved. ' +
-      'Read projectBinding in the result to confirm whether the conversation is bound.',
+      'Read projectBinding in the result to confirm whether the conversation is bound. ' +
+      'Then read udt_path_get. Interactively clarify purpose, observable target outcomes, time horizon and budget before initial diagnosis and a proposed course route. Planning has its own tools; never put an undiagnosed syllabus into the diagnosis map.',
     parameters: {
       title: {
         type: 'string',
@@ -611,7 +627,8 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
       '(part-of | prerequisite | related | goal). Nodes are born "unconfirmed" unless you pass `state`.\n' +
       '• "set-state" — move one node to a new state. "confirmed" is REFUSED unless the node already carries a ' +
       'check or transfer evidence entry; explanation or practice alone never confirms.\n' +
-      '• "add-evidence" — append one observation to a node. Record what happened, not how good it was.\n' +
+      '• "add-evidence" — append one observation to a node. Record what happened, not how good it was. ' +
+      'During an active planned lesson, supply its explicit attemptId and bound nodeId; the runtime stamps the conversation/attempt provenance. Stale attempts are refused.\n' +
       'A single call may add at most 8 nodes and a map holds at most 40. Never use this to plant a whole ' +
       'syllabus: add only what the current diagnosis justifies. ' +
       'An explicit courseId/nodeId write may select the project only when this conversation has no selection. ' +
@@ -638,7 +655,8 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
           },
         },
       },
-      nodeId: { type: 'string', description: 'For op=set-state / add-evidence: the target node.' },
+      nodeId: { type: 'string', description: 'For op=set-state / add-evidence: the target node. Planned evidence must use the active attempt\'s bound node.' },
+      attemptId: { type: 'string', description: 'For op=add-evidence during planned learning: required active attemptId from udt_path_get. Provenance is stamped by the runtime.' },
       state: { type: 'string', enum: [...NODE_STATES], description: 'For op=set-state: the new state.' },
       evidenceKind: {
         type: 'string',
@@ -688,6 +706,7 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
         nodeId?: string
         state?: NodeState
         evidenceKind?: EvidenceKind
+        attemptId?: string
         evidenceNote?: string
         readiness?: Readiness
         at?: string
@@ -783,13 +802,20 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
         ...(input.evidenceNote === undefined ? {} : { note: input.evidenceNote }),
         ...(input.readiness === undefined ? {} : { readiness: input.readiness }),
       }
-      const result = recordEvidence(node, evidence, {
-        now,
-        ...(input.state === undefined ? {} : { state: input.state }),
+      const stored = await state.mutateNode(courseId, nodeId, (current) => {
+        requireProjectMatch(state.resolveProject(sessionId), courseId)
+        const planned = sessionId ? activeAttempt(state.readCourseRun(courseId, sessionId)) : undefined
+        if (planned && ['requested', 'working'].includes(planned.status) && !input.attemptId) throw new Error('planned-evidence-needs-attemptId: read udt_path_get and bind its diagnosed node')
+        const attempt = input.attemptId ? requireAttempt(state, courseId, sessionId, input.attemptId) : undefined
+        if (attempt && attempt.nodeId !== current.id) throw new Error('bind-the-node-before-recording-planned-evidence')
+        const trusted: Evidence = attempt ? { ...evidence, sessionId: sessionId!, attemptId: attempt.id } : evidence
+        const result = recordEvidence(current, trusted, {
+          now,
+          ...(input.state === undefined ? {} : { state: input.state }),
+        })
+        if (!result.ok) throw new Error(violationMessage(result.violations))
+        return result.node
       })
-      if (!result.ok) throw new Error(violationMessage(result.violations))
-
-      const stored = await state.writeNode(result.node)
       return {
         courseId,
         op: input.op,
@@ -921,12 +947,14 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       'Default mode "append" adds to the current lesson; use "replace" only to correct what is there.\n' +
       'A check block has no input box: the surface displays the question and the learner answers in the chat. ' +
       'An explicit nodeId write may select its project only when this conversation has no selection. ' +
-      'It never replaces new/project selection; check projectBinding in the result.',
+      'It never replaces new/project selection; check projectBinding in the result. ' +
+      'For planned teaching, read udt_path_get, explicitly bind its node with udt_course_run_update and supply active attemptId. Content is saved per conversation/attempt with history; stale attempts are rejected.',
     parameters: {
       nodeId: {
         type: 'string',
         description: 'Node to write for. Omit to use this conversation\'s current focus (see udt_status).',
       },
+      attemptId: { type: 'string', description: 'Required for planned teaching: active attemptId from udt_path_get.' },
       title: { type: 'string', description: 'Lesson title; defaults to the node title.' },
       mode: {
         type: 'string',
@@ -965,6 +993,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
     execute: async (args, exec) => {
       const input = args as {
         nodeId?: string
+        attemptId?: string
         title?: string
         mode?: 'append' | 'replace'
         blocks: unknown[]
@@ -974,7 +1003,11 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       const sessionId = sessionOf(exec)
       const project = state.resolveProject(sessionId)
       const focused = sessionId === undefined ? undefined : state.activeFocus(sessionId)
-      const nodeId = input.nodeId ?? focused?.node.id
+      const planned = sessionId && project.course ? activeAttempt(state.readCourseRun(project.course.id, sessionId)) : undefined
+      if (planned && ['requested', 'working'].includes(planned.status) && !input.attemptId) throw new Error('planned-lesson-needs-attemptId: read udt_path_get and bind its diagnosed node')
+      const attempt = input.attemptId && project.course ? requireAttempt(state, project.course.id, sessionId, input.attemptId) : undefined
+      if (input.attemptId && !attempt) throw new Error('no-active-course-attempt')
+      const nodeId = input.nodeId ?? attempt?.nodeId ?? focused?.node.id
       if (nodeId === undefined) {
         throw new Error('no nodeId given and no learning focus is active; call udt_status to see the focus')
       }
@@ -1005,29 +1038,35 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
         return result.data
       })
 
-      const now = nowIso()
-      const existing = state.lessonForNode(nodeId)
-      const blocks = mode === 'replace' ? parsed : [...(existing?.blocks ?? []), ...parsed]
-
-      if (blocks.length > MAX_BLOCKS_PER_LESSON) {
-        throw new Error(
-          `a lesson holds at most ${MAX_BLOCKS_PER_LESSON} blocks; this would make ${blocks.length}. ` +
-            'Replace the lesson or start a new node.',
-        )
+      const buildLesson = (existing: LessonRecord | undefined): LessonRecord => {
+        const blocks = mode === 'replace' ? parsed : [...(existing?.blocks ?? []), ...parsed]
+        if (blocks.length > MAX_BLOCKS_PER_LESSON) {
+          throw new Error(
+            `a lesson holds at most ${MAX_BLOCKS_PER_LESSON} blocks; this would make ${blocks.length}. ` +
+              'Replace the lesson or start a new node.',
+          )
+        }
+        const now = nowIso()
+        return LessonSchema.parse({
+          id: existing?.id ?? (attempt ? `${attempt.id}:${nodeId}:lesson` : `${nodeId}:lesson`),
+          courseId,
+          nodeId,
+          title: input.title ?? existing?.title ?? state.readNode(nodeId)!.title,
+          blocks,
+          origin: 'tutor',
+          createdAt: existing?.createdAt ?? now,
+          updatedAt: now,
+        })
       }
-
-      const lesson: LessonRecord = LessonSchema.parse({
-        id: existing?.id ?? `${nodeId}:lesson`,
-        courseId,
-        nodeId,
-        title: input.title ?? existing?.title ?? node.title,
-        blocks,
-        // Real teaching, written by the tutor — never the v0.0.4 scaffold.
-        origin: 'tutor',
-        createdAt: existing?.createdAt ?? now,
-        updatedAt: now,
-      })
-      await state.writeLesson(lesson)
+      const lesson = attempt && sessionId
+        ? await writeCourseTeaching(state, courseId, sessionId, attempt.id, nodeId, buildLesson)
+        : await state.mutateLesson(courseId, nodeId, (existing) => {
+          requireProjectMatch(state.resolveProject(sessionId), courseId)
+          const current = sessionId ? activeAttempt(state.readCourseRun(courseId, sessionId)) : undefined
+          if (current && ['requested', 'working'].includes(current.status)) throw new Error('planned-lesson-needs-attemptId: read udt_path_get and bind its diagnosed node')
+          return buildLesson(existing)
+        })
+      const now = lesson.updatedAt
 
       // The tutor has produced teaching for this node: the handoff that was
       // waiting on it is now ready, and its timing chain closes.
@@ -1218,4 +1257,5 @@ export function registerTools(host: ToolsHost, state: UdState): void {
   host.tools.register(udtMapUpdateTool(state))
   host.tools.register(udtLessonUpdateTool(state))
   host.tools.register(udtDecideNextTool(state))
+  for (const tool of planningTools(state)) host.tools.register(tool)
 }

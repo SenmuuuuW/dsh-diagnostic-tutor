@@ -98,6 +98,8 @@ async function mount(props: Partial<Parameters<typeof LearningMapPanel>[0]> = {}
 describe('the map page', () => {
   it('renders the map as its own page, with a census and every node', async () => {
     await mount()
+    expect(container.querySelector('.dt-path-page')).not.toBeNull()
+    await act(async () => { [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Knowledge & evidence')?.click() })
     expect(container.querySelector('.dt-map-root')).not.toBeNull()
     expect(container.querySelectorAll('.dt-map-row')).toHaveLength(nodes.length)
     // The census is state counts, not a score.
@@ -108,6 +110,7 @@ describe('the map page', () => {
 
   it('shows the selected node evidence beside the tree', async () => {
     await mount()
+    await act(async () => { [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Knowledge & evidence')?.click() })
     expect(container.querySelector('.dt-map-detail')?.textContent).toContain('Machine Learning')
 
     const rows = [...container.querySelectorAll<HTMLButtonElement>('.dt-map-row')]

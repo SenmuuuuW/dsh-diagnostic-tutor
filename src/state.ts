@@ -58,6 +58,8 @@ import type { LessonKey, LessonRecord } from './lesson.js'
 import { HandoffSchema } from './handoff.js'
 import type { HandoffKey, HandoffRecord } from './handoff.js'
 import { focusKey, handoffKey, isLegacyExecutionKey, nextStepKey } from './execution-key.js'
+import { CourseRunSchema, LearningPathSchema, emptyPath, emptyRun } from './path.js'
+import type { CourseRun, LearningPath } from './path.js'
 
 /* -------------------------------------------------------------------------- */
 /* Records                                                                    */
@@ -117,6 +119,9 @@ export const EvidenceSchema = z.object({
   at: z.string(),
   note: z.string().min(1).optional(),
   readiness: ReadinessSchema.optional(),
+  /** Runtime-stamped provenance for observations made during a planned attempt. */
+  sessionId: z.string().min(1).optional(),
+  attemptId: z.string().min(1).optional(),
 })
 export type Evidence = z.infer<typeof EvidenceSchema>
 
@@ -280,6 +285,9 @@ export interface UdExport {
   readonly focus: readonly FocusRecord[]
   /** Which Learning Project each conversation had open. */
   readonly projects: readonly ProjectRecord[]
+  /** Planning and actual course attempts are learner-owned history too. */
+  readonly learningPaths: readonly LearningPath[]
+  readonly courseRuns: readonly CourseRun[]
 }
 
 export type CourseKey = string
@@ -386,6 +394,9 @@ export const udtDomain = defineDomain({
     // handoff rather than two.
     [HANDOFFS_TABLE]: domainTable<HandoffKey, HandoffRecord>(HandoffSchema),
     [PROJECTS_TABLE]: domainTable<ProjectKey, ProjectRecord>(ProjectSchema),
+    // Additive v1 tables: older v1 documents open with empty planning maps.
+    learning_paths: domainTable<string, LearningPath>(LearningPathSchema),
+    course_runs: domainTable<string, CourseRun>(CourseRunSchema),
   },
 })
 
@@ -469,6 +480,8 @@ export interface UdState {
   readNode(id: NodeKey): NodeRecord | undefined
   /** Insert or fully replace one node. */
   writeNode(record: NodeRecord): Promise<NodeRecord>
+  /** Read, validate, and commit a node change on the project/planning queue. The transform must not enqueue writes. */
+  mutateNode(courseId: CourseKey, nodeId: NodeKey, change: (current: NodeRecord) => NodeRecord): Promise<NodeRecord>
   /** Number of nodes across every course. */
   nodeCount(): number
   /** The course plus its map. */
@@ -603,9 +616,16 @@ export interface UdState {
   lessonForNode(nodeId: NodeKey): LessonRecord | undefined
   /** Insert or fully replace one lesson. */
   writeLesson(record: LessonRecord): Promise<LessonRecord>
+  /** Read, merge, and commit a node's lesson on the project/planning queue. The transform must not enqueue writes. */
+  mutateLesson(courseId: CourseKey, nodeId: NodeKey, change: (current: LessonRecord | undefined) => LessonRecord): Promise<LessonRecord>
   /** Number of lessons across every course. */
   lessonCount(): number
 
+  /** Immutable planning snapshots; writes are validated and revision checked inside one queue. */
+  readPath(courseId: string): LearningPath | undefined
+  mutatePath(courseId: string, expectedRevision: number, change: (current: LearningPath) => LearningPath): Promise<LearningPath>
+  readCourseRun(courseId: string, sessionId: string): CourseRun | undefined
+  mutateCourseRun(courseId: string, sessionId: string, change: (current: CourseRun) => CourseRun): Promise<CourseRun>
   snapshot(): UdStateSnapshot
   /** Release the backend unit. Idempotent. */
   close(): Promise<void>
@@ -662,6 +682,10 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
   const nextSteps: KvTable<NextStepKey, NextStepRecord> = domain.table(NEXT_STEPS_TABLE)
   const handoffs: KvTable<HandoffKey, HandoffRecord> = domain.table(HANDOFFS_TABLE)
   const projects: KvTable<ProjectKey, ProjectRecord> = domain.table(PROJECTS_TABLE)
+  const paths: KvTable<string, LearningPath> = domain.table('learning_paths')
+  const runs: KvTable<string, CourseRun> = domain.table('course_runs')
+  let planningGeneration = 0
+  const runKey = (courseId: string, sessionId: string) => JSON.stringify([sessionId, courseId])
   const learner: DomainGlobal<LearnerProfile> = domain.global
 
   const listNodesFor = (courseId: CourseKey): NodeRecord[] =>
@@ -784,6 +808,20 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
     async writeNode(record) {
       await nodes.put(record.id, record)
       return record
+    },
+
+    mutateNode(courseId, nodeId, change) {
+      const generation = planningGeneration
+      return withProjectWrite(async () => {
+        if (generation !== planningGeneration || !courses.get(courseId)) throw new Error('project-unavailable: refresh the selected project')
+        const current = nodes.get(nodeId)
+        if (!current || current.courseId !== courseId) throw new Error('node-unavailable: use an existing node in this project')
+        const proposed = change(structuredClone(current))
+        if (proposed.id !== nodeId || proposed.courseId !== courseId) throw new Error('node identity cannot change')
+        const next = NodeSchema.parse(proposed)
+        await nodes.put(nodeId, next)
+        return structuredClone(next)
+      })
     },
 
     nodeCount: () => nodes.size,
@@ -934,16 +972,21 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
         // owns: it is a choice they made, and an export that dropped it would
         // restore them to a library with nothing selected.
         projects: [...projects.entries()].map(([, record]) => record),
+        learningPaths: [...paths.entries()].map(([, record]) => structuredClone(record)),
+        courseRuns: [...runs.entries()].map(([, record]) => structuredClone(record)),
       }
     },
 
     async resetState(now) {
-      // Table by table, on the domain's own write chain, so a reset cannot
-      // interleave with a write that is already queued.
-      for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs, projects]) {
-        for (const key of [...table.keys()]) await table.delete(key)
-      }
-      await learner.set({ initializedAt: UNINITIALIZED, updatedAt: now })
+      // Invalidate planning work captured before reset; serialize with planning
+      // and project selections so late writes cannot resurrect deleted plans.
+      ++planningGeneration
+      await withProjectWrite(async () => {
+        for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs, projects, paths, runs]) {
+          for (const key of [...table.keys()]) await table.delete(key)
+        }
+        await learner.set({ initializedAt: UNINITIALIZED, updatedAt: now })
+      })
     },
 
     readHandoff: (sessionId, targetNodeId) => {
@@ -988,7 +1031,59 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       return record
     },
 
+    mutateLesson(courseId, nodeId, change) {
+      const generation = planningGeneration
+      return withProjectWrite(async () => {
+        if (generation !== planningGeneration || !courses.get(courseId)) throw new Error('project-unavailable: refresh the selected project')
+        if (nodes.get(nodeId)?.courseId !== courseId) throw new Error('node-unavailable: use an existing node in this project')
+        const current = [...lessons.entries()].map(([, record]) => record).find((record) => record.nodeId === nodeId)
+        const proposed = change(current === undefined ? undefined : structuredClone(current))
+        if (proposed.courseId !== courseId || proposed.nodeId !== nodeId || (current && proposed.id !== current.id)) throw new Error('lesson identity cannot change')
+        const next = LessonSchema.parse(proposed)
+        await lessons.put(next.id, next)
+        return structuredClone(next)
+      })
+    },
+
     lessonCount: () => lessons.size,
+
+    readPath: (courseId) => {
+      const record = paths.get(courseId)
+      return record === undefined ? undefined : structuredClone(record)
+    },
+
+    mutatePath(courseId, expectedRevision, change) {
+      const generation = planningGeneration
+      return withProjectWrite(async () => {
+        if (generation !== planningGeneration || !courses.get(courseId)) throw new Error('project-unavailable: refresh the selected project')
+        const current = structuredClone(paths.get(courseId) ?? emptyPath(courseId, new Date().toISOString()))
+        if (current.revision !== expectedRevision) throw new Error('revision-conflict: learning plan changed; refresh before writing')
+        const proposed = change(current)
+        if (proposed.courseId !== courseId) throw new Error('planning project identity cannot change')
+        const next = LearningPathSchema.parse({ ...proposed, revision: current.revision + 1 })
+        await paths.put(courseId, next)
+        return structuredClone(next)
+      })
+    },
+
+    readCourseRun: (courseId, sessionId) => {
+      const record = runs.get(runKey(courseId, sessionId))
+      return record === undefined ? undefined : structuredClone(record)
+    },
+
+    mutateCourseRun(courseId, sessionId, change) {
+      const generation = planningGeneration
+      return withProjectWrite(async () => {
+        if (!sessionId || generation !== planningGeneration || !courses.get(courseId)) throw new Error('project-unavailable: refresh the selected project')
+        const key = runKey(courseId, sessionId)
+        const current = structuredClone(runs.get(key) ?? emptyRun(courseId, sessionId, new Date().toISOString()))
+        const proposed = change(current)
+        if (proposed.courseId !== courseId || proposed.sessionId !== sessionId) throw new Error('course run identity cannot change')
+        const next = CourseRunSchema.parse({ ...proposed, revision: current.revision + 1 })
+        await runs.put(key, next)
+        return structuredClone(next)
+      })
+    },
 
     snapshot() {
       const profile = learner.get()

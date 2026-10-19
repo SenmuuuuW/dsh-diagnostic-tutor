@@ -1,3 +1,4 @@
+import { CourseLearning, useCoursePath } from './course-learning.js'
 /**
  * The full-page learning panel.
  *
@@ -108,6 +109,8 @@ export function LearningPanel({
     onStarted: onFocusStarted,
   })
 
+  const coursePath = useCoursePath((client ?? defaultClient).pathClient, state.overview?.course?.id, sessionId)
+
   // Pick something on arrival, the same way the docked tab does. Without this
   // the middle and right panes sit empty until the learner works out that the
   // map rows are clickable — which reads as a broken page, not an invitation.
@@ -161,6 +164,11 @@ export function LearningPanel({
   // own screen so pressing the control visibly does something — both this and
   // "chosen nothing" have no course, and a surface reading only `course`
   // renders them identically.
+  if (overview?.course && coursePath && (coursePath.path.brief || coursePath.run)) {
+    return <CourseLearning view={coursePath} title={overview.course.title}
+      onOpenMap={onOpenMapPage} onOpenChat={onOpenChat} onExport={state.exportData} onReset={state.resetAll} />
+  }
+
   if (overview?.selection === 'new') {
     return (
       <div className="dt-root-wrap">

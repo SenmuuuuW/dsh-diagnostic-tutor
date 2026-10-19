@@ -381,6 +381,7 @@ export function apply(ctx: Context): void {
 
 export { LearningPanel } from './app.js'
 export { LearningMapPanel, MAP_PANEL_ID } from './map-panel.js'
+export { PathPage } from './path-page.js'
 export { LearningTab, LearningTabTitle } from './tab.jsx'
 export { LessonBody, BlockView, BLOCK_RENDERERS } from './blocks.js'
 export type { PanelClient } from './app.js'

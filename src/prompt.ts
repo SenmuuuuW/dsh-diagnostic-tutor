@@ -103,25 +103,9 @@ export function promptSession(ctx: Context, sessionId: string | undefined, text:
     return { prompted: false, reason: 'this profile has no agent registry' }
   }
 
-  // The requested session is the right target. DSH creates an agent lazily —
-  // a brand-new session has none until something is said in it — so fall back
-  // to the registry only when doing so is unambiguous, and never guess between
-  // several conversations.
-  let agent = agents.get(sessionId as never)
-  if (!agent) {
-    const live = agents.list()
-    if (live.length === 1 && live[0] !== undefined) {
-      agent = live[0]
-    } else {
-      return {
-        prompted: false,
-        reason:
-          live.length === 0
-            ? 'that session has no live agent yet — say anything in the chat and the tutor will pick the focus up'
-            : `that session has no live agent, and ${live.length} other conversations are open`,
-      }
-    }
-  }
+  // Never wake a sole unrelated Agent when the requested conversation has none.
+  const agent = agents.get(sessionId as never)
+  if (!agent) return { prompted: false, reason: 'that session has no live agent yet — say anything in the chat and retry' }
 
   const target = agent
   target.followup(
