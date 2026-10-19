@@ -7,6 +7,7 @@ import type { NodeView } from '../src/contract.js'
 import type { CourseAttempt, Curriculum, GoalBrief, PathView } from '../src/path.js'
 import { defaultPathClient, PathClientError } from '../src/client/path-client.js'
 import type { PathClient } from '../src/client/path-client.js'
+import { resetLanguageForTests, setLang } from '../src/client/i18n.js'
 import { PathPage } from '../src/client/path-page.js'
 
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
@@ -90,6 +91,7 @@ afterEach(() => {
   container.remove()
   vi.useRealTimers()
   vi.unstubAllGlobals()
+  resetLanguageForTests()
 })
 async function mount(props: Partial<Parameters<typeof PathPage>[0]> = {}) {
   await act(async () => root.render(createElement(PathPage, { courseId: 'synthetic-course', sessionId: 'synthetic-session', title: 'Synthetic classifier project', nodes, client, ...props })))
@@ -347,6 +349,22 @@ describe('goal wizard persistence and request readiness', () => {
     expect(client.start).not.toHaveBeenCalled()
     expect(client.request).not.toHaveBeenCalled()
     expect(client.get).toHaveBeenCalledWith('synthetic-course', undefined)
+  })
+
+  it('renders the route copy in Chinese, without translating learning content', async () => {
+    await mount()
+    expect(container.textContent).toContain('Learning path')
+
+    await act(async () => setLang('zh'))
+    expect(container.textContent).toContain('学习路线')
+    expect(container.textContent).not.toContain('Learning path')
+    // Data from the route is content, not interface copy.
+    expect(container.textContent).toContain('Represent the data')
+    expect(container.textContent).toContain('Classifier route 1')
+
+    await act(async () => setLang('en'))
+    expect(container.textContent).toContain('Learning path')
+    expect(container.textContent).not.toMatch(/[\u4e00-\u9fff]/)
   })
 })
 

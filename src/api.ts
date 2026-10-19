@@ -522,6 +522,44 @@ async function handleObserved(
   sendJson(res, 200, { ok: true, handoff: handoffFor(state, sessionId, nodeId, Date.now()) })
 }
 
+/**
+ * `GET /preferences` — the learner's interface language, if one is saved.
+ *
+ * The value lives on the learner singleton rather than in the browser so it
+ * survives DSH restarts (the web port changes, and browser storage does not
+ * follow it) and applies to every conversation. It is a display preference
+ * only: nothing about the diagnosis, teaching or stored evidence changes.
+ */
+function handlePreferences(state: UdState, res: ServerResponse): void {
+  const language = state.readLearner().preferredLanguage
+  sendJson(res, 200, {
+    ok: true,
+    language: language === 'en' || language === 'zh' ? language : null,
+  })
+}
+
+/** One of the two languages this build ships copy for. */
+const LANGUAGES = ['en', 'zh'] as const
+
+/**
+ * `POST /preferences/language { language }` — remember the interface language.
+ *
+ * Validated here rather than trusted from the body: an unknown value would
+ * leave the UI without copy after the next load, so it is rejected instead of
+ * stored.
+ */
+async function handleSetLanguage(state: UdState, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const body = await readJsonBody(req)
+  if (body === undefined) return fail(res, 400, 'bad-body')
+  const language = body.language
+  if (typeof language !== 'string' || !LANGUAGES.includes(language as (typeof LANGUAGES)[number])) {
+    return fail(res, 400, 'unsupported-language')
+  }
+  const now = new Date().toISOString()
+  await state.updateLearner({ preferredLanguage: language }, now)
+  sendJson(res, 200, { ok: true, language })
+}
+
 export interface ApiDeps {
   readonly state: UdState
   /**
@@ -575,6 +613,12 @@ export function createApiHandler(deps: ApiDeps) {
     }
     if (method === 'POST' && route === '/handoff/observed') {
       return handleObserved(state, req, res)
+    }
+    if (method === 'GET' && route === '/preferences') {
+      return handlePreferences(state, res)
+    }
+    if (method === 'POST' && route === '/preferences/language') {
+      return await handleSetLanguage(state, req, res)
     }
 
     return fail(res, method === 'GET' || method === 'POST' ? 404 : 405, 'no-such-route')

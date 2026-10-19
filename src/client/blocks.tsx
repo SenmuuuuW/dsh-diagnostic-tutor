@@ -17,6 +17,7 @@
 import { useState, type ReactNode } from 'react'
 
 import type { Block, HandoffView, NextStepView } from '../contract.js'
+import { useLessonText } from './lesson-text.js'
 import { continuationLabel, formatDuration } from './model.js'
 
 /** Props every renderer receives. */
@@ -268,6 +269,7 @@ function BlockLabel({ icon, children }: { icon: ReactNode; children: ReactNode }
 }
 
 function ExampleBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
   if (block.type !== 'example') return null
   return (
     <div className="dt-block dt-block-example">
@@ -278,7 +280,7 @@ function ExampleBlockView({ block }: BlockRenderProps): ReactNode {
           </svg>
         }
       >
-        Worked example
+        {text.workedExample}
       </BlockLabel>
       <h4>{block.content.title}</h4>
       <ol>
@@ -294,6 +296,7 @@ function ExampleBlockView({ block }: BlockRenderProps): ReactNode {
 }
 
 function DiagramBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
   if (block.type !== 'diagram') return null
   const isMermaid = block.content.format === 'mermaid'
   return (
@@ -307,11 +310,13 @@ function DiagramBlockView({ block }: BlockRenderProps): ReactNode {
           </svg>
         }
       >
-        Diagram
+        {text.diagram}
       </BlockLabel>
       {isMermaid && (
         <p className="dt-caption">
-          Source shown as text — this build ships no <code>mermaid</code> renderer.
+          {text.mermaidSourcePrefix}
+          <code>mermaid</code>
+          {text.mermaidSourceSuffix}
         </p>
       )}
       <pre className="dt-pre">{block.content.spec}</pre>
@@ -329,19 +334,20 @@ function DiagramBlockView({ block }: BlockRenderProps): ReactNode {
  * question sitting in a panel.
  */
 function CheckBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
   if (block.type !== 'check') return null
   return (
     <div className="dt-block dt-block-check">
       <div className="dt-check-head">
-        <span className="dt-check-tag">Your turn</span>
-        <span className="dt-check-where">answer in the chat →</span>
+        <span className="dt-check-tag">{text.yourTurn}</span>
+        <span className="dt-check-where">{text.answerInChatHint}</span>
       </div>
       <div className="dt-check-body">
         <Paragraphs md={block.content.prompt} />
       </div>
       {block.content.hint !== undefined && (
         <p className="dt-check-hint">
-          <span>Hint</span>
+          <span>{text.hint}</span>
           {inline(block.content.hint)}
         </p>
       )}
@@ -364,11 +370,12 @@ export const BLOCK_RENDERERS: Record<string, Renderer> = {
 
 /** Shown for a block type this build does not know. Never throws. */
 function UnknownBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
   const type = (block as { type?: unknown }).type
   return (
     <div className="dt-block dt-block-unknown">
-      <strong>{typeof type === 'string' ? type : 'unknown'}</strong> block — this build has no
-      renderer for it. Update the plugin to see it.
+      <strong>{typeof type === 'string' ? type : text.unknownType}</strong>
+      {text.unknownBlockAfter}
     </div>
   )
 }
@@ -517,15 +524,13 @@ export function DataFooter({
   onReset: () => void
   busy?: boolean
 }): ReactNode {
+  const text = useLessonText()
   const [confirming, setConfirming] = useState(false)
 
   if (confirming) {
     return (
       <div className="dt-data dt-data-confirm">
-        <p className="dt-data-ask">
-          Delete your goal, your map, every lesson and all the evidence behind it? This cannot
-          be undone.
-        </p>
+        <p className="dt-data-ask">{text.deleteConfirm}</p>
         <div className="dt-data-row">
           <button
             type="button"
@@ -536,10 +541,10 @@ export function DataFooter({
             }}
             disabled={busy === true}
           >
-            {busy === true ? 'Deleting…' : 'Yes, delete everything'}
+            {busy === true ? text.deleting : text.deleteYes}
           </button>
           <button type="button" className="dt-quiet" onClick={() => setConfirming(false)}>
-            Cancel
+            {text.cancel}
           </button>
         </div>
       </div>
@@ -549,14 +554,12 @@ export function DataFooter({
   return (
     <div className="dt-data">
       <button type="button" className="dt-quiet" onClick={onExport} disabled={busy === true}>
-        Export my data
+        {text.exportData}
       </button>
       <button type="button" className="dt-quiet" onClick={() => setConfirming(true)} disabled={busy === true}>
-        Delete everything
+        {text.deleteAll}
       </button>
-      <span className="dt-data-note">
-        Stored on this machine only. Nothing is sent anywhere.
-      </span>
+      <span className="dt-data-note">{text.dataNote}</span>
     </div>
   )
 }

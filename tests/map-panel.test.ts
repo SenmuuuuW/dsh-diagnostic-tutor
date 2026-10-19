@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 import type { NodeDetailResponse, NodeView, OverviewResponse } from '../src/contract.js'
+import { resetLanguageForTests } from '../src/client/i18n.js'
 import { LearningMapPanel } from '../src/client/map-panel.js'
 import type { PanelClient } from '../src/client/use-learning.js'
 
@@ -87,6 +88,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount())
   container.remove()
+  resetLanguageForTests()
 })
 
 async function mount(props: Partial<Parameters<typeof LearningMapPanel>[0]> = {}): Promise<void> {
@@ -146,5 +148,28 @@ describe('the map page', () => {
     })
     expect(container.textContent).toContain('Nothing to map yet.')
     expect(container.querySelector('.dt-map-root')).toBeNull()
+  })
+
+  it('switches its own copy between English and Chinese without a reload', async () => {
+    await mount()
+    // The route tab tries the real client, which has no host in this test; the
+    // language check lives on the knowledge view so it asserts copy, not a
+    // network failure.
+    await act(async () => { [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Knowledge & evidence')?.click() })
+    const pane = () => container.querySelector('.dt-map-pane')?.textContent ?? ''
+    expect(pane()).toContain('Diagnosis map')
+    expect(pane()).not.toMatch(/[\u4e00-\u9fff]/)
+
+    const toggle = container.querySelector<HTMLButtonElement>('.dt-lang-toggle')
+    expect(toggle?.textContent).toBe('中文')
+    await act(async () => toggle?.click())
+    expect(pane()).toContain('诊断地图')
+    expect(container.querySelector('.dt-lang-toggle')?.textContent).toBe('EN')
+
+    const back = container.querySelector<HTMLButtonElement>('.dt-lang-toggle')
+    // No host is attached in a unit test, so the preference stays local.
+    await act(async () => back?.click())
+    expect(pane()).toContain('Diagnosis map')
+    expect(pane()).not.toMatch(/[\u4e00-\u9fff]/)
   })
 })

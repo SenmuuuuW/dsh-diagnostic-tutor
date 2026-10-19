@@ -118,4 +118,9 @@ export const PATH_CSS = `
 @media (max-width:1050px) { .dt-path-workspace { grid-template-columns:1fr; } .dt-path-detail { max-height:min(620px,46vh); } }
 @media (max-width:620px) { .dt-path-header { padding:16px; } .dt-path-body { padding:16px; } .dt-path-status,.dt-path-alert { margin:10px 16px 0; } .dt-path-fields,.dt-path-columns { grid-template-columns:1fr; } .dt-path-steps { flex-wrap:wrap; } .dt-path-steps li { flex-basis:40%; } .dt-path-summary { grid-template-columns:1fr; } .dt-path-card { padding:14px; } .dt-path-canvas { height:330px; } }
 @media (prefers-reduced-motion:reduce) { .dt-path-page * { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+/* Interface-language switch: the same chrome as the bar's other buttons, and
+   never wider than its own two characters. */
+.dt-lang-toggle { flex:none; min-height:28px; padding:5px 12px; border-radius:7px; border:1px solid var(--dt-border-strong,#cfd4dc); background:var(--dt-bg,#fff); color:inherit; font:inherit; font-size:12px; font-weight:550; cursor:pointer; }
+.dt-lang-toggle:hover { background:var(--dt-surface,#f7f8fa); }
+.dt-lang-toggle:focus-visible { outline:2px solid var(--dt-accent,#4f46e5); outline-offset:3px; }
 `

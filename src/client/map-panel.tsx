@@ -15,6 +15,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
 
 import { DataFooter } from './blocks.jsx'
+import { useLang } from './i18n.js'
+import { LanguageToggle } from './language-toggle.js'
+import { evidenceKindLabel, readinessLabel, stateLabel, useMapText } from './map-text.js'
 import { PathPage } from './path-page.js'
 import type { PathClient } from './path-client.js'
 import type { NodeDetailResponse, NodeView } from '../contract.js'
@@ -56,12 +59,14 @@ function MapRows({
   focusNodeId: string | null
   onSelect: (id: string) => void
 }): ReactNode {
+  const text = useMapText()
+  const lang = useLang()
   const rows = flattenTree(buildMapTree([...nodes]))
   if (rows.length === 0) {
     return (
       <>
         <EmptyArt kind="map" />
-        <p className="dt-empty">Nothing on the map yet. State a goal in the chat.</p>
+        <p className="dt-empty">{text.emptyMap}</p>
       </>
     )
   }
@@ -86,10 +91,10 @@ function MapRows({
           <span className="dt-node-title">
             {node.title}
             <span className="dt-node-rel">
-              {relationLabel(node.relation)} · {node.evidenceCount} evidence
+              {relationLabel(node.relation, lang)} · {text.evidenceCount(node.evidenceCount)}
             </span>
           </span>
-          <span className={`dt-tab-state dt-state-${node.state}`}>{node.state}</span>
+          <span className={`dt-tab-state dt-state-${node.state}`}>{stateLabel(node.state, lang)}</span>
         </button>
       ))}
     </div>
@@ -112,15 +117,14 @@ function MapDetail({
   isFocused: boolean
   onSelect: (id: string) => void
 }): ReactNode {
+  const text = useMapText()
+  const lang = useLang()
   if (detail === null) {
     return (
       <div className="dt-empty-state">
         <EmptyArt kind="evidence" />
-        <p className="dt-empty-title">{loading ? 'Loading your map…' : 'Nothing selected'}</p>
-        <p className="dt-empty">
-          Pick a node on the left and this column shows what is recorded against it, and why it is
-          in that state.
-        </p>
+        <p className="dt-empty-title">{loading ? text.loadingMap : text.nothingSelected}</p>
+        <p className="dt-empty">{text.pickNode}</p>
       </div>
     )
   }
@@ -131,20 +135,24 @@ function MapDetail({
           <StateGlyph state={detail.node.state} />
         </span>
         <div className="dt-detail-hero-id">
-          <p className="dt-eyebrow">Selected node</p>
+          <p className="dt-eyebrow">{text.selectedNode}</p>
           <h2>{detail.node.title}</h2>
         </div>
       </div>
       <div className="dt-meta">
-        <span className={`dt-tab-state dt-state-${detail.node.state}`}>{detail.node.state}</span>
-        <span className="dt-chip">{relationLabel(detail.node.relation)}</span>
-        {detail.parent !== null && <span className="dt-chip">parent: {detail.parent.title}</span>}
+        <span className={`dt-tab-state dt-state-${detail.node.state}`}>
+          {stateLabel(detail.node.state, lang)}
+        </span>
+        <span className="dt-chip">{relationLabel(detail.node.relation, lang)}</span>
+        {detail.parent !== null && (
+          <span className="dt-chip">{text.parent(detail.parent.title)}</span>
+        )}
         {detail.children.length > 0 && (
-          <span className="dt-chip">{detail.children.length} children</span>
+          <span className="dt-chip">{text.children(detail.children.length)}</span>
         )}
       </div>
 
-      <p className="dt-why">{stateExplanation(detail.node.state)}</p>
+      <p className="dt-why">{stateExplanation(detail.node.state, lang)}</p>
 
       <NodeLocator
         parent={
@@ -159,33 +167,32 @@ function MapDetail({
           state: child.state,
         }))}
         onSelect={onSelect}
+        label={text.whereThisSits}
       />
 
-      <p className="dt-section-title">
-        Evidence <span>{detail.node.evidence.length}</span>
-      </p>
+      <p className="dt-section-title">{text.evidence(detail.node.evidence.length)}</p>
       {detail.node.evidence.length === 0 ? (
         <>
           <EmptyArt kind="evidence" />
-          <p className="dt-empty">Nothing recorded yet.</p>
+          <p className="dt-empty">{text.nothingRecorded}</p>
         </>
       ) : (
         <ul className="dt-evidence">
           {detail.node.evidence.map((entry, index) => (
             <li key={index}>
-              <span className="dt-ev-kind">{entry.kind.replace(/-/g, ' ')}</span>
+              <span className="dt-ev-kind">{evidenceKindLabel(entry.kind, lang)}</span>
               {entry.readiness !== undefined && (
-                <span className="dt-ev-readiness">{entry.readiness.replace(/-/g, ' ')}</span>
+                <span className="dt-ev-readiness">{readinessLabel(entry.readiness, lang)}</span>
               )}
               {entry.note !== undefined && <span className="dt-ev-note">{entry.note}</span>}
-              <span className="dt-ev-when">{formatWhen(entry.at)}</span>
+              <span className="dt-ev-when">{formatWhen(entry.at, Date.now(), lang)}</span>
             </li>
           ))}
         </ul>
       )}
       {note !== null && <p className="dt-caption">{note}</p>}
       {error !== null && <p className="dt-empty">{error}</p>}
-      {isFocused && <p className="dt-caption">This is the node the tutor is teaching.</p>}
+      {isFocused && <p className="dt-caption">{text.teachingNode}</p>}
     </>
   )
 }
@@ -205,6 +212,8 @@ export function LearningMapPanel({
   onOpenLearning,
   pathClient,
 }: LearningMapPanelProps): ReactNode {
+  const text = useMapText()
+  const lang = useLang()
   const [page, setPage] = useState<'curriculum' | 'knowledge'>('curriculum')
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview })
   const { overview, focus, detail, selectedId, note, error, loading, library } = state
@@ -224,30 +233,30 @@ export function LearningMapPanel({
       <div className="dt-root-wrap">
         <header className="dt-bar">
           <div className="dt-bar-id">
-            <span className="dt-bar-name">Learning map</span>
+            <span className="dt-bar-name">{text.pageTitle}</span>
             <span className="dt-bar-sep" aria-hidden="true">
               ·
             </span>
-            <span className="dt-bar-note">no project open</span>
+            <span className="dt-bar-note">{text.noProject}</span>
           </div>
-          {onOpenLearning !== undefined && (
-            <button type="button" className="dt-bar-back" onClick={onOpenLearning}>
-              Open learning view
-            </button>
-          )}
+          <div className="dt-bar-actions">
+            {onOpenLearning !== undefined && (
+              <button type="button" className="dt-bar-back" onClick={onOpenLearning}>
+                {text.openLearning}
+              </button>
+            )}
+            <LanguageToggle />
+          </div>
         </header>
         <div className="dt-root dt-root-welcome">
           <div className="dt-welcome">
             <EmptyArt kind="welcome" />
-            <p className="dt-welcome-eyebrow">Learning map</p>
-            <h1 className="dt-welcome-title">Nothing to map yet.</h1>
-            <p className="dt-welcome-body">
-              State a goal in the chat and the tutor will grow the diagnosis map here, one
-              diagnosed node at a time.
-            </p>
+            <p className="dt-welcome-eyebrow">{text.pageTitle}</p>
+            <h1 className="dt-welcome-title">{text.welcomeTitle}</h1>
+            <p className="dt-welcome-body">{text.welcomeBody}</p>
             {library.length > 0 && (
               <>
-                <p className="dt-section-title">Or open a project</p>
+                <p className="dt-section-title">{text.orOpenProject}</p>
                 <ul className="dt-library">
                   {library.map((project) => (
                     <li key={project.id}>
@@ -258,7 +267,7 @@ export function LearningMapPanel({
                       >
                         <span className="dt-project-name">{project.title}</span>
                         <span className="dt-project-count">
-                          {project.confirmed} of {project.total} confirmed
+                          {text.confirmedOf(project.confirmed, project.total)}
                         </span>
                       </button>
                     </li>
@@ -268,7 +277,7 @@ export function LearningMapPanel({
             )}
             {onOpenChat !== undefined && (
               <button type="button" className="dt-primary dt-here-action" onClick={onOpenChat}>
-                Go to the chat
+                {text.goToChat}
               </button>
             )}
           </div>
@@ -286,7 +295,7 @@ export function LearningMapPanel({
     <div className="dt-root-wrap dt-map-root-wrap">
       <header className="dt-bar">
         <div className="dt-bar-id">
-          <span className="dt-bar-name">Learning map</span>
+          <span className="dt-bar-name">{text.pageTitle}</span>
           <span className="dt-bar-sep" aria-hidden="true">
             ·
           </span>
@@ -295,19 +304,20 @@ export function LearningMapPanel({
         <div className="dt-bar-actions">
           {onOpenLearning !== undefined && (
             <button type="button" className="dt-bar-back" onClick={onOpenLearning}>
-              Open learning view
+              {text.openLearning}
             </button>
           )}
           {onOpenChat !== undefined && (
             <button type="button" className="dt-bar-back" onClick={onOpenChat}>
-              Back to the conversation
+              {text.backToChat}
             </button>
           )}
+          <LanguageToggle />
         </div>
       </header>
-      <nav className="dt-path-tabs" aria-label="Learning map views">
-        <button type="button" aria-current={page === 'curriculum' ? 'page' : undefined} onClick={() => setPage('curriculum')}>Course route</button>
-        <button type="button" aria-current={page === 'knowledge' ? 'page' : undefined} onClick={() => setPage('knowledge')}>Knowledge &amp; evidence</button>
+      <nav className="dt-path-tabs" aria-label={text.mapViews}>
+        <button type="button" aria-current={page === 'curriculum' ? 'page' : undefined} onClick={() => setPage('curriculum')}>{text.courseRoute}</button>
+        <button type="button" aria-current={page === 'knowledge' ? 'page' : undefined} onClick={() => setPage('knowledge')}>{text.knowledgeEvidence}</button>
       </nav>
       {page === 'curriculum' ? (
         <PathPage courseId={overview.course.id} title={overview.course.title} nodes={nodes}
@@ -315,30 +325,30 @@ export function LearningMapPanel({
       ) : <div className="dt-map-root">
         <section className="dt-map-pane">
           <header className="dt-course-card dt-map-cover">
-            <p className="dt-eyebrow">Diagnosis map</p>
+            <p className="dt-eyebrow">{text.diagnosisMap}</p>
             <h1 className="dt-course-title">{overview.course.title}</h1>
-            <p className="dt-shared">Shared across conversations</p>
+            <p className="dt-shared">{text.sharedAcrossConversations}</p>
             <p className="dt-goal">
-              <b>Goal:</b> {overview.course.goal}
+              <b>{text.goalLabel}</b> {overview.course.goal}
             </p>
           </header>
 
-          <p className="dt-eyebrow dt-eyebrow-here">This conversation</p>
+          <p className="dt-eyebrow dt-eyebrow-here">{text.thisConversation}</p>
           {focus === null ? (
-            <p className="dt-here-empty">
-              No focus yet. Pick a node below to start learning here.
-            </p>
+            <p className="dt-here-empty">{text.noFocus}</p>
           ) : (
             <p className="dt-here-focus">
               <span className="dt-here-node">{focusNode?.title ?? focus.nodeId}</span>
               {focusNode !== undefined && (
-                <span className={`dt-tab-state dt-state-${focusNode.state}`}>{focusNode.state}</span>
+                <span className={`dt-tab-state dt-state-${focusNode.state}`}>
+                  {stateLabel(focusNode.state, lang)}
+                </span>
               )}
             </p>
           )}
 
           <p className="dt-section-title">
-            {rows.length} nodes <span>{confirmed} confirmed by evidence</span>
+            {text.census(rows.length)} <span>{text.confirmedByEvidence(confirmed)}</span>
           </p>
           <StateBar nodes={nodes} />
           <MapRows
@@ -347,10 +357,7 @@ export function LearningMapPanel({
             focusNodeId={focus?.nodeId ?? null}
             onSelect={select}
           />
-          <p className="dt-caption">
-            The map grows only as diagnosis reveals something. A node moves off its born state
-            because evidence was recorded, never because it was listed.
-          </p>
+          <p className="dt-caption">{text.mapGrowth}</p>
         </section>
 
         <aside className="dt-map-detail dt-pane">

@@ -264,6 +264,43 @@ async function openCase(scenario, size, theme) {
   return state
 }
 
+/**
+ * Switch the interface language and prove both directions render.
+ *
+ * Translation-agnostic on purpose: every language's copy contains CJK glyphs,
+ * so the check does not pin a phrase that may be reworded later. It also proves
+ * the switch makes no network request — the preview has no host to store a
+ * preference in, and the fixture harness refuses learner-data API calls.
+ */
+async function languageCheck() {
+  assert.equal(await cdp.evaluate(`document.querySelector('.dt-lang-toggle')?.textContent`), '中文', `${currentCase}: language toggle missing or not offering Chinese`)
+  await clickSelector('.dt-lang-toggle')
+  await waitFor(`document.querySelector('.dt-lang-toggle')?.textContent === 'EN'`, 'language toggle did not switch to Chinese')
+  // The map page hosts the route, but starting a lesson switches the preview to
+  // the course-reading view; both are translated surfaces, so read whichever one
+  // is mounted. The language toggle is removed from the copy before reading it:
+  // it is labelled with the *other* language (中文), which is not translated copy.
+  const surface = `(() => {
+    const read = (selector) => {
+      const element = document.querySelector(selector)
+      if (!element) return ''
+      const clone = element.cloneNode(true)
+      for (const toggle of clone.querySelectorAll('.dt-lang-toggle')) toggle.remove()
+      return clone.textContent ?? ''
+    }
+    return read('.dt-path-page') + read('.dt-course-reading')
+  })()`
+  const chinese = await cdp.evaluate(surface)
+  assert.match(chinese, /[\u4e00-\u9fff]/, `${currentCase}: Chinese mode rendered no Chinese copy`)
+  assert.equal(await cdp.evaluate('window.__pathCheck.blockedApi.length'), 0, `${currentCase}: switching language attempted a learner-data API call`)
+  if (currentCase === 'curriculum-1440-light') await screenshot(`${currentCase}-zh`)
+  await clickSelector('.dt-lang-toggle')
+  await waitFor(`document.querySelector('.dt-lang-toggle')?.textContent === '中文'`, 'language toggle did not switch back to English')
+  const english = await cdp.evaluate(surface)
+  assert.doesNotMatch(english, /[\u4e00-\u9fff]/, `${currentCase}: English mode still renders Chinese copy`)
+  return { languageSwitch: true }
+}
+
 async function browseCurriculum(state) {
   const initialWrites = await writes()
   const initialAttempt = state.run.activeAttemptId
@@ -512,10 +549,11 @@ try {
           : scenario === 'path-setup' ? await setupWizard(state)
           : await assessmentFlow(state)
         const layout = await layoutCheck()
+        const language = await languageCheck()
         assert.equal(await cdp.evaluate('window.__pathCheck.blockedApi.length'), 0, `${currentCase}: fixture tried a learner-data API`)
         assert.equal(runtimeErrors.length, 0, `${currentCase}: browser exception: ${JSON.stringify(runtimeErrors)}`)
         assert.equal(apiRequests.length, 0, `${currentCase}: learner-data network request: ${JSON.stringify(apiRequests)}`)
-        results.push({ name: currentCase, ...checks, layout })
+        results.push({ name: currentCase, ...checks, ...language, layout })
         await screenshot(currentCase)
         console.log(`PASS ${currentCase}: ${JSON.stringify(checks)}`)
       }

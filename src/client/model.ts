@@ -7,6 +7,7 @@
  */
 
 import type { HandoffView, LessonRecord, NodeView } from '../contract.js'
+import type { Lang } from './i18n.js'
 
 /** One node plus its children, in render order. */
 export interface MapTreeNode {
@@ -87,7 +88,21 @@ export function flattenTree(roots: readonly MapTreeNode[]): MapTreeNode[] {
 }
 
 /** Human label for a relation, in the map's own terms. */
-export function relationLabel(relation: string): string {
+export function relationLabel(relation: string, lang: Lang = 'en'): string {
+  if (lang === 'zh') {
+    switch (relation) {
+      case 'goal':
+        return '目标'
+      case 'part-of':
+        return '组成部分'
+      case 'prerequisite':
+        return '先修'
+      case 'related':
+        return '相关'
+      default:
+        return relation
+    }
+  }
   switch (relation) {
     case 'goal':
       return 'goal'
@@ -124,7 +139,27 @@ export function isFilledState(state: string): boolean {
  * move it. So the explanation now describes the state rather than counting
  * what is on the page.
  */
-export function stateExplanation(state: string): string {
+export function stateExplanation(state: string, lang: Lang = 'en'): string {
+  if (lang === 'zh') {
+    switch (state) {
+      case 'unconfirmed':
+        return '尚未确立——这里记录的任何内容都还没有使它脱离这一状态。'
+      case 'explained':
+        return '已经讲解过，但仅凭这一点并不能证明已经理解。'
+      case 'practiced':
+        return '至少尝试过一次。'
+      case 'checked':
+        return '已经提出了检查题或近迁移问题。'
+      case 'weak':
+        return '部分掌握或不稳定——在继续之前值得修补。'
+      case 'blocked':
+        return '无法继续：这里缺少某些前提，或存在误解。'
+      case 'confirmed':
+        return '由检查或迁移观察支持。经过重新核验，而非想当然。'
+      default:
+        return '未知状态。'
+    }
+  }
   switch (state) {
     case 'unconfirmed':
       return 'Not established yet — nothing recorded here has moved it off this state.'
@@ -263,14 +298,31 @@ export function handoffLineVisible(input: {
  *
  * @param at - the ISO timestamp from the record.
  * @param now - the reference instant; defaults to the current time.
+ * @param lang - the interface language; the instant itself is never translated.
  * @returns a relative phrase for anything recent, otherwise a plain date.
  */
-export function formatWhen(at: string, now: number = Date.now()): string {
+export function formatWhen(at: string, now: number = Date.now(), lang: Lang = 'en'): string {
   const then = Date.parse(at)
   if (Number.isNaN(then)) return at
   const seconds = Math.round((now - then) / 1000)
   // A clock skew between the host and the browser shows up as a negative age;
   // "in 3 seconds" on a recorded observation is worse than saying nothing.
+  if (lang === 'zh') {
+    if (seconds < 45) return '刚刚'
+    const minutes = Math.round(seconds / 60)
+    if (minutes < 60) return `${minutes} 分钟前`
+    const hours = Math.round(minutes / 60)
+    if (hours < 24) return `${hours} 小时前`
+    const days = Math.round(hours / 24)
+    if (days < 7) return days === 1 ? '昨天' : `${days} 天前`
+    const date = new Date(then)
+    const sameYear = new Date(now).getFullYear() === date.getFullYear()
+    return date.toLocaleDateString('zh-CN', {
+      day: 'numeric',
+      month: 'short',
+      ...(sameYear ? {} : { year: 'numeric' }),
+    })
+  }
   if (seconds < 45) return 'just now'
   const minutes = Math.round(seconds / 60)
   if (minutes < 60) return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`
