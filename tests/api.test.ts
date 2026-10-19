@@ -528,6 +528,44 @@ describe('API over real persisted state', () => {
     }
   })
 
+  it('stores the interface language on the learner profile', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openState(harness)
+
+      // Never written: the UI falls back to its detected language.
+      const before = await call(state, { path: '/preferences' })
+      expect(before.status).toBe(200)
+      expect(before.json).toEqual({ ok: true, language: null })
+
+      const saved = await call(state, {
+        method: 'POST',
+        path: '/preferences/language',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ language: 'zh' }),
+      })
+      expect(saved.status).toBe(200)
+      expect(saved.json).toEqual({ ok: true, language: 'zh' })
+      // Durable, not just echoed: the next read comes from the learner record.
+      expect(state.readLearner().preferredLanguage).toBe('zh')
+      expect((await call(state, { path: '/preferences' })).json).toEqual({ ok: true, language: 'zh' })
+
+      // Only languages this build ships copy for are accepted.
+      const unsupported = await call(state, {
+        method: 'POST',
+        path: '/preferences/language',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ language: 'fr' }),
+      })
+      expect(unsupported.status).toBe(400)
+      expect((unsupported.json.error as { code: string }).code).toBe('unsupported-language')
+      expect(state.readLearner().preferredLanguage).toBe('zh')
+      expect((await call(state, { method: 'POST', path: '/preferences/language', body: 'not json' })).status).toBe(400)
+    } finally {
+      await harness.close()
+    }
+  })
+
   it('404s an unknown route and 405s an unsupported method', async () => {
     const harness = await createHarness()
     try {

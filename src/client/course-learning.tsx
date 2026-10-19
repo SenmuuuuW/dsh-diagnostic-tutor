@@ -4,6 +4,8 @@ import type { ReactNode } from 'react'
 import type { PathView } from '../path.js'
 import type { PathClient } from './path-client.js'
 import { DataFooter, LessonBody } from './blocks.js'
+import { LanguageToggle } from './language-toggle.js'
+import { useLessonText } from './lesson-text.js'
 
 export function useCoursePath(client: PathClient | undefined, courseId: string | undefined, sessionId?: string): PathView | null {
   const scope = `${courseId ?? ''}:${sessionId ?? ''}`
@@ -32,6 +34,7 @@ export function CourseLearning({ view, title, compact = false, onOpenMap, onOpen
   view: PathView; title: string; compact?: boolean; onOpenMap?: (() => void) | undefined;
   onOpenChat?: (() => void) | undefined; onExport: () => void; onReset: () => void;
 }): ReactNode {
+  const text = useLessonText()
   const attempt = view.run?.attempts.find((entry) => entry.id === view.run?.activeAttemptId)
   const route = view.path.curricula.find((entry) => entry.version === (attempt?.version ?? view.path.acceptedVersion))
   const index = route?.items.findIndex((entry) => entry.id === attempt?.itemId) ?? -1
@@ -43,22 +46,23 @@ export function CourseLearning({ view, title, compact = false, onOpenMap, onOpen
   const content = <>
     <header className="dt-course-card">
       <p className="dt-eyebrow">{title}</p>
-      <h2 className="dt-course-title">{item?.title ?? 'Your learning route'}</h2>
-      {item && route && <p className="dt-shared">{module?.title} · Lesson {index + 1} of {route.items.length} · Route v{route.version}</p>}
-      {attempt && <p className="dt-caption">{attempt.status === 'completed' ? 'Lesson completed · evidence recorded' : attempt.status === 'interrupted' ? 'Lesson paused' : 'This conversation’s current lesson'}</p>}
-      {attempt && view.path.acceptedVersion !== attempt.version && <p className="dt-caption">A newer route exists. This lesson remains on v{attempt.version}.</p>}
-      {onOpenMap && <button className="dt-secondary" type="button" onClick={onOpenMap}>Open course route</button>}
+      <h2 className="dt-course-title">{item?.title ?? text.learningRoute}</h2>
+      {item && route && <p className="dt-shared">{module?.title} · {text.lesson} {index + 1} {text.lessonOf} {route.items.length} · {text.routeVersion}{route.version}</p>}
+      {attempt && <p className="dt-caption">{attempt.status === 'completed' ? text.lessonCompleted : attempt.status === 'interrupted' ? text.lessonPaused : text.currentLesson}</p>}
+      {attempt && view.path.acceptedVersion !== attempt.version && <p className="dt-caption">{text.newerRoutePrefix}{attempt.version}{text.newerRouteSuffix}</p>}
+      {onOpenMap && <button className="dt-secondary" type="button" onClick={onOpenMap}>{text.openCourseRoute}</button>}{' '}
+      <LanguageToggle />
     </header>
     {latest.size ? [...latest.values()].map((unit) => <article key={unit.lesson.nodeId} className="dt-lesson-body dt-course-unit">
-      <div className="dt-lesson-head"><h3 className="dt-lesson-title">{unit.lesson.title}</h3><span className="dt-origin">Tutor</span></div>
+      <div className="dt-lesson-head"><h3 className="dt-lesson-title">{unit.lesson.title}</h3><span className="dt-origin">{text.tutorOrigin}</span></div>
       <LessonBody blocks={unit.lesson.blocks} />
     </article>) : <div className="dt-empty-state">
-      <p className="dt-empty-title">{attempt ? 'The tutor is preparing this lesson' : route ? 'Your course route is ready' : 'Build a route around your goal'}</p>
-      <p className="dt-empty">{attempt ? 'The teaching appears here as it is written. Answer the tutor’s questions in the chat.' : route ? 'Browse any lesson Overview in Learning map, then choose where to begin.' : 'Set your target, available time and background in Learning map, then ask for an initial diagnosis and course outline.'}</p>
-      {attempt && !attempt.prompted && <p className="dt-notice">{attempt.promptReason ?? 'The teaching request has not reached a live tutor yet.'} Open the course route to retry.</p>}
+      <p className="dt-empty-title">{attempt ? text.preparingTitle : route ? text.routeReadyTitle : text.buildRouteTitle}</p>
+      <p className="dt-empty">{attempt ? text.preparingBody : route ? text.routeReadyBody : text.buildRouteBody}</p>
+      {attempt && !attempt.prompted && <p className="dt-notice">{attempt.promptReason ?? text.promptPending}{text.promptRetry}</p>}
     </div>}
-    {attempt?.outcome && <div className="dt-next"><p className="dt-next-label">Lesson outcome</p><p>{attempt.outcome}</p><p className="dt-caption">Completing a lesson does not automatically confirm its knowledge points.</p>{onOpenMap && <button type="button" className="dt-primary" onClick={onOpenMap}>Choose the next lesson</button>}</div>}
-    {onOpenChat && <button type="button" className="dt-secondary" onClick={onOpenChat}>Answer in the chat</button>}
+    {attempt?.outcome && <div className="dt-next"><p className="dt-next-label">{text.lessonOutcome}</p><p>{attempt.outcome}</p><p className="dt-caption">{text.outcomeNote}</p>{onOpenMap && <button type="button" className="dt-primary" onClick={onOpenMap}>{text.chooseNextLesson}</button>}</div>}
+    {onOpenChat && <button type="button" className="dt-secondary" onClick={onOpenChat}>{text.answerInChat}</button>}
     <DataFooter onExport={onExport} onReset={onReset} />
   </>
   return compact ? <div className="dt-tab">{content}</div> : <div className="dt-root-wrap"><div className="dt-course-reading">{content}</div></div>

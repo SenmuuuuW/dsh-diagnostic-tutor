@@ -38,6 +38,29 @@ Verified with 568 tests, typecheck, production build, 24 browser cases, and clea
 map/panel/tab visual audits. A temporary DSH 0.2.1-rc.2 profile also saved a goal
 draft and skipped the initial assessment through the real plugin API.
 
+### Added — a Chinese interface, switchable in place
+
+The Learning map page, the course route and the lesson panel now ship copy in
+English and Simplified Chinese. A toggle in the map header changes the interface
+language without a reload; the same choice applies to the course route and the
+pinned lesson, which share one language store.
+
+The preference is saved on the learner profile (`preferredLanguage`) through
+`GET /preferences` and `POST /preferences/language`, so it survives a DSH
+restart and follows the learner across conversations. The browser applies the
+choice immediately and saves in the background; an unreachable host keeps the
+local choice. Before the preference loads, a Chinese browser locale starts in
+Chinese and everything else keeps the existing English default.
+
+This is interface copy only. Tutor-written teaching, goal text, lesson content
+and recorded evidence are not translated, and no tool contract changed.
+Diagnosis-side surfaces (full learning panel, docked tab) remain English; the
+new page and the course route are the translated surfaces.
+
+Verified with 579 tests, typecheck, production build, 24 browser cases (each one
+also switching to Chinese and back, with no learner-data request), and clean
+map/panel visual audits.
+
 ### Added — the diagnosis map as its own page
 
 The map and the lesson answer different questions, and sharing one column made

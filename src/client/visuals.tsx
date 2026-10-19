@@ -12,6 +12,9 @@
 
 import type { ReactNode } from 'react'
 
+import { useLang } from './i18n.js'
+import { stateLabel } from './map-text.js'
+
 /** The skill's seven states, ordered from settled to needing attention. */
 export const STATE_ORDER = [
   'confirmed',
@@ -118,22 +121,25 @@ export function StateGlyph({ state }: { state: string }): ReactNode {
  * percentage of "done".
  */
 export function StateBar({ nodes }: { nodes: readonly StatedNode[] }): ReactNode {
+  const lang = useLang()
   const counts = stateCounts(nodes)
   const total = counts.reduce((sum, entry) => sum + entry.count, 0)
   if (total === 0) return null
+  const word = (state: string) => stateLabel(state, lang)
+  const census = lang === 'zh' ? `${total} 个节点：` : `${total} nodes: `
   return (
     <div className="dt-statebar">
       <div
         className="dt-statebar-track"
         role="img"
-        aria-label={`${total} nodes: ${counts.map((entry) => `${entry.count} ${entry.state}`).join(', ')}`}
+        aria-label={`${census}${counts.map((entry) => lang === 'zh' ? `${entry.count} 个${word(entry.state)}` : `${entry.count} ${entry.state}`).join(lang === 'zh' ? '，' : ', ')}`}
       >
         {counts.map((entry) => (
           <span
             key={entry.state}
             className={`dt-statebar-seg dt-state-${entry.state}`}
             style={{ flexGrow: entry.count }}
-            title={`${entry.count} ${entry.state}`}
+            title={lang === 'zh' ? `${entry.count} 个${word(entry.state)}` : `${entry.count} ${entry.state}`}
           />
         ))}
       </div>
@@ -141,7 +147,7 @@ export function StateBar({ nodes }: { nodes: readonly StatedNode[] }): ReactNode
         {counts.map((entry) => (
           <li key={entry.state} className={`dt-state-${entry.state}`}>
             <span className="dt-statebar-key" aria-hidden="true" />
-            {entry.state}
+            {word(entry.state)}
             <b>{entry.count}</b>
           </li>
         ))}
@@ -171,11 +177,14 @@ export function NodeLocator({
   node,
   children,
   onSelect,
+  label = 'Where this sits',
 }: {
   parent: LocatorItem | null
   node: LocatorItem
   children: readonly LocatorItem[]
   onSelect: (id: string) => void
+  /** What to call this block; translated by the surface that hosts it. */
+  label?: string
 }): ReactNode {
   if (parent === null && children.length === 0) return null
   const item = (entry: LocatorItem, kind: 'parent' | 'child' | 'current'): ReactNode =>
@@ -202,7 +211,7 @@ export function NodeLocator({
 
   return (
     <div className="dt-locator">
-      <p className="dt-eyebrow">Where this sits</p>
+      <p className="dt-eyebrow">{label}</p>
       <div className="dt-locator-chain">
         {parent !== null && item(parent, 'parent')}
         {item(node, 'current')}

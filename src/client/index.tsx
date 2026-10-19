@@ -30,6 +30,7 @@ import type { ReactNode } from 'react'
 import { useState } from 'react'
 
 import { LearningPanel } from './app.js'
+import { enableLanguagePersistence, hydrateLanguage } from './i18n.js'
 import { LearningMapPanel, MAP_PANEL_ID } from './map-panel.js'
 import { LearningTab, LearningTabTitle } from './tab.jsx'
 import { useCurrentSessionId } from './use-session.js'
@@ -205,6 +206,14 @@ export function apply(ctx: Context): void {
   // Read, not injected as a prop: the session scope adapter is how a
   // root-scoped seat learns which conversation is open.
   const uiSession = ctx.get('uiSession')
+
+  // Read the saved interface language once, from the real host only. The
+  // preview's stub context has no layout service, which is precisely how this
+  // stays out of the fixture harness (and out of its no-API-request check).
+  if (layout) {
+    enableLanguagePersistence()
+    void hydrateLanguage()
+  }
 
   /**
    * `PANEL_ID` as the layout names it.

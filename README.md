@@ -499,6 +499,21 @@ loopback `Host`, from a loopback `Origin`, and is not marked cross-site. Anythin
 else gets `403` and no body. The browser receives **views only** — no storage
 path, no domain handle, no raw record.
 
+### Interface language
+
+The Learning map, the course route and the lesson panel ship copy in **English
+and Simplified Chinese**. A toggle in the map's header switches the whole
+surface in place; the language is saved on the learner profile
+(`preferredLanguage`, via `GET /preferences` and `POST /preferences/language`),
+so it survives a restart and applies to every conversation. The choice applies
+immediately and is saved in the background: a failed request keeps the local
+choice rather than flipping the UI back.
+
+It is copy, not content: the tutor's teaching, the learner's goal text, lesson
+overviews and recorded evidence are never machine-translated, and the model is
+not instructed to change language by the toggle. The older diagnosis-side
+surfaces (full learning panel, docked tab) remain English for now.
+
 ## Preview
 
 The panel takes its API as a prop, so the UI runs with no DSH and no agent:
