@@ -1,3 +1,5 @@
+import type { PathClient } from './path-client.js'
+import { defaultPathClient } from './path-client.js'
 /**
  * Shared learning state for both surfaces.
  *
@@ -25,6 +27,9 @@ import * as realApi from './api.js'
 
 /** The calls the surfaces make; injectable so preview and tests can fake them. */
 export interface PanelClient {
+  /** Optional planning capability; legacy clients remain node-only. */
+  pathClient?: PathClient
+
   fetchOverview(sessionId?: string): Promise<OverviewResponse>
   fetchNode(nodeId: string): Promise<NodeDetailResponse>
   fetchLesson(nodeId: string): Promise<LessonResponse>
@@ -76,6 +81,7 @@ function orderedWrite<T>(
 }
 
 export const defaultClient: PanelClient = {
+  pathClient: defaultPathClient,
   fetchOverview: realApi.fetchOverview,
   fetchNode: realApi.fetchNode,
   fetchLesson: realApi.fetchLesson,

@@ -407,7 +407,7 @@ try {
     }
   }
 
-  if (surface === 'map' && !(await cdp.evaluate(`!!document.querySelector('.dt-map-root')`))) {
+  if (surface === 'map' && !(await cdp.evaluate(`!!document.querySelector('.dt-map-root, .dt-path-page')`))) {
     // The map page is a main panel: its sidebar entry is labelled, not a tab.
     await cdp.evaluate(`(() => {
       const hit = [...document.querySelectorAll('button, [role=button]')]
@@ -417,7 +417,7 @@ try {
     await sleep(3000)
   }
 
-  const rootSelector = surface === 'tab' ? '.dt-tab' : surface === 'map' ? '.dt-map-root' : '.dt-root'
+  const rootSelector = surface === 'tab' ? '.dt-tab' : surface === 'map' ? '.dt-map-root, .dt-path-page' : '.dt-root'
   const mounted = await cdp.evaluate(`!!document.querySelector(${JSON.stringify(rootSelector)})`)
   if (!mounted) throw new Error(`${surface} never mounted`)
 

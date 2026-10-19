@@ -33,6 +33,7 @@ import type { FocusPromptResult } from './prompt.js'
 import { focusPromptText } from './prompt.js'
 import type { CourseRecord, FocusRecord, NodeRecord, UdState } from './state.js'
 import { guarded } from './trust-fence.js'
+import { handlePathApi } from './path-api.js'
 
 /** The slice of `webServer` this module uses, declared structurally. */
 export interface WebServerLike {
@@ -547,6 +548,7 @@ export function createApiHandler(deps: ApiDeps) {
     const method = req.method ?? 'GET'
     const url = new URL(req.url ?? '/', 'http://localhost')
     const route = url.pathname.slice(API_PREFIX.length) || '/'
+    if (await handlePathApi(route, req, res, deps, url)) return
     // Read per request, not once: a conversation's project is its own, and the
     // route that changes it must not be answered from a value captured before.
     const asker = url.searchParams.get('sessionId') ?? undefined

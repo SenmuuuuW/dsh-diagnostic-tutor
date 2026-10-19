@@ -12,9 +12,11 @@
  * Neither decides anything; both read the same `useLearning` state.
  */
 
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 import { DataFooter } from './blocks.jsx'
+import { PathPage } from './path-page.js'
+import type { PathClient } from './path-client.js'
 import type { NodeDetailResponse, NodeView } from '../contract.js'
 import { buildMapTree, flattenTree, formatWhen, relationLabel, stateExplanation } from './model.js'
 import type { PanelClient } from './use-learning.js'
@@ -35,6 +37,7 @@ export interface LearningMapPanelProps {
   onOpenChat?: (() => void) | undefined
   /** Switch to the teaching panel in the main column. */
   onOpenLearning?: (() => void) | undefined
+  pathClient?: PathClient | undefined
 }
 
 /**
@@ -200,7 +203,9 @@ export function LearningMapPanel({
   sessionId,
   onOpenChat,
   onOpenLearning,
+  pathClient,
 }: LearningMapPanelProps): ReactNode {
+  const [page, setPage] = useState<'curriculum' | 'knowledge'>('curriculum')
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview })
   const { overview, focus, detail, selectedId, note, error, loading, library } = state
 
@@ -300,7 +305,14 @@ export function LearningMapPanel({
           )}
         </div>
       </header>
-      <div className="dt-map-root">
+      <nav className="dt-path-tabs" aria-label="Learning map views">
+        <button type="button" aria-current={page === 'curriculum' ? 'page' : undefined} onClick={() => setPage('curriculum')}>Course route</button>
+        <button type="button" aria-current={page === 'knowledge' ? 'page' : undefined} onClick={() => setPage('knowledge')}>Knowledge &amp; evidence</button>
+      </nav>
+      {page === 'curriculum' ? (
+        <PathPage courseId={overview.course.id} title={overview.course.title} nodes={nodes}
+          sessionId={sessionId} client={pathClient} onOpenChat={onOpenChat} onStarted={onOpenChat} />
+      ) : <div className="dt-map-root">
         <section className="dt-map-pane">
           <header className="dt-course-card dt-map-cover">
             <p className="dt-eyebrow">Diagnosis map</p>
@@ -351,7 +363,7 @@ export function LearningMapPanel({
             onSelect={select}
           />
         </aside>
-      </div>
+      </div>}
       <footer className="dt-foot">
         <DataFooter onExport={state.exportData} onReset={state.resetAll} />
       </footer>

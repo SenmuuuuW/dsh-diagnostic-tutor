@@ -5,6 +5,39 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — interactive goal setup and a versioned course route
+
+A learning project can now keep a saved goal brief (purpose, observable
+outcomes, self-reported background, deadline/time zone, available weekly time,
+session size and preferences), an evidence-referenced initial assessment, and
+multiple immutable route proposals. The multi-step form saves incomplete drafts;
+opening an Overview never starts a lesson. Initial diagnosis and route
+proposals are requested from the tutor after the learner saves the brief and
+explicitly completes or skips the assessment. Accepting a proposal is a
+separate learner action. A route includes ordered modules and lesson Overviews
+from first to final, required/optional prerequisite edges, outcomes, outline,
+practice, assessment criteria and effort ranges with budget-conflict options.
+
+The route graph and ordered lesson list are two views of the same curriculum
+revision. Each project, module and lesson can be opened as an Overview; later
+lessons can be browsed without being started. The current lesson is pinned to a
+session's accepted route version, and a replan cannot move another conversation.
+Starting a planned lesson persists a run and attempt before the tutor is woken;
+it does not fabricate a diagnosis node. Teaching is stored as attempt-owned
+snapshots, retries and review preserve history, and lesson completion does not
+imply mastery. After each completion the tutor compares fresh evidence with the
+remaining route and may propose a materially changed draft; the learner still
+accepts it explicitly. A stale attempt cannot bind nodes, append teaching, or
+use another conversation's evidence.
+
+The project aggregate and per-session run are additive v1 storage tables, so
+existing v1 stores open without migration. Planning records and lesson snapshots
+are included in export and reset; no real learner data was used in verification.
+
+Verified with 568 tests, typecheck, production build, 24 browser cases, and clean
+map/panel/tab visual audits. A temporary DSH 0.2.1-rc.2 profile also saved a goal
+draft and skipped the initial assessment through the real plugin API.
+
 ### Added — the diagnosis map as its own page
 
 The map and the lesson answer different questions, and sharing one column made

@@ -1,3 +1,4 @@
+import { CourseLearning, useCoursePath } from './course-learning.js'
 /**
  * The docked Learning tab.
  *
@@ -161,6 +162,8 @@ export function LearningTab({
   const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading, select, library } =
     state
 
+  const coursePath = useCoursePath((client ?? defaultClient).pathClient, state.overview?.course?.id, activeSession)
+
   // Show something on first paint: the focused node if there is one, else the
   // map's first row. `select` is a stable callback, so this runs on arrival
   // rather than on every render.
@@ -221,6 +224,11 @@ export function LearningTab({
   // Chosen: the tutor will make this conversation's project from whatever the
   // learner says next. Nothing is created here — no empty course, no invented
   // focus — so this state is a sentence and a way back, and nothing else.
+  if (overview?.course && coursePath && (coursePath.path.brief || coursePath.run)) {
+    return <CourseLearning view={coursePath} title={overview.course.title} compact
+      onOpenMap={onOpenMapPage}  onExport={state.exportData} onReset={state.resetAll} />
+  }
+
   if (startingNew) {
     return (
       <div className="dt-tab">
@@ -457,18 +465,18 @@ export function LearningTab({
         />
       )}
 
-      <CompactMap
+      {onOpenMapPage ? <button type="button" className="dt-secondary dt-map-shortcut" onClick={onOpenMapPage}>Course route &amp; diagnosis map →</button> : <CompactMap
         nodes={rows}
         selectedId={shownId}
         focusNodeId={focus?.nodeId ?? null}
         onSelect={select}
         {...(onOpenMapPage === undefined ? {} : { onOpenMapPage })}
-      />
+      />}
 
       {dataNote !== null && <p className="dt-caption">{dataNote}</p>}
 
       {/* ---- the evidence behind this node ---- */}
-      {detail !== null && detail.node.evidence.length > 0 && (
+      {!onOpenMapPage && detail !== null && detail.node.evidence.length > 0 && (
         <>
           <p className="dt-tab-section">
             Evidence <span>{detail.node.evidence.length}</span>
