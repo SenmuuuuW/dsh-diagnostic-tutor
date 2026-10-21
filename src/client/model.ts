@@ -223,13 +223,21 @@ export function conversationControl(input: {
   focusNodeId: string | null
   shownNodeId: string | null
   hasNextStep: boolean
-}): ConversationControl | null {
+}, lang: Lang = 'en'): ConversationControl | null {
   if (input.hasNextStep) return null
   if (input.focusNodeId !== null) {
-    return { kind: 'in-progress', label: 'Learning in progress', nodeId: input.focusNodeId }
+    return {
+      kind: 'in-progress',
+      label: lang === 'zh' ? '正在学习' : 'Learning in progress',
+      nodeId: input.focusNodeId,
+    }
   }
   if (input.shownNodeId === null) return null
-  return { kind: 'start', label: 'Start learning', nodeId: input.shownNodeId }
+  return {
+    kind: 'start',
+    label: lang === 'zh' ? '开始学习' : 'Start learning',
+    nodeId: input.shownNodeId,
+  }
 }
 
 /**
@@ -258,7 +266,8 @@ export function lessonPlaceholder(input: {
  * cannot name a different verb: a stay says `Continue`, a move says
  * `Continue learning`.
  */
-export function continuationLabel(nextStep: { targetNodeId: string | null } | null): string {
+export function continuationLabel(nextStep: { targetNodeId: string | null } | null, lang: Lang = 'en'): string {
+  if (lang === 'zh') return nextStep !== null && nextStep.targetNodeId === null ? '继续' : '继续学习'
   return nextStep !== null && nextStep.targetNodeId === null ? 'Continue' : 'Continue learning'
 }
 
@@ -351,18 +360,21 @@ export function formatWhen(at: string, now: number = Date.now(), lang: Lang = 'e
  * @returns a short duration string, or an empty string when there is nothing
  *   meaningful to show yet.
  */
-export function formatDuration(ms: number): string {
+export function formatDuration(ms: number, lang: Lang = 'en'): string {
   const seconds = Math.round(ms / 1000)
   if (seconds < 1) return ''
-  if (seconds < 60) return `${seconds}s`
+  const s = lang === 'zh' ? '秒' : 's'
+  const m = lang === 'zh' ? '分' : 'm'
+  const h = lang === 'zh' ? '时' : 'h'
+  if (seconds < 60) return `${seconds}${s}`
   const minutes = Math.floor(seconds / 60)
   if (minutes < 60) {
     const rest = seconds % 60
-    return rest === 0 ? `${minutes}m` : `${minutes}m ${rest}s`
+    return rest === 0 ? `${minutes}${m}` : `${minutes}${m} ${rest}${s}`
   }
   const hours = Math.floor(minutes / 60)
   const restMinutes = minutes % 60
-  return restMinutes === 0 ? `${hours}h` : `${hours}h ${restMinutes}m`
+  return restMinutes === 0 ? `${hours}${h}` : `${hours}${h} ${restMinutes}${m}`
 }
 
 /** The seven states, in the order the skill introduces them. */

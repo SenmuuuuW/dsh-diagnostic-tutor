@@ -35,7 +35,8 @@ import type { ReactNode } from 'react'
 
 import { useState } from 'react'
 
-import { enableLanguagePersistence, hydrateLanguage } from './i18n.js'
+import { enableLanguagePersistence, getLang, hydrateLanguage } from './i18n.js'
+import { tabTitleFor, useLearningText } from './learning-text.js'
 import { LearningMapPanel, MAP_PANEL_ID } from './map-panel.js'
 import { LearningTab, LearningTabTitle } from './tab.jsx'
 import { useCurrentSessionId } from './use-session.js'
@@ -77,7 +78,10 @@ export function LearnAction({
   onOpen: () => void
 }): ReactNode {
   const sessionId = useCurrentSessionId(uiSession)
-  const [notice, setNotice] = useState<string | null>(null)
+  const text = useLearningText()
+  // Whether the reason is on screen, not the sentence itself: a language switch
+  // must not leave an English notice behind.
+  const [missingSession, setMissingSession] = useState(false)
 
   return (
     <div className="dt-learn-wrap" data-wide={wide}>
@@ -89,24 +93,24 @@ export function LearnAction({
         // control deliberately never selects one — borrowing the state would
         // claim something untrue. `:focus-visible` gives keyboard users the
         // same ring the native row shows.
-        aria-label={wide ? undefined : 'Learn'}
-        title={sessionId === undefined ? NO_SESSION_NOTICE : 'Learn'}
+        aria-label={wide ? undefined : text.learnAria}
+        title={sessionId === undefined ? text.noSessionNotice : text.learnLabel}
         onClick={() => {
           if (sessionId === undefined) {
             // Not a disabled button with no explanation: the reason is the
             // whole message, and it is short enough to just say.
-            setNotice(NO_SESSION_NOTICE)
+            setMissingSession(true)
             return
           }
-          setNotice(null)
+          setMissingSession(false)
           onOpen()
         }}
       >
         {/* The panellist sizes its glyph 16 wide / 18 collapsed. */}
         <PanelIcon size={wide ? 16 : 18} />
-        <span className="dt-learn-label">Learn</span>
+        <span className="dt-learn-label">{text.learnLabel}</span>
       </button>
-      {wide && notice !== null && <p className="dt-learn-notice">{notice}</p>}
+      {wide && missingSession && <p className="dt-learn-notice">{text.noSessionNotice}</p>}
     </div>
   )
 }
@@ -238,7 +242,9 @@ export function apply(ctx: Context): void {
     kind: TAB_ID,
     // A page type, not a resource viewer: it has no address globs, so it is
     // opened by kind and never competes to render someone else's resource.
-    title: () => 'Current lesson',
+    // Evaluated when the tab chrome renders; the title seat below is a live
+    // component so an in-place language switch updates the visible chip too.
+    title: () => tabTitleFor(getLang()),
     priority: 'extension',
   })
 

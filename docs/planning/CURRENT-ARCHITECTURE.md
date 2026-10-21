@@ -28,7 +28,9 @@ DSH Runtime
     ├── 侧栏 Learning map 入口   → 主栏唯一页面（map-panel.tsx）
     │                              ├─ 学习路线 PathPage（path-page.tsx）
     │                              └─ 知识与证据（诊断图 + 证据）
-    └── 共享：blocks.tsx / visuals.tsx / i18n.ts / *-text.ts
+    └── 共享：blocks.tsx / visuals.tsx / i18n.ts
+             文案：path-text.ts / map-text.ts / lesson-text.ts /
+                   learning-text.ts（共享）/ tab-text.ts / panel-text.ts
 ```
 
 `null` 布局说明：主栏只有 `diagnostic-tutor-map` 一个 main key；完整全屏学习面板不再注册（`src/client/app.tsx` 仅保留给预览与测试）。
@@ -147,14 +149,18 @@ DSH Runtime
 
 - 目标草稿、初诊/跳过、证据引用校验、版本化路线、显式接受、逐课 Overview、路线画布与顺序清单同源。
 - 会话隔离（`course_runs` 按 `[sessionId, courseId]`）、幂等 operation ID、revision CAS、过期 attempt 拒绝、完成课次证据要求。
-- 旧 v1 存储兼容（新增表，无迁移）、导出/重置、中英界面切换（存 learner profile）。
-- 验证记录：578 个 Vitest 测试、24 组浏览器场景（每组含中英切换）、类型检查、生产构建、地图/面板视觉审计。
+- 旧 v1 存储兼容（新增表，无迁移）、导出/重置。
+- 中英界面切换覆盖全部插件页面：地图页、路线页、课程/课次面板、停靠标签、独立全屏面板、
+  下一步卡片、等待提示、欢迎行、侧栏 Learn 入口；语言存 learner profile。
+- 验证记录：587 个 Vitest 测试、24 组浏览器场景（每组含中英切换）、类型检查、生产构建、地图/面板视觉审计。
 
 **未实现（不要当成已有能力）**
 
 - 自动补课/跳课建议、路线版本差异 UI、跨课程迁移验收。
 - 教学语言不随界面切换：界面只有中英文案，模型写什么语言就是什么语言。
-- 停靠标签里的旧诊断文案仍为英文；侧栏标签不随语言切换（注册时固定）。
+- 侧栏 `Learning map` panellist 标签在插件加载时注册，不随切换变化；
+  宿主/模型生成的错误文本与动态 handoff detail 保持原样；
+  开发预览页工具栏不在产品界面内，未翻译。
 - 没有算法规划器：路线由模型提出，运行时只校验和保存；没有自动 mastery、没有云端推送。
 
 ## 11. 当前技术债（有意的取舍）
@@ -168,7 +174,7 @@ DSH Runtime
 
 ```sh
 pnpm typecheck
-pnpm test                 # 578 tests
+pnpm test                 # 587 tests
 pnpm build
 pnpm preview              # 构建产物预览
 node scripts/path-check.mjs http://127.0.0.1:8391/ /tmp/udt-path

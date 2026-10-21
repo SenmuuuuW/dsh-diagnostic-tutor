@@ -5,6 +5,30 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — every surface follows one language switch
+
+The last English-only chrome now follows the same English/Simplified-Chinese
+switch as the Learning map and course route: the docked **Current lesson** tab
+(welcome and library states, node map rows, focus controls, teaching region and
+empty states), the standalone full-page panel used by the preview and tests, the
+next-step card, the handoff progress line, the welcome feature row, and the
+sidebar **Learn** action with its missing-conversation explanation. The tab chip
+and panel headers switch in place.
+
+Shared copy lives in `learning-text.ts`; the two larger surfaces keep their own
+`tab-text.ts` and `panel-text.ts`. Both surfaces carry a language toggle. English
+defaults are unchanged, so the existing contract is preserved.
+
+The shared store's own status lines (started/focus recorded/export/delete
+feedback) are translated too. Deliberately untranslated: node, course and
+lesson content; model-written reasons; server/model error text and dynamic
+handoff details as generated; the `Learning map` sidebar panellist label
+(registered once when the plugin loads, so it cannot follow an in-place
+switch); and the development preview's own toolbar.
+
+Verified with 587 tests, typecheck, production build, 24 browser cases, and
+clean map/tab/panel visual audits.
+
 ### Changed — one learning page and one current-lesson surface
 
 The plugin is no longer three destinations. **Learning map** is the only

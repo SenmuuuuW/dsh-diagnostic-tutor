@@ -24,6 +24,8 @@ import type {
   ProjectCardView,
 } from '../contract.js'
 import * as realApi from './api.js'
+import { getLang } from './i18n.js'
+import { runtimeCopy } from './learning-text.js'
 
 /** The calls the surfaces make; injectable so preview and tests can fake them. */
 export interface PanelClient {
@@ -311,10 +313,11 @@ export function useLearning(options: {
             setNote(null)
             return
           }
+          const copy = runtimeCopy(getLang())
           setNote(
             result.prompted
-              ? 'Started. The tutor is teaching this node in the chat — the surface updates as it writes.'
-              : `Focus recorded, but the tutor was not woken (${result.promptReason ?? 'unknown reason'}). Say anything in the chat to continue.`,
+              ? copy.started
+              : copy.focusRecorded(result.promptReason ?? copy.unknownReason),
           )
           setLesson(nextLesson.lesson)
           onStarted?.()
@@ -358,21 +361,23 @@ export function useLearning(options: {
 
   const exportData = useCallback(() => {
     setDataNote(null)
+    const copy = runtimeCopy(getLang())
     void client
       .downloadExport?.()
-      .then((name) => setDataNote(`Saved ${name}.`))
-      .catch((cause: Error) => setDataNote(`Could not export: ${cause.message}`))
+      .then((name) => setDataNote(copy.saved(name)))
+      .catch((cause: Error) => setDataNote(copy.exportFailed(cause.message)))
   }, [client])
 
   const resetAll = useCallback(() => {
     setDataNote(null)
     setDetail(null)
     setLesson(null)
+    const copy = runtimeCopy(getLang())
     void client
       .resetState?.()
       .then(refresh)
-      .then(() => setDataNote('Everything was deleted.'))
-      .catch((cause: Error) => setDataNote(`Could not delete: ${cause.message}`))
+      .then(() => setDataNote(copy.everythingDeleted))
+      .catch((cause: Error) => setDataNote(copy.deleteFailed(cause.message)))
   }, [client, refresh])
 
   useEffect(() => {

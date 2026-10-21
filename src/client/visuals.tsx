@@ -13,6 +13,7 @@
 import type { ReactNode } from 'react'
 
 import { useLang } from './i18n.js'
+import { useLearningText } from './learning-text.js'
 import { stateLabel } from './map-text.js'
 
 /** The skill's seven states, ordered from settled to needing attention. */
@@ -229,6 +230,7 @@ export function NodeLocator({
 
 /** The three things that fill this surface, as one glance. */
 export function FeatureRow(): ReactNode {
+  const text = useLearningText()
   return (
     <ul className="dt-features">
       <li>
@@ -240,8 +242,8 @@ export function FeatureRow(): ReactNode {
             <path d="M12 7.4v3.1M10.1 11.3l-3.2 4.4M13.9 11.3l3.2 4.4" />
           </svg>
         </span>
-        <b>Diagnosis map</b>
-        <span>grown one node at a time</span>
+        <b>{text.featureMapTitle}</b>
+        <span>{text.featureMapBody}</span>
       </li>
       <li>
         <span className="dt-feature-icon" aria-hidden="true">
@@ -250,8 +252,8 @@ export function FeatureRow(): ReactNode {
             <path d="M19 4.5h-6c-.8 0-1.3.6-1.3 1.3V20c0-.8.5-1.3 1.3-1.3h6z" />
           </svg>
         </span>
-        <b>A lesson</b>
-        <span>written beside the chat</span>
+        <b>{text.featureLessonTitle}</b>
+        <span>{text.featureLessonBody}</span>
       </li>
       <li>
         <span className="dt-feature-icon" aria-hidden="true">
@@ -262,8 +264,8 @@ export function FeatureRow(): ReactNode {
             <circle cx="7" cy="15" r="1.7" strokeDasharray="1.8 1.8" />
           </svg>
         </span>
-        <b>Evidence</b>
-        <span>behind every state</span>
+        <b>{text.featureEvidenceTitle}</b>
+        <span>{text.featureEvidenceBody}</span>
       </li>
     </ul>
   )
