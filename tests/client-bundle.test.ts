@@ -195,9 +195,10 @@ describe('the client plugin registers into the DSH slots', () => {
     expect(panellists[0]?.options.id).toBe('diagnostic-tutor-map')
     expect(panellists[0]?.options.label).toBe('Learning map')
 
-    // Two main panels: the teaching view and the map view.
+    // One main panel: the map page. The lesson no longer has a full-page
+    // surface of its own; it lives in the docked tab beside the conversation.
     const mains = bySlot('main')
-    expect(mains.map((entry) => entry.options.key).sort()).toEqual(['diagnostic-tutor', 'diagnostic-tutor-map'])
+    expect(mains.map((entry) => entry.options.key)).toEqual(['diagnostic-tutor-map'])
 
     // The docked tab: a declared type, plus a body and a title registered under
     // the type's own id, because that is the key the seats dispatch on.
@@ -216,23 +217,12 @@ describe('the client plugin registers into the DSH slots', () => {
     const { ctx, recorded } = fakeClientContext()
     ;(module.apply as (c: unknown) => void)(ctx)
 
-    const main = recorded.registrations.find(
-      (entry) => entry.options.name === 'main' && entry.options.key === 'diagnostic-tutor',
-    )
     const map = recorded.registrations.find(
       (entry) => entry.options.name === 'main' && entry.options.key === 'diagnostic-tutor-map',
     )
     const tab = recorded.registrations.find((entry) => entry.options.name === 'sidebar.right.pane.tab')
-    expect(main).toBeDefined()
+    expect(map).toBeDefined()
     expect(tab).toBeDefined()
-
-    // Both render without a client injected. With no data at all — what a
-    // freshly mounted client has before its first fetch — both show the
-    // first-use state rather than an empty shell.
-    const mainHtml = renderToStaticMarkup(createElement(main?.Component as never, {} as never))
-    expect(mainHtml).toContain('dt-root')
-    // No project open: the panel shows the library, not a course it guessed.
-    expect(mainHtml).toContain('What do you want to learn?')
 
     // The docked tab is narrow-first. With no data at all — which is what a
     // freshly mounted client has before its first fetch — it must show the
@@ -245,12 +235,14 @@ describe('the client plugin registers into the DSH slots', () => {
     expect(tabHtml).toContain('Nothing here yet')
 
     // The map page has its own identity in the bar, so a learner who switched
-    // to it knows which page they are on, and a way back to the teaching view.
-    expect(map).toBeDefined()
+    // to it knows which page they are on. With no project open there is no
+    // current lesson to open yet, so the only header control is the language
+    // switch; the welcome body offers the way to the chat.
     const mapHtml = renderToStaticMarkup(createElement(map?.Component as never, {} as never))
     expect(mapHtml).toContain('Learning map')
     expect(mapHtml).toContain('Nothing to map yet.')
-    expect(mapHtml).toContain('Open learning view')
+    expect(mapHtml).not.toContain('Open current lesson')
+    expect(mapHtml).toContain('dt-lang-toggle')
   })
 })
 

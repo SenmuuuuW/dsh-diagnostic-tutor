@@ -6,17 +6,23 @@
  * on unload.
  *
  * ---------------------------------------------------------------------------
- * v0.0.3 scope (see docs/planning/PLAN.md §7)
+ * Scope on this branch (unreleased on top of the published v0.1.1)
  * ---------------------------------------------------------------------------
- * Goal → detection → diagnosis map. The runtime now carries real product
- * semantics: it records a learning goal in the learner's words, plants a map
- * root, and lets a map grow one diagnosis at a time under rules that make
- * unverified mastery impossible to store.
+ * The runtime owns learner state and the surfaces that show it; it owns no
+ * teaching decisions. What it registers:
  *
- * Still deliberately absent:
- *   - no lesson generation, no quiz system -> v0.0.4+
- *   - no client half / UI                  -> v0.0.4
- *   - no resource ingestion, no RAG        -> out of scope for v0.1
+ *   - a goal → diagnosis map (courses, nodes, evidence) per project;
+ *   - one learning focus, next step and handoff per conversation;
+ *   - versioned course routes (goal brief, evidence-referenced assessment,
+ *     immutable curriculum revisions, explicit learner acceptance);
+ *   - session-scoped course runs: an attempt, teaching snapshots and the
+ *     evidence that completion is allowed to cite;
+ *   - the browser half: one "Learning map" main page, one "Current lesson"
+ *     docked tab, and the HTTP routes both read through.
+ *
+ * Still deliberately absent: resource ingestion and RAG (out of scope), and
+ * any rule that decides what to teach. The Universal Diagnostic Tutor skill is
+ * the teaching brain; this plugin only records what it did.
  *
  * ---------------------------------------------------------------------------
  * Cross-version discipline (see PLAN.md 2.12 #9 / #16)
@@ -170,8 +176,8 @@ export async function apply(ctx: Context): Promise<void> {
       .catch(() => {})
   })
 
-  registerTools({ tools }, state)
+  const toolCount = registerTools({ tools }, state)
   ctx.logger.debug(
-    `[diagnostic-tutor] ready — domain "${state.name}" v${state.version}, 4 tools registered`,
+    `[diagnostic-tutor] ready — domain "${state.name}" v${state.version}, ${toolCount} tools registered`,
   )
 }

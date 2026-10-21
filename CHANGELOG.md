@@ -5,6 +5,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — one learning page and one current-lesson surface
+
+The plugin is no longer three destinations. **Learning map** is the only
+main-column page (course route, knowledge & evidence), and **Current lesson**
+is the only teaching surface, docked beside the chat. The full-page learning
+panel was removed from the plugin's registrations; the conversation keeps the
+main column, and a check can always be answered without leaving the lesson.
+
+The docked tab no longer offers **Open full view**, and the map page no longer
+switches to a full-page lesson panel: its **Open current lesson** button returns
+to the conversation and opens the lesson tab in the same step. The map's sidebar
+label and its `main` key still come from one id, and the Learn action still opens
+the tab without replacing the conversation.
+
+The standalone full-page component remains exported for the preview and the
+tests, but it is not reachable from the running plugin. The loader log now
+reports the real number of registered tools instead of a hardcoded four.
+
 ### Added — interactive goal setup and a versioned course route
 
 A learning project can now keep a saved goal brief (purpose, observable

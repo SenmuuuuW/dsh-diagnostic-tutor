@@ -1,17 +1,23 @@
 /**
  * dsh-diagnostic-tutor — browser half.
  *
- * Registers two things, which together are the whole navigation story:
+ * Registers the whole navigation story, which is now two destinations:
  *
- *   - an icon in the left sidebar (`sidebar.panellist`, a `list`), whose `id`
- *     addresses the matching main panel;
- *   - the panel itself (`main`, a `keyed` slot) under that same id.
+ *   - **Learning map**: an icon in the left sidebar (`sidebar.panellist`, a
+ *     `list`) whose `id` addresses the matching main panel, plus that panel
+ *     (`main`, a `keyed` slot, key `diagnostic-tutor-map`);
+ *   - **Current lesson**: a sidebar action (`sidebar.footer.action`) that opens
+ *     a session-scoped tab in the right sidebar, `LearningTab`, plus that tab's
+ *     body and title.
  *
- * The framework supplies the button chrome and the panel switching; this module
- * only says what the icon looks like and what the panel renders. No DSH
- * component is re-implemented and no DSH internal is reached into.
+ * There is no full-page lesson panel: one page for browsing and one surface for
+ * learning keeps the chat in the main column and avoids a second place that
+ * renders the same lesson. The framework supplies the button chrome and the
+ * panel switching; this module only says what the icons look like and what each
+ * surface renders. No DSH component is re-implemented and no DSH internal is
+ * reached into.
  *
- * Both registrations go through `ctx.slots.inject(...)`, which is mandatory
+ * Every registration goes through `ctx.slots.inject(...)`, which is mandatory
  * rather than stylistic: registering into a slot before its owner has declared
  * it throws.
  */
@@ -29,7 +35,6 @@ import type { ReactNode } from 'react'
 
 import { useState } from 'react'
 
-import { LearningPanel } from './app.js'
 import { enableLanguagePersistence, hydrateLanguage } from './i18n.js'
 import { LearningMapPanel, MAP_PANEL_ID } from './map-panel.js'
 import { LearningTab, LearningTabTitle } from './tab.jsx'
@@ -47,15 +52,6 @@ export const name = 'diagnostic-tutor-client'
  * the browser half runs in its own Cordis context against the page's registry.
  */
 export const inject = ['slots', 'layout', 'sidebarRightTabs', 'uiSession']
-
-/**
- * The key the full Learning Panel registers under in `main`.
- *
- * Nothing selects it by default. It is reached only by pressing *Open full
- * view* from the docked tab, because taking over the main column is a decision
- * the learner should make rather than one the sidebar makes for them.
- */
-export const PANEL_ID = 'diagnostic-tutor'
 
 /** What the sidebar says when there is no conversation to learn in. */
 export const NO_SESSION_NOTICE = 'Open or create a conversation to start learning.'
@@ -145,49 +141,9 @@ function PanelIcon({ size, active = false }: { size: number; active?: boolean })
   )
 }
 
-/**
- * The panel body, with the session the tutor should be woken in threaded
- * through, plus a way back to the conversation.
- *
- * That last part matters more than it looks. The map, the node detail and the
- * learning surface occupy the **main** column, which is the same column the
- * conversation lives in — so while the panel is open the learner cannot type.
- * Checks are answered in the chat, so the surface needs a door back to it, and
- * `ctx.layout.selectPanel(null)` is the documented way to show the conversation
- * again.
- *
- * The conversation it is looking at comes from the session scope adapter, not
- * from the slot props: `main` is root-scoped, and only session-scoped seats are
- * handed a `sessionId`. See `use-session.ts` for why that distinction matters.
- */
-function MainPanel({
-  uiSession,
-  onOpenChat,
-  onFocusStarted,
-  onOpenMapPage,
-}: {
-  uiSession?: unknown
-  onOpenChat?: (() => void) | undefined
-  onFocusStarted?: (() => void) | undefined
-  onOpenMapPage?: (() => void) | undefined
-}): ReactNode {
-  // The conversation the learner has open — not the first row of the session
-  // list, which is a different conversation as soon as anything newer exists.
-  const sessionId = useCurrentSessionId(uiSession)
-  return (
-    <LearningPanel
-      {...(sessionId === undefined ? {} : { sessionId })}
-      {...(onOpenChat === undefined ? {} : { onOpenChat })}
-      {...(onFocusStarted === undefined ? {} : { onFocusStarted })}
-      {...(onOpenMapPage === undefined ? {} : { onOpenMapPage })}
-    />
-  )
-}
-
-/** Props the slot supplies; re-declared for the bound wrapper. */
+/** Props the `main` slot supplies; identity comes from the session scope adapter. */
 interface MainPanelProps {
-  /** Standard root props; present but unused now that identity comes from the
-   * scope adapter. Declared so a future reader does not reintroduce a list scan. */
+  /** Standard root props; declared so a future reader does not reintroduce a list scan. */
   useSessions?: unknown
 }
 
@@ -216,7 +172,7 @@ export function apply(ctx: Context): void {
   }
 
   /**
-   * `PANEL_ID` as the layout names it.
+   * `MAP_PANEL_ID` as the layout names it.
    *
    * `MainPanelId` is a compile-time-only brand — the value is the same string
    * at runtime — so a plugin that owns the id constant can name it here instead
@@ -224,7 +180,6 @@ export function apply(ctx: Context): void {
    * imported, so this file still pulls in no `@deepseek-ai/*` value.
    */
   type PanelRef = Parameters<NonNullable<typeof layout>['selectPanel']>[0]
-  const panelRef = PANEL_ID as unknown as PanelRef
   const mapPanelRef = MAP_PANEL_ID as unknown as PanelRef
 
   // ---------------------------------------------------------------------------
@@ -265,39 +220,14 @@ export function apply(ctx: Context): void {
     }),
   )
 
-  ctx.slots.inject('main', () =>
-    ctx.slots.register(
-      {
-        name: 'main',
-        key: PANEL_ID,
-      },
-      function BoundMainPanel(props: MainPanelProps): ReactNode {
-        return (
-          <MainPanel
-            {...props}
-            uiSession={uiSession}
-            onOpenChat={() => {
-              // Show the conversation, then dock: the session surface that the
-              // right sidebar needs comes back with it.
-              layout?.selectPanel(null)
-              openDockedTab()
-            }}
-            onFocusStarted={() => openDockedTab()}
-            onOpenMapPage={() => layout?.selectPanel(mapPanelRef)}
-          />
-        )
-      },
-    ),
-  )
-
   // ---------------------------------------------------------------------------
   // The docked tab.
   //
-  // This is what lets the chat and the learning surface coexist. The full panel
-  // takes the main column — the same column the conversation lives in — so with
-  // only that panel the learner must leave the lesson to answer a check. The
-  // right sidebar is a separate column, so the same runtime sits beside the
-  // chat.
+  // This is the only lesson surface now. An earlier version also offered a
+  // full-page panel in the main column; that was a second way to read the same
+  // lesson and a third destination to choose from, so it was removed. The
+  // conversation keeps the main column; the lesson sits beside it here, where
+  // answering a check never means leaving the lesson.
   //
   // Registration is two stages, and the order is enforced by the framework:
   // declare the tab type, then register the body and title under the type's own
@@ -308,7 +238,7 @@ export function apply(ctx: Context): void {
     kind: TAB_ID,
     // A page type, not a resource viewer: it has no address globs, so it is
     // opened by kind and never competes to render someone else's resource.
-    title: () => 'Learning',
+    title: () => 'Current lesson',
     priority: 'extension',
   })
 
@@ -316,10 +246,9 @@ export function apply(ctx: Context): void {
    * Dock the tab, retrying briefly.
    *
    * The right sidebar hosts **session-scoped** tabs, so it can only accept one
-   * while a session surface is mounted — and while the full panel occupies the
-   * main column, no session surface exists. Returning to the conversation
-   * mounts one, so the useful moment to dock is just after that. Retrying
-   * covers the gap between the click and the surface mounting.
+   * while a session surface is mounted. Returning to the conversation mounts
+   * one, so the useful moment to dock is just after that. Retrying covers the
+   * gap between the click and the surface mounting.
    */
   const openDockedTab = (attempt = 0): void => {
     // Resolved with `get`, not read as a property: this plugin injects the
@@ -334,8 +263,11 @@ export function apply(ctx: Context): void {
     }
   }
 
-  // The map page itself. A second `main` key: the shell's panel switcher now
-  // has two destinations, the teaching view and the map view.
+  // The map page: the plugin's only main panel.
+  //
+  // Route and knowledge live here; the lesson lives in the docked tab. "Open
+  // current lesson" therefore leaves this page and returns to the conversation
+  // with the lesson tab open, instead of replacing one main column with another.
   ctx.slots.inject('main', () =>
     ctx.slots.register(
       { name: 'main', key: MAP_PANEL_ID as unknown as NonNullable<PanelRef> },
@@ -345,11 +277,11 @@ export function apply(ctx: Context): void {
           <LearningMapPanel
             {...props}
             {...(sessionId === undefined ? {} : { sessionId })}
-            onOpenChat={() => {
+            onOpenChat={() => layout?.selectPanel(null)}
+            onOpenLesson={() => {
               layout?.selectPanel(null)
               openDockedTab()
             }}
-            onOpenLearning={() => layout?.selectPanel(panelRef)}
           />
         )
       },
@@ -364,11 +296,6 @@ export function apply(ctx: Context): void {
         <LearningTab
           {...props}
           uiSession={uiSession}
-          onOpenFullView={() => {
-            // Show the full panel, which means giving up the main column. The
-            // tab stays docked, so the way back is the panel's own header.
-            layout?.selectPanel(panelRef)
-          }}
           onOpenMapPage={() => layout?.selectPanel(mapPanelRef)}
         />
       )

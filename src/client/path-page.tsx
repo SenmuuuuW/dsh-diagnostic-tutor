@@ -566,7 +566,7 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
   const busyAction = busy !== null
 
   return <div className="dt-path-page" aria-label={text.pageLabel(title)}>
-    <header className="dt-path-header"><div><p className="dt-path-eyebrow">{text.learningPath}</p><h2>{title}</h2><p className="dt-path-muted">{text.learningPathIntro}</p></div><div className="dt-path-actions"><Button onClick={() => setSelection({ kind: 'project' })}>{text.projectOverview}</Button><Button aria-expanded={wizardOpen} onClick={() => setWizardOpen((open) => !open)}>{text.goalAndTimeSettings}</Button>{onOpenChat && <Button onClick={onOpenChat}>{text.backToConversation}</Button>}</div></header>
+    <header className="dt-path-header"><div><p className="dt-path-eyebrow">{text.learningPath}</p><h2>{title}</h2><p className="dt-path-muted">{text.learningPathIntro}</p></div><div className="dt-path-actions"><Button onClick={() => setSelection({ kind: 'project' })}>{text.projectOverview}</Button><Button aria-expanded={wizardOpen} onClick={() => setWizardOpen((open) => !open)}>{text.goalAndTimeSettings}</Button></div></header>
     {readOnly && <div className="dt-path-status" role="note">{text.readOnlyNotice}</div>}
     {error && <div className="dt-path-alert" role="alert">{error}</div>}
     {pollError && <div className="dt-path-alert" role="status">{view ? text.updatesPaused : text.couldNotLoadPath}{pollError} <button type="button" className="dt-path-link" onClick={() => { void refresh() }}>{text.retryLoading}</button></div>}
