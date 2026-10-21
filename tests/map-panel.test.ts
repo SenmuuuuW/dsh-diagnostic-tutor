@@ -124,22 +124,22 @@ describe('the map page', () => {
     expect(container.querySelector('.dt-map-detail')?.textContent).toContain('Recorded against this node.')
   })
 
-  it('offers the way back to the teaching view and the conversation', async () => {
+  it('offers the way back to the current lesson and the conversation', async () => {
     const opened: string[] = []
     await mount({
-      onOpenLearning: () => opened.push('learning'),
+      onOpenLesson: () => opened.push('lesson'),
       onOpenChat: () => opened.push('chat'),
     })
     const buttons = [...container.querySelectorAll<HTMLButtonElement>('button')]
-    const learning = buttons.find((button) => button.textContent?.trim() === 'Open learning view')
+    const lesson = buttons.find((button) => button.textContent?.trim() === 'Open current lesson')
     const chat = buttons.find((button) => button.textContent?.trim() === 'Back to the conversation')
-    expect(learning).toBeDefined()
+    expect(lesson).toBeDefined()
     expect(chat).toBeDefined()
     await act(async () => {
-      learning?.click()
+      lesson?.click()
       chat?.click()
     })
-    expect(opened).toEqual(['learning', 'chat'])
+    expect(opened).toEqual(['lesson', 'chat'])
   })
 
   it('says there is nothing to map when no project is open', async () => {

@@ -228,7 +228,7 @@ window.__ModuleLoader__ = {
     root.render(window.React.createElement(Component, {
       client,
       ...(planning ? { pathClient, sessionId: "preview-session", onOpenChat: () => render("panel"),
-        onOpenLearning: () => render("panel"), onOpenMapPage: () => render("map") } : {}),
+        onOpenLesson: () => render("panel"), onOpenMapPage: () => render("map") } : {}),
     }));
   };
   render(surface);

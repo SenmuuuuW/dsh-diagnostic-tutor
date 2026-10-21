@@ -1,15 +1,14 @@
 /**
- * The diagnosis map's own page.
+ * The Learning map page: the plugin's only main-column page.
  *
- * The learning surface and the map answer different questions — "what am I
- * being taught" and "what do I actually know" — and a docked column that
- * carries both makes the map read as a footnote under the lesson. This page
- * gives the map the whole main column: the tree on the left, the selected
- * node's evidence on the right, and the same state census the docked tab uses.
+ * It answers two questions in one place — "what is my route" (course route tab)
+ * and "what do I actually know" (knowledge & evidence tab). The lesson itself
+ * lives in the docked tab beside the conversation, so this page never doubles
+ * as a second teaching surface.
  *
- * It is a *second* main panel, not a replacement for the Learning panel:
- * `Learning` stays the teaching view, `Learning map` is the reference view.
- * Neither decides anything; both read the same `useLearning` state.
+ * Nothing here decides anything; every view reads the same `useLearning` state
+ * the docked tab reads (`pathClient` supplies the planning view for the route
+ * tab).
  */
 
 import { useEffect, useState, type ReactNode } from 'react'
@@ -38,8 +37,8 @@ export interface LearningMapPanelProps {
   sessionId?: string | undefined
   /** Show the conversation again. */
   onOpenChat?: (() => void) | undefined
-  /** Switch to the teaching panel in the main column. */
-  onOpenLearning?: (() => void) | undefined
+  /** Return to the conversation with the current-lesson tab open. */
+  onOpenLesson?: (() => void) | undefined
   pathClient?: PathClient | undefined
 }
 
@@ -209,7 +208,7 @@ export function LearningMapPanel({
   initialOverview,
   sessionId,
   onOpenChat,
-  onOpenLearning,
+  onOpenLesson,
   pathClient,
 }: LearningMapPanelProps): ReactNode {
   const text = useMapText()
@@ -240,11 +239,6 @@ export function LearningMapPanel({
             <span className="dt-bar-note">{text.noProject}</span>
           </div>
           <div className="dt-bar-actions">
-            {onOpenLearning !== undefined && (
-              <button type="button" className="dt-bar-back" onClick={onOpenLearning}>
-                {text.openLearning}
-              </button>
-            )}
             <LanguageToggle />
           </div>
         </header>
@@ -302,9 +296,9 @@ export function LearningMapPanel({
           <span className="dt-bar-note">{overview.course.title}</span>
         </div>
         <div className="dt-bar-actions">
-          {onOpenLearning !== undefined && (
-            <button type="button" className="dt-bar-back" onClick={onOpenLearning}>
-              {text.openLearning}
+          {onOpenLesson !== undefined && (
+            <button type="button" className="dt-bar-back" onClick={onOpenLesson}>
+              {text.openLesson}
             </button>
           )}
           {onOpenChat !== undefined && (

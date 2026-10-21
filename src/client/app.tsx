@@ -1,6 +1,11 @@
 import { CourseLearning, useCoursePath } from './course-learning.js'
 /**
- * The full-page learning panel.
+ * The standalone full-page learning panel.
+ *
+ * NOTE: the plugin no longer registers this as a main panel. The product now
+ * has one main page (`Learning map`) and one lesson surface (the docked tab),
+ * so the same lesson is not offered in two places. This component is kept as
+ * the standalone full-page renderer used by the preview and the tests.
  *
  * Three columns, left to right, that read as one sentence: **the course and its
  * diagnosis map → the node you picked → the learning surface for it.** This is

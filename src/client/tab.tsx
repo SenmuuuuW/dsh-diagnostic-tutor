@@ -38,7 +38,7 @@ import { EmptyArt, StateBar, StateGlyph } from './visuals.jsx'
 
 /** The tab chip's text. */
 export function LearningTabTitle(): ReactNode {
-  return <>Learning</>
+  return <>Current lesson</>
 }
 
 function CompactMap({
@@ -128,13 +128,6 @@ export interface LearningTabProps {
   uiSession?: unknown
   /** Pre-supplied state, so the preview and tests skip the first fetch. */
   initialOverview?: OverviewResponse | undefined
-  /**
-   * Opens the full panel in the main column.
-   *
-   * Offered, never taken: the docked tab is the everyday surface, and giving up
-   * the chat to see more of the map is the learner's call.
-   */
-  onOpenFullView?: (() => void) | undefined
   /** Opens the diagnosis map as its own main-column page. */
   onOpenMapPage?: (() => void) | undefined
 }
@@ -150,7 +143,6 @@ export function LearningTab({
   sessionId,
   uiSession,
   initialOverview,
-  onOpenFullView,
   onOpenMapPage,
 }: LearningTabProps): ReactNode {
   // The live scope when there is one. `adapter.current` is a HostObservable and
@@ -415,13 +407,6 @@ export function LearningTab({
       <section className="dt-lesson">
         <p className="dt-tab-section">
           Learning surface
-          {onOpenFullView !== undefined && (
-            // Secondary on purpose. Everything here works without it; it only
-            // trades the chat for a wider map.
-            <button type="button" className="dt-tab-expand" onClick={onOpenFullView}>
-              Open full view
-            </button>
-          )}
         </p>
         {/* The wait line is for a wait: with the lesson on screen (or nothing
             focused) it would be announcing what the page already shows. */}

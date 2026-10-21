@@ -1249,13 +1249,19 @@ function udtDecideNextTool(state: UdState): ToolDefinition {
  *
  * @param host - the context slice carrying the tools registry.
  * @param state - the open persistence handle the tools read from and write to.
+ * @returns how many tools were registered, so the loader log cannot drift from
+ *   the registry itself (it used to say "4" while nine were registered).
  */
-export function registerTools(host: ToolsHost, state: UdState): void {
-  host.tools.register(udtStatusTool(state))
-  host.tools.register(udtGoalCreateTool(state))
-  host.tools.register(udtMapGetTool(state))
-  host.tools.register(udtMapUpdateTool(state))
-  host.tools.register(udtLessonUpdateTool(state))
-  host.tools.register(udtDecideNextTool(state))
-  for (const tool of planningTools(state)) host.tools.register(tool)
+export function registerTools(host: ToolsHost, state: UdState): number {
+  const core = [
+    udtStatusTool(state),
+    udtGoalCreateTool(state),
+    udtMapGetTool(state),
+    udtMapUpdateTool(state),
+    udtLessonUpdateTool(state),
+    udtDecideNextTool(state),
+  ]
+  const planning = planningTools(state)
+  for (const tool of [...core, ...planning]) host.tools.register(tool)
+  return core.length + planning.length
 }

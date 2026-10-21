@@ -139,7 +139,7 @@ function staticOverview(): OverviewResponse {
 
 describe('the tab title', () => {
   it('names the surface', () => {
-    expect(renderToStaticMarkup(createElement(LearningTabTitle))).toContain('Learning')
+    expect(renderToStaticMarkup(createElement(LearningTabTitle))).toContain('Current lesson')
   })
 })
 
