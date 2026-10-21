@@ -5,6 +5,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — DeepSeek brand accents
+
+The plugin's own accent is now DeepSeek's brand blue — `#4d6bfe` on the light
+canvas and `#6a84ff` on the dark one — used sparingly: the stage progress bar,
+the active Learning-map tab, the current/selected route node and lesson row,
+focus rings, action links, and hover washes. The primary action fill keeps the
+host's near-black (light) / near-white (dark) button token, because on DeepSeek
+surfaces the blue marks and does not act. A new `--dt-brand*` token family
+derives the soft wash and line from the accent and is restated for the dark
+theme at the same level as the roots.
+
+
 ### Changed — the route page shows one stage at a time
 
 The course-route page no longer stacks every card at once. A small progress bar
