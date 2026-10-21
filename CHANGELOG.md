@@ -5,6 +5,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — the route page shows one stage at a time
+
+The course-route page no longer stacks every card at once. A small progress bar
+names the four stages (goal & time, initial diagnosis, route, learning) and the
+body only shows the stage the project is actually in. Goal editing stays in the
+header; the diagnosis card owns the page until it is complete or skipped; route
+versions take over only after that; once a route is accepted the page leads with
+the route canvas and the selected Overview.
+
+The initial diagnosis now has an explicit **in progress** state: while the tutor
+is asking questions in the conversation, the page says so and offers **Open
+conversation** (and **Skip initial assessment**) instead of showing a waiting
+card that looked stalled. An empty route area explains which step is missing.
+Folded sections (**Initial diagnosis summary**, **Route versions and settings**)
+keep the history reachable without leading the page, and the effort card only
+appears when the estimate conflicts with the saved time budget.
+
 ### Changed — every surface follows one language switch
 
 The last English-only chrome now follows the same English/Simplified-Chinese
