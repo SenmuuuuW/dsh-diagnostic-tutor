@@ -469,6 +469,16 @@ ordered lesson list and every Overview) and **Knowledge & evidence** (the
 diagnosis map and its recorded observations). Neither one teaches: they show
 stored state.
 
+The route tab shows one stage at a time. A progress bar names the four stages —
+goal & time, initial diagnosis, route, learning — and only the current stage's
+cards are expanded. Before a goal is saved the wizard owns the page; while the
+tutor is asking diagnostic questions the page says **Initial diagnosis in
+progress** and offers a way back to the conversation; route versions appear only
+after the diagnosis is complete or skipped; once accepted, the page leads with
+the route canvas. Completed diagnosis details and route settings stay reachable
+in folded sections, and the effort card only appears when the estimate conflicts
+with the saved budget.
+
 The lesson lives in the docked tab, where the conversation is still on screen.
 That is what makes the check loop work without leaving the lesson. The sidebar
 action **Learn** opens that tab and never takes over the main column; the map's

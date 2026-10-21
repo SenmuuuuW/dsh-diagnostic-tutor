@@ -234,8 +234,11 @@ describe('goal wizard persistence and request readiness', () => {
     expect(saved).toMatchObject({ sessionId: 'synthetic-session', courseId: 'synthetic-course', expectedRevision: 4, brief: { purpose: 'I am still choosing the project', outcomes: [], background: '', targetDate: null, durationWeeks: null, deadline: 'none', weeklyMinutes: null, sessionMinutes: null, preferences: '' } })
     expect(saved.brief.timeZone.length).toBeGreaterThan(0)
     expect(container.textContent).toContain('Incomplete goal draft saved')
-    expect(button('Request diagnosis').disabled).toBe(true)
-    expect(button('Request a route proposal').disabled).toBe(true)
+    // Progressive disclosure: before the goal is complete only the current
+    // stage is shown; the diagnosis/route actions appear with their stage.
+    expect(container.querySelector('.dt-path-stagebar li[data-state="current"]')?.textContent).toContain('Goal & time')
+    expect([...container.querySelectorAll('button')].some((entry) => entry.textContent?.trim() === 'Request diagnosis')).toBe(false)
+    expect([...container.querySelectorAll('button')].some((entry) => entry.textContent?.trim() === 'Request a route proposal')).toBe(false)
   })
 
   it('recovers a server draft and submits outcomes, self-report, timezone and exclusive duration', async () => {
@@ -286,7 +289,10 @@ describe('goal wizard persistence and request readiness', () => {
       return structuredClone(host)
     })
     await mount()
-    expect(button('Request a route proposal').disabled).toBe(true)
+    // The diagnosis stage owns the page; the route request appears only after
+    // the assessment is complete or explicitly skipped.
+    expect(container.querySelector('.dt-path-stagebar li[data-state="current"]')?.textContent).toContain('Initial diagnosis')
+    expect([...container.querySelectorAll('button')].some((entry) => entry.textContent?.trim() === 'Request a route proposal')).toBe(false)
     expect(client.skipAssessment).not.toHaveBeenCalled()
     await click('Skip initial assessment')
     expect(client.skipAssessment).toHaveBeenCalledWith({ sessionId: 'synthetic-session', courseId: 'synthetic-course', expectedRevision: 4 })
@@ -365,6 +371,51 @@ describe('goal wizard persistence and request readiness', () => {
     await act(async () => setLang('en'))
     expect(container.textContent).toContain('Learning path')
     expect(container.textContent).not.toMatch(/[\u4e00-\u9fff]/)
+  })
+})
+
+describe('progressive disclosure of the route page', () => {
+  it('shows a clear pending-diagnosis state and the way back to the conversation', async () => {
+    host = pathView([])
+    host.path = {
+      ...host.path,
+      assessment: null,
+      assessmentRevision: 0,
+      requests: [{ id: 'diag-1', sessionId: 'synthetic-session', kind: 'diagnosis', briefRevision: 1, createdAt: NOW, prompted: true, reason: null }],
+    }
+    const opened: string[] = []
+    await mount({ onOpenChat: () => opened.push('chat') })
+
+    const pending = container.querySelector('.dt-path-pending')
+    expect(pending).not.toBeNull()
+    expect(pending?.textContent).toContain('Initial diagnosis in progress')
+    expect(pending?.textContent).toContain('Answer there')
+    // The route cannot be requested while the diagnosis is still in progress.
+    expect([...container.querySelectorAll('button')].some((entry) => entry.textContent?.trim() === 'Request a route proposal')).toBe(false)
+
+    const open = [...pending!.querySelectorAll('button')].find((entry) => entry.textContent?.includes('Open conversation'))
+    await act(async () => { open?.click() })
+    expect(opened).toEqual(['chat'])
+  })
+
+  it('explains what is missing when no route exists yet, instead of showing a blank area', async () => {
+    host = pathView([])
+    await mount()
+
+    expect(container.querySelector('.dt-path-stagebar li[data-state="current"]')?.textContent).toContain('Learning route')
+    expect(container.textContent).toContain('Diagnosis is ready. Request a route proposal above')
+    expect(button('Request a route proposal').disabled).toBe(false)
+    // Earlier stages are folded away: the diagnosis summary is a disclosure,
+    // not another stacked card.
+    expect(container.querySelector('details.dt-path-fold summary')?.textContent).toContain('Initial diagnosis summary')
+  })
+
+  it('folds route versions away once a route is accepted', async () => {
+    await mount()
+    expect(container.querySelector('.dt-path-stagebar li[data-state="current"]')?.textContent).toContain('Learning')
+    const summaries = [...container.querySelectorAll('details.dt-path-fold summary')].map((entry) => entry.textContent ?? '')
+    expect(summaries.some((entry) => entry.includes('Initial diagnosis summary'))).toBe(true)
+    expect(summaries.some((entry) => entry.includes('Route versions and settings'))).toBe(true)
   })
 })
 

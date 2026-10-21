@@ -116,6 +116,23 @@ export const PATH_CSS = `
 .dt-path-empty h3 { margin-top:4px; }
 .dt-path-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 @media (max-width:1050px) { .dt-path-workspace { grid-template-columns:1fr; } .dt-path-detail { max-height:min(620px,46vh); } }
+
+.dt-path-stagebar { border:1px solid var(--dt-border,#e3e6ea); border-radius:10px; padding:12px 14px; background:var(--dt-surface,#f7f8fa); }
+.dt-path-stagebar ol { list-style:none; display:flex; flex-wrap:wrap; gap:8px 14px; margin:0; padding:0; }
+.dt-path-stagebar li { display:flex; align-items:center; gap:6px; color:var(--dt-muted,#6b7280); font-size:12px; }
+.dt-path-stagebar li[data-state=current] { color:var(--dt-text,#1c1f23); font-weight:600; }
+.dt-path-stagebar li[data-state=done] { color:var(--dt-text,#1c1f23); }
+.dt-path-stagebar li small { font-weight:400; color:var(--dt-muted,#6b7280); }
+.dt-path-stagebar li[data-state=current] small { color:var(--dt-accent,#4f46e5); }
+.dt-path-stage-number { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; border:1px solid var(--dt-border-strong,#cfd4dc); font-size:11px; font-weight:600; }
+.dt-path-stagebar li[data-state=done] .dt-path-stage-number { background:var(--dt-accent,#4f46e5); border-color:var(--dt-accent,#4f46e5); color:var(--dt-on-accent,#fff); }
+.dt-path-stagebar li[data-state=current] .dt-path-stage-number { border-color:var(--dt-accent,#4f46e5); color:var(--dt-accent,#4f46e5); }
+.dt-path-stagebar p { margin:8px 0 0; }
+.dt-path-fold { border:1px solid var(--dt-border,#e3e6ea); border-radius:10px; background:var(--dt-bg,#fff); }
+.dt-path-fold > summary { cursor:pointer; padding:11px 14px; font-weight:550; color:var(--dt-text,#1c1f23); }
+.dt-path-fold[open] > summary { border-bottom:1px solid var(--dt-border,#e3e6ea); }
+.dt-path-fold > .dt-path-card { border:0; border-radius:0; }
+.dt-path-pending { border-left:3px solid var(--dt-accent,#4f46e5); background:var(--dt-surface,#f7f8fa); }
 @media (max-width:620px) { .dt-path-header { padding:16px; } .dt-path-body { padding:16px; } .dt-path-status,.dt-path-alert { margin:10px 16px 0; } .dt-path-fields,.dt-path-columns { grid-template-columns:1fr; } .dt-path-steps { flex-wrap:wrap; } .dt-path-steps li { flex-basis:40%; } .dt-path-summary { grid-template-columns:1fr; } .dt-path-card { padding:14px; } .dt-path-canvas { height:330px; } }
 @media (prefers-reduced-motion:reduce) { .dt-path-page * { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
 /* Interface-language switch: the same chrome as the bar's other buttons, and
