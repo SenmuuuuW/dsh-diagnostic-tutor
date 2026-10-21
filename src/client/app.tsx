@@ -29,6 +29,9 @@ import { CourseLearning, useCoursePath } from './course-learning.js'
 import { useEffect, type ReactNode } from 'react'
 
 import { DataFooter, HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
+import { useLang, type Lang } from './i18n.js'
+import { LanguageToggle } from './language-toggle.js'
+import { evidenceKindLabel, readinessLabel, stateLabel } from './map-text.js'
 import {
   buildMapTree,
   continuationLabel,
@@ -41,6 +44,7 @@ import {
   relationLabel,
   stateExplanation,
 } from './model.js'
+import { usePanelText } from './panel-text.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
 import { EmptyArt, FeatureRow, NodeLocator, StateBar, StateGlyph } from './visuals.jsx'
@@ -48,10 +52,10 @@ import { EmptyArt, FeatureRow, NodeLocator, StateBar, StateGlyph } from './visua
 export type { PanelClient } from './use-learning.js'
 
 /** A node state as one chip: the mark, and the word. Never a number. */
-function StateChip({ state }: { state: string }): ReactNode {
+function StateChip({ state, lang }: { state: string; lang: Lang }): ReactNode {
   return (
     <span className={`dt-tab-state dt-state-${state}`}>
-      {state}
+      {stateLabel(state, lang)}
     </span>
   )
 }
@@ -84,11 +88,11 @@ export interface LearningPanelProps {
 }
 
 /** The status pill plus its mark. Never a number. */
-function StateMark({ state }: { state: string }): ReactNode {
+function StateMark({ state, lang }: { state: string; lang: Lang }): ReactNode {
   return (
     <>
       <span className={`dt-dot dt-state-${state}`} data-filled={isFilledState(state)} />
-      <span className={`dt-state dt-state-${state}`}>{state}</span>
+      <span className={`dt-state dt-state-${state}`}>{stateLabel(state, lang)}</span>
     </>
   )
 }
@@ -107,6 +111,8 @@ export function LearningPanel({
   onFocusStarted,
   onOpenMapPage,
 }: LearningPanelProps): ReactNode {
+  const text = usePanelText()
+  const lang = useLang()
   const state = useLearning({
     client: client ?? defaultClient,
     sessionId,
@@ -152,7 +158,7 @@ export function LearningPanel({
     focusNodeId: focus?.nodeId ?? null,
     shownNodeId: selectedId,
     hasNextStep: nextStep !== null,
-  })
+  }, lang)
   const placeholder = lessonPlaceholder({
     focusNodeId: focus?.nodeId ?? null,
     hasNextStep: nextStep !== null,
@@ -179,38 +185,38 @@ export function LearningPanel({
       <div className="dt-root-wrap">
         <header className="dt-bar">
           <div className="dt-bar-id">
-            <span className="dt-bar-name">Start something new</span>
+            <span className="dt-bar-name">{text.startNew}</span>
             <span className="dt-bar-sep" aria-hidden="true">
               ·
             </span>
-            <span className="dt-bar-note">the tutor creates the project from what you say</span>
+            <span className="dt-bar-note">{text.startNewNote}</span>
           </div>
-          {onOpenChat !== undefined && (
-            <button type="button" className="dt-bar-back" onClick={onOpenChat}>
-              Back to the conversation
-            </button>
-          )}
+          <div className="dt-bar-actions">
+            {onOpenChat !== undefined && (
+              <button type="button" className="dt-bar-back" onClick={onOpenChat}>
+                {text.backToChat}
+              </button>
+            )}
+            <LanguageToggle />
+          </div>
         </header>
         <div className="dt-root dt-root-welcome">
           <div className="dt-welcome">
             <EmptyArt kind="welcome" />
-            <p className="dt-welcome-eyebrow">Start something new</p>
-            <h1 className="dt-welcome-title">Tell the tutor what you want to learn in Chat.</h1>
-            <p className="dt-welcome-body">
-              When the tutor records a goal there, it becomes this conversation&rsquo;s project.
-              Nothing is created here, and your other projects are untouched.
-            </p>
+            <p className="dt-welcome-eyebrow">{text.startNew}</p>
+            <h1 className="dt-welcome-title">{text.startNewTitle}</h1>
+            <p className="dt-welcome-body">{text.startNewBody}</p>
             <FeatureRow />
             {library.length > 0 && (
               <>
-                <p className="dt-section-title">Or continue one</p>
+                <p className="dt-section-title">{text.orContinue}</p>
                 <ul className="dt-library">
                   {library.map((project) => (
                     <li key={project.id}>
                       <button type="button" className="dt-project" onClick={() => state.openProject(project.id)}>
                         <span className="dt-project-name">{project.title}</span>
                         <span className="dt-project-count">
-                          {project.confirmed} of {project.total} confirmed
+                          {text.confirmedOf(project.confirmed, project.total)}
                         </span>
                       </button>
                     </li>
@@ -220,7 +226,7 @@ export function LearningPanel({
             )}
             {onOpenChat !== undefined && (
               <button type="button" className="dt-primary dt-here-action" onClick={onOpenChat}>
-                Go to the chat
+                {text.goToChat}
               </button>
             )}
           </div>
@@ -234,17 +240,20 @@ export function LearningPanel({
       <div className="dt-root-wrap">
         <header className="dt-bar">
           <div className="dt-bar-id">
-            <span className="dt-bar-name">Learning</span>
+            <span className="dt-bar-name">{text.learning}</span>
             <span className="dt-bar-sep" aria-hidden="true">
               ·
             </span>
-            <span className="dt-bar-note">your conversation stays in the sidebar</span>
+            <span className="dt-bar-note">{text.conversationInSidebar}</span>
           </div>
-          {onOpenChat !== undefined && (
-            <button type="button" className="dt-bar-back" onClick={onOpenChat}>
-              Back to the conversation
-            </button>
-          )}
+          <div className="dt-bar-actions">
+            {onOpenChat !== undefined && (
+              <button type="button" className="dt-bar-back" onClick={onOpenChat}>
+                {text.backToChat}
+              </button>
+            )}
+            <LanguageToggle />
+          </div>
         </header>
         <div className="dt-root dt-root-welcome">
         <div className="dt-welcome">
@@ -255,19 +264,19 @@ export function LearningPanel({
               there is genuinely nothing yet. */}
           {library.length > 0 && (
             <>
-              <p className="dt-welcome-eyebrow">Your learning</p>
-              <h1 className="dt-welcome-title">Your learning projects</h1>
-              <p className="dt-welcome-body">Shared across your conversations.</p>
+              <p className="dt-welcome-eyebrow">{text.yourLearning}</p>
+              <h1 className="dt-welcome-title">{text.yourLearningProjects}</h1>
+              <p className="dt-welcome-body">{text.projectsShared}</p>
               <ul className="dt-library">
                 {library.map((project) => (
                   <li key={project.id}>
                     <button type="button" className="dt-project" onClick={() => state.openProject(project.id)}>
                       <span className="dt-project-name">{project.title}</span>
                       <span className="dt-project-count">
-                        {project.confirmed} of {project.total} confirmed
+                        {text.confirmedOf(project.confirmed, project.total)}
                       </span>
                       <span className="dt-project-go">
-                        {project.confirmed === 0 ? 'Open' : 'Continue'} →
+                        {text.projectGo(project.confirmed)} →
                       </span>
                     </button>
                   </li>
@@ -275,36 +284,22 @@ export function LearningPanel({
               </ul>
             </>
           )}
-          <p className="dt-welcome-eyebrow">Universal Diagnostic Tutor</p>
-          <h1 className="dt-welcome-title">What do you want to learn?</h1>
-          <p className="dt-welcome-body">
-            Works with the Universal Diagnostic Tutor skill. Start by telling the tutor what you
-            want to learn — in your own words, in the chat. Then this page fills in: a map of what
-            you actually know, the lesson, and the evidence behind every status.
-          </p>
+          <p className="dt-welcome-eyebrow">{text.product}</p>
+          <h1 className="dt-welcome-title">{text.welcomeTitle}</h1>
+          <p className="dt-welcome-body">{text.welcomeBody}</p>
           <FeatureRow />
           <div className="dt-welcome-sample">
-            <span className="dt-welcome-sample-label">Try</span>
-            <span className="dt-welcome-sample-text">
-              I want to learn machine learning. I know some Python, but my math is weak.
-            </span>
+            <span className="dt-welcome-sample-label">{text.tryLabel}</span>
+            <span className="dt-welcome-sample-text">{text.trySample}</span>
           </div>
-          <p className="dt-welcome-note">
-            If tutoring doesn&apos;t start, make sure the UDT skill is available to your active DSH
-            agent.
-          </p>
-          <p className="dt-welcome-note">
-            No account, no scores, no streak. Your goal, your map and the evidence behind it stay
-            on this machine, and are yours to keep or delete.
-          </p>
+          <p className="dt-welcome-note">{text.skillNote}</p>
+          <p className="dt-welcome-note">{text.dataNote}</p>
           {/* The warning belongs with the copy it qualifies, not under the
               data controls — Export and Delete are about state, not about the
               missing skill. */}
           {teachingBrain === false && (
             <p className="dt-notice">
-              <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records
-              and shows your learning state, but no lesson will be written until the skill is
-              available to your active DSH agent.
+              <b>{text.warningTitle}</b> {text.warningBody}
             </p>
           )}
           <DataFooter onExport={state.exportData} onReset={state.resetAll} />
@@ -318,28 +313,29 @@ export function LearningPanel({
     <div className="dt-root-wrap">
       <header className="dt-bar">
         <div className="dt-bar-id">
-          <span className="dt-bar-name">Learning</span>
+          <span className="dt-bar-name">{text.learning}</span>
           <span className="dt-bar-sep" aria-hidden="true">
             ·
           </span>
           <span className="dt-bar-note">
             {sessionId === undefined
-              ? 'no conversation selected'
-              : 'your conversation stays in the sidebar'}
+              ? text.noConversation
+              : text.conversationInSidebar}
           </span>
         </div>
         <div className="dt-bar-actions">
           {onOpenMapPage !== undefined && (
             <button type="button" className="dt-bar-back" onClick={onOpenMapPage}>
-              Learning map
+              {text.learningMap}
             </button>
           )}
           {onOpenChat !== undefined && (
             <button type="button" className="dt-bar-back" onClick={onOpenChat}>
               {/* Named plainly: the fear this button answers is "did I lose my chat?" */}
-              Back to the conversation
+              {text.backToChat}
             </button>
           )}
+          <LanguageToggle />
         </div>
       </header>
       <div className="dt-root">
@@ -359,29 +355,27 @@ export function LearningPanel({
             <circle cx="98" cy="14" r="2.4" fill="currentColor" stroke="none" />
             <circle cx="70" cy="46" r="5" strokeDasharray="2 3" />
           </svg>
-          <p className="dt-eyebrow">Your learning</p>
-          <h1 className="dt-course-title">{overview?.course?.title ?? 'No goal yet'}</h1>
+          <p className="dt-eyebrow">{text.yourLearning}</p>
+          <h1 className="dt-course-title">{overview?.course?.title ?? text.noGoal}</h1>
           {overview?.course != null && (
             <>
-              <p className="dt-shared">Shared across conversations</p>
+              <p className="dt-shared">{text.sharedAcross}</p>
               <p className="dt-goal">
-                <b>Goal:</b> {overview.course.goal}
+                <b>{text.goalLabel}</b> {overview.course.goal}
               </p>
             </>
           )}
         </header>
 
         <section className="dt-here-card">
-          <p className="dt-eyebrow dt-eyebrow-here">This conversation</p>
+          <p className="dt-eyebrow dt-eyebrow-here">{text.thisConversation}</p>
           {focus === null ? (
-            <p className="dt-here-empty">
-              No learning focus yet. Pick a node below to start learning here.
-            </p>
+            <p className="dt-here-empty">{text.noFocus}</p>
           ) : (
             <p className="dt-here-focus">
               <span className="dt-here-node">{focusNodeTitle ?? focus.nodeId}</span>
               {focusNodeState !== null && (
-                <span className={`dt-tab-state dt-state-${focusNodeState}`}>{focusNodeState}</span>
+                <span className={`dt-tab-state dt-state-${focusNodeState}`}>{stateLabel(focusNodeState, lang)}</span>
               )}
             </p>
           )}
@@ -398,30 +392,25 @@ export function LearningPanel({
               onClick={() => state.continueTo(control.nodeId)}
               disabled={starting || sessionId === undefined}
               {...(sessionId === undefined
-                ? { title: 'Open or create a conversation first — that is where the tutor replies.' }
+                ? { title: text.startNoSessionTitle }
                 : {})}
             >
-              {starting ? 'Starting…' : control.label}
+              {starting ? text.starting : control.label}
             </button>
           )}
           {sessionId === undefined && (
-            <p className="dt-caption">
-              Open a conversation first. The tutor teaches in the chat, so a node cannot be started
-              without one.
-            </p>
+            <p className="dt-caption">{text.startNoSessionBody}</p>
           )}
         </section>
 
         <p className="dt-section-title">
-          Diagnosis map <span>{rows.length} nodes</span>
+          {text.diagnosisMap} <span>{text.census(rows.length)}</span>
         </p>
         <StateBar nodes={overview?.nodes ?? []} />
         {rows.length === 0 && (
           <>
             <EmptyArt kind="map" />
-            <p className="dt-empty">
-              Nothing on the map yet. State a goal in the chat and the runtime will record it.
-            </p>
+            <p className="dt-empty">{text.emptyMap}</p>
           </>
         )}
         {rows.map(({ node, depth }) => (
@@ -451,15 +440,13 @@ export function LearningPanel({
             <span className="dt-node-title">
               {node.title}
               <span className="dt-node-rel">
-                {relationLabel(node.relation)} · {node.evidenceCount} evidence
+                {relationLabel(node.relation, lang)} · {text.evidenceCount(node.evidenceCount)}
               </span>
             </span>
-            <StateChip state={node.state} />
+            <StateChip state={node.state} lang={lang} />
           </button>
         ))}
-        <p className="dt-caption">
-          {confirmed} of {rows.length} confirmed by evidence.
-        </p>
+        <p className="dt-caption">{text.confirmedByEvidence(confirmed, rows.length)}</p>
       </div>
 
       {/* ---- node detail ---- */}
@@ -468,12 +455,9 @@ export function LearningPanel({
           <div className="dt-empty-state">
             <EmptyArt kind="evidence" />
             <p className="dt-empty-title">
-              {loading ? 'Loading your map…' : 'Nothing selected'}
+              {loading ? text.loadingMap : text.nothingSelected}
             </p>
-            <p className="dt-empty">
-              Pick a node on the map and this column shows what is recorded against it, and why it
-              is in that state.
-            </p>
+            <p className="dt-empty">{text.pickNode}</p>
           </div>
         ) : (
           <>
@@ -482,20 +466,22 @@ export function LearningPanel({
                 <StateGlyph state={detail.node.state} />
               </span>
               <div className="dt-detail-hero-id">
-                <p className="dt-eyebrow">Selected node</p>
+                <p className="dt-eyebrow">{text.selectedNode}</p>
                 <h2>{detail.node.title}</h2>
               </div>
             </div>
             <div className="dt-meta">
-              <StateMark state={detail.node.state} />
-              <span className="dt-chip">{relationLabel(detail.node.relation)}</span>
-              {detail.parent !== null && <span className="dt-chip">parent: {detail.parent.title}</span>}
+              <StateMark state={detail.node.state} lang={lang} />
+              <span className="dt-chip">{relationLabel(detail.node.relation, lang)}</span>
+              {detail.parent !== null && (
+                <span className="dt-chip">{text.parent(detail.parent.title)}</span>
+              )}
               {detail.children.length > 0 && (
-                <span className="dt-chip">{detail.children.length} children</span>
+                <span className="dt-chip">{text.children(detail.children.length)}</span>
               )}
             </div>
 
-            <p className="dt-why">{stateExplanation(detail.node.state)}</p>
+            <p className="dt-why">{stateExplanation(detail.node.state, lang)}</p>
 
             <NodeLocator
               parent={
@@ -510,26 +496,27 @@ export function LearningPanel({
                 state: child.state,
               }))}
               onSelect={state.select}
+              label={text.whereThisSits}
             />
 
             <p className="dt-section-title">
-              Evidence <span>{detail.node.evidence.length}</span>
+              {text.evidence} <span>{detail.node.evidence.length}</span>
             </p>
             {detail.node.evidence.length === 0 ? (
               <>
                 <EmptyArt kind="evidence" />
-                <p className="dt-empty">Nothing recorded yet.</p>
+                <p className="dt-empty">{text.nothingRecorded}</p>
               </>
             ) : (
               <ul className="dt-evidence">
                 {detail.node.evidence.map((entry, index) => (
                   <li key={index}>
-                    <span className="dt-ev-kind">{entry.kind.replace(/-/g, ' ')}</span>
+                    <span className="dt-ev-kind">{evidenceKindLabel(entry.kind, lang)}</span>
                     {entry.readiness !== undefined && (
-                      <span className="dt-ev-readiness">{entry.readiness.replace(/-/g, ' ')}</span>
+                      <span className="dt-ev-readiness">{readinessLabel(entry.readiness, lang)}</span>
                     )}
                     {entry.note !== undefined && <span className="dt-ev-note">{entry.note}</span>}
-                    <span className="dt-ev-when">{formatWhen(entry.at)}</span>
+                    <span className="dt-ev-when">{formatWhen(entry.at, Date.now(), lang)}</span>
                   </li>
                 ))}
               </ul>
@@ -541,11 +528,7 @@ export function LearningPanel({
                 that block on the left rather than here. Keeping a second one
                 next to the teaching would put two primary-weight controls on
                 one screen and leave the learner guessing which starts what. */}
-            {isFocused && (
-              <p className="dt-caption">
-                This is the node the tutor is teaching. The lesson is on the right.
-              </p>
-            )}
+            {isFocused && <p className="dt-caption">{text.teachingNode}</p>}
           </>
         )}
       </div>
@@ -553,23 +536,20 @@ export function LearningPanel({
       {/* ---- learning surface ---- */}
       <div className="dt-pane">
         <div className="dt-lesson-head">
-          <p className="dt-eyebrow">Learning surface</p>
-          {lesson !== null && <span className="dt-origin">{lesson.origin}</span>}
+          <p className="dt-eyebrow">{text.learningSurface}</p>
+          {lesson !== null && <span className="dt-origin">{text.lessonOrigin(lesson.origin)}</span>}
         </div>
         {lesson === null ? (
           placeholder === 'preparing' ? (
             <div className="dt-empty-state">
               <EmptyArt kind="lesson" />
-              <p className="dt-empty">The tutor is preparing this node…</p>
-              <p className="dt-caption">
-                The teaching appears here as it is written, while the conversation continues in the
-                chat.
-              </p>
+              <p className="dt-empty">{text.preparing}</p>
+              <p className="dt-caption">{text.preparingBody}</p>
             </div>
           ) : (
             <div className="dt-empty-state">
               <EmptyArt kind="lesson" />
-              <p className="dt-empty-title">Nothing is being taught yet</p>
+              <p className="dt-empty-title">{text.nothingTaught}</p>
               {/* The invitation names the action that actually exists. With a
                   recommendation pending there is no start control to press, and
                   a focused node whose tutor has already handed off is not a turn
@@ -577,14 +557,15 @@ export function LearningPanel({
               <p className="dt-empty">
                 {placeholder === 'press-continue' ? (
                   <>
-                    The tutor has recorded the next step. Press{' '}
-                    <b>{continuationLabel(nextStep)}</b> and the teaching appears here, and the
-                    conversation stays in the chat.
+                    {text.pressContinuePrefix}
+                    <b>{continuationLabel(nextStep, lang)}</b>
+                    {text.pressContinueSuffix}
                   </>
                 ) : (
                   <>
-                    Choose a node on the map and press <b>Start learning</b>. The teaching appears
-                    here, and the conversation stays in the chat.
+                    {text.pressStartPrefix}
+                    <b>{text.startLearning}</b>
+                    {text.pressStartSuffix}
                   </>
                 )}
               </p>
@@ -620,12 +601,12 @@ export function LearningPanel({
             className={nextStep === null && lesson !== null ? 'dt-primary' : 'dt-secondary'}
             onClick={onOpenChat}
           >
-            Answer in the chat
+            {text.answerInChat}
           </button>
         )}
         {lesson !== null && (
           <button type="button" className="dt-secondary" onClick={state.dismissLesson}>
-            Back to the node
+            {text.backToNode}
           </button>
         )}
         {dataNote !== null && <p className="dt-caption">{dataNote}</p>}

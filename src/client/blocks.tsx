@@ -17,7 +17,10 @@
 import { useState, type ReactNode } from 'react'
 
 import type { Block, HandoffView, NextStepView } from '../contract.js'
+import { useLang } from './i18n.js'
+import { useLearningText } from './learning-text.js'
 import { useLessonText } from './lesson-text.js'
+import { readinessLabel } from './map-text.js'
 import { continuationLabel, formatDuration } from './model.js'
 
 /** Props every renderer receives. */
@@ -428,6 +431,8 @@ export function NextStepCard({
   onContinue: () => void
   busy?: boolean
 }): ReactNode {
+  const text = useLearningText()
+  const lang = useLang()
   const moves = nextStep.targetNodeId !== null
   return (
     <div className="dt-next">
@@ -435,32 +440,32 @@ export function NextStepCard({
         <span className="dt-next-arrow" aria-hidden="true">
           ↓
         </span>
-        Next best step
+        {text.nextBestStep}
       </p>
       <p className="dt-next-from">
         <span className="dt-next-tick" aria-hidden="true">
           ✓
         </span>
-        {nextStep.fromNodeTitle} — {nextStep.action.replace(/-/g, ' ')}
+        {nextStep.fromNodeTitle} — {readinessLabel(nextStep.action, lang)}
       </p>
       <p className="dt-next-target">
         {moves ? (
           <>
-            Next: <b>{nextStep.targetNodeTitle}</b>
+            {text.nextPrefix} <b>{nextStep.targetNodeTitle}</b>
           </>
         ) : (
           <>
-            Next: <b>Stay on {nextStep.fromNodeTitle}</b>
+            {text.nextPrefix} <b>{text.stayOn(nextStep.fromNodeTitle)}</b>
           </>
         )}
       </p>
       <p className="dt-next-why">
-        <span className="dt-next-why-label">Why:</span> {nextStep.reason}
+        <span className="dt-next-why-label">{text.why}</span> {nextStep.reason}
       </p>
       <button type="button" className="dt-primary" onClick={onContinue} disabled={busy === true}>
         {/* The label comes from the shared rule, so a sentence elsewhere that
             points at this button cannot name a different verb. */}
-        {busy === true ? 'Starting…' : continuationLabel(nextStep)}
+        {busy === true ? text.starting : continuationLabel(nextStep, lang)}
       </button>
     </div>
   )
@@ -488,18 +493,21 @@ export function HandoffLine({
   handoff: HandoffView
   onRetry: () => void
 }): ReactNode {
+  const text = useLearningText()
+  const lang = useLang()
   const retryable = handoff.phase === 'failed' || handoff.phase === 'stalled'
-  const elapsed = formatDuration(handoff.elapsedMs)
+  const elapsed = formatDuration(handoff.elapsedMs, lang)
   return (
     <div className="dt-handoff" data-phase={handoff.phase}>
       <span className="dt-handoff-dot" aria-hidden="true" />
-      <span className="dt-handoff-label">{handoff.label}</span>
+      {/* The phase is the stable part; the host's label is English. */}
+      <span className="dt-handoff-label">{text.handoffLabel(handoff.phase)}</span>
       {elapsed !== '' && <span className="dt-handoff-time">{elapsed}</span>}
-      {handoff.attempts > 1 && <span className="dt-handoff-try">attempt {handoff.attempts}</span>}
+      {handoff.attempts > 1 && <span className="dt-handoff-try">{text.handoffAttempts(handoff.attempts)}</span>}
       {handoff.detail !== undefined && <span className="dt-handoff-detail">{handoff.detail}</span>}
       {retryable && (
         <button type="button" className="dt-handoff-retry" onClick={onRetry}>
-          Ask again
+          {text.askAgain}
         </button>
       )}
     </div>

@@ -522,19 +522,24 @@ path, no domain handle, no raw record.
 
 ### Interface language
 
-The Learning map, the course route and the lesson panel ship copy in **English
-and Simplified Chinese**. A toggle in the map's header switches the whole
-surface in place; the language is saved on the learner profile
-(`preferredLanguage`, via `GET /preferences` and `POST /preferences/language`),
-so it survives a restart and applies to every conversation. The choice applies
-immediately and is saved in the background: a failed request keeps the local
-choice rather than flipping the UI back.
+Every plugin surface ships copy in **English and Simplified Chinese**: the
+Learning map page, the course route, the docked Current-lesson tab, the
+standalone full-page panel used by the preview and tests, and the shared
+next-step card, handoff line and welcome row. The sidebar Learn action and its
+missing-conversation explanation switch too. A toggle in the map header (and in
+the lesson surfaces) changes the copy in place; the language is saved on the
+learner profile (`preferredLanguage`, via `GET /preferences` and
+`POST /preferences/language`), so it survives a restart and applies to every
+conversation. The choice applies immediately and is saved in the background: a
+failed request keeps the local choice rather than flipping the UI back.
 
 It is copy, not content: the tutor's teaching, the learner's goal text, lesson
-overviews and recorded evidence are never machine-translated, and the model is
-not instructed to change language by the toggle. The docked tab's legacy
-diagnosis copy (node map rows, focus controls) still renders in English; the
-course/lesson view it shows once a route exists uses the translated copy.
+overviews, node titles and recorded evidence are never machine-translated, and
+the model is not instructed to change language by the toggle. Three things stay
+outside the switch: the **Learning map** sidebar label (registered once when the
+plugin loads, so it cannot follow an in-place change), server/model error text
+and dynamic handoff details as generated, and the development preview's own
+toolbar.
 
 ## Preview
 

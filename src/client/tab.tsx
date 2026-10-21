@@ -21,6 +21,10 @@ import { useEffect, useMemo, type ReactNode } from 'react'
 
 import type { NodeView, OverviewResponse } from '../contract.js'
 import { DataFooter, HandoffLine, LessonBody, NextStepCard } from './blocks.jsx'
+import { useLang } from './i18n.js'
+import { LanguageToggle } from './language-toggle.js'
+import { useLearningText } from './learning-text.js'
+import { evidenceKindLabel, readinessLabel, stateLabel } from './map-text.js'
 import {
   buildMapTree,
   continuationLabel,
@@ -31,6 +35,7 @@ import {
   relationLabel,
   stateExplanation,
 } from './model.js'
+import { useTabText } from './tab-text.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
 import { useCurrentSessionId } from './use-session.js'
@@ -38,7 +43,7 @@ import { EmptyArt, StateBar, StateGlyph } from './visuals.jsx'
 
 /** The tab chip's text. */
 export function LearningTabTitle(): ReactNode {
-  return <>Current lesson</>
+  return useLearningText().tabTitle
 }
 
 function CompactMap({
@@ -54,16 +59,18 @@ function CompactMap({
   onSelect: (id: string) => void
   onOpenMapPage?: (() => void) | undefined
 }): ReactNode {
+  const text = useTabText()
+  const lang = useLang()
   const rows = useMemo(() => flattenTree(buildMapTree(nodes)), [nodes])
   const confirmed = nodes.filter((node) => node.state === 'confirmed').length
 
   return (
     <>
       <p className="dt-tab-section">
-        Diagnosis map <span>{nodes.length}</span>
+        {text.diagnosisMap} <span>{nodes.length}</span>
         {onOpenMapPage !== undefined && (
           <button type="button" className="dt-tab-expand" onClick={onOpenMapPage}>
-            Open map
+            {text.openMap}
           </button>
         )}
       </p>
@@ -71,7 +78,7 @@ function CompactMap({
       {rows.length === 0 && (
         <>
           <EmptyArt kind="map" />
-          <p className="dt-empty">No map yet — state a goal in the chat.</p>
+          <p className="dt-empty">{text.noMapYet}</p>
         </>
       )}
       <div className="dt-tree">
@@ -95,12 +102,12 @@ function CompactMap({
               <StateGlyph state={node.state} />
             </span>
             <span className="dt-tab-node-title">{node.title}</span>
-            <span className={`dt-tab-state dt-state-${node.state}`}>{node.state}</span>
+            <span className={`dt-tab-state dt-state-${node.state}`}>{stateLabel(node.state, lang)}</span>
           </button>
         ))}
       </div>
       <p className="dt-caption">
-        {confirmed} of {nodes.length} confirmed by evidence.
+        {text.confirmedByEvidence(confirmed, nodes.length)}
       </p>
     </>
   )
@@ -150,6 +157,9 @@ export function LearningTab({
   // surface with the new id — no cache, no closure, nothing to invalidate.
   const liveSession = useCurrentSessionId(uiSession)
   const activeSession = uiSession === undefined ? sessionId : liveSession
+  const text = useTabText()
+  const learning = useLearningText()
+  const lang = useLang()
   const state = useLearning({ client: client ?? defaultClient, sessionId: activeSession, initialOverview })
   const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading, select, library } =
     state
@@ -180,7 +190,7 @@ export function LearningTab({
     focusNodeId: focus?.nodeId ?? null,
     shownNodeId: shownId,
     hasNextStep: nextStep !== null,
-  })
+  }, lang)
   const placeholder = lessonPlaceholder({
     focusNodeId: focus?.nodeId ?? null,
     hasNextStep: nextStep !== null,
@@ -226,26 +236,24 @@ export function LearningTab({
       <div className="dt-tab">
         <header className="dt-here">
           <button type="button" className="dt-back" onClick={() => state.openProject()}>
-            ← All learning
+            {text.allLearning}
           </button>
           <EmptyArt kind="welcome" />
-          <p className="dt-eyebrow">Start something new</p>
-          <p className="dt-here-empty">Tell the tutor what you want to learn in Chat.</p>
-          <p className="dt-caption">
-            When the tutor records a goal there, it becomes this conversation&rsquo;s project. Your
-            other projects are untouched.
-          </p>
+          <p className="dt-eyebrow">{text.startSomethingNew}</p>
+          <p className="dt-here-empty">{text.tellTutorInChat}</p>
+          <p className="dt-caption">{text.newProjectNote}</p>
+          <LanguageToggle />
         </header>
         {library.length > 0 && (
           <section className="dt-lesson">
-            <p className="dt-tab-section">Or continue one</p>
+            <p className="dt-tab-section">{text.orContinueOne}</p>
             <ul className="dt-library">
               {library.map((project) => (
                 <li key={project.id}>
                   <button type="button" className="dt-project" onClick={() => state.openProject(project.id)}>
                     <span className="dt-project-name">{project.title}</span>
                     <span className="dt-project-count">
-                      {project.confirmed} of {project.total} confirmed
+                      {text.confirmedOf(project.confirmed, project.total)}
                     </span>
                   </button>
                 </li>
@@ -255,9 +263,7 @@ export function LearningTab({
         )}
         {teachingBrain === false && (
           <p className="dt-notice">
-            <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records and
-            shows your learning state, but no lesson will be written until the skill is available to
-            your active DSH agent.
+            <b>{text.skillMissingTitle}</b> {text.skillMissingBody}
           </p>
         )}
         <section className="dt-lesson">
@@ -276,14 +282,12 @@ export function LearningTab({
       <div className="dt-tab">
         <header className="dt-here">
           <EmptyArt kind="library" />
-          <p className="dt-eyebrow">Your learning</p>
+          <p className="dt-eyebrow">{text.yourLearning}</p>
           {library.length === 0 ? (
-            <p className="dt-here-empty">
-              Nothing here yet. Tell the tutor what you want to learn, in the chat.
-            </p>
+            <p className="dt-here-empty">{text.nothingHereYet}</p>
           ) : (
             <>
-              <p className="dt-shared">Shared across your conversations</p>
+              <p className="dt-shared">{text.sharedAcrossYourConversations}</p>
               <ul className="dt-library">
                 {library.map((project) => (
                   <li key={project.id}>
@@ -294,10 +298,10 @@ export function LearningTab({
                     >
                       <span className="dt-project-name">{project.title}</span>
                       <span className="dt-project-count">
-                        {project.confirmed} of {project.total} confirmed
+                        {text.confirmedOf(project.confirmed, project.total)}
                       </span>
                       <span className="dt-project-go">
-                        {project.confirmed === 0 ? 'Open' : 'Continue'} →
+                        {project.confirmed === 0 ? text.openLabel : text.continueLabel} →
                       </span>
                     </button>
                   </li>
@@ -305,6 +309,7 @@ export function LearningTab({
               </ul>
             </>
           )}
+          <LanguageToggle />
         </header>
 
         <section className="dt-lesson">
@@ -313,15 +318,13 @@ export function LearningTab({
               both in one place made the two states read alike, which is the
               same failure as before in a different costume. */}
           <button type="button" className="dt-secondary dt-here-action" onClick={() => state.openProject()}>
-            + Start something new
+            {text.startSomethingNewAction}
           </button>
         </section>
 
         {teachingBrain === false && (
           <p className="dt-notice">
-            <b>The Universal Diagnostic Tutor skill was not found.</b> This panel still records and
-            shows your learning state, but no lesson will be written until the skill is available to
-            your active DSH agent.
+            <b>{text.skillMissingTitle}</b> {text.skillMissingBody}
           </p>
         )}
         <section className="dt-lesson">
@@ -345,7 +348,7 @@ export function LearningTab({
         {/* One link, not a breadcrumb: there are two levels and the learner
             only ever needs the one they are not on. */}
         <button type="button" className="dt-back" onClick={() => state.openProject()}>
-          ← All learning
+          {text.allLearning}
         </button>
         <div className="dt-tab-cover">
           <svg className="dt-course-orbit" viewBox="0 0 120 78" aria-hidden="true" focusable="false">
@@ -354,21 +357,21 @@ export function LearningTab({
             <circle cx="98" cy="14" r="2.4" fill="currentColor" stroke="none" />
             <circle cx="70" cy="46" r="5" strokeDasharray="2 3" />
           </svg>
-          <p className="dt-eyebrow">Your learning</p>
-          <h2 className="dt-here-course">{overview?.course?.title ?? 'No goal yet'}</h2>
-          {overview?.course != null && <p className="dt-shared">Shared across conversations</p>}
+          <p className="dt-eyebrow">{text.yourLearning}</p>
+          <h2 className="dt-here-course">{overview?.course?.title ?? text.noGoal}</h2>
+          {overview?.course != null && <p className="dt-shared">{text.sharedAcrossConversations}</p>}
         </div>
 
-        <p className="dt-eyebrow dt-eyebrow-here">This conversation</p>
+        <p className="dt-eyebrow dt-eyebrow-here">{text.thisConversation}</p>
         {focus === null ? (
-          <p className="dt-here-empty">
-            No learning focus yet. Pick a node below to start learning here.
-          </p>
+          <p className="dt-here-empty">{text.noFocus}</p>
         ) : (
           <p className="dt-here-focus">
             <span className="dt-here-node">{focusNodeTitle ?? focus.nodeId}</span>
             {focusNodeState !== null && (
-              <span className={`dt-tab-state dt-state-${focusNodeState}`}>{focusNodeState}</span>
+              <span className={`dt-tab-state dt-state-${focusNodeState}`}>
+                {stateLabel(focusNodeState, lang)}
+              </span>
             )}
           </p>
         )}
@@ -388,17 +391,16 @@ export function LearningTab({
             onClick={() => state.continueTo(control.nodeId)}
             disabled={starting}
           >
-            {starting ? 'Starting…' : control.label}
+            {starting ? learning.starting : control.label}
           </button>
         )}
         {control?.kind === 'start' && (
-          <p className="dt-caption">
-            Starting records a focus for this conversation only. Your map and lessons stay shared.
-          </p>
+          <p className="dt-caption">{text.startingCaption}</p>
         )}
-        {loading && detail === null && <p className="dt-caption">Loading…</p>}
+        {loading && detail === null && <p className="dt-caption">{text.loading}</p>}
         {note !== null && <p className="dt-caption">{note}</p>}
         {error !== null && <p className="dt-empty">{error}</p>}
+        <LanguageToggle />
       </header>
 
       {/* ---- the teaching ---- */}
@@ -406,7 +408,7 @@ export function LearningTab({
           regions so a first-time learner can see what will fill them. */}
       <section className="dt-lesson">
         <p className="dt-tab-section">
-          Learning surface
+          {text.learningSurface}
         </p>
         {/* The wait line is for a wait: with the lesson on screen (or nothing
             focused) it would be announcing what the page already shows. */}
@@ -418,10 +420,10 @@ export function LearningTab({
             <EmptyArt kind="lesson" />
             <p className="dt-empty">
               {placeholder === 'preparing'
-                ? 'The tutor is preparing this node…'
+                ? text.preparing
                 : placeholder === 'press-continue'
-                  ? `Press ${continuationLabel(nextStep)} and the teaching appears here, while the chat stays open beside it.`
-                  : 'Press Start learning and the teaching appears here, while the chat stays open beside it.'}
+                  ? text.pressContinue(continuationLabel(nextStep, lang))
+                  : text.pressStart}
             </p>
           </div>
         ) : (
@@ -450,7 +452,7 @@ export function LearningTab({
         />
       )}
 
-      {onOpenMapPage ? <button type="button" className="dt-secondary dt-map-shortcut" onClick={onOpenMapPage}>Course route &amp; diagnosis map →</button> : <CompactMap
+      {onOpenMapPage ? <button type="button" className="dt-secondary dt-map-shortcut" onClick={onOpenMapPage}>{text.courseRouteAndMap}</button> : <CompactMap
         nodes={rows}
         selectedId={shownId}
         focusNodeId={focus?.nodeId ?? null}
@@ -464,14 +466,18 @@ export function LearningTab({
       {!onOpenMapPage && detail !== null && detail.node.evidence.length > 0 && (
         <>
           <p className="dt-tab-section">
-            Evidence <span>{detail.node.evidence.length}</span>
+            {text.evidence} <span>{detail.node.evidence.length}</span>
           </p>
           <ul className="dt-evidence">
             {detail.node.evidence.map((entry, index) => (
               <li key={index}>
-                <span className="dt-ev-kind">{entry.kind}</span>
+                {/* The kind is fixed vocabulary from the runtime; English keeps
+                    the stored word, Chinese uses the map's wording. */}
+                <span className="dt-ev-kind">
+                  {lang === 'zh' ? evidenceKindLabel(entry.kind, lang) : entry.kind}
+                </span>
                 {entry.readiness !== undefined && (
-                  <span className="dt-ev-readiness">{entry.readiness.replace(/-/g, ' ')}</span>
+                  <span className="dt-ev-readiness">{readinessLabel(entry.readiness, lang)}</span>
                 )}
                 {entry.note !== undefined && <span className="dt-ev-note">{entry.note}</span>}
               </li>
