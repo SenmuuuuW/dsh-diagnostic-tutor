@@ -479,6 +479,12 @@ the route canvas. Completed diagnosis details and route settings stay reachable
 in folded sections, and the effort card only appears when the estimate conflicts
 with the saved budget.
 
+The plugin's own accent is **DeepSeek's brand blue** — `#4d6bfe` on the light
+canvas, `#6a84ff` on the dark one — used sparingly for progress, the active tab,
+the current/selected item, focus rings and action links. Primary buttons keep the
+host's near-black/white fill: the blue marks, it does not act. All other colours
+continue to come from the host theme.
+
 The lesson lives in the docked tab, where the conversation is still on screen.
 That is what makes the check loop work without leaving the lesson. The sidebar
 action **Learn** opens that tab and never takes over the main column; the map's

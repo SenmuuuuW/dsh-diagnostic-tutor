@@ -50,7 +50,7 @@ const CSS = `/* The tokens are declared on every root the plugin renders: the pa
   /* The brand token resolves to near-black in light mode and near-white in
      dark, which is a foreground colour — not an accent. The button fill is the
      one that stays a button. */
-  --dt-accent: var(--dsw-alias-button-primary-fill, #4f46e5);
+  --dt-accent: var(--dsw-alias-button-primary-fill, #4d6bfe);
   /* …and the fill needs the design system's own foreground, because the fill
      inverts with the theme and a hardcoded #fff does not. White on near-white
      is a blank button: that is what the primary control was in dark mode. */
@@ -59,6 +59,15 @@ const CSS = `/* The tokens are declared on every root the plugin renders: the pa
      border is a black outline in light mode and a white one in dark, which
      shouts louder than the content it frames. */
   --dt-accent-line: color-mix(in srgb, var(--dt-accent) 38%, var(--dt-border));
+  /* DeepSeek brand accents. The host's brand token resolves to an ink in both
+     themes, so it cannot carry the blue; these are the plugin's own accent and
+     are used sparingly — focus, selection, the current stage, action links —
+     never as a large fill. The primary *action* keeps the host's near-black
+     fill: on DeepSeek surfaces the blue marks, it does not act. */
+  --dt-brand: #4d6bfe;
+  --dt-brand-ink: #3b56d9;
+  --dt-brand-soft: color-mix(in srgb, var(--dt-brand) 10%, var(--dt-bg));
+  --dt-brand-line: color-mix(in srgb, var(--dt-brand) 42%, var(--dt-border));
   --dt-good: var(--dsw-alias-state-success-primary, #1f8b4c);
   --dt-warn: var(--dsw-alias-state-warn-primary, #b7791f);
   --dt-stop: var(--dsw-alias-state-error-primary, #c0392b);
@@ -99,6 +108,10 @@ const CSS = `/* The tokens are declared on every root the plugin renders: the pa
    it only ever defines --dt-* names, so it cannot leak into the host's
    styling. DSH switches themes with this attribute; it is not a media query. */
 body[data-ds-dark-theme] {
+  /* DeepSeek's dark-theme blue steps one shade lighter so selection still reads
+     on the near-black canvas. */
+  --dt-brand: #6a84ff;
+  --dt-brand-ink: #8fa4ff;
   --dt-st-unconfirmed: #9aa3b2;
   --dt-st-explained: #7aa2f7;
   --dt-st-practiced: #a5a0f0;
@@ -106,6 +119,17 @@ body[data-ds-dark-theme] {
   --dt-st-weak: #f0a94a;
   --dt-st-blocked: #f2706f;
   --dt-st-confirmed: #4ade80;
+}
+
+/* The roots declare their own brand tokens (below), so the dark theme has to
+   restate them at the same level; an inherited body value is shadowed. */
+body[data-ds-dark-theme] .dt-root-wrap,
+body[data-ds-dark-theme] .dt-root,
+body[data-ds-dark-theme] .dt-tab {
+  --dt-brand: #6a84ff;
+  --dt-brand-ink: #8fa4ff;
+  --dt-brand-soft: color-mix(in srgb, var(--dt-brand) 14%, var(--dt-bg));
+  --dt-brand-line: color-mix(in srgb, var(--dt-brand) 45%, var(--dt-border));
 }
 
 .dt-root {
@@ -205,8 +229,8 @@ body[data-ds-dark-theme] {
   padding: 10px 12px; border: 1px solid var(--dt-border); border-radius: 9px;
   background: var(--dt-bg); color: inherit; font: inherit; cursor: pointer;
 }
-.dt-project:hover { background: var(--dt-surface); border-color: var(--dt-border-strong); }
-.dt-project:focus-visible { outline: 2px solid var(--dt-accent, #4f46e5); outline-offset: 2px; }
+.dt-project:hover { background: var(--dt-brand-soft); border-color: var(--dt-brand-line); }
+.dt-project:focus-visible { outline: 2px solid var(--dt-brand, #4d6bfe); outline-offset: 2px; }
 .dt-project-name { font-size: 13px; font-weight: 600; }
 .dt-project-count { font-size: 11.5px; color: var(--dt-muted); }
 .dt-project-go { font-size: 11.5px; color: var(--dt-muted); margin-top: 2px; }
@@ -217,8 +241,8 @@ body[data-ds-dark-theme] {
   display: inline-block; margin: 0 0 10px; padding: 2px 0; border: 0;
   background: none; color: var(--dt-muted); font: inherit; font-size: 11.5px; cursor: pointer;
 }
-.dt-back:hover { color: var(--dt-text); text-decoration: underline; }
-.dt-back:focus-visible { outline: 2px solid var(--dt-accent, #4f46e5); outline-offset: 2px; border-radius: 4px; }
+.dt-back:hover { color: var(--dt-brand-ink); text-decoration: underline; }
+.dt-back:focus-visible { outline: 2px solid var(--dt-brand, #4d6bfe); outline-offset: 2px; border-radius: 4px; }
 
 /* ---- the sidebar's Learn action ---------------------------------------- */
 /* These are not "inspired by" DSH's sidebar row; they are its values, read out
@@ -250,7 +274,7 @@ body[data-ds-dark-theme] {
   text-align: left;
   cursor: pointer;
 }
-.dt-learn:hover { background: var(--dsw-alias-interactive-bg-hover); }
+.dt-learn:hover { background: var(--dt-brand-soft); }
 .dt-learn:focus-visible {
   outline: var(--dsw-focus-ring-width) solid
     var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
@@ -296,8 +320,8 @@ body[data-ds-dark-theme] {
   padding: 10px 12px; border: 1px solid var(--dt-border); border-radius: 9px;
   background: var(--dt-bg); color: inherit; font: inherit; cursor: pointer;
 }
-.dt-project:hover { background: var(--dt-surface); border-color: var(--dt-border-strong); }
-.dt-project:focus-visible { outline: 2px solid var(--dt-accent, #4f46e5); outline-offset: 2px; }
+.dt-project:hover { background: var(--dt-brand-soft); border-color: var(--dt-brand-line); }
+.dt-project:focus-visible { outline: 2px solid var(--dt-brand, #4d6bfe); outline-offset: 2px; }
 .dt-project-name { font-size: 13px; font-weight: 600; }
 .dt-project-count { font-size: 11.5px; color: var(--dt-muted); }
 .dt-project-go { font-size: 11.5px; color: var(--dt-muted); margin-top: 2px; }
@@ -308,8 +332,8 @@ body[data-ds-dark-theme] {
   display: inline-block; margin: 0 0 10px; padding: 2px 0; border: 0;
   background: none; color: var(--dt-muted); font: inherit; font-size: 11.5px; cursor: pointer;
 }
-.dt-back:hover { color: var(--dt-text); text-decoration: underline; }
-.dt-back:focus-visible { outline: 2px solid var(--dt-accent, #4f46e5); outline-offset: 2px; border-radius: 4px; }
+.dt-back:hover { color: var(--dt-brand-ink); text-decoration: underline; }
+.dt-back:focus-visible { outline: 2px solid var(--dt-brand, #4d6bfe); outline-offset: 2px; border-radius: 4px; }
 
 /* ---- the sidebar's Learn action ---------------------------------------- */
 /* It sits at the sidebar foot, above Settings, because that is the only
@@ -321,7 +345,7 @@ body[data-ds-dark-theme] {
   padding: 7px 9px; border: 0; border-radius: 8px; background: transparent;
   color: inherit; font: inherit; font-size: 13px; text-align: left; cursor: pointer;
 }
-.dt-learn:hover { background: var(--dt-surface); }
+.dt-learn:hover { background: var(--dt-brand-soft); }
 .dt-learn svg { flex: none; }
 .dt-learn-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 /* The reason a press did nothing, said where the press happened. */
@@ -371,7 +395,7 @@ body[data-ds-dark-theme] {
   border: 1px solid var(--dt-border); background: var(--dt-bg);
   color: var(--dt-muted); font: inherit; font-size: 11.5px; cursor: pointer;
 }
-.dt-tab-expand:hover { color: var(--dt-text); border-color: var(--dt-border-strong); }
+.dt-tab-expand:hover { color: var(--dt-brand-ink); border-color: var(--dt-brand-line); }
 @media (max-width: 640px) { .dt-bar-note { display: none; } }
 
 /* ---- first use --------------------------------------------------------- */
@@ -636,7 +660,7 @@ body[data-ds-dark-theme] {
   border: 1px solid var(--dt-border-strong); background: transparent;
   color: inherit; font: inherit; font-size: 12px; cursor: pointer;
 }
-.dt-secondary:hover { background: var(--dt-surface); }
+.dt-secondary:hover { background: var(--dt-surface); border-color: var(--dt-brand-line); }
 .dt-secondary:disabled { opacity: .55; cursor: default; }
 
 /* ---- lesson ------------------------------------------------------------ */
@@ -765,7 +789,7 @@ body[data-ds-dark-theme] {
 }
 .dt-check-hint span {
   font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
-  margin-right: 7px; color: var(--dt-accent);
+  margin-right: 7px; color: var(--dt-brand-ink, #3b56d9);
 }
 
 /* ---- math (styled, not typeset) ---------------------------------------- */
