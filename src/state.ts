@@ -625,6 +625,8 @@ export interface UdState {
   readPath(courseId: string): LearningPath | undefined
   mutatePath(courseId: string, expectedRevision: number, change: (current: LearningPath) => LearningPath): Promise<LearningPath>
   readCourseRun(courseId: string, sessionId: string): CourseRun | undefined
+  /** Every planned run across conversations, for resolving "continue learning". */
+  listCourseRuns(): CourseRun[]
   mutateCourseRun(courseId: string, sessionId: string, change: (current: CourseRun) => CourseRun): Promise<CourseRun>
   snapshot(): UdStateSnapshot
   /** Release the backend unit. Idempotent. */
@@ -1070,6 +1072,8 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       const record = runs.get(runKey(courseId, sessionId))
       return record === undefined ? undefined : structuredClone(record)
     },
+
+    listCourseRuns: () => [...runs.entries()].map(([, record]) => structuredClone(record)),
 
     mutateCourseRun(courseId, sessionId, change) {
       const generation = planningGeneration

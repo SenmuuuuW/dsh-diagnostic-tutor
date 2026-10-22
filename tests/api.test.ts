@@ -566,6 +566,40 @@ describe('API over real persisted state', () => {
     }
   })
 
+  it('resolves which conversation resumes a project, without writing a selection', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openState(harness)
+      const ml = await seedGoal(state, 'Machine Learning', 'learn ml')
+      const korean = await seedGoal(state, 'Korean', 'learn korean')
+
+      // An active focus is the strongest evidence of where learning was.
+      await state.selectProject('session-old', 'machine-learning', '2026-01-01T00:00:00.000Z')
+      await state.startFocus('machine-learning', ml, '2026-01-02T00:00:00.000Z', 'session-old')
+      await state.selectProject('session-new', 'machine-learning', '2026-01-03T00:00:00.000Z')
+
+      const fromElsewhere = await call(state, { path: '/project/session?courseId=machine-learning&sessionId=session-asking' })
+      expect(fromElsewhere.status).toBe(200)
+      expect(fromElsewhere.json).toEqual({ ok: true, sessionId: 'session-old', reason: 'active-focus' })
+
+      // With no focus or run, the newest project selection wins.
+      await state.selectProject('session-korean', 'korean', '2026-01-04T00:00:00.000Z')
+      const noLearning = await call(state, { path: '/project/session?courseId=korean&sessionId=session-asking' })
+      expect(noLearning.json).toEqual({ ok: true, sessionId: 'session-korean', reason: 'recent-project' })
+
+      // With nothing stored, the asking conversation is the fallback.
+      await state.writeCourse({ id: 'empty', title: 'Empty', goal: 'empty', status: 'paused', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' })
+      expect((await call(state, { path: '/project/session?courseId=empty&sessionId=session-asking' })).json).toEqual({ ok: true, sessionId: 'session-asking', reason: 'current' })
+
+      // The route is read-only: the asking conversation's project stays untouched.
+      expect(state.readProject('session-asking')).toBeUndefined()
+      expect((await call(state, { path: '/project/session' })).status).toBe(400)
+      expect((await call(state, { path: '/project/session?courseId=nope' })).status).toBe(404)
+    } finally {
+      await harness.close()
+    }
+  })
+
   it('404s an unknown route and 405s an unsupported method', async () => {
     const harness = await createHarness()
     try {

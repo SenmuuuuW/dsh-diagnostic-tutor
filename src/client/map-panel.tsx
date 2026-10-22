@@ -39,6 +39,8 @@ export interface LearningMapPanelProps {
   onOpenChat?: (() => void) | undefined
   /** Return to the conversation with the current-lesson tab open. */
   onOpenLesson?: (() => void) | undefined
+  /** Switch to the conversation a project's learning belongs to; false when the shell cannot navigate. */
+  onOpenSession?: ((sessionId: string) => boolean) | undefined
   pathClient?: PathClient | undefined
 }
 
@@ -209,12 +211,13 @@ export function LearningMapPanel({
   sessionId,
   onOpenChat,
   onOpenLesson,
+  onOpenSession,
   pathClient,
 }: LearningMapPanelProps): ReactNode {
   const text = useMapText()
   const lang = useLang()
   const [page, setPage] = useState<'curriculum' | 'knowledge'>('curriculum')
-  const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview })
+  const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview, onOpenSession })
   const { overview, focus, detail, selectedId, note, error, loading, library } = state
 
   // Pick something on arrival, so the right column is a record rather than an
@@ -226,6 +229,31 @@ export function LearningMapPanel({
     const first = overview?.nodes?.[0]?.id
     if (first !== undefined) select(focus?.nodeId ?? first)
   }, [arrival, select, overview, focus])
+
+  /**
+   * Enter the project's current lesson.
+   *
+   * If the project's lesson was started in another conversation, switch there
+   * instead of opening an empty current-lesson tab here. The stored session is
+   * resolved read-only; falling back to this conversation is the old behaviour.
+   */
+  const enterCurrentLesson = (): void => {
+    const courseId = overview?.course?.id
+    const resolve = (client ?? defaultClient).resolveProjectSession
+    if (courseId !== undefined && sessionId !== undefined && resolve !== undefined && onOpenSession !== undefined) {
+      void (async () => {
+        try {
+          const resolved = await resolve(courseId, sessionId)
+          if (resolved.sessionId !== null && resolved.sessionId !== sessionId && onOpenSession(resolved.sessionId)) return
+        } catch {
+          // Unresolvable (or an older host): stay in this conversation.
+        }
+        onOpenLesson?.()
+      })()
+      return
+    }
+    onOpenLesson?.()
+  }
 
   if (overview?.course == null) {
     return (
@@ -257,7 +285,7 @@ export function LearningMapPanel({
                       <button
                         type="button"
                         className="dt-project"
-                        onClick={() => state.openProject(project.id)}
+                        onClick={() => void state.enterProject(project.id)}
                       >
                         <span className="dt-project-name">{project.title}</span>
                         <span className="dt-project-count">
@@ -297,7 +325,7 @@ export function LearningMapPanel({
         </div>
         <div className="dt-bar-actions">
           {onOpenLesson !== undefined && (
-            <button type="button" className="dt-bar-back" onClick={onOpenLesson}>
+            <button type="button" className="dt-bar-back" onClick={enterCurrentLesson}>
               {text.openLesson}
             </button>
           )}

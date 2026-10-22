@@ -240,6 +240,8 @@ Agent 提议教学路线与下一步；运行时验证结构、预算输入、�
 
 所有规划写入使用预期 revision；晚返回的旧结果不能覆盖用户刚修改的预算或选课。Start / Continue 带 sessionId、projectId、itemId、revision 和幂等操作 ID。
 
+继续学习本身也遵守会话隔离：项目库和“Open current lesson”通过只读的 `/project/session` 解析该项目最近活跃的会话（active focus → 有尝试的 course run → 最近项目选择），再用宿主 `uiWorkspace.openSession` 切过去并打开停靠标签；只有项目从未被任何会话触碰时才回退到当前会话。
+
 浏览别的课程 Overview 不得改变当前学习位置；改选项目、接受新版本、开始课次分别是显式行为。打开页、画布选择和展开模块都不应创建学习证据。
 
 ## 11. 实现顺序与验收
@@ -278,4 +280,4 @@ Agent 提议教学路线与下一步；运行时验证结构、预算输入、�
 
 首版验收：568 个 Vitest 测试、TypeScript 检查、生产构建通过；path browser fixture 在浅/深色与 1440/900/400 宽度下通过 24 组交互场景，地图页、全屏面板和侧栏视觉审计均无发现。将包安装到 DSH `0.2.1-rc.2` 的全新 `/tmp` profile 后，Learning map 正常挂载，目标草稿保存和显式跳过初诊均经真实 HTTP API 持久化；未登录提示按预期出现并被关闭，没有调用 Agent。全程没有访问或修改真实学习者数据。
 
-界面收敛（2026-10-20）：Learning map 成为唯一主栏页面，Current lesson 停靠标签成为唯一教学表面；独立的全屏学习面板不再注册（仅保留给预览与测试），地图页的“Open current lesson”改为返回对话并打开停靠标签。中英切换现在覆盖全部插件页面：地图页、路线页、课程/课次面板、停靠标签、独立全屏面板、下一步卡片、等待提示、欢迎行与侧栏 Learn 入口；只有侧栏固定注册的 Learning map 标签、宿主动态 handoff 详情和开发预览工具栏仍为固定文本。最新数字：590 个 Vitest 测试、24 组浏览器场景（每组都验证中英切换）、地图与面板视觉审计无发现；详见 CURRENT-ARCHITECTURE.md。
+界面收敛（2026-10-20）：Learning map 成为唯一主栏页面，Current lesson 停靠标签成为唯一教学表面；独立的全屏学习面板不再注册（仅保留给预览与测试），地图页的“Open current lesson”改为返回对话并打开停靠标签。中英切换现在覆盖全部插件页面：地图页、路线页、课程/课次面板、停靠标签、独立全屏面板、下一步卡片、等待提示、欢迎行与侧栏 Learn 入口；只有侧栏固定注册的 Learning map 标签、宿主动态 handoff 详情和开发预览工具栏仍为固定文本。最新数字：600 个 Vitest 测试、24 组浏览器场景（每组都验证中英切换）、地图与面板视觉审计无发现；详见 CURRENT-ARCHITECTURE.md。

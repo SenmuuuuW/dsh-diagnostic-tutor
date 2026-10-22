@@ -137,6 +137,8 @@ export interface LearningTabProps {
   initialOverview?: OverviewResponse | undefined
   /** Opens the diagnosis map as its own main-column page. */
   onOpenMapPage?: (() => void) | undefined
+  /** Switch to the conversation a project's learning belongs to; false when the shell cannot navigate. */
+  onOpenSession?: ((sessionId: string) => boolean) | undefined
 }
 
 /**
@@ -151,6 +153,7 @@ export function LearningTab({
   uiSession,
   initialOverview,
   onOpenMapPage,
+  onOpenSession,
 }: LearningTabProps): ReactNode {
   // The live scope when there is one. `adapter.current` is a HostObservable and
   // `useCurrentSessionId` subscribes to it, so a session switch re-renders this
@@ -160,7 +163,7 @@ export function LearningTab({
   const text = useTabText()
   const learning = useLearningText()
   const lang = useLang()
-  const state = useLearning({ client: client ?? defaultClient, sessionId: activeSession, initialOverview })
+  const state = useLearning({ client: client ?? defaultClient, sessionId: activeSession, initialOverview, onOpenSession })
   const { overview, focus, nextStep, handoff, teachingBrain, dataNote, selectedId, detail, lesson, note, error, starting, loading, select, library } =
     state
 
@@ -250,7 +253,7 @@ export function LearningTab({
             <ul className="dt-library">
               {library.map((project) => (
                 <li key={project.id}>
-                  <button type="button" className="dt-project" onClick={() => state.openProject(project.id)}>
+                  <button type="button" className="dt-project" onClick={() => void state.enterProject(project.id)}>
                     <span className="dt-project-name">{project.title}</span>
                     <span className="dt-project-count">
                       {text.confirmedOf(project.confirmed, project.total)}
@@ -294,7 +297,7 @@ export function LearningTab({
                     <button
                       type="button"
                       className="dt-project"
-                      onClick={() => state.openProject(project.id)}
+                      onClick={() => void state.enterProject(project.id)}
                     >
                       <span className="dt-project-name">{project.title}</span>
                       <span className="dt-project-count">

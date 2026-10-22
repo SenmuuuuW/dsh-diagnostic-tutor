@@ -269,6 +269,36 @@ export function apply(ctx: Context): void {
     }
   }
 
+  /**
+   * Switch to the conversation a project's learning belongs to.
+   *
+   * Resolved by the host from stored focus/run/selection records, then handed
+   * to the shell's own session navigation (`uiWorkspace.openSession`). The
+   * service is optional: a profile without it keeps the old behaviour of
+   * opening the project in the current conversation.
+   *
+   * @returns whether navigation was actually requested; false means fall back.
+   */
+  const openLearningSession = (target: string): boolean => {
+    const uiWorkspace = (() => {
+      try {
+        return ctx.reflect.get('uiWorkspace') as { openSession?: (sessionId: string) => void } | undefined
+      } catch {
+        return undefined
+      }
+    })()
+    if (uiWorkspace?.openSession === undefined) return false
+    try {
+      uiWorkspace.openSession(target)
+    } catch {
+      return false
+    }
+    // The tab is session-scoped: dock it once the target conversation's surface
+    // is mounted, so "enter learning" lands on the lesson too.
+    setTimeout(() => openDockedTab(), 600)
+    return true
+  }
+
   // The map page: the plugin's only main panel.
   //
   // Route and knowledge live here; the lesson lives in the docked tab. "Open
@@ -288,6 +318,7 @@ export function apply(ctx: Context): void {
               layout?.selectPanel(null)
               openDockedTab()
             }}
+            onOpenSession={openLearningSession}
           />
         )
       },
@@ -303,6 +334,7 @@ export function apply(ctx: Context): void {
           {...props}
           uiSession={uiSession}
           onOpenMapPage={() => layout?.selectPanel(mapPanelRef)}
+          onOpenSession={openLearningSession}
         />
       )
     }),

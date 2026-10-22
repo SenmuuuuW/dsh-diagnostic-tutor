@@ -14,6 +14,7 @@ import type {
   LessonResponse,
   NodeDetailResponse,
   OverviewResponse,
+  ProjectSessionResponse,
 } from '../contract.js'
 
 /** Route prefix owned by this plugin; must match the host's `API_PREFIX`. */
@@ -85,6 +86,19 @@ export function selectProject(sessionId: string, courseId?: string): Promise<unk
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(courseId === undefined ? { sessionId } : { sessionId, courseId }),
   })
+}
+
+/**
+ * Which conversation should resume a project's learning.
+ *
+ * A project is shared but its focus, runs and teaching attempts belong to a
+ * conversation, so "enter learning" asks before binding the project to the
+ * conversation currently on screen.
+ */
+export function resolveProjectSession(courseId: string, sessionId?: string): Promise<ProjectSessionResponse> {
+  const query = new URLSearchParams({ courseId })
+  if (sessionId !== undefined && sessionId.length > 0) query.set('sessionId', sessionId)
+  return request<ProjectSessionResponse>(`/project/session?${query.toString()}`)
 }
 
 /** One node, its evidence, its parent and its children. */
