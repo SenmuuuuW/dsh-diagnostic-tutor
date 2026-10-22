@@ -38,6 +38,13 @@ export interface PanelClient {
   startFocus(nodeId: string, sessionId?: string): Promise<FocusResponse>
   /** Optional: only the real client can change which project is open. */
   selectProject?(sessionId: string, courseId?: string): Promise<unknown>
+  /**
+   * Optional: resolve the conversation that should resume a project.
+   *
+   * Without it (preview, unit tests) "enter learning" falls back to opening the
+   * project in this conversation.
+   */
+  resolveProjectSession?(courseId: string, sessionId?: string): Promise<{ sessionId: string | null }>
   /** Optional: only the real client can report it. */
   reportObserved?(nodeId: string, sessionId: string): Promise<unknown>
   /** Optional: only the real client can save a file. */
@@ -89,6 +96,7 @@ export const defaultClient: PanelClient = {
   fetchLesson: realApi.fetchLesson,
   startFocus: realApi.startFocus,
   selectProject: realApi.selectProject,
+  resolveProjectSession: realApi.resolveProjectSession,
   reportObserved: realApi.reportObserved,
   downloadExport: realApi.downloadExport,
   resetState: realApi.resetState,
@@ -109,6 +117,11 @@ export interface LearningState {
   library: ProjectCardView[]
   /** Opens one in this conversation, or the blank slate when given none. */
   openProject: (courseId?: string) => void
+  /**
+   * Enters a project for learning: resumes the conversation that was last
+   * studying it when there is one, instead of rebinding it to this one.
+   */
+  enterProject: (courseId: string) => void
   readonly overview: OverviewResponse | null
   readonly focus: FocusView | null
   /** The tutor's recommendation, when the learner has not acted on it yet. */
@@ -157,8 +170,10 @@ export function useLearning(options: {
   initialOverview?: OverviewResponse | undefined
   /** Called once a focus has been recorded, so a surface can react to it. */
   onStarted?: (() => void) | undefined
+  /** Called when "enter learning" resolves to a different conversation. */
+  onOpenSession?: ((sessionId: string) => void) | undefined
 }): LearningState {
-  const { client, sessionId, initialOverview, onStarted } = options
+  const { client, sessionId, initialOverview, onStarted, onOpenSession } = options
 
   // A request belongs to the scope that started it. Replacing this token on
   // every switch also rejects an old A response after an A → B → A journey.
@@ -497,11 +512,43 @@ export function useLearning(options: {
     [client, setOverview],
   )
 
+  /**
+   * Enter a project for learning.
+   *
+   * A project is shared, but its focus and runs belong to a conversation. If a
+   * stored conversation was last learning it, opening the project here would
+   * start a second, empty attempt; so this asks the host which conversation
+   * that is and, when it differs, hands navigation to the surface. Otherwise it
+   * falls back to the ordinary "open here" write.
+   */
+  const enterProject = useCallback(
+    (courseId: string) => {
+      const scope = scopeRef.current
+      const current = scope.sessionId
+      const resolve = client.resolveProjectSession
+      if (current === undefined || resolve === undefined || onOpenSession === undefined) {
+        openProject(courseId)
+        return
+      }
+      void (async () => {
+        try {
+          const resolved = await resolve(courseId, current)
+          if (resolved.sessionId !== null && resolved.sessionId !== current && onOpenSession(resolved.sessionId)) return
+        } catch {
+          // A project that cannot be resolved is still openable here.
+        }
+        openProject(courseId)
+      })()
+    },
+    [client, onOpenSession, openProject],
+  )
+
   return {
     overview,
     /** The learner's projects, shared like the maps themselves. */
     library: overview?.library ?? [],
     openProject,
+    enterProject,
     focus,
     nextStep: overview?.nextStep ?? null,
     handoff: overview?.handoff ?? null,

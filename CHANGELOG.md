@@ -5,6 +5,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — "enter learning" resumes the conversation that owns it
+
+A project is shared, but its focus, planned runs and teaching attempts belong
+to a conversation. Opening a project from the library, or pressing **Open
+current lesson**, used to bind the project to whichever conversation was on
+screen — so continuing a project from a fresh chat started a second, empty
+attempt. Those entry points now ask the host which conversation was last
+learning the project (`GET /project/session`, read-only) and, when it differs,
+switch there with the shell's own session navigation and dock the current-lesson
+tab. Resolution order: newest active focus, newest course run with an attempt,
+newest project selection; the asking conversation is only the fallback when the
+project has never been touched. A profile without the navigation service keeps
+the old behaviour.
+
+
 ### Changed — DeepSeek brand accents
 
 The plugin's own accent is now DeepSeek's brand blue — `#4d6bfe` on the light

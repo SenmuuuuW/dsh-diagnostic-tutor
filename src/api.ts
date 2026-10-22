@@ -32,6 +32,7 @@ import type { HandoffView } from './handoff.js'
 import type { FocusPromptResult } from './prompt.js'
 import { focusPromptText } from './prompt.js'
 import type { CourseRecord, FocusRecord, NodeRecord, UdState } from './state.js'
+import { resolveLearningSession } from './project-session.js'
 import { guarded } from './trust-fence.js'
 import { handlePathApi } from './path-api.js'
 
@@ -560,6 +561,23 @@ async function handleSetLanguage(state: UdState, req: IncomingMessage, res: Serv
   sendJson(res, 200, { ok: true, language })
 }
 
+/**
+ * `GET /project/session?courseId=&sessionId=` — which conversation resumes a project.
+ *
+ * A project is shared, but where it was last studied is not. The browser asks
+ * this before "entering learning" so continuing a project opens the
+ * conversation that actually holds its focus/run instead of rebinding the
+ * project to whichever conversation happens to be on screen. Read-only: no
+ * selection is written by answering it.
+ */
+function handleProjectSession(state: UdState, url: URL, res: ServerResponse): void {
+  const courseId = url.searchParams.get('courseId')
+  if (courseId === null || courseId.length === 0) return fail(res, 400, 'missing-course-id')
+  const resolved = resolveLearningSession(state, courseId, url.searchParams.get('sessionId') ?? undefined)
+  if (resolved === null) return fail(res, 404, 'no-such-course')
+  sendJson(res, 200, { ok: true, sessionId: resolved.sessionId, reason: resolved.reason })
+}
+
 export interface ApiDeps {
   readonly state: UdState
   /**
@@ -595,6 +613,7 @@ export function createApiHandler(deps: ApiDeps) {
     if (method === 'GET' && route === '/overview') {
       return handleOverview(state, deps, url.searchParams.get('sessionId') ?? undefined, res)
     }
+    if (method === 'GET' && route === '/project/session') return handleProjectSession(state, url, res)
     if (method === 'POST' && route === '/project') return await handleSelectProject(state, req, res)
     if (method === 'GET' && route === '/export') return handleExport(state, res)
     if (method === 'POST' && route === '/reset') return await handleReset(state, res)

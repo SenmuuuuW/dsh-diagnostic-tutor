@@ -498,6 +498,15 @@ sidebar Learning map ──────▶ Learning map (main column: route | kn
 Open current lesson ◀────── returns to chat + lesson tab
 ```
 
+Entering learning follows the conversation, not the window. A project is
+shared, but its focus and planned runs belong to a conversation, so the project
+library and **Open current lesson** ask the host which conversation was last
+learning the project (`GET /project/session`, read-only) and switch there with
+the shell's session navigation when it differs. The order is: newest active
+focus, then newest course run with an attempt, then newest project selection;
+only a project no conversation has ever touched falls back to the conversation
+on screen.
+
 A full-page lesson panel used to exist as a second main destination. It was
 removed: one page for browsing, one surface for learning, and the conversation
 keeps the main column.
@@ -522,12 +531,14 @@ host still renders here.
 
 ### Browser API
 
-Three calls, at `/diagnostic-tutor/api`:
+The browser's core calls, at `/diagnostic-tutor/api` (the full route list is in
+[the architecture notes](docs/planning/CURRENT-ARCHITECTURE.md)):
 
 | Route | Returns |
 | --- | --- |
 | `GET /overview` | the current course and its whole map (`course: null` on a first run) |
 | `GET /node?id=` | one node with its evidence, parent and children |
+| `GET /project/session?courseId=` | the conversation that should resume a project (read-only) |
 | `POST /lesson {nodeId}` | the prototype lesson, built once and reused after that |
 
 Every request passes a **trust fence**: a bare `ctx.webServer.register()` route

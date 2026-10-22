@@ -85,6 +85,8 @@ export interface LearningPanelProps {
    * of sharing this one. Absent in the preview and in tests.
    */
   onOpenMapPage?: (() => void) | undefined
+  /** Switch to the conversation a project's learning belongs to; false when the shell cannot navigate. */
+  onOpenSession?: ((sessionId: string) => boolean) | undefined
 }
 
 /** The status pill plus its mark. Never a number. */
@@ -110,6 +112,7 @@ export function LearningPanel({
   onOpenChat,
   onFocusStarted,
   onOpenMapPage,
+  onOpenSession,
 }: LearningPanelProps): ReactNode {
   const text = usePanelText()
   const lang = useLang()
@@ -118,6 +121,7 @@ export function LearningPanel({
     sessionId,
     initialOverview,
     onStarted: onFocusStarted,
+    onOpenSession,
   })
 
   const coursePath = useCoursePath((client ?? defaultClient).pathClient, state.overview?.course?.id, sessionId)
@@ -213,7 +217,7 @@ export function LearningPanel({
                 <ul className="dt-library">
                   {library.map((project) => (
                     <li key={project.id}>
-                      <button type="button" className="dt-project" onClick={() => state.openProject(project.id)}>
+                      <button type="button" className="dt-project" onClick={() => void state.enterProject(project.id)}>
                         <span className="dt-project-name">{project.title}</span>
                         <span className="dt-project-count">
                           {text.confirmedOf(project.confirmed, project.total)}
@@ -270,7 +274,7 @@ export function LearningPanel({
               <ul className="dt-library">
                 {library.map((project) => (
                   <li key={project.id}>
-                    <button type="button" className="dt-project" onClick={() => state.openProject(project.id)}>
+                    <button type="button" className="dt-project" onClick={() => void state.enterProject(project.id)}>
                       <span className="dt-project-name">{project.title}</span>
                       <span className="dt-project-count">
                         {text.confirmedOf(project.confirmed, project.total)}

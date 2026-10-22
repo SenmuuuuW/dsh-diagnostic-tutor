@@ -124,6 +124,58 @@ describe('the map page', () => {
     expect(container.querySelector('.dt-map-detail')?.textContent).toContain('Recorded against this node.')
   })
 
+  it('opens the conversation that owns the current lesson instead of this one', async () => {
+    const opened: string[] = []
+    const navigated: string[] = []
+    const resolving: PanelClient = {
+      ...client,
+      resolveProjectSession: (courseId, sessionId) => {
+        expect(courseId).toBe('ml')
+        expect(sessionId).toBe('s1')
+        return Promise.resolve({ sessionId: 'session-owner' })
+      },
+    }
+    await mount({
+      client: resolving,
+      onOpenLesson: () => opened.push('lesson'),
+      onOpenSession: (sessionId) => { navigated.push(sessionId); return true },
+    })
+    const lesson = [...container.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.trim() === 'Open current lesson')
+    await act(async () => {
+      lesson?.click()
+      await Promise.resolve()
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+    expect(navigated).toEqual(['session-owner'])
+    expect(opened).toEqual([])
+  })
+
+  it('keeps the local hand-off when this conversation already owns the lesson', async () => {
+    const opened: string[] = []
+    const navigated: string[] = []
+    const resolving: PanelClient = {
+      ...client,
+      resolveProjectSession: () => Promise.resolve({ sessionId: 's1' }),
+    }
+    await mount({
+      client: resolving,
+      onOpenLesson: () => opened.push('lesson'),
+      onOpenSession: (sessionId) => { navigated.push(sessionId); return true },
+    })
+    const lesson = [...container.querySelectorAll<HTMLButtonElement>('button')]
+      .find((button) => button.textContent?.trim() === 'Open current lesson')
+    await act(async () => {
+      lesson?.click()
+      await Promise.resolve()
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+    expect(navigated).toEqual([])
+    expect(opened).toEqual(['lesson'])
+  })
+
   it('offers the way back to the current lesson and the conversation', async () => {
     const opened: string[] = []
     await mount({

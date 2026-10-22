@@ -98,6 +98,13 @@ export interface HandoffView {
  * it — and the counting here is the learner's own progress through it, shared
  * by every conversation like the project itself.
  */
+/** Which conversation a project's learning should resume in. */
+export interface ProjectSessionResponse {
+  ok: true
+  sessionId: string
+  reason: 'active-focus' | 'active-run' | 'recent-project' | 'current'
+}
+
 export interface ProjectCardView {
   id: string
   title: string

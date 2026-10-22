@@ -18,7 +18,7 @@ DSH Runtime
 │   ├── 模型工具（9 个）          src/tools.ts（6）+ src/path-tools.ts（3）
 │   ├── 唤醒模型                 src/prompt.ts（旧循环焦点）
 │   │                            src/path-runtime.ts（初诊 / 路线 / 开课提示词）
-│   └── HTTP API                 src/api.ts + src/path-api.ts（16 条路由）
+│   └── HTTP API                 src/api.ts + src/path-api.ts（17 条路由）
 │
 ├── 模型 / UDT skill（仓库外）
 │   └── 只能通过工具读写状态；运行时不复制、不内置教学逻辑
@@ -101,6 +101,7 @@ DSH Runtime
 | `/overview` | GET | 当前项目、诊断图、焦点、建议、handoff、项目库 |
 | `/node` `/lesson` | GET | 单节点详情 / 单节点旧 lesson |
 | `/project` | POST | 本会话选择项目 |
+| `/project/session` | GET | 解析继续学习应进入的会话（只读，不写选择） |
 | `/focus` | POST | 旧循环开始学习 + 唤醒模型 |
 | `/handoff/observed` | POST | 浏览器首次渲染的时间点 |
 | `/export` `/reset` | GET/POST | 导出全部数据 / 删除一切 |
@@ -154,9 +155,12 @@ DSH Runtime
   下一步卡片、等待提示、欢迎行、侧栏 Learn 入口；语言存 learner profile。
 - 品牌强调色采用 DeepSeek 蓝：浅色 #4d6bfe、深色 #6a84ff，只用于进度条、当前标签、
   选中/当前课次、焦点环、操作链接与悬停底色；主按钮仍用宿主的近黑/近白填充（蓝色是标记，不是动作）。
+- 继续学习入口（项目库卡片、“Open current lesson”）先向宿主解析项目最近活跃的会话并切换过去，
+  避免在新对话里重新开一份空课次；解析顺序为 active focus → 有尝试的 course run → 最近项目选择，
+  无导航服务时回退为在当前会话打开。
 - 路线页按阶段渐进展示（目标与时间 → 初诊 → 路线 → 学习），初诊未完成时只显示当前阶段并给出
   「去对话回答」提示；已完成的初诊摘要与路线版本折叠在次要位置。
-- 验证记录：590 个 Vitest 测试、24 组浏览器场景（每组含中英切换）、类型检查、生产构建、地图/面板视觉审计。
+- 验证记录：600 个 Vitest 测试、24 组浏览器场景（每组含中英切换）、类型检查、生产构建、地图/面板视觉审计。
 
 **未实现（不要当成已有能力）**
 
@@ -178,7 +182,7 @@ DSH Runtime
 
 ```sh
 pnpm typecheck
-pnpm test                 # 590 tests
+pnpm test                 # 600 tests
 pnpm build
 pnpm preview              # 构建产物预览
 node scripts/path-check.mjs http://127.0.0.1:8391/ /tmp/udt-path
