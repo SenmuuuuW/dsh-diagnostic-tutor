@@ -491,6 +491,12 @@ the current/selected item, focus rings and action links. Primary buttons keep th
 host's near-black/white fill: the blue marks, it does not act. All other colours
 continue to come from the host theme.
 
+The initial diagnosis is asked through DSH's **interactive question card**
+(`ask_user_question`) when the profile provides it: options are tapped rather
+than typed, multi-select works, and a free-text question covers explanations.
+The tutor still owns the questions, evidence and assessment; profiles without
+that tool fall back to chat text.
+
 The lesson lives in the docked tab, where the conversation is still on screen.
 That is what makes the check loop work without leaving the lesson. The sidebar
 action **Learn** opens that tab and never takes over the main column; the map's
