@@ -101,6 +101,8 @@ export type Curriculum = z.infer<typeof CurriculumSchema>
 export const PathRequestSchema = z.object({
   id: short, sessionId: short, kind: z.enum(['diagnosis', 'plan']), briefRevision: z.number().int(),
   createdAt: z.string(), prompted: z.boolean(), reason: z.string().nullable(),
+  /** Set when the prompted turn failed after the request was accepted, so the UI can retry after a restart. */
+  failure: z.string().max(2000).nullable().optional(),
 })
 export const LearningPathSchema = z.object({
   courseId: short,

@@ -13,6 +13,7 @@ import type { Assessment, CurriculumInput, GoalBrief } from '../src/path.js'
 import {
   acceptCurriculum, beginCourseItem, bindCourseNode, completeCourseItem, pathView,
   proposeCurriculum, recordCourseTeaching, reservePathRequest, saveAssessment, saveBrief, stampCoursePrompt,
+  stampPathRequest, stampPathRequestFailure,
 } from '../src/path-runtime.js'
 import type { BeginItemInput } from '../src/path-runtime.js'
 import { newNode, openUdState, UDT_DOMAIN_VERSION } from '../src/state.js'
@@ -311,6 +312,24 @@ describe('planning runtime with temporary DSH storage', () => {
   })
 
   describe('request reservations', () => {
+    it('durably records a failed prompted turn, but never relabels a finished diagnosis', async () => {
+      await saveBrief(state, COURSE, SESSION, 0, brief())
+      const reserved = await reservePathRequest(state, {
+        courseId: COURSE, sessionId: SESSION, expectedRevision: revision(state), kind: 'diagnosis', operationId: 'failed-turn',
+      })
+      await stampPathRequest(state, COURSE, SESSION, reserved.request.id, true)
+      await stampPathRequestFailure(state, SESSION, 'OpenAI API error (403): insufficient balance')
+      expect(state.readPath(COURSE)?.requests[0]).toMatchObject({
+        prompted: true, failure: 'OpenAI API error (403): insufficient balance',
+      })
+
+      // The diagnosis is now recorded; a later unrelated agent error must not
+      // rewrite this request into a failure.
+      await saveAssessment(state, COURSE, SESSION, revision(state), assessment(state))
+      await stampPathRequestFailure(state, SESSION, 'Another unrelated failure')
+      expect(state.readPath(COURSE)?.requests[0]?.failure).toBe('OpenAI API error (403): insufficient balance')
+    })
+
     it('deduplicates simultaneous requests for the same operation and checks replay identity', async () => {
       await saveBrief(state, COURSE, SESSION, 0, brief())
       const input = { courseId: COURSE, sessionId: SESSION, expectedRevision: revision(state), kind: 'diagnosis' as const, operationId: 'request-race' }

@@ -118,6 +118,43 @@ export async function reservePathRequest(state: UdState, input: { courseId: stri
     : `Please propose my complete learning route for ${project.title} (${input.courseId}). Read udt_path_get first. Use my latest goal, target outcomes, deadline/time zone, weekly budget and initial assessment. Put the full module/lesson outline and EVERY lesson Overview in udt_path_update op=propose, from first lesson through final check. Include observable outcomes, outline, practice, assessment method, estimated time range and prerequisite edges. Explain assumptions and time-budget conflicts, and offer scope/time adjustments. This is a draft for me to accept, not permission to mark mastery or pre-generate every lesson body. Keep planned topics separate from diagnosed knowledge nodes.`
   return { shouldPrompt: !replay, prompt, request: path.requests.find((request) => request.id === input.operationId)! }
 }
+/**
+ * Record that the tutor turn behind a path request failed.
+ *
+ * The browser's own session snapshot is memory-only, so it cannot explain a
+ * failed turn after a restart. This stamps the durable request record instead:
+ * only the newest prompted request from that conversation, and only while its
+ * result is still missing. A diagnosis that was already recorded, or another
+ * conversation's request, is never touched — a later unrelated agent error in
+ * the same chat must not mislabel a finished diagnosis.
+ *
+ * @param state - state handle.
+ * @param sessionId - the conversation whose turn failed.
+ * @param reason - the error message shown to the learner.
+ */
+export async function stampPathRequestFailure(state: UdState, sessionId: string, reason: string): Promise<void> {
+  const courseId = state.resolveProject(sessionId).course?.id
+  if (courseId === undefined) return
+  for (let attempt = 0; attempt < 3; ++attempt) {
+    const path = state.readPath(courseId)
+    if (path === undefined) return
+    const request = path.requests.at(-1)
+    if (request === undefined || request.sessionId !== sessionId || !request.prompted || request.failure === reason) return
+    const resolved = request.kind === 'diagnosis'
+      ? path.assessment !== null && path.assessment.status !== 'in-progress'
+      : path.curricula.some((entry) => entry.createdAt >= request.createdAt)
+    if (resolved) return
+    try {
+      await state.mutatePath(courseId, path.revision, (current) => ({
+        ...current,
+        requests: current.requests.map((entry) => entry.id === request.id && entry.sessionId === sessionId ? { ...entry, failure: reason } : entry),
+      }))
+      return
+    } catch (error) {
+      if (!(error as Error).message.startsWith('revision-conflict')) throw error
+    }
+  }
+}
 export async function stampPathRequest(state: UdState, courseId: string, sessionId: string, id: string, prompted: boolean, reason?: string) {
   // The Agent may already have updated the plan; retry a CAS stamp on latest only.
   for (let attempt = 0; attempt < 3; ++attempt) {

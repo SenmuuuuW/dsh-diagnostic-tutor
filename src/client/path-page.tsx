@@ -584,6 +584,22 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
   ]
   const stageIndex = stages.findIndex((entry) => entry.key === stage)
   const skipAssessment = () => { void mutate('skip', (params) => client.skipAssessment(params), () => setNotice(text.assessmentSkippedNotice)) }
+  /**
+   * Retry the initial diagnosis and return to the conversation.
+   *
+   * The point of pressing the failed-turn action is to make the tutor speak; a
+   * bare navigation is what made it look like the button did nothing. If the
+   * request cannot be composed at all, still show the conversation.
+   */
+  const retryDiagnosisAndOpen = () => {
+    const path = currentView.current?.path
+    if (!path || dirtyRef.current || !ready(path.brief)) { onOpenChat?.(); return }
+    void mutate('request-diagnosis', (params) => client.request({ ...params, kind: 'diagnosis', operationId: operationId() }), (result) => {
+      const response = result as PromptedPathView
+      if (!response.prompted) setPromptIssue({ kind: 'diagnosis', message: response.promptReason ?? text.tutorUnreachable })
+      onOpenChat?.()
+    })
+  }
   const assessmentCard = <AssessmentCard assessment={assessment} nodes={nodes} readyBrief={savedReady} dirty={dirty} readOnly={readOnly} busy={busyAction} waiting={diagnosisWaiting} showActions={false} onRequest={() => ask('diagnosis')} onSkip={skipAssessment} onEvidence={setKnowledgeId} onOpenChat={onOpenChat} />
   const assessmentCardFull = <AssessmentCard assessment={assessment} nodes={nodes} readyBrief={savedReady} dirty={dirty} readOnly={readOnly} busy={busyAction} waiting={diagnosisWaiting} onRequest={() => ask('diagnosis')} onSkip={skipAssessment} onEvidence={setKnowledgeId} onOpenChat={onOpenChat} />
   const routeView = view
@@ -606,21 +622,29 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
   const acceptVersion = (version: number) => {
     void mutate('accept', (params) => client.accept({ ...params, version }), () => setNotice(text.routeAcceptedNotice(version)))
   }
-  const diagnosisFailure = diagnosisWaiting && sessionActivity !== undefined && !sessionActivity.running
-    ? sessionActivity.lastAgentError
-    : null
+  // Prefer the durable request record (survives a restart); fall back to the
+  // live Session snapshot for a failure observed before the next refresh.
+  const liveFailure = sessionActivity !== undefined && !sessionActivity.running ? sessionActivity.lastAgentError : null
+  const diagnosisFailure = diagnosisWaiting ? latestDiagnosis?.failure ?? liveFailure : null
   const acceptedPlan = view?.path.curricula.find((entry) => entry.version === view.path.acceptedVersion) ?? null
   const activeLessonTitle = view && activeAttempt
     ? view.path.curricula.find((entry) => entry.version === activeAttempt.version)?.items.find((item) => item.id === activeAttempt.itemId)?.title ?? activeAttempt.itemId
     : null
   type NextAction = { label: string; run: () => void; disabled?: boolean }
-  const nextStep: { step: number; title: string; body: string; primary?: NextAction; secondary?: NextAction } | null = (() => {
+  const nextStep: { step: number; title: string; body: string; primary?: NextAction; secondary?: NextAction; tertiary?: NextAction } | null = (() => {
     if (!view || readOnly) return null
     if (!savedReady) return {
       step: 1, title: text.nextGoalTitle, body: text.nextGoalBody,
       primary: { label: text.nextSetGoal, run: () => setWizardOpen(true) },
     }
     if (diagnosisWaiting) {
+      if (diagnosisFailure !== null) return {
+        step: 2,
+        title: text.nextDiagnosisFailedTitle,
+        body: text.nextDiagnosisFailedBody(diagnosisFailure),
+        primary: { label: text.nextRetryDiagnosis, run: retryDiagnosisAndOpen, disabled: busyAction || dirty },
+        secondary: { label: text.skipAssessment, run: skipAssessment, disabled: busyAction },
+      }
       const running = sessionActivity?.running === true
       return {
         step: 2,
@@ -628,6 +652,10 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
         body: running ? text.nextWaitingRunningBody : text.nextWaitingBody,
         ...(onOpenChat ? { primary: { label: text.openConversation, run: onOpenChat } } : {}),
         secondary: { label: text.skipAssessment, run: skipAssessment, disabled: busyAction },
+        // A prompted turn may have failed before this page could observe it
+        // (for example after a restart). The link is the recovery path without
+        // pretending questions arrived, and it wakes the tutor before leaving.
+        ...(running ? {} : { tertiary: { label: text.nextRetryDiagnosisLink, run: retryDiagnosisAndOpen, disabled: busyAction || dirty } }),
       }
     }
     if (!diagnosisReady) return {
@@ -691,19 +719,13 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
           <p className="dt-path-eyebrow">{text.nextStepEyebrow} · {text.nextStepProgress(nextStep.step, stages.length)}</p>
           <h3>{nextStep.title}</h3>
           <p>{nextStep.body}</p>
+          {nextStep.tertiary && <button type="button" className="dt-path-link dt-path-next-link" disabled={nextStep.tertiary.disabled} onClick={nextStep.tertiary.run}>{nextStep.tertiary.label}</button>}
         </div>
         {(nextStep.primary || nextStep.secondary) && <div className="dt-path-next-actions">
           {nextStep.primary && <Button primary disabled={nextStep.primary.disabled} onClick={nextStep.primary.run}>{nextStep.primary.label}</Button>}
           {nextStep.secondary && <Button disabled={nextStep.secondary.disabled} onClick={nextStep.secondary.run}>{nextStep.secondary.label}</Button>}
         </div>}
       </section>}
-      {diagnosisFailure !== null && <div className="dt-path-alert" role="alert">
-        <p>{text.diagnosisFailed(diagnosisFailure)}</p>
-        <div className="dt-path-actions">
-          <Button primary disabled={busyAction || dirty} onClick={() => ask('diagnosis')}>{text.nextRetryDiagnosis}</Button>
-          <Button disabled={busyAction} onClick={skipAssessment}>{text.skipAssessment}</Button>
-        </div>
-      </div>}
       {pinnedCard}
       {stage === 'diagnosis' && !diagnosisWaiting && assessmentCard}
       {stage !== 'goal' && staleAssessment}

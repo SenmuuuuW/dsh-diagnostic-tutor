@@ -12,15 +12,19 @@ The route page used to say **Answer the tutor’s questions** from the moment th
 request was sent, so a learner who followed the button before the tutor replied
 — or after the turn failed — landed in a conversation with nothing to answer.
 
-The page now reads the Session Controller's live snapshot for the conversation
-it is showing and adapts:
+The page now follows the turn and keeps a durable recovery path:
 
 - the tutor turn is running → **The tutor is preparing diagnostic questions**,
   with the honest note that the questions appear in the conversation;
-- the turn ended with an agent error → an alert shows the actual failure (for
-  example a provider billing error) with **Retry initial diagnosis** and
-  **Skip initial assessment**, instead of pretending the learner has questions;
-- otherwise the card stays **Answer the tutor’s questions**.
+- the turn ended with an agent error → **The tutor could not finish the check**,
+  the actual error, and one action that **retries with the current model and
+  opens the conversation**; skipping stays available. The host stamps the error
+  on the durable path request, so the explanation survives an app restart (the
+  browser session snapshot is memory-only);
+- otherwise the card stays **Answer the tutor’s questions**, with a small
+  **No questions yet? Request the diagnosis again** link for a prompted turn
+  that silently produced nothing.
+
 
 Skip remains available in every waiting state, and the normal answer-in-chat
 flow is unchanged. The snapshot reader is optional: previews and profiles
