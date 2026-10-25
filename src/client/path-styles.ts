@@ -141,6 +141,7 @@ export const PATH_CSS = `
 .dt-path-next-copy .dt-path-next-link { margin-top:4px; font-size:12.5px; }
 .dt-path-next-actions { display:flex; flex-direction:column; align-items:stretch; gap:8px; flex:none; min-width:172px; }
 .dt-path-next-actions .dt-path-button { white-space:nowrap; }
+.dt-path-fit-warn { color:var(--dt-warn,#b7791f); }
 @media (max-width:620px) { .dt-path-next { flex-direction:column; } .dt-path-next-actions { flex-direction:row; flex-wrap:wrap; width:100%; min-width:0; } }
 @media (max-width:620px) { .dt-path-header { padding:16px; } .dt-path-body { padding:16px; } .dt-path-status,.dt-path-alert { margin:10px 16px 0; } .dt-path-fields,.dt-path-columns { grid-template-columns:1fr; } .dt-path-steps { flex-wrap:wrap; } .dt-path-steps li { flex-basis:40%; } .dt-path-summary { grid-template-columns:1fr; } .dt-path-card { padding:14px; } .dt-path-canvas { height:330px; } }
 @media (prefers-reduced-motion:reduce) { .dt-path-page * { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
