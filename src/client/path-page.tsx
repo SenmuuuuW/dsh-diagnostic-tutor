@@ -9,6 +9,7 @@ import { defaultPathClient, PathClientError } from './path-client.js'
 import type { PathClient, PathWriteParams, PromptedPathView } from './path-client.js'
 import { usePathText } from './path-text.js'
 import type { PathText } from './path-text.js'
+import { classifyTutorError } from './tutor-error.js'
 import type { SessionActivity } from './use-session-activity.js'
 
 export interface PathPageProps {
@@ -626,6 +627,10 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
   // live Session snapshot for a failure observed before the next refresh.
   const liveFailure = sessionActivity !== undefined && !sessionActivity.running ? sessionActivity.lastAgentError : null
   const diagnosisFailure = diagnosisWaiting ? latestDiagnosis?.failure ?? liveFailure : null
+  // Server time, so a stale request reads correctly even if the client clock is off.
+  const diagnosisAgeMinutes = view !== null && latestDiagnosis !== undefined
+    ? Math.max(0, Math.round((Date.parse(view.now) - Date.parse(latestDiagnosis.createdAt)) / 60_000))
+    : 0
   const acceptedPlan = view?.path.curricula.find((entry) => entry.version === view.path.acceptedVersion) ?? null
   const activeLessonTitle = view && activeAttempt
     ? view.path.curricula.find((entry) => entry.version === activeAttempt.version)?.items.find((item) => item.id === activeAttempt.itemId)?.title ?? activeAttempt.itemId
@@ -641,21 +646,24 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
       if (diagnosisFailure !== null) return {
         step: 2,
         title: text.nextDiagnosisFailedTitle,
-        body: text.nextDiagnosisFailedBody(diagnosisFailure),
+        body: text.nextDiagnosisFailedBody(text.tutorFailureAdvice(classifyTutorError(diagnosisFailure)), diagnosisFailure),
         primary: { label: text.nextRetryDiagnosis, run: retryDiagnosisAndOpen, disabled: busyAction || dirty },
         secondary: { label: text.skipAssessment, run: skipAssessment, disabled: busyAction },
       }
       const running = sessionActivity?.running === true
+      const waitingFor = diagnosisAgeMinutes >= 1 ? ` ${text.waitingFor(diagnosisAgeMinutes)}` : ''
       return {
         step: 2,
         title: running ? text.nextWaitingRunningTitle : text.nextWaitingTitle,
-        body: running ? text.nextWaitingRunningBody : text.nextWaitingBody,
+        body: running ? text.nextWaitingRunningBody : `${text.nextWaitingBody}${waitingFor}`,
         ...(onOpenChat ? { primary: { label: text.openConversation, run: onOpenChat } } : {}),
         secondary: { label: text.skipAssessment, run: skipAssessment, disabled: busyAction },
         // A prompted turn may have failed before this page could observe it
         // (for example after a restart). The link is the recovery path without
         // pretending questions arrived, and it wakes the tutor before leaving.
-        ...(running ? {} : { tertiary: { label: text.nextRetryDiagnosisLink, run: retryDiagnosisAndOpen, disabled: busyAction || dirty } }),
+        // It appears after a minute, so a fast double click cannot create two
+        // diagnosis requests before the tutor has had a chance to answer.
+        ...(running || diagnosisAgeMinutes < 1 ? {} : { tertiary: { label: text.nextRetryDiagnosisLink, run: retryDiagnosisAndOpen, disabled: busyAction || dirty } }),
       }
     }
     if (!diagnosisReady) return {

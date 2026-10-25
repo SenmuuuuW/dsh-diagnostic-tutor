@@ -119,7 +119,7 @@ describe('guarded path HTTP API', () => {
     expect(prompts[0]?.text).toContain(brief.purpose)
     expect(prompts[0]?.text).toContain('udt_path_get')
     expect(prompts[0]?.text).toContain('ask_user_question')
-    expect(prompts[0]?.text).toContain('One or two questions at a time')
+    expect(prompts[0]?.text).toContain('Ask 1-2 key questions')
     const replay = await call('/path/request', 'POST', { ...identity(0), kind: 'diagnosis', operationId: 'diagnose' })
     expect(replay.json.prompted).toBe(false)
     expect(prompts).toHaveLength(1)

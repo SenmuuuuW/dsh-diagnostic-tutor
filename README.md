@@ -499,10 +499,11 @@ the four stages — goal & time, initial diagnosis, route, learning — and a
 version, start the first lesson, continue the current one) plus at most one
 real alternative. Competing action rows live in the folded history, not beside
 it. Before a goal is saved the wizard owns the page; while the tutor is asking
-diagnostic questions the card points back to the conversation, says whether the
-tutor is still thinking, and on a failed turn retries with the current model and
-opens the chat (the failure is recorded on the path request, so it survives a
-restart); route versions
+diagnostic questions the card points back to the conversation, shows how long it
+has waited, says whether the tutor is still thinking, and on a failed turn
+retries with the current model and opens the chat (the failure is recorded on
+the path request, so it survives a restart; provider errors are translated into
+billing / auth / rate-limit / network / context advice); route versions
 appear only after the diagnosis is complete or skipped; once accepted, the page
 leads with the route canvas. Completed diagnosis details and route settings stay
 reachable in folded sections, and the effort card only appears when the estimate
