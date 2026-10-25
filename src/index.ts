@@ -46,10 +46,12 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-agent'
 
 import { API_PREFIX, registerApi } from './api.js'
 import type { WebServerLike } from './api.js'
 import { withActivity } from './handoff.js'
+import { stampPathRequestFailure } from './path-runtime.js'
 import { promptSession } from './prompt.js'
 import { UDT_DOMAIN_NAME, openUdState } from './state.js'
 import { registerTools } from './tools.js'
@@ -157,6 +159,15 @@ export async function apply(ctx: Context): Promise<void> {
   // happening". Only the first event counts, and only from the session the
   // handoff asked in, so a busy conversation elsewhere cannot make a quiet
   // handoff look alive.
+  // A prompted turn can fail after the request was accepted (a provider error,
+  // for example). The browser snapshot that would show it is memory-only, so
+  // stamp the durable request record here; the map page can then explain and
+  // retry even after a restart.
+  ctx.on('agent/error', ({ agent, error }) => {
+    const reason = error instanceof Error ? error.message : String(error)
+    void stampPathRequestFailure(state, String(agent.session.id), reason).catch(() => {})
+  })
+
   ctx.on('session/event', (session, event) => {
     // The event says which conversation produced it, so the handoff is looked
     // up in that conversation rather than in the course at large. A busy

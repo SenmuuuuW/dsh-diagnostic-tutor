@@ -489,7 +489,28 @@ describe('one obvious next step', () => {
     expect(card?.textContent).toContain('Skip initial assessment')
   })
 
-  it('reports a failed tutor turn and offers retry or skip instead of pretending questions exist', async () => {
+  it('turns a failed tutor turn into one retry action that also opens the conversation', async () => {
+    host = pathView([])
+    host.path = {
+      ...host.path,
+      assessment: null,
+      assessmentRevision: 0,
+      requests: [{ id: 'diag-1', sessionId: 'synthetic-session', kind: 'diagnosis', briefRevision: 1, createdAt: NOW, prompted: true, reason: null, failure: 'OpenAI API error (403): insufficient balance' }],
+    }
+    const opened: string[] = []
+    // No live session snapshot: the durable request record alone must drive this.
+    await mount({ onOpenChat: () => opened.push('chat') })
+
+    const card = container.querySelector('.dt-path-next')
+    expect(card?.textContent).toContain('The tutor could not finish the check')
+    expect(card?.textContent).toContain('insufficient balance')
+    // One action does both halves: wake the tutor again, then show the chat.
+    await click('Retry and open conversation')
+    expect(vi.mocked(client.request).mock.calls[0]![0]).toMatchObject({ kind: 'diagnosis' })
+    expect(opened).toEqual(['chat'])
+  })
+
+  it('lets a learner re-request a diagnosis whose questions never arrived', async () => {
     host = pathView([])
     host.path = {
       ...host.path,
@@ -497,14 +518,14 @@ describe('one obvious next step', () => {
       assessmentRevision: 0,
       requests: [{ id: 'diag-1', sessionId: 'synthetic-session', kind: 'diagnosis', briefRevision: 1, createdAt: NOW, prompted: true, reason: null }],
     }
-    await mount({ sessionActivity: { running: false, lastAgentError: 'OpenAI API error (403): insufficient balance' } })
+    const opened: string[] = []
+    await mount({ onOpenChat: () => opened.push('chat') })
 
-    const alert = container.querySelector('[role="alert"]')
-    expect(alert?.textContent).toContain('insufficient balance')
-    expect(alert?.textContent).toContain('no questions appeared')
-    await click('Retry initial diagnosis')
+    // The durable request is unresolved and no live failure is observable;
+    // the recovery path still wakes the tutor instead of only navigating.
+    await click('No questions yet? Request the diagnosis again')
     expect(vi.mocked(client.request).mock.calls[0]![0]).toMatchObject({ kind: 'diagnosis' })
-    expect(container.querySelector('.dt-path-next')?.textContent).toContain('Answer the tutor')
+    expect(opened).toEqual(['chat'])
   })
 
   it('asks for the route once, then offers acceptance instead of another request', async () => {
