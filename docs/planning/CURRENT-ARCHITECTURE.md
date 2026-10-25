@@ -158,6 +158,9 @@ DSH Runtime
   选中/当前课次、焦点环、操作链接与悬停底色；主按钮仍用宿主的近黑/近白填充（蓝色是标记，不是动作）。
 - 初诊唤醒文案要求导师用 DSH 的 `ask_user_question` 提出诊断问题（选项可点选、支持多选与
   自由文本）；工具不可用的 profile 回退为聊天文本。问题内容与证据记录仍由导师决定。
+- 请求卫生（2026-10-25）：唤醒文案改为短句学习者口吻（不再把 goal JSON 贴进聊天）；
+  等待卡显示等待时长，重新请求入口在 1 分钟后才出现，避免快速双击制造重复请求；
+  provider 错误按 billing/auth/rate-limit/network/context 分类给出下一步建议，并保留原始信息。
 - 初诊等待期同时读取 Session Controller 实时快照与路线请求的持久化 failure：回合运行中提示
   “正在准备”，回合失败时主按钮用当前模型重试并打开对话（失败会写入 path request，重启后仍可见）；
   无失败但未产生问题时提供“重新请求初诊”链接。
@@ -171,7 +174,7 @@ DSH Runtime
   无导航服务时回退为在当前会话打开。
 - 路线页按阶段渐进展示（目标与时间 → 初诊 → 路线 → 学习），初诊未完成时只显示当前阶段并给出
   「去对话回答」提示；已完成的初诊摘要与路线版本折叠在次要位置。
-- 验证记录：621 个 Vitest 测试、24 组浏览器场景（每组含中英切换）、类型检查、生产构建、地图/面板视觉审计。
+- 验证记录：624 个 Vitest 测试、24 组浏览器场景（每组含中英切换）、类型检查、生产构建、地图/面板视觉审计。
 - 监控（2026-10-25）：host 写本地无内容事件日志（`<dsh-home>/logs/diagnostic-tutor-events.jsonl`，
   1 MB 上限、单次轮转，测试环境禁用），`GET /diagnostics` 返回阶段/请求/事件报告，
   `pnpm doctor` 提供只读体检；不联网、不记录聊天/目标/证据内容。
@@ -197,7 +200,7 @@ DSH Runtime
 
 ```sh
 pnpm typecheck
-pnpm test                 # 621 tests
+pnpm test                 # 624 tests
 pnpm build
 pnpm preview              # 构建产物预览
 node scripts/path-check.mjs http://127.0.0.1:8391/ /tmp/udt-path

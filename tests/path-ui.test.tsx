@@ -516,16 +516,32 @@ describe('one obvious next step', () => {
       ...host.path,
       assessment: null,
       assessmentRevision: 0,
-      requests: [{ id: 'diag-1', sessionId: 'synthetic-session', kind: 'diagnosis', briefRevision: 1, createdAt: NOW, prompted: true, reason: null }],
+      requests: [{ id: 'diag-1', sessionId: 'synthetic-session', kind: 'diagnosis', briefRevision: 1, createdAt: '2026-10-01T11:55:00.000Z', prompted: true, reason: null }],
     }
     const opened: string[] = []
     await mount({ onOpenChat: () => opened.push('chat') })
 
     // The durable request is unresolved and no live failure is observable;
-    // the recovery path still wakes the tutor instead of only navigating.
+    // after a minute the recovery path still wakes the tutor instead of only
+    // navigating.
+    expect(container.querySelector('.dt-path-next')?.textContent).toContain('Waiting 5 min')
     await click('No questions yet? Request the diagnosis again')
     expect(vi.mocked(client.request).mock.calls[0]![0]).toMatchObject({ kind: 'diagnosis' })
     expect(opened).toEqual(['chat'])
+  })
+
+  it('does not offer an immediate retry for a request that just started', async () => {
+    host = pathView([])
+    host.path = {
+      ...host.path,
+      assessment: null,
+      assessmentRevision: 0,
+      requests: [{ id: 'diag-1', sessionId: 'synthetic-session', kind: 'diagnosis', briefRevision: 1, createdAt: NOW, prompted: true, reason: null }],
+    }
+    await mount()
+    const card = container.querySelector('.dt-path-next')
+    expect(card?.textContent).not.toContain('No questions yet?')
+    expect(card?.textContent).not.toContain('Waiting 0 min')
   })
 
   it('asks for the route once, then offers acceptance instead of another request', async () => {

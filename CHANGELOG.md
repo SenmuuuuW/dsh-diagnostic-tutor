@@ -5,6 +5,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — clearer waiting, fewer duplicate requests, actionable errors
+
+- The diagnosis and route wake messages are now short learner-voice prompts:
+  the full goal JSON is gone (the tutor reads `udt_path_get`), and the
+  diagnosis message asks for `ask_user_question` in one line. Less context, less
+  system-message noise in the chat.
+- The waiting card shows **how long** the request has been unanswered. Its
+  **No questions yet? Request the diagnosis again** link appears only after a
+  minute, so a rapid second click cannot create a duplicate diagnosis request
+  before the tutor has had a chance to answer.
+- Provider turn failures are classified and explained instead of dumping the
+  raw upstream error: billing / auth / rate limit / network / context, each with
+  the practical next move, followed by the original message.
+
+
 ### Added — local diagnostics for "it got stuck"
 
 - **Event journal** at `<dsh-home>/logs/diagnostic-tutor-events.jsonl`: tool

@@ -14,6 +14,7 @@
  * Pure helpers in `path-page.tsx` receive the text object (or `lang`) as a
  * parameter; only components may call `usePathText()`.
  */
+import type { TutorErrorKind } from './tutor-error.js'
 
 import { useLang } from './i18n.js'
 
@@ -56,7 +57,18 @@ const en = {
   nextWaitingRunningTitle: 'The tutor is preparing diagnostic questions',
   nextWaitingRunningBody: 'The tutor is thinking in the conversation. Answer once the questions appear — or skip the diagnosis.',
   nextDiagnosisFailedTitle: 'The tutor could not finish the check',
-  nextDiagnosisFailedBody: (reason: string) => `The conversation turn failed: ${reason} Retrying wakes the tutor again with your current model and opens the conversation.`,
+  nextDiagnosisFailedBody: (advice: string, reason: string): string => `${advice} Provider error: ${reason}`,
+  waitingFor: (minutes: number): string => `Waiting ${minutes} min without an answer.`,
+  tutorFailureAdvice: (kind: TutorErrorKind): string => {
+    switch (kind) {
+      case 'billing': return 'The model provider reported insufficient balance. Switch to a working model or top up the provider, then retry.'
+      case 'auth': return 'The model provider rejected the credentials. Check the API key or sign-in, then retry.'
+      case 'rate-limit': return 'The model provider is rate limiting. Wait a moment, then retry.'
+      case 'network': return 'The model provider could not be reached. Check the network, then retry.'
+      case 'context': return 'The conversation is too long for this model. Start a fresh conversation or choose a larger-context model, then retry.'
+      default: return 'The tutor turn failed. Retrying wakes the tutor again with the current model and opens the conversation.'
+    }
+  },
   nextRetryDiagnosis: 'Retry and open conversation',
   nextRouteWaitingTitle: 'The tutor is preparing the route',
   nextRouteWaitingBody: 'The proposal is being prepared in the conversation. You can keep this page open.',
@@ -391,7 +403,18 @@ const zh: typeof en = {
   nextWaitingRunningTitle: '导师正在准备初诊问题',
   nextWaitingRunningBody: '导师正在对话里思考。等问题出现后回答；也可以跳过初诊。',
   nextDiagnosisFailedTitle: '导师没能完成初诊',
-  nextDiagnosisFailedBody: (reason) => `对话回合出错：${reason} 重试会用当前模型再次唤醒导师，并打开对话。`,
+  nextDiagnosisFailedBody: (advice, reason) => `${advice}（原始错误：${reason}）`,
+  waitingFor: (minutes) => `已等待 ${minutes} 分钟仍无回应。`,
+  tutorFailureAdvice: (kind) => {
+    switch (kind) {
+      case 'billing': return '模型服务余额不足。换一个可用模型或充值后再重试。'
+      case 'auth': return '模型服务鉴权失败。检查 API Key 或登录状态后再重试。'
+      case 'rate-limit': return '模型服务限流了。稍等片刻再重试。'
+      case 'network': return '连不上模型服务。检查网络后再重试。'
+      case 'context': return '对话上下文对这个模型来说太长了。开一个新对话或换更大上下文的模型后再重试。'
+      default: return '导师回合失败了。重试会用当前模型再次唤醒导师，并打开对话。'
+    }
+  },
   nextRetryDiagnosis: '重试并打开对话',
   nextRouteWaitingTitle: '导师正在准备路线',
   nextRouteWaitingBody: '学习路线方案正在对话中生成，可以先把这一页留着。',
