@@ -163,7 +163,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.1.1` | `0.2.1-rc.2`, `0.2.0-rc.2` (test suite also on `0.1.7-alpha.2`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.1.1` | `0.2.1-rc.3`, `0.2.1-rc.2`, `0.2.0-rc.2` (test suite also on `0.1.7-alpha.2`) | `^22.19.0 \|\| >=24.0.0` |
 | `0.1.0` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
 Rules this repository enforces mechanically:
@@ -188,7 +188,7 @@ Rules this repository enforces mechanically:
 
 | | |
 | --- | --- |
-| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | verified against `0.2.1-rc.2` |
+| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | verified against `0.2.1-rc.3` |
 | the [Universal Diagnostic Tutor](https://github.com/SenmuuuuW/universal-diagnostic-tutor-skill) skill | the teaching brain. Without it the runtime loads, records and displays state, but **no lesson is ever written** |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 

@@ -5,6 +5,27 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Compatibility — verified on DSH 0.2.1-rc.3
+
+The desktop app moved from `0.2.1-rc.2` to `0.2.1-rc.3`. The plugin needed no
+code changes: the release bumps package versions and adds a sidebar entry-actions
+slot, both additive for this plugin. The dev dependency cohort is now pinned to
+`0.2.1-rc.3` and the lockfile refreshed.
+
+Re-verified against `0.2.1-rc.3`:
+
+- `pnpm typecheck` and `pnpm build` pass; 607 tests pass across 37 files.
+- 24 route browser cases pass (assessments, proposals, explicit accept/start,
+  light/dark, three widths, language switch).
+- A fresh isolated `0.2.1-rc.3` web profile that includes this plugin:
+  - boots without plugin errors and the client bundle loads (no runtime exceptions);
+  - the sidebar shows **Learning map** and **Learn**, the map page opens, and
+    the docked **Current lesson** tab registers and renders its first-run state;
+  - host routes answer: `GET /diagnostic-tutor/api/preferences` → `200`,
+    `GET /diagnostic-tutor/api/project/session?courseId=no-such` →
+    `404 no-such-course`.
+
+
 ### Changed — one next step, at a glance
 
 The route page now leads with a single **Next step** card instead of making the
