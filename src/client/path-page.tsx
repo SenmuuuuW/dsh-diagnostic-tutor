@@ -9,6 +9,7 @@ import { defaultPathClient, PathClientError } from './path-client.js'
 import type { PathClient, PathWriteParams, PromptedPathView } from './path-client.js'
 import { usePathText } from './path-text.js'
 import type { PathText } from './path-text.js'
+import type { SessionActivity } from './use-session-activity.js'
 
 export interface PathPageProps {
   courseId: string
@@ -19,6 +20,8 @@ export interface PathPageProps {
   onStarted?: (() => void) | undefined
   /** Return to the conversation with the current-lesson tab open. */
   onOpenLesson?: (() => void) | undefined
+  /** Live turn state of the conversation this page is showing, when observable. */
+  sessionActivity?: SessionActivity | undefined
   client?: PathClient | undefined
 }
 
@@ -410,7 +413,7 @@ function Overview({ plan, selection, view, nodes, activeAttempt, readOnly, busy,
 export function PathPage(props: PathPageProps): ReactNode {
   return <PathPageBody key={JSON.stringify([props.courseId, props.sessionId ?? null])} {...props} />
 }
-function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted, onOpenLesson, client = defaultPathClient }: PathPageProps): ReactNode {
+function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted, onOpenLesson, sessionActivity, client = defaultPathClient }: PathPageProps): ReactNode {
   const text = usePathText()
   const lang = useLang()
   const textRef = useRef(text)
@@ -603,6 +606,9 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
   const acceptVersion = (version: number) => {
     void mutate('accept', (params) => client.accept({ ...params, version }), () => setNotice(text.routeAcceptedNotice(version)))
   }
+  const diagnosisFailure = diagnosisWaiting && sessionActivity !== undefined && !sessionActivity.running
+    ? sessionActivity.lastAgentError
+    : null
   const acceptedPlan = view?.path.curricula.find((entry) => entry.version === view.path.acceptedVersion) ?? null
   const activeLessonTitle = view && activeAttempt
     ? view.path.curricula.find((entry) => entry.version === activeAttempt.version)?.items.find((item) => item.id === activeAttempt.itemId)?.title ?? activeAttempt.itemId
@@ -614,10 +620,15 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
       step: 1, title: text.nextGoalTitle, body: text.nextGoalBody,
       primary: { label: text.nextSetGoal, run: () => setWizardOpen(true) },
     }
-    if (diagnosisWaiting) return {
-      step: 2, title: text.nextWaitingTitle, body: text.nextWaitingBody,
-      ...(onOpenChat ? { primary: { label: text.openConversation, run: onOpenChat } } : {}),
-      secondary: { label: text.skipAssessment, run: skipAssessment, disabled: busyAction },
+    if (diagnosisWaiting) {
+      const running = sessionActivity?.running === true
+      return {
+        step: 2,
+        title: running ? text.nextWaitingRunningTitle : text.nextWaitingTitle,
+        body: running ? text.nextWaitingRunningBody : text.nextWaitingBody,
+        ...(onOpenChat ? { primary: { label: text.openConversation, run: onOpenChat } } : {}),
+        secondary: { label: text.skipAssessment, run: skipAssessment, disabled: busyAction },
+      }
     }
     if (!diagnosisReady) return {
       step: 2, title: text.nextDiagnosisTitle, body: text.nextDiagnosisBody,
@@ -686,6 +697,13 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
           {nextStep.secondary && <Button disabled={nextStep.secondary.disabled} onClick={nextStep.secondary.run}>{nextStep.secondary.label}</Button>}
         </div>}
       </section>}
+      {diagnosisFailure !== null && <div className="dt-path-alert" role="alert">
+        <p>{text.diagnosisFailed(diagnosisFailure)}</p>
+        <div className="dt-path-actions">
+          <Button primary disabled={busyAction || dirty} onClick={() => ask('diagnosis')}>{text.nextRetryDiagnosis}</Button>
+          <Button disabled={busyAction} onClick={skipAssessment}>{text.skipAssessment}</Button>
+        </div>
+      </div>}
       {pinnedCard}
       {stage === 'diagnosis' && !diagnosisWaiting && assessmentCard}
       {stage !== 'goal' && staleAssessment}

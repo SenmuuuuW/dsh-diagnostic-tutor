@@ -471,6 +471,42 @@ describe('one obvious next step', () => {
     expect(nextCard().textContent).toContain('Skip initial assessment')
   })
 
+  it('says the tutor is still preparing while the turn is running', async () => {
+    host = pathView([])
+    host.path = {
+      ...host.path,
+      assessment: null,
+      assessmentRevision: 0,
+      requests: [{ id: 'diag-1', sessionId: 'synthetic-session', kind: 'diagnosis', briefRevision: 1, createdAt: NOW, prompted: true, reason: null }],
+    }
+    await mount({ sessionActivity: { running: true, lastAgentError: null } })
+
+    const card = container.querySelector('.dt-path-next')
+    expect(card?.textContent).toContain('The tutor is preparing diagnostic questions')
+    expect(card?.textContent).not.toContain('Answer the tutor’s questions')
+    // A running turn has no failure to report, and skipping stays available.
+    expect(container.querySelector('[role="alert"]')).toBeNull()
+    expect(card?.textContent).toContain('Skip initial assessment')
+  })
+
+  it('reports a failed tutor turn and offers retry or skip instead of pretending questions exist', async () => {
+    host = pathView([])
+    host.path = {
+      ...host.path,
+      assessment: null,
+      assessmentRevision: 0,
+      requests: [{ id: 'diag-1', sessionId: 'synthetic-session', kind: 'diagnosis', briefRevision: 1, createdAt: NOW, prompted: true, reason: null }],
+    }
+    await mount({ sessionActivity: { running: false, lastAgentError: 'OpenAI API error (403): insufficient balance' } })
+
+    const alert = container.querySelector('[role="alert"]')
+    expect(alert?.textContent).toContain('insufficient balance')
+    expect(alert?.textContent).toContain('no questions appeared')
+    await click('Retry initial diagnosis')
+    expect(vi.mocked(client.request).mock.calls[0]![0]).toMatchObject({ kind: 'diagnosis' })
+    expect(container.querySelector('.dt-path-next')?.textContent).toContain('Answer the tutor')
+  })
+
   it('asks for the route once, then offers acceptance instead of another request', async () => {
     vi.useFakeTimers()
     host = pathView([])
