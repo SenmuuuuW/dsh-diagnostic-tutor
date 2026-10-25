@@ -38,6 +38,8 @@ import { useState } from 'react'
 import { enableLanguagePersistence, getLang, hydrateLanguage } from './i18n.js'
 import { tabTitleFor, useLearningText } from './learning-text.js'
 import { LearningMapPanel, MAP_PANEL_ID } from './map-panel.js'
+import { useSessionActivity } from './use-session-activity.js'
+import type { SessionActivitySource } from './use-session-activity.js'
 import { LearningTab, LearningTabTitle } from './tab.jsx'
 import { useCurrentSessionId } from './use-session.js'
 import { injectStyles } from './styles.js'
@@ -166,6 +168,15 @@ export function apply(ctx: Context): void {
   // Read, not injected as a prop: the session scope adapter is how a
   // root-scoped seat learns which conversation is open.
   const uiSession = ctx.get('uiSession')
+  // Optional: only a real web shell has the Session Controller. The map page
+  // uses it to say whether the tutor is still thinking or the turn failed.
+  const sessions = (() => {
+    try {
+      return ctx.reflect.get('sessions') as SessionActivitySource | undefined
+    } catch {
+      return undefined
+    }
+  })()
 
   // Read the saved interface language once, from the real host only. The
   // preview's stub context has no layout service, which is precisely how this
@@ -309,10 +320,12 @@ export function apply(ctx: Context): void {
       { name: 'main', key: MAP_PANEL_ID as unknown as NonNullable<PanelRef> },
       function BoundMapPanel(props: MainPanelProps): ReactNode {
         const sessionId = useCurrentSessionId(uiSession)
+        const sessionActivity = useSessionActivity(sessions, sessionId)
         return (
           <LearningMapPanel
             {...props}
             {...(sessionId === undefined ? {} : { sessionId })}
+            {...(sessionActivity === undefined ? {} : { sessionActivity })}
             onOpenChat={() => layout?.selectPanel(null)}
             onOpenLesson={() => {
               layout?.selectPanel(null)

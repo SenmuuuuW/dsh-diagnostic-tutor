@@ -22,6 +22,7 @@ import type { PathClient } from './path-client.js'
 import type { NodeDetailResponse, NodeView } from '../contract.js'
 import { buildMapTree, flattenTree, formatWhen, relationLabel, stateExplanation } from './model.js'
 import type { PanelClient } from './use-learning.js'
+import type { SessionActivity } from './use-session-activity.js'
 import { defaultClient, useLearning } from './use-learning.js'
 import { EmptyArt, NodeLocator, StateBar, StateGlyph } from './visuals.jsx'
 
@@ -41,6 +42,8 @@ export interface LearningMapPanelProps {
   onOpenLesson?: (() => void) | undefined
   /** Switch to the conversation a project's learning belongs to; false when the shell cannot navigate. */
   onOpenSession?: ((sessionId: string) => boolean) | undefined
+  /** Live turn state of the conversation this page is showing, when observable. */
+  sessionActivity?: SessionActivity | undefined
   pathClient?: PathClient | undefined
 }
 
@@ -212,6 +215,7 @@ export function LearningMapPanel({
   onOpenChat,
   onOpenLesson,
   onOpenSession,
+  sessionActivity,
   pathClient,
 }: LearningMapPanelProps): ReactNode {
   const text = useMapText()
@@ -344,7 +348,8 @@ export function LearningMapPanel({
       {page === 'curriculum' ? (
         <PathPage courseId={overview.course.id} title={overview.course.title} nodes={nodes}
           sessionId={sessionId} client={pathClient} onOpenChat={onOpenChat}
-          onStarted={onOpenLesson ?? onOpenChat} onOpenLesson={onOpenLesson} />
+          onStarted={onOpenLesson ?? onOpenChat} onOpenLesson={onOpenLesson}
+          {...(sessionActivity === undefined ? {} : { sessionActivity })} />
       ) : <div className="dt-map-root">
         <section className="dt-map-pane">
           <header className="dt-course-card dt-map-cover">

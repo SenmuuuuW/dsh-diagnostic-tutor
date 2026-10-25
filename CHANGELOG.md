@@ -5,6 +5,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed — the diagnosis step no longer points at questions that never arrived
+
+Requesting the initial diagnosis wakes the tutor, but the turn runs in the chat.
+The route page used to say **Answer the tutor’s questions** from the moment the
+request was sent, so a learner who followed the button before the tutor replied
+— or after the turn failed — landed in a conversation with nothing to answer.
+
+The page now reads the Session Controller's live snapshot for the conversation
+it is showing and adapts:
+
+- the tutor turn is running → **The tutor is preparing diagnostic questions**,
+  with the honest note that the questions appear in the conversation;
+- the turn ended with an agent error → an alert shows the actual failure (for
+  example a provider billing error) with **Retry initial diagnosis** and
+  **Skip initial assessment**, instead of pretending the learner has questions;
+- otherwise the card stays **Answer the tutor’s questions**.
+
+Skip remains available in every waiting state, and the normal answer-in-chat
+flow is unchanged. The snapshot reader is optional: previews and profiles
+without a Session Controller keep the previous copy.
+
+
 ### Compatibility — verified on DSH 0.2.1-rc.3
 
 The desktop app moved from `0.2.1-rc.2` to `0.2.1-rc.3`. The plugin needed no
