@@ -5,6 +5,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — local diagnostics for "it got stuck"
+
+- **Event journal** at `<dsh-home>/logs/diagnostic-tutor-events.jsonl`: tool
+  calls/results (name, operation, duration), tutor prompt outcomes, agent errors
+  and path actions. Content-free, 1 MB cap, one rotation, disabled in tests.
+- **`pnpm doctor`** (`scripts/doctor.mjs`): read-only report of every project's
+  stage, pending/failed tutor requests with age, stalled lesson attempts and
+  route-length conflicts; `--json` and `--strict` modes.
+- **`GET /diagnostic-tutor/api/diagnostics`**: the same health report (counts,
+  project stages, issues, recent journal events), behind the existing loopback
+  trust fence. Returns `503` when the journal is disabled.
+
+
 ### Changed — the initial diagnosis asks with the interactive question card
 
 The diagnosis wake message now tells the tutor to ask its initial questions

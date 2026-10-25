@@ -99,7 +99,8 @@
     "audit:ui": "node scripts/ui-audit.mjs",
     "check:scroll": "node scripts/scroll-check.mjs",
     "loop": "node scripts/learning-loop.mjs",
-    "handoff": "node scripts/handoff-e2e.mjs"
+    "handoff": "node scripts/handoff-e2e.mjs",
+    "doctor": "node scripts/doctor.mjs"
   },
   "dependencies": {
     "zod": "4.4.3"

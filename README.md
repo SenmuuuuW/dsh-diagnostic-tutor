@@ -180,6 +180,29 @@ Rules this repository enforces mechanically:
   in the range — so the compatibility matrix above, not the range floor, is the
   contract. Dev dependencies pin one exact cohort for the type baseline.
 
+## Diagnostics
+
+Monitoring is local and content-free: no chat, goal, lesson or evidence text is
+recorded, and nothing is sent anywhere.
+
+```sh
+pnpm doctor                 # human-readable health report
+node scripts/doctor.mjs --json   # machine-readable
+node scripts/doctor.mjs --strict # exit 1 if an error-severity issue exists
+```
+
+It reads `<dsh-home>/storages/udt.json` plus the event journal and reports each
+project's stage, pending/failed tutor requests (with age), stalled attempts and
+route-length conflicts. The same report is available at
+`GET /diagnostic-tutor/api/diagnostics` (loopback-only, like every plugin
+route).
+
+The host journal lives at `<dsh-home>/logs/diagnostic-tutor-events.jsonl`
+(`DSH_DIAGNOSTIC_TUTOR_EVENTS` overrides the path, `off` disables it). It logs
+lifecycle events only: tool names and operations, durations, request outcomes,
+provider error messages (truncated). A single file is capped at 1 MB and
+rotated once.
+
 ---
 
 ## Install

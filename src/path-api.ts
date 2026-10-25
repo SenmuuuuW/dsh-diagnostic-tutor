@@ -43,17 +43,20 @@ export async function handlePathApi(route: string, req: IncomingMessage, res: Se
     selectedProject(state, base.courseId, base.sessionId)
     if (route === '/path/brief') {
       const input = identity.extend({ brief: z.unknown() }).parse(raw)
-      await saveBrief(state, base.courseId, base.sessionId, base.expectedRevision, input.brief)
+      const saved = await saveBrief(state, base.courseId, base.sessionId, base.expectedRevision, input.brief)
+      deps.onEvent?.('path.brief', { courseId: base.courseId, sessionId: base.sessionId, revision: saved.revision })
     } else if (route === '/path/skip-assessment') {
       const path = pathView(state, base.courseId, base.sessionId).path
-      await saveAssessment(state, base.courseId, base.sessionId, base.expectedRevision, {
+      const saved = await saveAssessment(state, base.courseId, base.sessionId, base.expectedRevision, {
         status: 'skipped', summary: 'The learner chose to start with unverified foundations.', strengths: [], gaps: [],
         uncertainties: ['Foundations have not been checked; early lessons need diagnostic checks.'], evidence: [],
         briefRevision: path.briefRevision, sessionId: base.sessionId, updatedAt: new Date().toISOString(),
       }, true)
+      deps.onEvent?.('path.skip-diagnosis', { courseId: base.courseId, sessionId: base.sessionId, revision: saved.revision })
     } else if (route === '/path/accept') {
       const input = identity.extend({ version: z.number().int().positive() }).parse(raw)
-      await acceptCurriculum(state, base.courseId, base.sessionId, base.expectedRevision, input.version)
+      const accepted = await acceptCurriculum(state, base.courseId, base.sessionId, base.expectedRevision, input.version)
+      deps.onEvent?.('path.accept-route', { courseId: base.courseId, sessionId: base.sessionId, version: input.version, revision: accepted.revision })
     } else if (route === '/path/request') {
       const input = identity.extend({ kind: z.enum(['diagnosis', 'plan']), operationId: z.string().min(1).max(200) }).parse(raw)
       const request = await reservePathRequest(state, input)
@@ -64,6 +67,10 @@ export async function handlePathApi(route: string, req: IncomingMessage, res: Se
         catch (cause) { prompted = false; reason = (cause as Error).message }
         await stampPathRequest(state, base.courseId, base.sessionId, input.operationId, prompted, reason)
       }
+      deps.onEvent?.('path.request', {
+        courseId: base.courseId, sessionId: base.sessionId, kind: input.kind, requestId: input.operationId,
+        prompted, ...(reason === undefined ? {} : { reason: reason.slice(0, 240) }),
+      })
       send(res, 200, { ...pathView(state, base.courseId, base.sessionId), prompted, ...(reason ? { promptReason: reason } : {}) })
       return true
     } else if (route === '/path/start') {
@@ -76,6 +83,10 @@ export async function handlePathApi(route: string, req: IncomingMessage, res: Se
         catch (cause) { prompted = false; reason = (cause as Error).message }
         await stampCoursePrompt(state, input, result.attempt.id, prompted, reason)
       }
+      deps.onEvent?.('path.start-lesson', {
+        courseId: base.courseId, sessionId: base.sessionId, version: input.version, itemId: input.itemId,
+        attemptId: result.attempt.id, prompted, ...(reason === undefined ? {} : { reason: reason.slice(0, 240) }),
+      })
       send(res, 200, { ...pathView(state, base.courseId, base.sessionId), prompted, ...(reason ? { promptReason: reason } : {}) })
       return true
     } else { send(res, 404, { ok: false, error: { code: 'no-such-path-route' } }); return true }
@@ -83,6 +94,7 @@ export async function handlePathApi(route: string, req: IncomingMessage, res: Se
   } catch (cause) {
     const message = cause instanceof z.ZodError ? cause.issues.map((entry) => `${entry.path.join('.')}: ${entry.message}`).join('; ') : (cause as Error).message
     const code = message.split(':')[0] ?? 'invalid-planning-request'
+    deps.onEvent?.('path.error', { route, code: code.slice(0, 80) })
     const status = code === 'revision-conflict' || code === 'project-selection-changed' || code === 'stale-curriculum' ? 409 : code === 'no-such-course' ? 404 : 400
     send(res, status, { ok: false, error: { code, message } })
   }
