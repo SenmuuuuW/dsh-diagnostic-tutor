@@ -505,9 +505,11 @@ retries with the current model and opens the chat (the failure is recorded on
 the path request, so it survives a restart; provider errors are translated into
 billing / auth / rate-limit / network / context advice); route versions
 appear only after the diagnosis is complete or skipped; once accepted, the page
-leads with the route canvas. Completed diagnosis details and route settings stay
-reachable in folded sections, and the effort card only appears when the estimate
-conflicts with the saved budget.
+leads with the route canvas. A proposed or accepted route shows its total study
+time, the weeks it takes at the saved weekly budget, and any lessons longer than
+the preferred session. Next step moves to the first unfinished lesson after a
+completion, and says when the whole route is done. Completed diagnosis details
+and route settings stay reachable in folded sections.
 
 The plugin's own accent is **DeepSeek's brand blue** — `#4d6bfe` on the light
 canvas, `#6a84ff` on the dark one — used sparingly for progress, the active tab,

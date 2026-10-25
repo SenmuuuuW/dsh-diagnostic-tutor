@@ -564,6 +564,54 @@ describe('one obvious next step', () => {
     expect(client.accept).toHaveBeenCalledWith({ sessionId: 'synthetic-session', courseId: 'synthetic-course', expectedRevision: 5, version: 1 })
   })
 
+  it('shows route effort and flags lessons over the session budget before acceptance', async () => {
+    host = pathView([curriculum(1, false)])
+    await mount()
+
+    // The fixture route is 3 lessons / 100–170 min with a 30-minute session.
+    expect(container.textContent).toContain('3 lessons')
+    expect(container.textContent).toContain('longer than your 30-minute session')
+    expect(container.textContent).toContain('3 lesson(s)')
+  })
+
+  it('continues with the next unfinished lesson after completed ones', async () => {
+    host = pathView()
+    host.run = {
+      ...host.run!, revision: 2, activeAttemptId: null,
+      attempts: [
+        attempt({ id: 'a1', itemId: 'represent', status: 'completed' }),
+        attempt({ id: 'a2', itemId: 'train', status: 'completed' }),
+      ],
+    }
+    await mount()
+
+    const card = container.querySelector('.dt-path-next')
+    expect(card?.textContent).toContain('Start the next lesson')
+    expect(card?.textContent).toContain('2 of 3 lessons done')
+    expect(card?.textContent).toContain('Evaluate new examples')
+    expect(container.textContent).toContain('2 of 3 lessons completed')
+    await click('Start next lesson')
+    expect(vi.mocked(client.start).mock.calls[0]![0]).toMatchObject({ version: 1, itemId: 'evaluate' })
+  })
+
+  it('says the route is complete when every lesson has a completed attempt', async () => {
+    host = pathView()
+    host.run = {
+      ...host.run!, revision: 3, activeAttemptId: null,
+      attempts: [
+        attempt({ id: 'a1', itemId: 'represent', status: 'completed' }),
+        attempt({ id: 'a2', itemId: 'train', status: 'completed' }),
+        attempt({ id: 'a3', itemId: 'evaluate', status: 'completed' }),
+      ],
+    }
+    await mount()
+
+    const card = container.querySelector('.dt-path-next')
+    expect(card?.textContent).toContain('This route is complete')
+    expect(card?.textContent).not.toContain('Start the next lesson')
+    expect([...container.querySelectorAll('button')].some((entry) => entry.textContent?.trim() === 'Start lesson')).toBe(false)
+  })
+
   it('names the first lesson once accepted, and starts it from the card', async () => {
     const onStarted = vi.fn()
     await mount({ onStarted })

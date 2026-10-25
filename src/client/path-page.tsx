@@ -9,6 +9,7 @@ import { defaultPathClient, PathClientError } from './path-client.js'
 import type { PathClient, PathWriteParams, PromptedPathView } from './path-client.js'
 import { usePathText } from './path-text.js'
 import type { PathText } from './path-text.js'
+import { routeFit } from './path-fit.js'
 import { classifyTutorError } from './tutor-error.js'
 import type { SessionActivity } from './use-session-activity.js'
 
@@ -604,11 +605,23 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
   const assessmentCard = <AssessmentCard assessment={assessment} nodes={nodes} readyBrief={savedReady} dirty={dirty} readOnly={readOnly} busy={busyAction} waiting={diagnosisWaiting} showActions={false} onRequest={() => ask('diagnosis')} onSkip={skipAssessment} onEvidence={setKnowledgeId} onOpenChat={onOpenChat} />
   const assessmentCardFull = <AssessmentCard assessment={assessment} nodes={nodes} readyBrief={savedReady} dirty={dirty} readOnly={readOnly} busy={busyAction} waiting={diagnosisWaiting} onRequest={() => ask('diagnosis')} onSkip={skipAssessment} onEvidence={setKnowledgeId} onOpenChat={onOpenChat} />
   const routeView = view
+  const acceptedPlan = view?.path.curricula.find((entry) => entry.version === view.path.acceptedVersion) ?? null
+  const fitPlan = stage === 'learning' && acceptedPlan !== null ? acceptedPlan : plan
+  const routeMetrics = fitPlan === undefined || view === null ? null : routeFit(fitPlan, view.path.brief)
+  const completedItemIds = new Set((view?.run?.attempts ?? []).filter((entry) => entry.status === 'completed').map((entry) => entry.itemId))
+  const completedPlanItems = acceptedPlan?.items.filter((item) => completedItemIds.has(item.id)) ?? []
+  const nextLesson = acceptedPlan?.items.find((item) => !completedItemIds.has(item.id)) ?? null
   const routeCard = routeView === null ? null : <section className="dt-path-card" aria-label={text.routeProposalsLabel}><div className="dt-path-card-head"><h3>{versions.length ? text.routeVersions : text.buildRoute}</h3>{planWaiting && <span className="dt-path-tag" role="status">{text.waitingProposal}</span>}</div>
     {!versions.length && <p className="dt-path-muted">{text.noVersionsHelp}</p>}
     {!assessmentCurrent && savedReady && <p className="dt-path-muted">{text.needsAssessmentHelp}</p>}
     <div className="dt-path-version-row">{versions.length > 0 && <label>{text.routeToBrowse}<select className="dt-path-version" aria-label={text.routeVersionToBrowse} value={selectedVersion ?? ''} onChange={(event) => { setSelectedVersion(Number(event.target.value)); setSelection({ kind: 'project' }) }}>{versions.map((entry) => <option key={entry.version} value={entry.version}>{text.versionOption(entry.version, entry.version === routeView.path.acceptedVersion, entry.acceptedAt !== null, entry.title)}</option>)}</select></label>}{stage !== 'route' && <><Button disabled={!canPlan} onClick={() => ask('plan')}>{planWaiting ? text.requestPlanAgain : versions.length ? text.requestRevisedPlan : text.requestRouteProposal}</Button>{plan && plan.version !== routeView.path.acceptedVersion && <Button primary disabled={readOnly || busyAction || dirty || plan.briefRevision !== routeView.path.briefRevision || plan.assessmentRevision !== routeView.path.assessmentRevision} onClick={() => acceptVersion(plan.version)}>{text.acceptRouteVersion(plan.version)}</Button>}</>}</div>
     {plan && <p className="dt-path-small dt-path-muted">{plan.version === routeView.path.acceptedVersion ? text.routeAcceptedHelp : text.routeProposalHelp}{plan.briefRevision !== routeView.path.briefRevision || plan.assessmentRevision !== routeView.path.assessmentRevision ? text.routeRevisionWarning : ''}</p>}
+    {plan && routeMetrics !== null && routeMetrics.lessons > 0 && <p className={`dt-path-small ${routeMetrics.longLessons.length > 0 ? 'dt-path-fit-warn' : 'dt-path-muted'}`}>
+      {text.routeEffort(routeMetrics.lessons, range({ min: routeMetrics.totalMin, max: routeMetrics.totalMax }, text))}
+      {routeMetrics.weeksMin !== null && routeMetrics.weeksMax !== null ? ` ${text.routeWeeks(routeMetrics.weeksMin, routeMetrics.weeksMax)}` : ''}
+      {routeMetrics.longLessons.length > 0 && routeMetrics.sessionMinutes !== null ? ` ${text.routeSessionMismatch(routeMetrics.longLessons.length, routeMetrics.sessionMinutes)}` : ''}
+      {stage === 'learning' ? ` ${text.routeProgress(completedPlanItems.length, routeMetrics.lessons)}` : ''}
+    </p>}
     {versions.some((entry) => entry.version > (selectedVersion ?? 0) && !entry.acceptedAt) && <p className="dt-path-muted">{text.newerDraftHelp}</p>}
   </section>
   const pinnedCard = activeAttempt && view ? <section className="dt-path-card" data-current="true" aria-label={text.pinnedLessonLabel}><p className="dt-path-eyebrow">{text.pinnedAttemptEyebrow}</p><h3>{view.path.curricula.find((entry) => entry.version === activeAttempt.version)?.items.find((item) => item.id === activeAttempt.itemId)?.title ?? activeAttempt.itemId}</h3><p>{text.routeVersion(activeAttempt.version)} · {text.attemptStatus(activeAttempt.status)} · {text.attemptWord} <code>{activeAttempt.id}</code></p>{view.path.acceptedVersion !== null && view.path.acceptedVersion !== activeAttempt.version && <p>{text.newerAcceptedRoute(view.path.acceptedVersion, activeAttempt.version)}</p>}<div className="dt-path-actions"><Button onClick={() => { setSelectedVersion(activeAttempt.version); onSelect(activeAttempt.itemId) }}>{text.viewPinnedOverview}</Button>{view.path.acceptedVersion !== null && view.path.acceptedVersion !== activeAttempt.version && <Button onClick={() => { setSelectedVersion(view.path.acceptedVersion); setSelection({ kind: 'project' }) }}>{text.browseAcceptedVersion(view.path.acceptedVersion)}</Button>}{onOpenChat && <Button onClick={onOpenChat}>{text.openCurrentConversation}</Button>}</div></section> : null
@@ -631,7 +644,6 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
   const diagnosisAgeMinutes = view !== null && latestDiagnosis !== undefined
     ? Math.max(0, Math.round((Date.parse(view.now) - Date.parse(latestDiagnosis.createdAt)) / 60_000))
     : 0
-  const acceptedPlan = view?.path.curricula.find((entry) => entry.version === view.path.acceptedVersion) ?? null
   const activeLessonTitle = view && activeAttempt
     ? view.path.curricula.find((entry) => entry.version === activeAttempt.version)?.items.find((item) => item.id === activeAttempt.itemId)?.title ?? activeAttempt.itemId
     : null
@@ -694,10 +706,23 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
         ...(run === undefined ? {} : { primary: { label: onOpenLesson === undefined ? text.openConversation : text.nextOpenLesson, run } }),
       }
     }
-    const firstLesson = acceptedPlan?.items[0]
-    if (acceptedVersion !== null && firstLesson !== undefined) return {
-      step: 4, title: text.nextAcceptedTitle, body: text.nextAcceptedBody(firstLesson.title),
-      primary: { label: text.nextStartFirst, run: () => start(acceptedVersion, firstLesson.id, false), disabled: busyAction },
+    if (acceptedVersion !== null && nextLesson !== null && acceptedPlan !== null) {
+      const done = completedPlanItems.length
+      const total = acceptedPlan.items.length
+      return {
+        step: 4,
+        title: done === 0 ? text.nextAcceptedTitle : text.nextStartNextTitle,
+        body: done === 0 ? text.nextAcceptedBody(nextLesson.title) : text.nextStartNextBody(done, total, nextLesson.title),
+        primary: {
+          label: done === 0 ? text.nextStartFirst : text.nextStartNextAction,
+          run: () => start(acceptedVersion, nextLesson.id, false),
+          disabled: busyAction,
+        },
+      }
+    }
+    if (acceptedPlan !== null && nextLesson === null) return {
+      step: 4, title: text.nextCompleteTitle, body: text.nextCompleteBody,
+      ...(onOpenChat ? { primary: { label: text.openConversation, run: onOpenChat } } : {}),
     }
     return {
       step: 4, title: text.nextAcceptedTitle, body: text.stageLearningHint,

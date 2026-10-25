@@ -5,6 +5,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — the route shows its effort and the next lesson
+
+- Every described route now shows **lessons · total study time · weeks at the
+  saved weekly budget**, and flags lessons whose estimate exceeds the preferred
+  session length ("3 lessons are longer than your 60-minute session"). The plan
+  prompt also asks the tutor to size lessons for the session budget and to flag
+  exceptions.
+- After a lesson completes, **Start the next lesson** targets the first
+  unfinished item instead of repeating the first one, and shows `2 of 3 lessons
+  done`. When every item has a completed attempt the card says **This route is
+  complete** and points back to the conversation.
+- The route card reports `x of y lessons completed` once a route is accepted.
+
+
 ### Changed — clearer waiting, fewer duplicate requests, actionable errors
 
 - The diagnosis and route wake messages are now short learner-voice prompts:
