@@ -5,6 +5,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — the initial diagnosis asks with the interactive question card
+
+The diagnosis wake message now tells the tutor to ask its initial questions
+through DSH's `ask_user_question` tool instead of writing them as plain chat
+text. That tool renders an answerable card beside the composer: options can be
+tapped, multi-select is supported, and a free-text question covers "explain in
+your own words". The tutor still decides the questions and still records the
+evidence and assessment; the runtime only asks for the interactive channel.
+Profiles without the tool fall back to the chat, as before.
+
+
 ### Fixed — the diagnosis step no longer points at questions that never arrived
 
 Requesting the initial diagnosis wakes the tutor, but the turn runs in the chat.
