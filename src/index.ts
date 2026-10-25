@@ -51,7 +51,9 @@ import type {} from '@deepseek-ai/dsh-agent'
 import { API_PREFIX, registerApi } from './api.js'
 import type { WebServerLike } from './api.js'
 import { withActivity } from './handoff.js'
+import { openJournal } from './journal.js'
 import { stampPathRequestFailure } from './path-runtime.js'
+import { packageVersion } from './version.js'
 import { promptSession } from './prompt.js'
 import { UDT_DOMAIN_NAME, openUdState } from './state.js'
 import { registerTools } from './tools.js'
@@ -129,6 +131,10 @@ export async function apply(ctx: Context): Promise<void> {
   // Cordis awaits the returned promise before the plugin counts as unloaded.
   ctx.effect(() => () => state.close())
 
+  // Local, content-free monitoring. Disabled under the test runner and never
+  // allowed to fail the runtime (all writes are best-effort).
+  const journal = openJournal()
+
   // Mount the browser API if this profile has a web surface.
   //
   // Resolved eagerly first: a profile's web server is mounted by the base and
@@ -142,8 +148,19 @@ export async function apply(ctx: Context): Promise<void> {
     ctx.effect(() =>
       registerApi(server as WebServerLike, {
         state,
-        prompt: (sessionId, text) => promptSession(ctx, sessionId, text),
+        prompt: (sessionId, text) => {
+          const result = promptSession(ctx, sessionId, text)
+          journal.append('tutor.prompt', {
+            sessionId: sessionId ?? null,
+            prompted: result.prompted,
+            ...(result.reason === undefined ? {} : { reason: result.reason.slice(0, 240) }),
+          })
+          return result
+        },
         teachingBrain: (sessionId) => teachingBrainForSession(ctx, sessionId),
+        journal,
+        pluginVersion: packageVersion(),
+        onEvent: (event, fields) => journal.append(event, fields),
       }),
     )
     ctx.logger.debug(`[diagnostic-tutor] browser API mounted at ${API_PREFIX}`)
@@ -165,15 +182,40 @@ export async function apply(ctx: Context): Promise<void> {
   // retry even after a restart.
   ctx.on('agent/error', ({ agent, error }) => {
     const reason = error instanceof Error ? error.message : String(error)
+    journal.append('agent.error', { sessionId: String(agent.session.id), error: reason.slice(0, 240) })
     void stampPathRequestFailure(state, String(agent.session.id), reason).catch(() => {})
   })
 
+  const toolCalls = new Map<string, { name: string; start: number }>()
   ctx.on('session/event', (session, event) => {
+    const sessionId = String(session.id)
+    // Tool metadata only: the name, the operation and the duration. Arguments
+    // stay out of the journal, so no lesson or goal text is recorded.
+    if (event.type === 'tool/call') {
+      const data = event.data as { callId?: string; name?: string; arguments?: string }
+      if (typeof data.name === 'string' && data.name.startsWith('udt_')) {
+        let operation: string | undefined
+        try {
+          const parsed = JSON.parse(data.arguments ?? '') as { op?: unknown; action?: unknown }
+          if (typeof parsed.op === 'string') operation = parsed.op
+          else if (typeof parsed.action === 'string') operation = parsed.action
+        } catch { /* the tool gets to explain its own arguments */ }
+        journal.append('tool.call', { sessionId, tool: data.name, ...(operation === undefined ? {} : { op: operation }) })
+        if (data.callId !== undefined) toolCalls.set(`${sessionId}:${data.callId}`, { name: data.name, start: Date.now() })
+      }
+    } else if (event.type === 'tool/result') {
+      const message = (event.data as { message?: { toolCallId?: string } }).message
+      const key = message?.toolCallId === undefined ? undefined : `${sessionId}:${message.toolCallId}`
+      const tracked = key === undefined ? undefined : toolCalls.get(key)
+      if (tracked !== undefined && key !== undefined) {
+        toolCalls.delete(key)
+        journal.append('tool.result', { sessionId, tool: tracked.name, durationMs: Math.max(0, Date.now() - tracked.start) })
+      }
+    }
     // The event says which conversation produced it, so the handoff is looked
     // up in that conversation rather than in the course at large. A busy
     // conversation elsewhere cannot make a quiet handoff look alive — and two
     // conversations working on the same target keep separate records.
-    const sessionId = String(session.id)
     const handoff = state.activeHandoff(sessionId)
     if (handoff === undefined || handoff.status !== 'prompted') return
     void event
@@ -188,6 +230,7 @@ export async function apply(ctx: Context): Promise<void> {
   })
 
   const toolCount = registerTools({ tools }, state)
+  journal.append('plugin.ready', { tools: toolCount, version: packageVersion() })
   ctx.logger.debug(
     `[diagnostic-tutor] ready — domain "${state.name}" v${state.version}, ${toolCount} tools registered`,
   )

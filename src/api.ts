@@ -33,6 +33,8 @@ import type { FocusPromptResult } from './prompt.js'
 import { focusPromptText } from './prompt.js'
 import type { CourseRecord, FocusRecord, NodeRecord, UdState } from './state.js'
 import { resolveLearningSession } from './project-session.js'
+import { buildDiagnostics } from './diagnostics.js'
+import type { Journal } from './journal.js'
 import { guarded } from './trust-fence.js'
 import { handlePathApi } from './path-api.js'
 
@@ -590,6 +592,12 @@ export interface ApiDeps {
    * constant is accepted by standalone callers; omitted means inconclusive.
    */
   readonly teachingBrain?: boolean | null | ((sessionId: string | undefined) => Promise<boolean | null>)
+  /** Local content-free event journal. Absent in tests and in older callers. */
+  readonly journal?: Journal | undefined
+  /** Installed plugin version, for the diagnostics header. */
+  readonly pluginVersion?: string | undefined
+  /** Fire-and-forget lifecycle hook used by the journal (never awaited). */
+  readonly onEvent?: ((event: string, fields?: Readonly<Record<string, unknown>>) => void) | undefined
 }
 
 /**
@@ -614,6 +622,16 @@ export function createApiHandler(deps: ApiDeps) {
       return handleOverview(state, deps, url.searchParams.get('sessionId') ?? undefined, res)
     }
     if (method === 'GET' && route === '/project/session') return handleProjectSession(state, url, res)
+    if (method === 'GET' && route === '/diagnostics') {
+      if (deps.journal === undefined) return fail(res, 503, 'diagnostics-disabled')
+      try {
+        sendJson(res, 200, await buildDiagnostics(state, deps.journal, { ...(deps.pluginVersion === undefined ? {} : { pluginVersion: deps.pluginVersion }) }))
+      } catch (cause) {
+        deps.onEvent?.('diagnostics.error', { error: (cause as Error).message.slice(0, 240) })
+        return fail(res, 500, 'diagnostics-unavailable')
+      }
+      return
+    }
     if (method === 'POST' && route === '/project') return await handleSelectProject(state, req, res)
     if (method === 'GET' && route === '/export') return handleExport(state, res)
     if (method === 'POST' && route === '/reset') return await handleReset(state, res)

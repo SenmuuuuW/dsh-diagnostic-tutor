@@ -18,7 +18,7 @@ DSH Runtime
 │   ├── 模型工具（9 个）          src/tools.ts（6）+ src/path-tools.ts（3）
 │   ├── 唤醒模型                 src/prompt.ts（旧循环焦点）
 │   │                            src/path-runtime.ts（初诊 / 路线 / 开课提示词）
-│   └── HTTP API                 src/api.ts + src/path-api.ts（17 条路由）
+│   └── HTTP API                 src/api.ts + src/path-api.ts（18 条路由）
 │
 ├── 模型 / UDT skill（仓库外）
 │   └── 只能通过工具读写状态；运行时不复制、不内置教学逻辑
@@ -102,6 +102,7 @@ DSH Runtime
 | `/node` `/lesson` | GET | 单节点详情 / 单节点旧 lesson |
 | `/project` | POST | 本会话选择项目 |
 | `/project/session` | GET | 解析继续学习应进入的会话（只读，不写选择） |
+| `/diagnostics` | GET | 本地健康报告：阶段、待处理/失败请求、事件日志（只读） |
 | `/focus` | POST | 旧循环开始学习 + 唤醒模型 |
 | `/handoff/observed` | POST | 浏览器首次渲染的时间点 |
 | `/export` `/reset` | GET/POST | 导出全部数据 / 删除一切 |
@@ -170,7 +171,10 @@ DSH Runtime
   无导航服务时回退为在当前会话打开。
 - 路线页按阶段渐进展示（目标与时间 → 初诊 → 路线 → 学习），初诊未完成时只显示当前阶段并给出
   「去对话回答」提示；已完成的初诊摘要与路线版本折叠在次要位置。
-- 验证记录：611 个 Vitest 测试、24 组浏览器场景（每组含中英切换）、类型检查、生产构建、地图/面板视觉审计。
+- 验证记录：621 个 Vitest 测试、24 组浏览器场景（每组含中英切换）、类型检查、生产构建、地图/面板视觉审计。
+- 监控（2026-10-25）：host 写本地无内容事件日志（`<dsh-home>/logs/diagnostic-tutor-events.jsonl`，
+  1 MB 上限、单次轮转，测试环境禁用），`GET /diagnostics` 返回阶段/请求/事件报告，
+  `pnpm doctor` 提供只读体检；不联网、不记录聊天/目标/证据内容。
 - DSH `0.2.1-rc.3` 复核（2026-10-25）：开发依赖钉到 rc.3，607 个测试、24 组浏览器场景、类型检查与构建通过；隔离 rc.3 web profile 中插件正常加载（Learning map 页面、Current lesson 标签、host 路由），无运行时异常。
 
 **未实现（不要当成已有能力）**
@@ -193,7 +197,7 @@ DSH Runtime
 
 ```sh
 pnpm typecheck
-pnpm test                 # 611 tests
+pnpm test                 # 621 tests
 pnpm build
 pnpm preview              # 构建产物预览
 node scripts/path-check.mjs http://127.0.0.1:8391/ /tmp/udt-path
