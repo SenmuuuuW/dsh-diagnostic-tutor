@@ -17,6 +17,8 @@ export interface PathPageProps {
   sessionId?: string | undefined
   onOpenChat?: (() => void) | undefined
   onStarted?: (() => void) | undefined
+  /** Return to the conversation with the current-lesson tab open. */
+  onOpenLesson?: (() => void) | undefined
   client?: PathClient | undefined
 }
 
@@ -155,8 +157,10 @@ function GoalWizard({ draft, step, dirty, recovered, busy, readOnly, onChange, o
   </form>
 }
 
-function AssessmentCard({ assessment, nodes, readyBrief, dirty, readOnly, busy, waiting, onRequest, onSkip, onEvidence, onOpenChat }: {
+function AssessmentCard({ assessment, nodes, readyBrief, dirty, readOnly, busy, waiting, showActions = true, onRequest, onSkip, onEvidence, onOpenChat }: {
   assessment: Assessment | null; nodes: NodeView[]; readyBrief: boolean; dirty: boolean; readOnly: boolean; busy: boolean; waiting: boolean
+  /** The diagnosis stage owns the action row in the Next-step card; folds keep their own. */
+  showActions?: boolean
   onRequest: () => void; onSkip: () => void; onEvidence: (id: string) => void; onOpenChat?: (() => void) | undefined
 }): ReactNode {
   const text = usePathText()
@@ -172,10 +176,10 @@ function AssessmentCard({ assessment, nodes, readyBrief, dirty, readOnly, busy, 
     {waiting && <p role="status">{text.diagnosisWaiting}</p>}
     {!readyBrief && <p className="dt-path-muted">{text.diagnosisNeedsGoal}</p>}
     {dirty && <p className="dt-path-muted">{text.diagnosisNeedsSave}</p>}
-    <div className="dt-path-actions"><Button disabled={disabled} onClick={onRequest}>{waiting ? text.requestDiagnosisAgain : assessment ? text.requestNewDiagnosis : text.requestDiagnosis}</Button>
+    {showActions && <div className="dt-path-actions"><Button disabled={disabled} onClick={onRequest}>{waiting ? text.requestDiagnosisAgain : assessment ? text.requestNewDiagnosis : text.requestDiagnosis}</Button>
       {assessment?.status !== 'skipped' && <Button disabled={disabled} onClick={onSkip}>{text.skipAssessment}</Button>}
       {onOpenChat && <Button onClick={onOpenChat}>{text.openConversation}</Button>}
-    </div>
+    </div>}
   </section>
 }
 
@@ -406,7 +410,7 @@ function Overview({ plan, selection, view, nodes, activeAttempt, readOnly, busy,
 export function PathPage(props: PathPageProps): ReactNode {
   return <PathPageBody key={JSON.stringify([props.courseId, props.sessionId ?? null])} {...props} />
 }
-function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted, client = defaultPathClient }: PathPageProps): ReactNode {
+function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted, onOpenLesson, client = defaultPathClient }: PathPageProps): ReactNode {
   const text = usePathText()
   const lang = useLang()
   const textRef = useRef(text)
@@ -576,20 +580,19 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
     { key: 'learning', label: text.stageLearning },
   ]
   const stageIndex = stages.findIndex((entry) => entry.key === stage)
-  const stageMessage = stage === 'goal' ? text.stageGoalHint : stage === 'diagnosis' ? text.stageDiagnosisHint : stage === 'route' ? text.stageRouteHint : text.stageLearningHint
   const skipAssessment = () => { void mutate('skip', (params) => client.skipAssessment(params), () => setNotice(text.assessmentSkippedNotice)) }
-  const assessmentCard = <AssessmentCard assessment={assessment} nodes={nodes} readyBrief={savedReady} dirty={dirty} readOnly={readOnly} busy={busyAction} waiting={diagnosisWaiting} onRequest={() => ask('diagnosis')} onSkip={skipAssessment} onEvidence={setKnowledgeId} onOpenChat={onOpenChat} />
+  const assessmentCard = <AssessmentCard assessment={assessment} nodes={nodes} readyBrief={savedReady} dirty={dirty} readOnly={readOnly} busy={busyAction} waiting={diagnosisWaiting} showActions={false} onRequest={() => ask('diagnosis')} onSkip={skipAssessment} onEvidence={setKnowledgeId} onOpenChat={onOpenChat} />
+  const assessmentCardFull = <AssessmentCard assessment={assessment} nodes={nodes} readyBrief={savedReady} dirty={dirty} readOnly={readOnly} busy={busyAction} waiting={diagnosisWaiting} onRequest={() => ask('diagnosis')} onSkip={skipAssessment} onEvidence={setKnowledgeId} onOpenChat={onOpenChat} />
   const routeView = view
   const routeCard = routeView === null ? null : <section className="dt-path-card" aria-label={text.routeProposalsLabel}><div className="dt-path-card-head"><h3>{versions.length ? text.routeVersions : text.buildRoute}</h3>{planWaiting && <span className="dt-path-tag" role="status">{text.waitingProposal}</span>}</div>
     {!versions.length && <p className="dt-path-muted">{text.noVersionsHelp}</p>}
     {!assessmentCurrent && savedReady && <p className="dt-path-muted">{text.needsAssessmentHelp}</p>}
-    <div className="dt-path-version-row">{versions.length > 0 && <label>{text.routeToBrowse}<select className="dt-path-version" aria-label={text.routeVersionToBrowse} value={selectedVersion ?? ''} onChange={(event) => { setSelectedVersion(Number(event.target.value)); setSelection({ kind: 'project' }) }}>{versions.map((entry) => <option key={entry.version} value={entry.version}>{text.versionOption(entry.version, entry.version === routeView.path.acceptedVersion, entry.acceptedAt !== null, entry.title)}</option>)}</select></label>}<Button disabled={!canPlan} onClick={() => ask('plan')}>{planWaiting ? text.requestPlanAgain : versions.length ? text.requestRevisedPlan : text.requestRouteProposal}</Button>{plan && plan.version !== routeView.path.acceptedVersion && <Button primary disabled={readOnly || busyAction || dirty || plan.briefRevision !== routeView.path.briefRevision || plan.assessmentRevision !== routeView.path.assessmentRevision} onClick={() => { void mutate('accept', (params) => client.accept({ ...params, version: plan.version }), () => setNotice(text.routeAcceptedNotice(plan.version))) }}>{text.acceptRouteVersion(plan.version)}</Button>}</div>
+    <div className="dt-path-version-row">{versions.length > 0 && <label>{text.routeToBrowse}<select className="dt-path-version" aria-label={text.routeVersionToBrowse} value={selectedVersion ?? ''} onChange={(event) => { setSelectedVersion(Number(event.target.value)); setSelection({ kind: 'project' }) }}>{versions.map((entry) => <option key={entry.version} value={entry.version}>{text.versionOption(entry.version, entry.version === routeView.path.acceptedVersion, entry.acceptedAt !== null, entry.title)}</option>)}</select></label>}{stage !== 'route' && <><Button disabled={!canPlan} onClick={() => ask('plan')}>{planWaiting ? text.requestPlanAgain : versions.length ? text.requestRevisedPlan : text.requestRouteProposal}</Button>{plan && plan.version !== routeView.path.acceptedVersion && <Button primary disabled={readOnly || busyAction || dirty || plan.briefRevision !== routeView.path.briefRevision || plan.assessmentRevision !== routeView.path.assessmentRevision} onClick={() => acceptVersion(plan.version)}>{text.acceptRouteVersion(plan.version)}</Button>}</>}</div>
     {plan && <p className="dt-path-small dt-path-muted">{plan.version === routeView.path.acceptedVersion ? text.routeAcceptedHelp : text.routeProposalHelp}{plan.briefRevision !== routeView.path.briefRevision || plan.assessmentRevision !== routeView.path.assessmentRevision ? text.routeRevisionWarning : ''}</p>}
     {versions.some((entry) => entry.version > (selectedVersion ?? 0) && !entry.acceptedAt) && <p className="dt-path-muted">{text.newerDraftHelp}</p>}
   </section>
   const pinnedCard = activeAttempt && view ? <section className="dt-path-card" data-current="true" aria-label={text.pinnedLessonLabel}><p className="dt-path-eyebrow">{text.pinnedAttemptEyebrow}</p><h3>{view.path.curricula.find((entry) => entry.version === activeAttempt.version)?.items.find((item) => item.id === activeAttempt.itemId)?.title ?? activeAttempt.itemId}</h3><p>{text.routeVersion(activeAttempt.version)} · {text.attemptStatus(activeAttempt.status)} · {text.attemptWord} <code>{activeAttempt.id}</code></p>{view.path.acceptedVersion !== null && view.path.acceptedVersion !== activeAttempt.version && <p>{text.newerAcceptedRoute(view.path.acceptedVersion, activeAttempt.version)}</p>}<div className="dt-path-actions"><Button onClick={() => { setSelectedVersion(activeAttempt.version); onSelect(activeAttempt.itemId) }}>{text.viewPinnedOverview}</Button>{view.path.acceptedVersion !== null && view.path.acceptedVersion !== activeAttempt.version && <Button onClick={() => { setSelectedVersion(view.path.acceptedVersion); setSelection({ kind: 'project' }) }}>{text.browseAcceptedVersion(view.path.acceptedVersion)}</Button>}{onOpenChat && <Button onClick={onOpenChat}>{text.openCurrentConversation}</Button>}</div></section> : null
-  const pendingCard = <section className="dt-path-card dt-path-pending" aria-label={text.diagnosisPendingTitle}><p className="dt-path-eyebrow">{text.initialDiagnosis}</p><h3>{text.diagnosisPendingTitle}</h3><p>{text.diagnosisPendingBody}</p><div className="dt-path-actions">{onOpenChat && <Button onClick={onOpenChat}>{text.openConversation}</Button>}<Button disabled={busyAction || readOnly} onClick={skipAssessment}>{text.skipAssessment}</Button></div></section>
-  const assessmentFold = <details className="dt-path-fold"><summary>{text.diagnosisDoneSummary} · {text.assessmentStatus(assessment?.status ?? 'ready')}</summary>{assessmentCard}</details>
+  const assessmentFold = <details className="dt-path-fold"><summary>{text.diagnosisDoneSummary} · {text.assessmentStatus(assessment?.status ?? 'ready')}</summary>{assessmentCardFull}</details>
   const routeFold = <details className="dt-path-fold"><summary>{text.routeSettingsSummary}</summary>{routeCard}</details>
   const staleAssessment = view?.path.assessment && !assessmentCurrent ? <p className="dt-path-muted">{text.assessmentStale}</p> : null
   const pinnedAlert = activeAttempt && !activeAttempt.prompted && !promptIssue ? <div className="dt-path-alert" role="alert">{text.pinnedRequestFailed} {activeAttempt.promptReason ?? text.noReason} <Button disabled={busyAction || readOnly} onClick={() => start(activeAttempt.version, activeAttempt.itemId, false)}>{text.retryCurrentLesson}</Button></div> : null
@@ -597,8 +600,63 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
   const capacityLine = capacity ? <p className="dt-path-muted dt-path-small">{text.capacityTitle(range(capacity, text))} · {capacity.available === null ? text.capacityNeedBudget : text.capacityAvailable(minutes(capacity.available, text))}</p> : null
   const capacityCard = capacity?.tight ? <section className="dt-path-card dt-path-conflict" aria-label={text.capacityLabel}><p>{capacity.conflict ? text.conflictMinimum : text.conflictMaximum} {text.conflictAdvice}</p><div className="dt-path-actions"><Button onClick={() => { setStep(0); setWizardOpen(true) }}>{text.editGoalScope}</Button><Button onClick={() => { setStep(2); setWizardOpen(true) }}>{text.editTimeBudget}</Button><Button disabled={!canPlan} onClick={() => ask('plan')}>{text.requestAdjustedPlan}</Button></div></section> : null
   const workspaceEl = plan && view ? <div className="dt-path-workspace"><RouteCanvas key={plan.version} plan={plan} selection={selection} activeAttempt={activeAttempt} attempts={view.run?.attempts ?? []} onSelect={onSelect} onModule={onModule} /><Overview plan={plan} selection={selection} view={view} nodes={nodes} activeAttempt={activeAttempt} readOnly={readOnly} busy={busyAction} onSelect={onSelect} onModule={onModule} onProject={() => setSelection({ kind: 'project' })} onStart={start} onEvidence={setKnowledgeId} /></div> : null
-  const emptyRouteEl = <section className="dt-path-empty"><p className="dt-path-eyebrow">{text.routeEmptyEyebrow}</p><h3>{planWaiting ? text.tutorPreparing : text.noCurriculum}</h3><p>{text.noCurriculumRoute}</p>{onOpenChat && <Button onClick={onOpenChat}>{text.openConversation}</Button>}</section>
-  const goalNeeded = <section className="dt-path-empty"><p className="dt-path-eyebrow">{text.learningPath}</p><h3>{text.stageGoal}</h3><p>{text.stageGoalHint}</p><Button onClick={() => setWizardOpen(true)}>{text.goalAndTimeSettings}</Button></section>
+  const acceptVersion = (version: number) => {
+    void mutate('accept', (params) => client.accept({ ...params, version }), () => setNotice(text.routeAcceptedNotice(version)))
+  }
+  const acceptedPlan = view?.path.curricula.find((entry) => entry.version === view.path.acceptedVersion) ?? null
+  const activeLessonTitle = view && activeAttempt
+    ? view.path.curricula.find((entry) => entry.version === activeAttempt.version)?.items.find((item) => item.id === activeAttempt.itemId)?.title ?? activeAttempt.itemId
+    : null
+  type NextAction = { label: string; run: () => void; disabled?: boolean }
+  const nextStep: { step: number; title: string; body: string; primary?: NextAction; secondary?: NextAction } | null = (() => {
+    if (!view || readOnly) return null
+    if (!savedReady) return {
+      step: 1, title: text.nextGoalTitle, body: text.nextGoalBody,
+      primary: { label: text.nextSetGoal, run: () => setWizardOpen(true) },
+    }
+    if (diagnosisWaiting) return {
+      step: 2, title: text.nextWaitingTitle, body: text.nextWaitingBody,
+      ...(onOpenChat ? { primary: { label: text.openConversation, run: onOpenChat } } : {}),
+      secondary: { label: text.skipAssessment, run: skipAssessment, disabled: busyAction },
+    }
+    if (!diagnosisReady) return {
+      step: 2, title: text.nextDiagnosisTitle, body: text.nextDiagnosisBody,
+      primary: { label: text.nextRequestDiagnosis, run: () => ask('diagnosis'), disabled: busyAction || dirty },
+      secondary: { label: text.skipAssessment, run: skipAssessment, disabled: busyAction },
+    }
+    if (!hasAcceptedRoute) {
+      if (planWaiting) return {
+        step: 3, title: text.nextRouteWaitingTitle, body: text.nextRouteWaitingBody,
+        ...(onOpenChat ? { primary: { label: text.openConversation, run: onOpenChat } } : {}),
+      }
+      if (plan !== undefined && plan.briefRevision === view.path.briefRevision && plan.assessmentRevision === view.path.assessmentRevision) return {
+        step: 3, title: text.nextProposalTitle, body: text.nextProposalBody(plan.version),
+        primary: { label: text.nextAcceptVersion(plan.version), run: () => acceptVersion(plan.version), disabled: busyAction || dirty },
+        secondary: { label: text.requestRevisedPlan, run: () => ask('plan'), disabled: !canPlan },
+      }
+      return {
+        step: 3, title: text.nextRouteTitle, body: text.nextRouteBody,
+        primary: { label: text.nextRequestRoute, run: () => ask('plan'), disabled: !canPlan },
+      }
+    }
+    const acceptedVersion = view.path.acceptedVersion
+    if (activeAttempt !== undefined && activeLessonTitle !== null) {
+      const run = onOpenLesson ?? onOpenChat
+      return {
+        step: 4, title: text.nextContinueTitle, body: text.nextContinueBody(activeLessonTitle),
+        ...(run === undefined ? {} : { primary: { label: onOpenLesson === undefined ? text.openConversation : text.nextOpenLesson, run } }),
+      }
+    }
+    const firstLesson = acceptedPlan?.items[0]
+    if (acceptedVersion !== null && firstLesson !== undefined) return {
+      step: 4, title: text.nextAcceptedTitle, body: text.nextAcceptedBody(firstLesson.title),
+      primary: { label: text.nextStartFirst, run: () => start(acceptedVersion, firstLesson.id, false), disabled: busyAction },
+    }
+    return {
+      step: 4, title: text.nextAcceptedTitle, body: text.stageLearningHint,
+      ...(onOpenChat ? { primary: { label: text.openConversation, run: onOpenChat } } : {}),
+    }
+  })()
 
   return <div className="dt-path-page" aria-label={text.pageLabel(title)}>
     <header className="dt-path-header"><div><p className="dt-path-eyebrow">{text.learningPath}</p><h2>{title}</h2><p className="dt-path-muted">{text.learningPathIntro}</p></div><div className="dt-path-actions"><Button onClick={() => setSelection({ kind: 'project' })}>{text.projectOverview}</Button><Button aria-expanded={wizardOpen} onClick={() => setWizardOpen((open) => !open)}>{text.goalAndTimeSettings}</Button></div></header>
@@ -616,20 +674,29 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
           const state = index < stageIndex ? 'done' : index === stageIndex ? 'current' : 'pending'
           return <li key={entry.key} data-state={state}><span className="dt-path-stage-number">{index + 1}</span><span>{entry.label}</span><small>{state === 'done' ? text.stageDone : state === 'current' ? text.stageCurrent : text.stagePending}</small></li>
         })}</ol>
-        <p className="dt-path-muted dt-path-small">{stageMessage}</p>
       </div>
+      {nextStep && <section className="dt-path-next" aria-label={text.nextStepEyebrow}>
+        <div className="dt-path-next-copy">
+          <p className="dt-path-eyebrow">{text.nextStepEyebrow} · {text.nextStepProgress(nextStep.step, stages.length)}</p>
+          <h3>{nextStep.title}</h3>
+          <p>{nextStep.body}</p>
+        </div>
+        {(nextStep.primary || nextStep.secondary) && <div className="dt-path-next-actions">
+          {nextStep.primary && <Button primary disabled={nextStep.primary.disabled} onClick={nextStep.primary.run}>{nextStep.primary.label}</Button>}
+          {nextStep.secondary && <Button disabled={nextStep.secondary.disabled} onClick={nextStep.secondary.run}>{nextStep.secondary.label}</Button>}
+        </div>}
+      </section>}
       {pinnedCard}
-      {stage === 'goal' && !wizardOpen && goalNeeded}
-      {stage === 'diagnosis' && (diagnosisWaiting ? pendingCard : assessmentCard)}
+      {stage === 'diagnosis' && !diagnosisWaiting && assessmentCard}
       {stage !== 'goal' && staleAssessment}
       {pinnedAlert}
       {knowledgeCard}
       {stage === 'route' && <>
         {diagnosisReady && assessmentFold}
-        {routeCard}
+        {versions.length > 0 && routeCard}
         {capacityLine}
         {capacityCard}
-        {plan ? workspaceEl : emptyRouteEl}
+        {workspaceEl}
       </>}
       {stage === 'learning' && <>
         {plan ? workspaceEl : null}

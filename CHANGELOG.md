@@ -5,6 +5,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — one next step, at a glance
+
+The route page now leads with a single **Next step** card instead of making the
+learner work out which card to act on. It states where they are (`Step 2 of 4`),
+what to do next in one sentence, and exactly one primary action: set the goal,
+request or answer the diagnosis, request the route, accept the version, start
+the first lesson, or continue the current one. A secondary action appears only
+when it is a real alternative (skip the diagnosis, request a revised route).
+
+The competing repeats are gone: the diagnosis stage keeps its explanatory card
+but no second action row, the route stage keeps its version browser but moves
+request/accept into the Next-step card, and the empty-state cards and the
+diagnosis "in progress" card were removed rather than stacked under the same
+guidance. Goal-stage and route-stage pages are now just the stage bar, the next
+step, and folded history. Starting or continuing a lesson from the map now also
+opens the Current-lesson tab.
+
+
 ### Changed — "enter learning" resumes the conversation that owns it
 
 A project is shared, but its focus, planned runs and teaching attempts belong

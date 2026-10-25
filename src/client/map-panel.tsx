@@ -343,7 +343,8 @@ export function LearningMapPanel({
       </nav>
       {page === 'curriculum' ? (
         <PathPage courseId={overview.course.id} title={overview.course.title} nodes={nodes}
-          sessionId={sessionId} client={pathClient} onOpenChat={onOpenChat} onStarted={onOpenChat} />
+          sessionId={sessionId} client={pathClient} onOpenChat={onOpenChat}
+          onStarted={onOpenLesson ?? onOpenChat} onOpenLesson={onOpenLesson} />
       ) : <div className="dt-map-root">
         <section className="dt-map-pane">
           <header className="dt-course-card dt-map-cover">
