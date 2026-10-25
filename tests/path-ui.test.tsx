@@ -137,7 +137,7 @@ describe('curriculum browsing and explicit execution', () => {
     await mount({ onStarted })
     await click('Browse lesson 2: Train the classifier')
     expect(button('Start lesson').disabled).toBe(true)
-    await click('Accept route version 1')
+    await click('Accept version 1')
     expect(client.accept).toHaveBeenCalledWith({ sessionId: 'synthetic-session', courseId: 'synthetic-course', expectedRevision: 4, version: 1 })
     expect(client.start).not.toHaveBeenCalled()
     const pending = deferred<ReturnType<typeof pathView> & { prompted: boolean }>()
@@ -296,11 +296,11 @@ describe('goal wizard persistence and request readiness', () => {
     expect(client.skipAssessment).not.toHaveBeenCalled()
     await click('Skip initial assessment')
     expect(client.skipAssessment).toHaveBeenCalledWith({ sessionId: 'synthetic-session', courseId: 'synthetic-course', expectedRevision: 4 })
-    expect(button('Request a route proposal').disabled).toBe(false)
-    await click('Request a route proposal')
+    expect(button('Request route proposal').disabled).toBe(false)
+    await click('Request route proposal')
     expect(vi.mocked(client.request).mock.calls[0]![0]).toMatchObject({ kind: 'plan', expectedRevision: 5, sessionId: 'synthetic-session', courseId: 'synthetic-course' })
     expect(container.querySelectorAll('.dt-path-node')).toHaveLength(0)
-    expect(container.textContent).toContain('Waiting for a tutor proposal')
+    expect(container.querySelector('.dt-path-next')?.textContent).toContain('The tutor is preparing the route')
   })
 
   it('does not overlap slow polls or discard every delayed response', async () => {
@@ -386,25 +386,27 @@ describe('progressive disclosure of the route page', () => {
     const opened: string[] = []
     await mount({ onOpenChat: () => opened.push('chat') })
 
-    const pending = container.querySelector('.dt-path-pending')
-    expect(pending).not.toBeNull()
-    expect(pending?.textContent).toContain('Initial diagnosis in progress')
-    expect(pending?.textContent).toContain('Answer there')
+    const next = container.querySelector('.dt-path-next')
+    expect(next).not.toBeNull()
+    expect(next?.textContent).toContain('Answer the tutor’s questions')
+    expect(next?.textContent).toContain('The diagnosis is in progress')
     // The route cannot be requested while the diagnosis is still in progress.
     expect([...container.querySelectorAll('button')].some((entry) => entry.textContent?.trim() === 'Request a route proposal')).toBe(false)
 
-    const open = [...pending!.querySelectorAll('button')].find((entry) => entry.textContent?.includes('Open conversation'))
-    await act(async () => { open?.click() })
+    await click('Open conversation')
     expect(opened).toEqual(['chat'])
   })
 
-  it('explains what is missing when no route exists yet, instead of showing a blank area', async () => {
+  it('answers "what now?" with one request action when no route exists yet', async () => {
     host = pathView([])
     await mount()
 
     expect(container.querySelector('.dt-path-stagebar li[data-state="current"]')?.textContent).toContain('Learning route')
-    expect(container.textContent).toContain('Diagnosis is ready. Request a route proposal above')
-    expect(button('Request a route proposal').disabled).toBe(false)
+    expect(container.querySelector('.dt-path-next')?.textContent).toContain('Generate the learning route')
+    expect(button('Request route proposal').disabled).toBe(false)
+    // Nothing else offers a competing request button or empty-state card.
+    expect(container.querySelector('.dt-path-empty')).toBeNull()
+    expect([...container.querySelectorAll('button')].some((entry) => entry.textContent?.trim() === 'Request a route proposal')).toBe(false)
     // Earlier stages are folded away: the diagnosis summary is a disclosure,
     // not another stacked card.
     expect(container.querySelector('details.dt-path-fold summary')?.textContent).toContain('Initial diagnosis summary')
@@ -416,6 +418,100 @@ describe('progressive disclosure of the route page', () => {
     const summaries = [...container.querySelectorAll('details.dt-path-fold summary')].map((entry) => entry.textContent ?? '')
     expect(summaries.some((entry) => entry.includes('Initial diagnosis summary'))).toBe(true)
     expect(summaries.some((entry) => entry.includes('Route versions and settings'))).toBe(true)
+  })
+})
+
+describe('one obvious next step', () => {
+  function nextCard(): HTMLElement {
+    const card = container.querySelector<HTMLElement>('.dt-path-next')
+    expect(card, 'next-step card').not.toBeNull()
+    return card!
+  }
+
+  it('starts with the goal form and names it in one action', async () => {
+    host = pathView([])
+    host.path = { ...host.path, brief: null, briefRevision: 0, assessment: null, assessmentRevision: 0 }
+    await mount()
+
+    expect(nextCard().textContent).toContain('Next step')
+    expect(nextCard().textContent).toContain('Step 1 of 4')
+    expect(nextCard().textContent).toContain('Set the goal and time budget')
+    expect(container.querySelectorAll('.dt-path-next [data-primary="true"]')).toHaveLength(1)
+    await click('Set goal and time')
+    expect(container.querySelector('form[aria-label="Learning goal wizard"]')).not.toBeNull()
+  })
+
+  it('asks for the diagnosis in one action when the goal is already saved', async () => {
+    host = pathView([])
+    host.path.assessment = null
+    host.path.assessmentRevision = 0
+    await mount()
+
+    expect(nextCard().textContent).toContain('Ask the tutor for a quick check')
+    expect(button('Request initial diagnosis').disabled).toBe(false)
+    await click('Request initial diagnosis')
+    expect(vi.mocked(client.request).mock.calls[0]![0]).toMatchObject({ kind: 'diagnosis' })
+    expect(nextCard().textContent).toContain('Answer the tutor’s questions')
+  })
+
+  it('points at the conversation while the diagnosis is running', async () => {
+    host = pathView([])
+    host.path = {
+      ...host.path,
+      assessment: null,
+      assessmentRevision: 0,
+      requests: [{ id: 'diag-1', sessionId: 'synthetic-session', kind: 'diagnosis', briefRevision: 1, createdAt: NOW, prompted: true, reason: null }],
+    }
+    const opened: string[] = []
+    await mount({ onOpenChat: () => opened.push('chat') })
+
+    expect(nextCard().textContent).toContain('Answer the tutor’s questions')
+    await click('Open conversation')
+    expect(opened).toEqual(['chat'])
+    expect(nextCard().textContent).toContain('Skip initial assessment')
+  })
+
+  it('asks for the route once, then offers acceptance instead of another request', async () => {
+    vi.useFakeTimers()
+    host = pathView([])
+    await mount()
+    expect(nextCard().textContent).toContain('Generate the learning route')
+    await click('Request route proposal')
+    expect(vi.mocked(client.request).mock.calls[0]![0]).toMatchObject({ kind: 'plan' })
+
+    host = pathView([curriculum(1, false)])
+    // The request write advanced the revision, so the proposal poll must too.
+    host.path.revision += 1
+    vi.mocked(client.get).mockResolvedValue(structuredClone(host))
+    await poll()
+
+    expect(nextCard().textContent).toContain('The route proposal is ready')
+    expect(container.querySelectorAll('.dt-path-next [data-primary="true"]')).toHaveLength(1)
+    await click('Accept version 1')
+    expect(client.accept).toHaveBeenCalledWith({ sessionId: 'synthetic-session', courseId: 'synthetic-course', expectedRevision: 5, version: 1 })
+  })
+
+  it('names the first lesson once accepted, and starts it from the card', async () => {
+    const onStarted = vi.fn()
+    await mount({ onStarted })
+
+    expect(nextCard().textContent).toContain('Start the first lesson')
+    expect(nextCard().textContent).toContain('Represent the data')
+    await click('Start first lesson')
+    expect(vi.mocked(client.start).mock.calls[0]![0]).toMatchObject({ version: 1, itemId: 'represent' })
+    expect(onStarted).toHaveBeenCalledTimes(1)
+  })
+
+  it('offers to reopen the current lesson while one is in progress', async () => {
+    host = pathView()
+    host.run = { ...host.run!, revision: 1, activeAttemptId: 'attempt-one', attempts: [attempt()] }
+    const opened: string[] = []
+    await mount({ onOpenLesson: () => opened.push('lesson') })
+
+    expect(nextCard().textContent).toContain('Continue the current lesson')
+    expect(nextCard().textContent).toContain('Represent the data')
+    await click('Continue this lesson')
+    expect(opened).toEqual(['lesson'])
   })
 })
 

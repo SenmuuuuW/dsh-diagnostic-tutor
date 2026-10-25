@@ -469,15 +469,18 @@ ordered lesson list and every Overview) and **Knowledge & evidence** (the
 diagnosis map and its recorded observations). Neither one teaches: they show
 stored state.
 
-The route tab shows one stage at a time. A progress bar names the four stages —
-goal & time, initial diagnosis, route, learning — and only the current stage's
-cards are expanded. Before a goal is saved the wizard owns the page; while the
-tutor is asking diagnostic questions the page says **Initial diagnosis in
-progress** and offers a way back to the conversation; route versions appear only
-after the diagnosis is complete or skipped; once accepted, the page leads with
-the route canvas. Completed diagnosis details and route settings stay reachable
-in folded sections, and the effort card only appears when the estimate conflicts
-with the saved budget.
+The route tab shows one stage at a time and one next step. A progress bar names
+the four stages — goal & time, initial diagnosis, route, learning — and a
+**Next step** card always answers "what now?" with a single primary action
+(set the goal, request or answer the diagnosis, request the route, accept the
+version, start the first lesson, continue the current one) plus at most one
+real alternative. Competing action rows live in the folded history, not beside
+it. Before a goal is saved the wizard owns the page; while the tutor is asking
+diagnostic questions the card points back to the conversation; route versions
+appear only after the diagnosis is complete or skipped; once accepted, the page
+leads with the route canvas. Completed diagnosis details and route settings stay
+reachable in folded sections, and the effort card only appears when the estimate
+conflicts with the saved budget.
 
 The plugin's own accent is **DeepSeek's brand blue** — `#4d6bfe` on the light
 canvas, `#6a84ff` on the dark one — used sparingly for progress, the active tab,
