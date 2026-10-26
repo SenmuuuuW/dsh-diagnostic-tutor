@@ -87,6 +87,12 @@ function minutes(value: number, text: PathText): string {
   return text.durationHours(Number((value / 60).toFixed(1)))
 }
 function range(value: { min: number; max: number }, text: PathText): string { return `${minutes(value.min, text)}–${minutes(value.max, text)}` }
+/** Human wait duration: minutes under an hour, hours under two days, then days. */
+function waitDuration(value: number, text: PathText): string {
+  if (value < 60) return text.durationMinutes(value)
+  if (value < 60 * 48) return text.durationHours(Number((value / 60).toFixed(1)))
+  return text.durationDays(Number((value / 1440).toFixed(1)))
+}
 function budget(brief: GoalBrief | null, plan: Curriculum, now: string, lang: Lang) {
   const total = effort(plan.items)
   let weeks = brief?.durationWeeks ?? null
@@ -663,7 +669,7 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
         secondary: { label: text.skipAssessment, run: skipAssessment, disabled: busyAction },
       }
       const running = sessionActivity?.running === true
-      const waitingFor = diagnosisAgeMinutes >= 1 ? ` ${text.waitingFor(diagnosisAgeMinutes)}` : ''
+      const waitingFor = diagnosisAgeMinutes >= 1 ? ` ${text.waitingFor(waitDuration(diagnosisAgeMinutes, text))}` : ''
       return {
         step: 2,
         title: running ? text.nextWaitingRunningTitle : text.nextWaitingTitle,
