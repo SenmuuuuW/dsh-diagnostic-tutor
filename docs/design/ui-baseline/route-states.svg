@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/></marker>
+  <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/></marker>
+  <style>
+    .title{font-size:24px;font-weight:700;fill:#0f172a}.sub{font-size:13px;fill:#64748b}
+    .lane{font-size:15px;font-weight:700;fill:#334155}.phase{font-size:12px;fill:#64748b}
+    .st{font-size:13px;font-weight:600;fill:#0f172a}.d{font-size:11px;fill:#475569}
+    .small{font-size:11px;fill:#64748b}.act{font-size:11px;fill:#2563eb}
+    .line{stroke:#475569;stroke-width:1.5;fill:none;marker-end:url(#a)}.blue{stroke:#2563eb;stroke-width:1.6;fill:none;marker-end:url(#ab)}
+    .box{stroke-width:1.5}
+  </style>
+</defs>
+<rect width="1500" height="900" fill="#fff"/>
+<text x="28" y="42" class="title">路线页状态机（UI 必须能表达的全部状态）</text>
+<text x="28" y="66" class="sub">阶段由数据推导（goal / diagnosis / route / learning / legacy）；每个阶段只有一个主操作，次操作才出现替代路径。</text>
+
+<!-- lanes -->
+<rect x="24" y="92" width="1452" height="150" rx="12" fill="#f8fafc" stroke="#e2e8f0"/>
+<text x="44" y="124" class="lane">1 · 目标与时间</text><text x="44" y="144" class="phase">goal</text>
+<rect x="24" y="258" width="1452" height="170" rx="12" fill="#eff6ff" stroke="#bfdbfe"/>
+<text x="44" y="290" class="lane">2 · 初始诊断</text><text x="44" y="310" class="phase">diagnosis</text>
+<rect x="24" y="444" width="1452" height="160" rx="12" fill="#f5f3ff" stroke="#ddd6fe"/>
+<text x="44" y="476" class="lane">3 · 学习路线</text><text x="44" y="496" class="phase">route</text>
+<rect x="24" y="620" width="1452" height="180" rx="12" fill="#ecfdf5" stroke="#a7f3d0"/>
+<text x="44" y="652" class="lane">4 · 开始学习</text><text x="44" y="672" class="phase">learning</text>
+
+<!-- goal -->
+<rect x="180" y="144" width="210" height="62" rx="9" fill="#fff" stroke="#cbd5e1"/><text x="196" y="168" class="st">未保存 / 不完整</text><text x="196" y="188" class="d">向导可随时关闭；草稿可恢复</text>
+<rect x="470" y="144" width="230" height="62" rx="9" fill="#fff" stroke="#cbd5e1"/><text x="486" y="168" class="st">brief 已保存</text><text x="486" y="188" class="d">目的 / 产出 / 周预算 / 时区</text>
+<path d="M 390 175 L 468 175" class="line"/><text x="392" y="165" class="act">保存 brief</text>
+
+<!-- diagnosis -->
+<rect x="180" y="316" width="190" height="66" rx="9" fill="#fff" stroke="#93c5fd"/><text x="196" y="340" class="st">未请求初诊</text><text x="196" y="360" class="d">主操作：请求初诊</text>
+<rect x="430" y="316" width="220" height="66" rx="9" fill="#dbeafe" stroke="#3b82f6"/><text x="446" y="340" class="st">已请求 · 进行中</text><text x="446" y="360" class="d">等待/运行/失败（failure 可重试）</text>
+<rect x="720" y="300" width="240" height="52" rx="9" fill="#fff" stroke="#93c5fd"/><text x="736" y="322" class="st">assessment ready</text><text x="736" y="341" class="d">证据引用的诊断结论</text>
+<rect x="720" y="362" width="240" height="46" rx="9" fill="#fff" stroke="#93c5fd"/><text x="736" y="382" class="st">已跳过初诊</text><text x="736" y="399" class="d">用户显式跳过，不伪造证据</text>
+<path d="M 370 349 L 428 349" class="line"/><text x="372" y="339" class="act">请求</text>
+<path d="M 650 349 L 718 326" class="line"/><text x="658" y="316" class="act">对话中回答</text>
+<path d="M 650 355 L 718 382" class="line"/><text x="658" y="394" class="act">跳过</text>
+<rect x="1030" y="316" width="260" height="58" rx="9" fill="#fff7ed" stroke="#fb923c"/><text x="1046" y="340" class="st">失败 / 无响应</text><text x="1046" y="360" class="d">provider / 鉴权 / 余额 / 网络；重试</text>
+<path d="M 1030 345 L 900 345" class="blue"/><text x="930" y="336" class="act">retry / 打开对话</text>
+<text x="720" y="430" class="small">运行中：页面显示等待时长；请求超过 10 分钟会被 doctor 标 stale（不自动重发）</text>
+
+<!-- route -->
+<rect x="180" y="492" width="220" height="66" rx="9" fill="#fff" stroke="#c4b5fd"/><text x="196" y="516" class="st">无提案</text><text x="196" y="536" class="d">主操作：请求学习路线</text>
+<rect x="470" y="484" width="260" height="82" rx="9" fill="#f5f3ff" stroke="#8b5cf6"/><text x="486" y="508" class="st">提案 vN · 未接受</text><text x="486" y="528" class="d">模块 / 课次 / 依赖 / 时长 / 单次冲突</text><text x="486" y="548" class="d">次操作：请求修订（生成 vN+1）</text>
+<rect x="800" y="484" width="220" height="82" rx="9" fill="#ede9fe" stroke="#7c3aed"/><text x="816" y="508" class="st">已接受 vN</text><text x="816" y="528" class="d">版本不可变；接受后才可开始</text><text x="816" y="548" class="d">改 brief/评估 → 需新版本</text>
+<path d="M 400 525 L 468 525" class="line"/><text x="402" y="515" class="act">请求路线</text>
+<path d="M 730 525 L 798 525" class="line"/><text x="736" y="515" class="act">接受 vN</text>
+<rect x="1060" y="492" width="280" height="66" rx="9" fill="#fff" stroke="#ddd6fe"/><text x="1076" y="516" class="st">会话固定在旧版本</text><text x="1076" y="536" class="d">已接受 vM（M&gt;N）；一行提示 + 浏览 vM</text>
+<path d="M 1020 525 L 1058 525" class="line" stroke-dasharray="4 4"/>
+<text x="470" y="582" class="small">修订时：旧版本保留；学习中的 attempt 不因新版本迁移（版本钉在会话/尝试上）</text>
+
+<!-- learning -->
+<rect x="180" y="700" width="210" height="66" rx="9" fill="#fff" stroke="#6ee7b7"/><text x="196" y="724" class="st">未开始任何课次</text><text x="196" y="744" class="d">主操作：开始第一课</text>
+<rect x="430" y="700" width="250" height="66" rx="9" fill="#d1fae5" stroke="#10b981"/><text x="446" y="724" class="st">attempt · 进行中</text><text x="446" y="744" class="d">当前课次；units 已写入；Continue</text>
+<rect x="720" y="700" width="230" height="66" rx="9" fill="#fff" stroke="#6ee7b7"/><text x="736" y="724" class="st">课次完成</text><text x="736" y="744" class="d">attempt completed · 完成 ≠ 掌握</text>
+<rect x="990" y="700" width="210" height="66" rx="9" fill="#fff" stroke="#6ee7b7"/><text x="1006" y="724" class="st">下一课 / 全部完成</text><text x="1006" y="744" class="d">进度 x/y；不自动开始下一课</text>
+<path d="M 390 733 L 428 733" class="line"/><text x="392" y="723" class="act">开始课次</text>
+<path d="M 680 733 L 718 733" class="line"/><text x="686" y="723" class="act">完成</text>
+<path d="M 950 733 L 988 733" class="line"/><text x="956" y="723" class="act">决定下一步</text>
+<path d="M 1180 700 C 1180 660 900 650 660 700" class="line" stroke-dasharray="4 4"/><text x="930" y="670" class="act">回到学习中的课次 / 继续</text>
+
+<!-- cross lane -->
+<path d="M 585 206 L 585 314" class="blue"/><text x="596" y="262" class="act">目标已保存 → 可请求初诊</text>
+<path d="M 800 412 L 800 482" class="blue"/><text x="810" y="452" class="act">ready / skipped → 可请求路线</text>
+<path d="M 910 566 L 910 698" class="blue"/><text x="920" y="632" class="act">已接受 → 可开始课次</text>
+
+<!-- legacy -->
+<rect x="1060" y="144" width="280" height="62" rx="9" fill="#fff" stroke="#cbd5e1"/><text x="1076" y="168" class="st">legacy 项目</text><text x="1076" y="188" class="d">有 legacy 课次、无 learning path</text>
+<text x="1060" y="224" class="small">只读/迁移入口；不显示阶段 4 的下一步动作</text>
+
+<!-- legend -->
+<rect x="24" y="820" width="1452" height="52" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<text x="44" y="851" class="small">实线 = 用户动作；虚线 = 版本/历史分支；蓝色 = 阶段推进。所有唤醒都写入普通对话消息；模型回合失败会落在对应 path request 的 failure 上。</text>
+</svg>

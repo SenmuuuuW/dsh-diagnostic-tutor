@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="940" viewBox="0 0 1400 940" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif">
+<defs>
+  <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/></marker>
+  <style>
+    .title{font-size:24px;font-weight:700;fill:#0f172a}
+    .sub{font-size:13px;fill:#64748b}
+    .cap{font-size:14px;font-weight:700;fill:#0f172a}
+    .t{font-size:12px;fill:#334155}
+    .s{font-size:11px;fill:#64748b}
+    .m{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;fill:#475569}
+    .n{font-size:12px;font-weight:700;fill:#ffffff}
+    .box{stroke-width:1.4}
+    .num{fill:#2563eb;stroke:#ffffff;stroke-width:2}
+    .arrow{stroke:#2563eb;stroke-width:1.6;fill:none;marker-end:url(#a)}
+  </style>
+</defs>
+<rect width="1400" height="940" fill="#ffffff"/>
+<text x="28" y="42" class="title">当前 UI 结构：一个主页面 + 一个停靠教学面</text>
+<text x="28" y="66" class="sub">Learning map 是主栏页面；Current lesson 是右栏 tab。两者都可从侧栏进入，对话始终是默认主栏。</text>
+
+<!-- window -->
+<rect x="24" y="92" width="1352" height="700" rx="14" fill="#ffffff" stroke="#94a3b8" class="box"/>
+<rect x="24" y="92" width="1352" height="36" rx="14" fill="#f1f5f9" stroke="#cbd5e1"/>
+<circle cx="48" cy="110" r="5" fill="#f87171"/><circle cx="66" cy="110" r="5" fill="#fbbf24"/><circle cx="84" cy="110" r="5" fill="#34d399"/>
+<text x="620" y="115" class="s">DeepSeek Harness · Desktop</text>
+
+<!-- sidebar -->
+<rect x="24" y="128" width="252" height="664" fill="#f8fafc" stroke="#e2e8f0"/>
+<text x="44" y="158" class="cap">deepseek HARNESS</text>
+<rect x="42" y="174" width="218" height="34" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="58" y="196" class="t">＋ 新会话</text>
+<text x="44" y="236" class="s">插件</text>
+<text x="44" y="262" class="s">自动化任务</text>
+<rect x="36" y="274" width="230" height="34" rx="8" fill="#eef2ff" stroke="#6366f1"/>
+<text x="46" y="296" class="t" fill="#3730a3">▦ 学习地图 / Learning map</text>
+<text x="44" y="334" class="s">更多</text>
+<text x="44" y="376" class="s">工作区</text>
+<text x="44" y="398" class="t">Yearbook</text>
+<text x="44" y="418" class="t">UDT DSH plugin</text>
+<text x="44" y="438" class="t">dsh-diagnostic-tutor-ui</text>
+<text x="44" y="458" class="t">Documents</text>
+<text x="44" y="478" class="t">dsh-web-ui</text>
+<text x="44" y="498" class="t">dsh-desktop</text>
+<path d="M 24 760 L 276 760" stroke="#e2e8f0"/>
+<rect x="36" y="770" width="230" height="34" rx="8" fill="#ecfdf5" stroke="#34d399"/>
+<text x="46" y="792" class="t" fill="#065f46">◈ Learn / 学习</text>
+<circle cx="248" cy="291" r="10" class="num"/><text x="248" y="296" class="n" text-anchor="middle">1</text>
+<circle cx="248" cy="787" r="10" class="num"/><text x="248" y="792" class="n" text-anchor="middle">2</text>
+
+<!-- main -->
+<rect x="276" y="128" width="756" height="664" fill="#ffffff" stroke="#e2e8f0"/>
+<text x="300" y="158" class="t">学习地图</text><text x="360" y="158" class="s">· 天文学（零基础）</text>
+<rect x="836" y="142" width="88" height="26" rx="6" fill="#ffffff" stroke="#cbd5e1"/><text x="846" y="159" class="s">打开当前课次</text>
+<rect x="930" y="142" width="76" height="26" rx="6" fill="#ffffff" stroke="#cbd5e1"/><text x="940" y="159" class="s">返回会话</text>
+<path d="M 276 178 L 1032 178" stroke="#e2e8f0"/>
+<rect x="292" y="192" width="86" height="30" rx="7" fill="#eef2ff" stroke="#6366f1"/><text x="304" y="212" class="t" fill="#3730a3">学习路线</text>
+<text x="394" y="212" class="s">知识与证据</text>
+<circle cx="700" cy="207" r="10" class="num"/><text x="700" y="212" class="n" text-anchor="middle">4</text>
+<rect x="838" y="236" width="76" height="26" rx="6" fill="#ffffff" stroke="#cbd5e1"/><text x="846" y="253" class="s">项目总览</text>
+<rect x="920" y="236" width="94" height="26" rx="6" fill="#ffffff" stroke="#cbd5e1"/><text x="928" y="253" class="s">目标与时间设置</text>
+
+<!-- stage bar -->
+<rect x="292" y="282" width="720" height="42" rx="9" fill="#f5f7ff" stroke="#c7d2fe"/>
+<text x="306" y="308" class="t">① 目标与时间 ✓　② 初始诊断 ✓　③ 学习路线 ✓　④ 开始学习 · 当前</text>
+<circle cx="1010" cy="303" r="10" class="num"/><text x="1010" y="308" class="n" text-anchor="middle">5</text>
+
+<!-- next step -->
+<rect x="292" y="338" width="720" height="104" rx="10" fill="#f5f7ff" stroke="#6366f1" stroke-width="1.6"/>
+<text x="308" y="362" class="s">下一步 · 第 4 步，共 4 步</text>
+<text x="308" y="386" class="cap">继续当前课次</text>
+<text x="308" y="406" class="t">当前课次：「NASA 岗位地图：三条路各自的门槛」。</text>
+<text x="308" y="424" class="s">21 课 · 44–55 小时 · ≈4.4–5.5 周 · 0/21 已完成 · ⚠ 21 课超出单次 60 分钟</text>
+<rect x="884" y="354" width="112" height="34" rx="7" fill="#111827"/><text x="898" y="376" class="s" fill="#ffffff">继续这一课</text>
+<circle cx="822" cy="373" r="10" class="num"/><text x="822" y="378" class="n" text-anchor="middle">6</text>
+
+<!-- workspace -->
+<rect x="292" y="458" width="450" height="310" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<text x="306" y="480" class="t">路线画布</text><text x="306" y="497" class="s">搜索 · 缩放 · Fit route · Current lesson</text>
+<rect x="306" y="512" width="422" height="118" rx="7" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="318" y="532" class="s">modules / lessons / prerequisite edges</text>
+<text x="318" y="552" class="s">当前课次高亮 · 已完成/进行中/未开始</text>
+<rect x="306" y="642" width="422" height="106" rx="7" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="318" y="664" class="s">搜索课次或主题</text>
+<rect x="756" y="458" width="256" height="310" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+<text x="770" y="480" class="s">项目总览 · 版本 1</text>
+<text x="770" y="506" class="cap">天文学与 NASA 科学家路线</text>
+<text x="770" y="530" class="s">路线摘要 / 计划课次 / 完成 / 预估用时</text>
+<text x="770" y="550" class="s">课次 Overview · 开始按钮 · 检查题</text>
+<rect x="770" y="582" width="228" height="74" rx="7" fill="#f8fafc" stroke="#e2e8f0"/><text x="782" y="604" class="s">Project Overview</text><text x="782" y="624" class="s">Accepted route · 12 lessons</text>
+<circle cx="742" cy="494" r="10" class="num"/><text x="742" y="499" class="n" text-anchor="middle">7</text>
+
+<!-- right -->
+<rect x="1032" y="128" width="344" height="664" fill="#ffffff" stroke="#e2e8f0"/>
+<rect x="1032" y="128" width="344" height="38" fill="#f8fafc" stroke="#e2e8f0"/>
+<text x="1046" y="152" class="t">当前课次</text><text x="1150" y="152" class="s">×  ＋</text>
+<rect x="1046" y="184" width="316" height="86" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+<text x="1060" y="208" class="cap">NASA 岗位地图：三条路各自的门槛</text>
+<text x="1060" y="230" class="s">天文学（零基础） · 课次 1/21 · 学习路线 v1</text>
+<text x="1060" y="252" class="s">本对话的当前课次</text>
+<text x="1060" y="282" class="s">[ 打开学习路线 ]  [ EN ]</text>
+<rect x="1046" y="288" width="316" height="360" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+<text x="1060" y="312" class="cap">第一课：NASA 岗位地图</text>
+<text x="1060" y="336" class="s">tutor 写入的 blocks：text / example / diagram / check</text>
+<text x="1060" y="358" class="s">“轮到你” 检查块 → 在对话中回答</text>
+<text x="1060" y="386" class="s">上一课 / 下一课 / 完成课次（由导师判断）</text>
+<circle cx="1338" cy="147" r="10" class="num"/><text x="1338" y="152" class="n" text-anchor="middle">3</text>
+
+<!-- callouts -->
+<rect x="24" y="806" width="660" height="110" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="40" y="830" class="cap">对话（默认主栏）</text>
+<text x="40" y="852" class="s">ask_user_question 卡出现在输入框上方：选项可点、可多选、可自由文本</text>
+<rect x="40" y="864" width="340" height="30" rx="6" fill="#ffffff" stroke="#cbd5e1"/><text x="52" y="884" class="s">发消息或创建任务…</text>
+<rect x="40" y="836" width="300" height="20" rx="5" fill="#eef2ff" stroke="#6366f1"/><text x="50" y="851" class="s">问题 1：在 NASA 你想做哪一类？ A/B/C/D</text>
+<circle cx="600" cy="846" r="10" class="num"/><text x="600" y="851" class="n" text-anchor="middle">8</text>
+
+<rect x="700" y="806" width="676" height="110" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
+<text x="716" y="830" class="cap">主栏互斥：对话 ⇄ Learning map</text>
+<text x="716" y="852" class="s">侧栏点击 Learning map → selectPanel(map)；返回会话 → selectPanel(null)。</text>
+<text x="716" y="872" class="s">Learn 只打开右栏 tab，不抢主栏；Open current lesson = 返回对话 + 打开 tab。</text>
+<text x="716" y="894" class="s">设计上：主栏一次只做一件事；右栏 tab 与对话共存。</text>
+</svg>
