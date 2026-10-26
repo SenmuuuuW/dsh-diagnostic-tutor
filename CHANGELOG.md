@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — one self-check through the real composition
+
+`tests/self-check-e2e.test.ts` mounts the actual plugin `apply` (tools, path
+API, journal, diagnostics, doctor) with a fake web server and agent registry,
+then walks goal → diagnosis → assessment → proposal → accept → first lesson and
+asserts the journal, the `/diagnostics` report and the doctor output. The tutor
+tool calls are scripted; every state transition is the production one.
+
+
 ### Changed — the route shows its effort and the next lesson
 
 - Every described route now shows **lessons · total study time · weeks at the
