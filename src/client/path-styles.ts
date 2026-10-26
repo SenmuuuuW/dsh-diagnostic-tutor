@@ -139,6 +139,7 @@ export const PATH_CSS = `
 .dt-path-next-copy p { margin:0; max-width:64ch; }
 .dt-path-next-copy p.dt-path-eyebrow { color:var(--dt-brand-ink,#3b56d9); margin-bottom:2px; }
 .dt-path-next-copy .dt-path-next-link { margin-top:4px; font-size:12.5px; }
+.dt-path-next-copy .dt-path-next-note { margin-top:4px; }
 .dt-path-next-actions { display:flex; flex-direction:column; align-items:stretch; gap:8px; flex:none; min-width:172px; }
 .dt-path-next-actions .dt-path-button { white-space:nowrap; }
 .dt-path-fit-warn { color:var(--dt-warn,#b7791f); }

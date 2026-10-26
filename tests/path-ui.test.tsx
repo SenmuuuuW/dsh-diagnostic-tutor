@@ -569,8 +569,9 @@ describe('one obvious next step', () => {
     await mount()
 
     // The fixture route is 3 lessons / 100–170 min with a 30-minute session.
-    expect(container.textContent).toContain('3 lessons')
-    expect(container.textContent).toContain('longer than your 30-minute session')
+    const card = container.querySelector('.dt-path-next')
+    expect(card?.textContent).toContain('3 lessons')
+    expect(card?.textContent).toContain('longer than your 30-minute session')
     expect(container.textContent).toContain('3 lesson(s)')
   })
 
@@ -631,6 +632,9 @@ describe('one obvious next step', () => {
 
     expect(nextCard().textContent).toContain('Continue the current lesson')
     expect(nextCard().textContent).toContain('Represent the data')
+    // The route summary lives in the same card, not only in a folded section.
+    expect(nextCard().textContent).toContain('3 lessons')
+    expect(nextCard().textContent).toContain('0 of 3 lessons completed')
     await click('Continue this lesson')
     expect(opened).toEqual(['lesson'])
   })

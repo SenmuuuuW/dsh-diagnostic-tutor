@@ -617,6 +617,14 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
   const completedItemIds = new Set((view?.run?.attempts ?? []).filter((entry) => entry.status === 'completed').map((entry) => entry.itemId))
   const completedPlanItems = acceptedPlan?.items.filter((item) => completedItemIds.has(item.id)) ?? []
   const nextLesson = acceptedPlan?.items.find((item) => !completedItemIds.has(item.id)) ?? null
+  const routeNote = routeMetrics === null || routeMetrics.lessons === 0 ? null : [
+    text.routeEffort(routeMetrics.lessons, range({ min: routeMetrics.totalMin, max: routeMetrics.totalMax }, text)),
+    ...(routeMetrics.weeksMin !== null && routeMetrics.weeksMax !== null ? [text.routeWeeks(routeMetrics.weeksMin, routeMetrics.weeksMax)] : []),
+    ...(stage === 'learning' ? [text.routeProgress(completedPlanItems.length, routeMetrics.lessons)] : []),
+    ...(routeMetrics.longLessons.length > 0 && routeMetrics.sessionMinutes !== null
+      ? [text.routeSessionMismatch(routeMetrics.longLessons.length, routeMetrics.sessionMinutes)]
+      : []),
+  ].join(' · ')
   const routeCard = routeView === null ? null : <section className="dt-path-card" aria-label={text.routeProposalsLabel}><div className="dt-path-card-head"><h3>{versions.length ? text.routeVersions : text.buildRoute}</h3>{planWaiting && <span className="dt-path-tag" role="status">{text.waitingProposal}</span>}</div>
     {!versions.length && <p className="dt-path-muted">{text.noVersionsHelp}</p>}
     {!assessmentCurrent && savedReady && <p className="dt-path-muted">{text.needsAssessmentHelp}</p>}
@@ -654,7 +662,7 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
     ? view.path.curricula.find((entry) => entry.version === activeAttempt.version)?.items.find((item) => item.id === activeAttempt.itemId)?.title ?? activeAttempt.itemId
     : null
   type NextAction = { label: string; run: () => void; disabled?: boolean }
-  const nextStep: { step: number; title: string; body: string; primary?: NextAction; secondary?: NextAction; tertiary?: NextAction } | null = (() => {
+  const nextStep: { step: number; title: string; body: string; note?: string; primary?: NextAction; secondary?: NextAction; tertiary?: NextAction } | null = (() => {
     if (!view || readOnly) return null
     if (!savedReady) return {
       step: 1, title: text.nextGoalTitle, body: text.nextGoalBody,
@@ -696,6 +704,7 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
       }
       if (plan !== undefined && plan.briefRevision === view.path.briefRevision && plan.assessmentRevision === view.path.assessmentRevision) return {
         step: 3, title: text.nextProposalTitle, body: text.nextProposalBody(plan.version),
+        ...(routeNote === null ? {} : { note: routeNote }),
         primary: { label: text.nextAcceptVersion(plan.version), run: () => acceptVersion(plan.version), disabled: busyAction || dirty },
         secondary: { label: text.requestRevisedPlan, run: () => ask('plan'), disabled: !canPlan },
       }
@@ -709,6 +718,7 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
       const run = onOpenLesson ?? onOpenChat
       return {
         step: 4, title: text.nextContinueTitle, body: text.nextContinueBody(activeLessonTitle),
+        ...(routeNote === null ? {} : { note: routeNote }),
         ...(run === undefined ? {} : { primary: { label: onOpenLesson === undefined ? text.openConversation : text.nextOpenLesson, run } }),
       }
     }
@@ -719,6 +729,7 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
         step: 4,
         title: done === 0 ? text.nextAcceptedTitle : text.nextStartNextTitle,
         body: done === 0 ? text.nextAcceptedBody(nextLesson.title) : text.nextStartNextBody(done, total, nextLesson.title),
+        ...(routeNote === null ? {} : { note: routeNote }),
         primary: {
           label: done === 0 ? text.nextStartFirst : text.nextStartNextAction,
           run: () => start(acceptedVersion, nextLesson.id, false),
@@ -728,6 +739,7 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
     }
     if (acceptedPlan !== null && nextLesson === null) return {
       step: 4, title: text.nextCompleteTitle, body: text.nextCompleteBody,
+      ...(routeNote === null ? {} : { note: routeNote }),
       ...(onOpenChat ? { primary: { label: text.openConversation, run: onOpenChat } } : {}),
     }
     return {
@@ -758,6 +770,7 @@ function PathPageBody({ courseId, title, nodes, sessionId, onOpenChat, onStarted
           <p className="dt-path-eyebrow">{text.nextStepEyebrow} · {text.nextStepProgress(nextStep.step, stages.length)}</p>
           <h3>{nextStep.title}</h3>
           <p>{nextStep.body}</p>
+          {nextStep.note && <p className="dt-path-small dt-path-muted dt-path-next-note">{nextStep.note}</p>}
           {nextStep.tertiary && <button type="button" className="dt-path-link dt-path-next-link" disabled={nextStep.tertiary.disabled} onClick={nextStep.tertiary.run}>{nextStep.tertiary.label}</button>}
         </div>
         {(nextStep.primary || nextStep.secondary) && <div className="dt-path-next-actions">
