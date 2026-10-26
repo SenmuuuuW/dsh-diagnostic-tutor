@@ -180,6 +180,15 @@ Rules this repository enforces mechanically:
   in the range — so the compatibility matrix above, not the range floor, is the
   contract. Dev dependencies pin one exact cohort for the type baseline.
 
+## UI baseline for redesign
+
+The current surfaces, state model and screenshots (generated from fixtures) live in
+[`docs/design/ui-baseline/index.html`](docs/design/ui-baseline/index.html) with a
+detailed handoff in
+[`docs/design/ui-baseline/README.md`](docs/design/ui-baseline/README.md). It covers
+the system structure, Learning map / Current lesson surfaces, every route-page state
+and the design constraints a new UI must keep.
+
 ## Diagnostics
 
 Monitoring is local and content-free: no chat, goal, lesson or evidence text is

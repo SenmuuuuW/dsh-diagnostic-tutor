@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSH Diagnostic Tutor · 当前 UI 基线</title>
+<style>
+  :root{--bg:#f7f8fa;--panel:#fff;--text:#1c1f23;--muted:#6b7280;--line:#e3e6ea;--brand:#4d6bfe;--soft:#eef2ff;--radius:12px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:14px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif}
+  header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:18px 28px;display:flex;gap:18px;align-items:baseline;flex-wrap:wrap}
+  header h1{font-size:19px;margin:0}
+  header p{margin:0;color:var(--muted);font-size:13px}
+  header a{margin-left:auto;color:var(--brand);text-decoration:none;font-size:13px}
+  main{max-width:1480px;margin:0 auto;padding:24px 28px 80px}
+  section{margin:34px 0 46px}
+  h2{font-size:16px;margin:0 0 4px}
+  .note{color:var(--muted);font-size:13px;margin:0 0 16px}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;overflow:auto}
+  .panel img{display:block;max-width:100%;height:auto;border-radius:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:18px}
+  figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  figure img{display:block;width:100%;height:auto;border-bottom:1px solid var(--line)}
+  figcaption{padding:10px 14px;font-size:12.5px;color:var(--muted)}
+  figcaption b{display:block;color:var(--text);font-size:13px;margin-bottom:2px}
+  .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  .links a{display:inline-block;padding:7px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--brand);text-decoration:none;font-size:12.5px}
+  .links a:hover{background:var(--soft)}
+  .tag{display:inline-block;background:var(--soft);color:#3b56d9;border:1px solid #c7d2fe;border-radius:999px;padding:1px 9px;font-size:11px;margin-left:8px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header>
+  <h1>DSH Diagnostic Tutor · 当前 UI 基线</h1>
+  <p>plugin 0.1.1 · DSH 0.2.1-rc.3 · 截图来自 fixture，不含真实学习内容</p>
+  <a href="README.md">详细文档 README.md →</a>
+</header>
+<main>
+  <section>
+    <h2>结构图<span class="tag">先看这个</span></h2>
+    <p class="note">插件由 host（工具/API/存储）+ client（主页面/右栏 tab）两半组成；导师是普通对话里的模型。</p>
+    <div class="panel"><img src="architecture.svg" alt="系统结构图"></div>
+  </section>
+
+  <section>
+    <h2>界面结构</h2>
+    <p class="note">Learning map 占据主栏（与对话互斥）；Current lesson 是右栏停靠 tab。侧栏底部 Learn 只打开右栏，不抢主栏。</p>
+    <div class="panel"><img src="ui-shell.svg" alt="界面结构图"></div>
+  </section>
+
+  <section>
+    <h2>路线页解剖</h2>
+    <p class="note">当前学习阶段的第一屏：阶段条 → Next-step（唯一主操作）→ 路线画布 + 项目总览。</p>
+    <div class="panel"><img src="route-page-annotated.png" alt="路线页标注"></div>
+  </section>
+
+  <section>
+    <h2>状态机</h2>
+    <p class="note">goal / diagnosis / route / learning 四阶段，以及失败、跳过、版本冲突、会话固定旧版本等分支。</p>
+    <div class="panel"><img src="route-states.svg" alt="路线页状态机"></div>
+  </section>
+
+  <section>
+    <h2>页面状态截图</h2>
+    <p class="note">1440×900 · 中文界面 · 浅色为主，另附深色版本。</p>
+    <div class="grid">
+      <figure><img src="screens/01-map-library.png" alt="未打开项目"><figcaption><b>01 · 项目列表</b>没有打开项目时，主栏显示空态和已有项目</figcaption></figure>
+      <figure><img src="screens/12-first-use.png" alt="首次使用"><figcaption><b>12 · 首次使用</b>完全没有项目时的空态</figcaption></figure>
+      <figure><img src="screens/02-route-goal.png" alt="目标阶段"><figcaption><b>02 · 目标与时间</b>brief 未完成；向导可关闭</figcaption></figure>
+      <figure><img src="screens/03-route-diagnosis.png" alt="初诊未请求"><figcaption><b>03 · 初诊未请求</b>Next-step 提供请求/跳过</figcaption></figure>
+      <figure><img src="screens/04-route-diagnosis-waiting.png" alt="初诊等待"><figcaption><b>04 · 初诊等待</b>请求已发到对话；等待时长与跳过入口</figcaption></figure>
+      <figure><img src="screens/05-route-request.png" alt="等待请求路线"><figcaption><b>05 · 等待请求路线</b>已跳过初诊，路线尚未生成</figcaption></figure>
+      <figure><img src="screens/06-route-proposal.png" alt="路线提案"><figcaption><b>06 · 提案已生成</b>接受版本 / 请求修订 / 预算与单次冲突</figcaption></figure>
+      <figure><img src="screens/07-route-learning.png" alt="学习阶段"><figcaption><b>07 · 学习阶段</b>当前最常用的主界面（浅色）</figcaption></figure>
+      <figure><img src="screens/08-route-learning-dark.png" alt="学习阶段深色"><figcaption><b>08 · 学习阶段（深色）</b></figcaption></figure>
+      <figure><img src="screens/09-knowledge-map.png" alt="知识与证据"><figcaption><b>09 · 知识与证据</b>节点状态与证据</figcaption></figure>
+      <figure><img src="screens/10-current-lesson-tab.png" alt="当前课次 tab"><figcaption><b>10 · 当前课次 tab</b>右栏教学面：课次头 + blocks + check</figcaption></figure>
+      <figure><img src="screens/11-current-lesson-tab-dark.png" alt="当前课次 tab 深色"><figcaption><b>11 · 当前课次 tab（深色）</b></figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>文档</h2>
+    <div class="links">
+      <a href="README.md">详细交接文档</a>
+      <a href="architecture.svg">architecture.svg</a>
+      <a href="ui-shell.svg">ui-shell.svg</a>
+      <a href="route-states.svg">route-states.svg</a>
+      <a href="route-page-annotated.png">route-page-annotated.png</a>
+    </div>
+  </section>
+</main>
+</body>
+</html>

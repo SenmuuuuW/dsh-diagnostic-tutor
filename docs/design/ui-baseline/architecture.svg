@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="880" viewBox="0 0 1280 880" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/></marker>
+  <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2563eb"/></marker>
+  <style>
+    .title{font-size:24px;font-weight:700;fill:#0f172a}
+    .sub{font-size:13px;fill:#64748b}
+    .h{font-size:15px;font-weight:700;fill:#0f172a}
+    .t{font-size:12px;fill:#334155}
+    .s{font-size:11px;fill:#64748b}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;fill:#334155}
+    .box{stroke-width:1.5}
+    .line{stroke:#64748b;stroke-width:1.4;fill:none;marker-end:url(#arrow)}
+    .line-blue{stroke:#2563eb;stroke-width:1.5;fill:none;marker-end:url(#arrow-blue)}
+    .zone{stroke-width:1.5;stroke-dasharray:5 5;fill:none}
+  </style>
+</defs>
+<rect width="1280" height="880" fill="#ffffff"/>
+<text x="28" y="40" class="title">DSH Diagnostic Tutor — 当前结构（plugin v0.1.1 · DSH 0.2.1-rc.3）</text>
+<text x="28" y="64" class="sub">所有学习数据只在本机；插件不调用模型，导师回合由用户动作（请求初诊/开始课次/重试）在自己的对话里唤醒。</text>
+
+<!-- Shell -->
+<rect x="24" y="90" width="268" height="750" rx="14" fill="#f8fafc" stroke="#94a3b8" class="box"/>
+<text x="42" y="118" class="h">DSH Shell（宿主）</text>
+<text x="42" y="138" class="s">Desktop / Web · React</text>
+<rect x="42" y="152" width="232" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="54" y="170" class="t">左侧栏</text><text x="54" y="187" class="s">panellist · footer action · 会话列表</text>
+<rect x="42" y="204" width="232" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="54" y="222" class="t">主栏</text><text x="54" y="239" class="s">chat 或 main panel（互斥）</text>
+<rect x="42" y="256" width="232" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="54" y="274" class="t">右栏</text><text x="54" y="291" class="s">session-scoped tabs</text>
+<rect x="42" y="308" width="232" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="54" y="326" class="t">原生互动问题卡</text><text x="54" y="343" class="s">ask_user_question · 输入框上方</text>
+<rect x="42" y="360" width="232" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="54" y="378" class="t">Layout / Slots / Session</text><text x="54" y="395" class="s">selectPanel · openTab · 会话状态</text>
+<rect x="42" y="418" width="232" height="44" rx="8" fill="#ffffff" stroke="#cbd5e1"/><text x="54" y="436" class="t">Locale / Theme</text><text x="54" y="453" class="s">中英切换 · light/dark tokens</text>
+
+<!-- Plugin -->
+<rect x="316" y="90" width="592" height="750" rx="14" fill="#eff6ff" stroke="#60a5fa" class="box"/>
+<text x="334" y="118" class="h">dsh-diagnostic-tutor（本插件）</text>
+<text x="334" y="138" class="s">host 一半 + browser 一半，同一个 npm 包 / Cordis 插件</text>
+
+<!-- Client half -->
+<rect x="334" y="154" width="556" height="258" rx="10" fill="#ffffff" stroke="#93c5fd"/>
+<text x="350" y="176" class="h" fill="#1d4ed8">Browser half（client）</text>
+<rect x="350" y="190" width="258" height="52" rx="7" fill="#dbeafe" stroke="#60a5fa"/>
+<text x="362" y="209" class="t">Learning map（main panel）</text>
+<text x="362" y="227" class="s">学习路线 · 知识与证据 · 删除/导出</text>
+<rect x="620" y="190" width="254" height="52" rx="7" fill="#dbeafe" stroke="#60a5fa"/>
+<text x="632" y="209" class="t">Current lesson（dock tab）</text>
+<text x="632" y="227" class="s">lesson blocks · 当前课次 · 上/下课次</text>
+<rect x="350" y="252" width="524" height="62" rx="7" fill="#ffffff" stroke="#bfdbfe"/>
+<text x="362" y="271" class="t">Route page（课程路线页）</text>
+<text x="362" y="289" class="s">阶段条 · Next-step 卡 · 路线画布 · 课次详情 · 折叠的初诊/路线设置</text>
+<text x="362" y="305" class="s">states: goal → diagnosis → route → learning；每阶段只有一个主操作</text>
+<rect x="350" y="324" width="254" height="46" rx="7" fill="#ffffff" stroke="#bfdbfe"/>
+<text x="362" y="343" class="t">Session activity hook</text><text x="362" y="360" class="s">running / lastAgentError（1s 轮询）</text>
+<rect x="620" y="324" width="254" height="46" rx="7" fill="#ffffff" stroke="#bfdbfe"/>
+<text x="632" y="343" class="t">i18n / 主题 / 样式注入</text><text x="632" y="360" class="s">EN/zh · --dt-brand 等 tokens</text>
+<rect x="350" y="380" width="524" height="22" rx="5" fill="#f8fafc" stroke="#e2e8f0"/>
+<text x="362" y="395" class="s">轮询 GET /path /overview；失败时展示可恢复状态；浏览器不直接读存储</text>
+
+<!-- Host half -->
+<rect x="334" y="430" width="556" height="392" rx="10" fill="#ffffff" stroke="#6ee7b7"/>
+<text x="350" y="452" class="h" fill="#047857">Host half（Node）</text>
+<rect x="350" y="466" width="166" height="60" rx="7" fill="#d1fae5" stroke="#34d399"/>
+<text x="362" y="485" class="t">plugin apply</text><text x="362" y="503" class="s">tools · API · journal · agent listeners</text>
+<rect x="528" y="466" width="172" height="60" rx="7" fill="#d1fae5" stroke="#34d399"/>
+<text x="540" y="485" class="t">9 个模型工具</text><text x="540" y="503" class="s">goal/map/path/lesson/course-run</text>
+<rect x="712" y="466" width="162" height="60" rx="7" fill="#d1fae5" stroke="#34d399"/>
+<text x="724" y="485" class="t">HTTP API</text><text x="724" y="503" class="s">18 条路由 · loopback trust fence</text>
+<rect x="350" y="540" width="166" height="68" rx="7" fill="#ffffff" stroke="#a7f3d0"/>
+<text x="362" y="559" class="t">UDT state</text><text x="362" y="577" class="s">courses/nodes/lessons</text><text x="362" y="593" class="s">focus/paths/runs/projects</text>
+<rect x="528" y="540" width="172" height="68" rx="7" fill="#ffffff" stroke="#a7f3d0"/>
+<text x="540" y="559" class="t">事件日志（local）</text><text x="540" y="577" class="s">plugin.ready · tool.call/result</text><text x="540" y="593" class="s">path.* · tutor.prompt · agent.error</text>
+<rect x="712" y="540" width="162" height="68" rx="7" fill="#ffffff" stroke="#a7f3d0"/>
+<text x="724" y="559" class="t">诊断 / 运维</text><text x="724" y="577" class="s">GET /diagnostics</text><text x="724" y="593" class="s">pnpm doctor · --json/--strict</text>
+<rect x="350" y="624" width="524" height="54" rx="7" fill="#f8fafc" stroke="#e2e8f0"/>
+<text x="362" y="643" class="t">路径请求（path request）</text>
+<text x="362" y="661" class="s">诊断/路线唤醒记录 · prompted · failure（provider 错误）· 重试/跳过</text>
+<rect x="350" y="690" width="524" height="48" rx="7" fill="#f8fafc" stroke="#e2e8f0"/>
+<text x="362" y="709" class="t">Course run（per conversation）</text>
+<text x="362" y="727" class="s">attempt · bind node · units · complete（完成 ≠ 掌握，不自动下一课）</text>
+<rect x="350" y="750" width="524" height="52" rx="7" fill="#fef3c7" stroke="#fbbf24"/>
+<text x="362" y="769" class="t">唤醒（wake）</text>
+<text x="362" y="787" class="s">host 通过 agents.followup 写入普通 user 消息；模型回合失败会回到 path request</text>
+
+<!-- Model -->
+<rect x="936" y="90" width="320" height="300" rx="14" fill="#fff7ed" stroke="#fb923c" class="box"/>
+<text x="954" y="118" class="h">导师（模型）</text>
+<text x="954" y="138" class="s">用户选择的 provider / model</text>
+<rect x="954" y="154" width="284" height="52" rx="7" fill="#ffedd5" stroke="#fdba74"/>
+<text x="966" y="173" class="t">Universal Diagnostic Tutor skill</text><text x="966" y="191" class="s">判断怎么诊断/怎么教（模型侧）</text>
+<rect x="954" y="216" width="284" height="52" rx="7" fill="#ffffff" stroke="#fed7aa"/>
+<text x="966" y="235" class="t">ask_user_question（原生 card）</text><text x="966" y="253" class="s">初诊优先走可点选问题卡</text>
+<rect x="954" y="278" width="284" height="52" rx="7" fill="#ffffff" stroke="#fed7aa"/>
+<text x="966" y="297" class="t">udt_* tool calls</text><text x="966" y="315" class="s">读/写地图、brief、assessment、路线、课次</text>
+<text x="954" y="356" class="s">运行时只记录/校验；教学决策属于模型。</text>
+
+<!-- Storage -->
+<rect x="936" y="420" width="320" height="240" rx="14" fill="#f5f3ff" stroke="#a78bfa" class="box"/>
+<text x="954" y="448" class="h">本机存储</text>
+<rect x="954" y="462" width="284" height="64" rx="7" fill="#ffffff" stroke="#ddd6fe"/>
+<text x="966" y="481" class="t">~/.dsh/storages/udt.json</text>
+<text x="966" y="499" class="s">courses · nodes · lessons · focus</text>
+<text x="966" y="515" class="s">session_projects · learning_paths · course_runs</text>
+<rect x="954" y="536" width="284" height="50" rx="7" fill="#ffffff" stroke="#ddd6fe"/>
+<text x="966" y="555" class="t">~/.dsh/logs/diagnostic-tutor-events.jsonl</text>
+<text x="966" y="573" class="s">1 MB 上限 · 轮转一次 · 不含聊天内容</text>
+<text x="954" y="610" class="s">导出/全部删除在路线页底部；导出是唯一的数据出口。</text>
+<text x="954" y="634" class="s">多会话共享项目，但 focus/run 属于各自会话。</text>
+
+<!-- Arrows -->
+<path d="M 292 220 L 334 220" class="line-blue"/>
+<text x="298" y="212" class="s">slots 注册</text>
+<path d="M 334 320 L 292 320" class="line-blue"/>
+<text x="300" y="312" class="s">selectPanel/openTab</text>
+<path d="M 890 500 L 932 500" class="line"/>
+<text x="896" y="492" class="s">tools</text>
+<path d="M 796 466 L 796 350 L 934 350" class="line"/>
+<text x="806" y="342" class="s">唤醒/followup → 对话</text>
+<path d="M 890 250 L 932 250" class="line"/>
+<text x="896" y="242" class="s">API</text>
+<path d="M 620 690 L 952 690 L 952 660" class="line"/>
+<text x="630" y="682" class="s">读写 run</text>
+<path d="M 616 574 L 952 574 L 952 548" class="line"/>
+<text x="624" y="566" class="s">journal</text>
+<path d="M 890 600 L 932 600" class="line"/>
+<text x="896" y="592" class="s">diagnostics</text>
+<path d="M 954 330 L 900 330 L 900 410" class="line" marker-end="none"/>
+<text x="918" y="330" class="s">问题卡</text>
+<path d="M 900 410 L 880 410" class="line" marker-end="none"/>
+</svg>
