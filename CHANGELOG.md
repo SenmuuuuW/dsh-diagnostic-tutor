@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — the route summary is in the Next-step card
+
+The lesson count, total study time, weeks at the weekly budget, progress and
+session-length conflicts used to live only in the folded **Route versions and
+settings**. They now also appear as a one-line note directly under the
+Next-step message, so "where is the route budget?" no longer requires scrolling
+and expanding a disclosure.
+
+
 ### Added — one self-check through the real composition
 
 `tests/self-check-e2e.test.ts` mounts the actual plugin `apply` (tools, path
