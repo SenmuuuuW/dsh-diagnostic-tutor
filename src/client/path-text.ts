@@ -58,7 +58,8 @@ const en = {
   nextWaitingRunningBody: 'The tutor is thinking in the conversation. Answer once the questions appear — or skip the diagnosis.',
   nextDiagnosisFailedTitle: 'The tutor could not finish the check',
   nextDiagnosisFailedBody: (advice: string, reason: string): string => `${advice} Provider error: ${reason}`,
-  waitingFor: (minutes: number): string => `Waiting ${minutes} min without an answer.`,
+  waitingFor: (duration: string): string => `Waiting ${duration} without an answer.`,
+  durationDays: (value: number) => `${value} d`,
   tutorFailureAdvice: (kind: TutorErrorKind): string => {
     switch (kind) {
       case 'billing': return 'The model provider reported insufficient balance. Switch to a working model or top up the provider, then retry.'
@@ -413,7 +414,8 @@ const zh: typeof en = {
   nextWaitingRunningBody: '导师正在对话里思考。等问题出现后回答；也可以跳过初诊。',
   nextDiagnosisFailedTitle: '导师没能完成初诊',
   nextDiagnosisFailedBody: (advice, reason) => `${advice}（原始错误：${reason}）`,
-  waitingFor: (minutes) => `已等待 ${minutes} 分钟仍无回应。`,
+  waitingFor: (duration) => `已等待 ${duration}仍无回应。`,
+  durationDays: (value) => `${value} 天`,
   tutorFailureAdvice: (kind) => {
     switch (kind) {
       case 'billing': return '模型服务余额不足。换一个可用模型或充值后再重试。'
