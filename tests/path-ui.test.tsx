@@ -341,7 +341,7 @@ describe('goal wizard persistence and request readiness', () => {
     vi.mocked(client.get).mockResolvedValueOnce(other)
     await mount({ courseId: 'another-synthetic-course', sessionId: 'another-synthetic-session', title: 'Another project' })
     await act(async () => late.resolve(pathView()))
-    expect(container.textContent).toContain('Another project')
+    expect(container.querySelector('.dt-path-page')?.getAttribute('aria-label')).toContain('Another project')
     expect((container.querySelector('.dt-path-version') as HTMLSelectElement).value).toBe('2')
   })
 
@@ -359,17 +359,17 @@ describe('goal wizard persistence and request readiness', () => {
 
   it('renders the route copy in Chinese, without translating learning content', async () => {
     await mount()
-    expect(container.textContent).toContain('Learning path')
+    expect(container.textContent).toContain('Learning route')
 
     await act(async () => setLang('zh'))
     expect(container.textContent).toContain('学习路线')
-    expect(container.textContent).not.toContain('Learning path')
+    expect(container.textContent).not.toContain('Learning route')
     // Data from the route is content, not interface copy.
     expect(container.textContent).toContain('Represent the data')
     expect(container.textContent).toContain('Classifier route 1')
 
     await act(async () => setLang('en'))
-    expect(container.textContent).toContain('Learning path')
+    expect(container.textContent).toContain('Learning route')
     expect(container.textContent).not.toMatch(/[\u4e00-\u9fff]/)
   })
 })
@@ -389,7 +389,7 @@ describe('progressive disclosure of the route page', () => {
     const next = container.querySelector('.dt-path-next')
     expect(next).not.toBeNull()
     expect(next?.textContent).toContain('Answer the tutor’s questions')
-    expect(next?.textContent).toContain('The diagnosis is in progress')
+    expect(next?.textContent).toContain('The diagnosis is running')
     // The route cannot be requested while the diagnosis is still in progress.
     expect([...container.querySelectorAll('button')].some((entry) => entry.textContent?.trim() === 'Request a route proposal')).toBe(false)
 
@@ -482,7 +482,7 @@ describe('one obvious next step', () => {
     await mount({ sessionActivity: { running: true, lastAgentError: null } })
 
     const card = container.querySelector('.dt-path-next')
-    expect(card?.textContent).toContain('The tutor is preparing diagnostic questions')
+    expect(card?.textContent).toContain('The tutor is preparing a few questions')
     expect(card?.textContent).not.toContain('Answer the tutor’s questions')
     // A running turn has no failure to report, and skipping stays available.
     expect(container.querySelector('[role="alert"]')).toBeNull()
@@ -525,7 +525,7 @@ describe('one obvious next step', () => {
     // after a minute the recovery path still wakes the tutor instead of only
     // navigating.
     expect(container.querySelector('.dt-path-next')?.textContent).toContain('Waiting 5 min')
-    await click('No questions yet? Request the diagnosis again')
+    await click('No questions yet? Retry')
     expect(vi.mocked(client.request).mock.calls[0]![0]).toMatchObject({ kind: 'diagnosis' })
     expect(opened).toEqual(['chat'])
   })
@@ -571,8 +571,7 @@ describe('one obvious next step', () => {
     // The fixture route is 3 lessons / 100–170 min with a 30-minute session.
     const card = container.querySelector('.dt-path-next')
     expect(card?.textContent).toContain('3 lessons')
-    expect(card?.textContent).toContain('longer than your 30-minute session')
-    expect(container.textContent).toContain('3 lesson(s)')
+    expect(card?.textContent).toContain('3 lessons over 30-min sessions')
   })
 
   it('continues with the next unfinished lesson after completed ones', async () => {
@@ -588,9 +587,9 @@ describe('one obvious next step', () => {
 
     const card = container.querySelector('.dt-path-next')
     expect(card?.textContent).toContain('Start the next lesson')
-    expect(card?.textContent).toContain('2 of 3 lessons done')
+    expect(card?.textContent).toContain('2/3 done')
     expect(card?.textContent).toContain('Evaluate new examples')
-    expect(container.textContent).toContain('2 of 3 lessons completed')
+    expect(nextCard().textContent).toContain('2/3 done')
     await click('Start next lesson')
     expect(vi.mocked(client.start).mock.calls[0]![0]).toMatchObject({ version: 1, itemId: 'evaluate' })
   })
@@ -634,7 +633,7 @@ describe('one obvious next step', () => {
     expect(nextCard().textContent).toContain('Represent the data')
     // The route summary lives in the same card, not only in a folded section.
     expect(nextCard().textContent).toContain('3 lessons')
-    expect(nextCard().textContent).toContain('0 of 3 lessons completed')
+    expect(nextCard().textContent).toContain('0/3 done')
     await click('Continue this lesson')
     expect(opened).toEqual(['lesson'])
   })

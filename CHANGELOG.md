@@ -5,6 +5,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — the route page is compressed to what matters
+
+Reading the page felt like reading a paper: a repeated page title and intro,
+status words on every stage, two cards for the same current lesson, and a long
+route sentence.
+
+- The page header is now just the two utility buttons; the project name stays in
+  the map's top bar where it already was.
+- The stage bar marks done steps with `✓` and only annotates the current step.
+- The Next-step card is the only card above the workspace: title, one line, a
+  compact `lessons · hours · weeks · progress · session warning` note, and the
+  action.
+- The duplicated pinned-attempt card is gone; only a one-line version notice
+  remains when the conversation's version differs from the accepted one.
+- The folded route card no longer repeats the effort/progress line.
+
+
 ### Changed — the route summary is in the Next-step card
 
 The lesson count, total study time, weeks at the weekly budget, progress and
