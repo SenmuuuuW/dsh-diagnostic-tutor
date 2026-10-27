@@ -104,14 +104,14 @@ export function LearningTab({
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState('')
   const operationId = () => typeof globalThis.crypto?.randomUUID === 'function' ? globalThis.crypto.randomUUID() : `tab-${Date.now().toString(36)}`
-  const nudge = async (kind: 'continue' | 'checkin') => {
+  const nudge = async (kind: 'continue' | 'checkin' | 'teachback') => {
     if (pathClient === undefined || view === null || attempt === undefined || courseId === undefined || activeSession === undefined) return
     setBusy(true); setNotice('')
     try {
       const result = await pathClient.start({
         sessionId: activeSession, courseId, expectedRevision: view.path.revision,
         version: attempt.version, itemId: attempt.itemId, operationId: operationId(),
-        resume: true, ...(kind === 'checkin' ? { checkin: true } : {}),
+        resume: true, ...(kind === 'checkin' ? { checkin: true } : {}), ...(kind === 'teachback' ? { teachBack: true } : {}),
       })
       if (!result.prompted) setNotice(result.promptReason ?? text.tabTutorUnreachable)
       else onOpenChat?.()
@@ -158,6 +158,7 @@ export function LearningTab({
         <button type="button" className="dtx-primary" disabled={busy || (attempt.status === 'completed')} onClick={() => void nudge('continue')}>
           {attempt.status === 'interrupted' ? text.resumeLesson : text.resumeTeaching}
         </button>
+        <button type="button" className="dtx-secondary" disabled={busy || attempt.status === 'completed' || attempt.units.length === 0} onClick={() => void nudge('teachback')}>{text.explainBack}</button>
         <button type="button" className="dtx-secondary" disabled={busy || attempt.status === 'completed'} onClick={() => void nudge('checkin')}>{text.checkIn}</button>
         {attempt.status !== 'completed' && pathClient?.pause !== undefined && <button type="button" className="dtx-link" disabled={busy} onClick={() => void pause()}>{text.pauseLesson}</button>}
         {onOpenChat !== undefined && <button type="button" className="dtx-link" onClick={onOpenChat}>{text.backToChat}</button>}

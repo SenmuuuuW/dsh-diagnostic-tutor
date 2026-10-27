@@ -20,6 +20,7 @@ export interface StartPathParams extends AcceptPathParams {
   review?: boolean
   resume?: boolean
   checkin?: boolean
+  teachBack?: boolean
 }
 export interface PromptedPathView extends PathView {
   prompted: boolean

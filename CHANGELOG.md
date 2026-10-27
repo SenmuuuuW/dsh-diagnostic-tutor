@@ -5,6 +5,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — teach-back: the learner explains it back
+
+The first step of the teach-back loop is live. From the lesson tab the learner
+can press **Let me explain it back**. That sends a normal learner follow-up:
+
+- the tutor must not explain the unit again;
+- after the learner's explanation it names one thing they got right, one
+  specific gap or misconception (quoting them when possible), and asks one
+  follow-up `why` or transfer question;
+- it records that explanation as evidence with `udt_map_update`
+  (`evidenceKind=explanation`), never as mastery;
+- it does not write a new lesson unit or continue until the check-in finishes.
+
+The learner answers in the chat, so the teach-back is part of the conversation
+rather than another form. 582 tests, typecheck, full build and 21 browser cases
+pass.
+
+
 ### Added — the tutor leads, resumes and pauses
 
 The lesson loop was still a reading surface: continuing after a break opened the

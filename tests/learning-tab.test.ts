@@ -152,6 +152,8 @@ describe('active lesson', () => {
     expect(onOpenChat).toHaveBeenCalled()
     await act(async () => { button('Check in with me').click(); await Promise.resolve() })
     expect(start.mock.calls.at(-1)![0]).toMatchObject({ resume: true, checkin: true })
+    await act(async () => { button('Let me explain it back').click(); await Promise.resolve() })
+    expect(start.mock.calls.at(-1)![0]).toMatchObject({ resume: true, teachBack: true })
     await act(async () => { button('Pause this lesson').click(); await Promise.resolve() })
     expect(pause).toHaveBeenCalledTimes(1)
   })
