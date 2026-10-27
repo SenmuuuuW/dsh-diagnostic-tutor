@@ -277,7 +277,7 @@ textarea.dtx-input { resize:vertical; min-height:96px; line-height:1.65; }
 .dtx-knowledge-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--dt-muted,#6b7280); font-size:12.5px; padding:40px; text-align:center; }
 
 /* ---------- lesson tab ---------- */
-.dtx-tab { min-height:100%; background:var(--dt-bg,#fff); color:var(--dt-text,#1c1f23); font-size:13px; line-height:1.6; padding:18px 18px 30px; text-align:left; }
+.dtx-tab { flex:1 1 auto; min-height:0; height:100%; overflow-y:auto; overflow-x:auto; overscroll-behavior:contain; background:var(--dt-bg,#fff); color:var(--dt-text,#1c1f23); font-size:13px; line-height:1.6; padding:18px 18px 30px; text-align:left; }
 .dtx-tab * { box-sizing:border-box; }
 .dtx-tab h2 { margin:8px 0 0; font-size:21px; letter-spacing:-.025em; line-height:1.3; }
 .dtx-tab-head-meta { color:var(--dt-muted,#6b7280); font-size:12px; margin-top:3px; }
