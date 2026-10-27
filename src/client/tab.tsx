@@ -7,7 +7,7 @@
  * narrow and only renders the lesson itself.
  */
 
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import type { CourseAttempt, Curriculum, CurriculumItem } from '../path.js'
 import { LessonBody } from './blocks.jsx'
@@ -103,6 +103,7 @@ export function LearningTab({
   const pathClient = (client ?? defaultClient).pathClient
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState('')
+  const [pausedLocal, setPausedLocal] = useState(false)
   const operationId = () => typeof globalThis.crypto?.randomUUID === 'function' ? globalThis.crypto.randomUUID() : `tab-${Date.now().toString(36)}`
   const nudge = async (kind: 'continue' | 'checkin' | 'teachback') => {
     if (pathClient === undefined || view === null || attempt === undefined || courseId === undefined || activeSession === undefined) return
@@ -114,7 +115,7 @@ export function LearningTab({
         resume: true, ...(kind === 'checkin' ? { checkin: true } : {}), ...(kind === 'teachback' ? { teachBack: true } : {}),
       })
       if (!result.prompted) setNotice(result.promptReason ?? text.tabTutorUnreachable)
-      else onOpenChat?.()
+      else { setPausedLocal(false); onOpenChat?.() }
     } catch (error) {
       setNotice(error instanceof Error ? error.message : text.tabTutorUnreachable)
     } finally { setBusy(false) }
@@ -124,11 +125,17 @@ export function LearningTab({
     setBusy(true); setNotice('')
     try {
       await pathClient.pause({ sessionId: activeSession, courseId, expectedRevision: view.path.revision })
+      setPausedLocal(true)
       setNotice(text.lessonPausedNotice)
     } catch (error) {
       setNotice(error instanceof Error ? error.message : text.tabPauseFailed)
     } finally { setBusy(false) }
   }
+
+  useEffect(() => {
+    if (attempt?.status === 'interrupted') setPausedLocal(true)
+    else if (attempt?.status === 'working' || attempt?.status === 'requested') setPausedLocal(false)
+  }, [attempt?.status])
 
   if (courseId === undefined) {
     return <EmptyTab title={text.tabEmptyTitle} body={text.tabEmptyBody} action={onOpenMapPage === undefined ? undefined : { label: text.openLearningMap, run: onOpenMapPage }} />
@@ -140,8 +147,9 @@ export function LearningTab({
     return <EmptyTab title={text.emptyLessonTitle} body={text.emptyLessonBody} action={onOpenMapPage === undefined ? undefined : { label: text.openLearningMap, run: onOpenMapPage }} />
   }
 
-  const status = attempt.status === 'completed' ? text.lessonComplete : attempt.status === 'interrupted' ? text.lessonInterrupted : text.lessonStatusCurrent
-  const tone = attempt.status === 'completed' ? 'green' : attempt.status === 'interrupted' ? 'amber' : 'blue'
+  const paused = pausedLocal || attempt.status === 'interrupted'
+  const status = attempt.status === 'completed' ? text.lessonComplete : paused ? text.lessonInterrupted : text.lessonStatusCurrent
+  const tone = attempt.status === 'completed' ? 'green' : paused ? 'amber' : 'blue'
   return (
     <div className="dtx-tab">
       <div className="dtx-tab-inner">
@@ -155,15 +163,21 @@ export function LearningTab({
       <p className="dtx-tab-teachhint">{text.teacherLeads} {text.teacherLeadsHint}</p>
       <div className="dtx-tab-progress"><span>{text.sessionProgress(done, route.items.length)}</span><span>{text.routeLabel(route.version)}</span></div>
       <div className="dtx-tab-actions">
-        <button type="button" className="dtx-primary" disabled={busy || (attempt.status === 'completed')} onClick={() => void nudge('continue')}>
-          {attempt.status === 'interrupted' ? text.resumeLesson : text.resumeTeaching}
-        </button>
-        <button type="button" className="dtx-secondary" disabled={busy || attempt.status === 'completed' || attempt.units.length === 0} onClick={() => void nudge('teachback')}>{text.explainBack}</button>
-        <button type="button" className="dtx-secondary" disabled={busy || attempt.status === 'completed'} onClick={() => void nudge('checkin')}>{text.checkIn}</button>
-        {attempt.status !== 'completed' && pathClient?.pause !== undefined && <button type="button" className="dtx-link" disabled={busy} onClick={() => void pause()}>{text.pauseLesson}</button>}
-        {onOpenChat !== undefined && <button type="button" className="dtx-link" onClick={onOpenChat}>{text.backToChat}</button>}
+        {paused
+          ? <>
+              <button type="button" className="dtx-primary" disabled={busy} onClick={() => void nudge('continue')}>{text.resumeLesson}</button>
+              {onOpenChat !== undefined && <button type="button" className="dtx-link" onClick={onOpenChat}>{text.backToChat}</button>}
+            </>
+          : <>
+              <button type="button" className="dtx-primary" disabled={busy || attempt.status === 'completed'} onClick={() => void nudge('continue')}>{text.resumeTeaching}</button>
+              <button type="button" className="dtx-secondary" disabled={busy || attempt.status === 'completed' || attempt.units.length === 0} onClick={() => void nudge('teachback')}>{text.explainBack}</button>
+              <button type="button" className="dtx-secondary" disabled={busy || attempt.status === 'completed'} onClick={() => void nudge('checkin')}>{text.checkIn}</button>
+              {attempt.status !== 'completed' && pathClient?.pause !== undefined && <button type="button" className="dtx-link" disabled={busy} onClick={() => void pause()}>{text.pauseLesson}</button>}
+              {onOpenChat !== undefined && <button type="button" className="dtx-link" onClick={onOpenChat}>{text.backToChat}</button>}
+            </>}
       </div>
-      {notice !== '' && <p className="dtx-tab-notice">{notice}</p>}
+      {notice !== '' ? <p className="dtx-tab-notice">{notice}</p>
+        : paused ? <p className="dtx-tab-notice">{text.lessonPausedResumeHint}</p> : null}
       <div className="dtx-tab-divider" />
       {units.length === 0
         ? <div className="dtx-tab-empty" style={{ minHeight: 260 }}>
