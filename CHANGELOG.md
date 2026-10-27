@@ -5,6 +5,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — Phase 2: Today plan and ICS export
+
+- Additive `tasks` table and `udt_plan_get` / `udt_plan_update`; plans are
+  learner-owned and runtime policy, never a teaching decision and never a
+  knowledge-state change.
+- The Learning map shows a compact **Today** card when open tasks exist; dated
+  items can be exported as an ICS calendar through `GET /plan/ics`.
+- `GET /overview` now includes Today tasks; the card is read-only except for
+  calendar export. DSH's schedule remains session-local, so no push notification
+  is promised.
+- 627 tests, typecheck, build and 21 browser cases pass.
+
+
 ### Added — Phase 1: rich content, math, quiz/flashcard and sources
 
 - **Math**: the host pre-renders `\(...\)` / `\[...\]` (and `formula` blocks)
