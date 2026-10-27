@@ -357,7 +357,7 @@ describe('the stylesheet cannot silently lose its theme', () => {
     expect(roots.filter(Boolean), `could not find the rendered roots: ${roots.join(', ')}`).toHaveLength(2)
 
     const tokenRule = /([^{}]*)\{[^{}]*--dt-bg:/.exec(sheet)?.[1] ?? ''
-    const declared = new Set([...tokenRule.matchAll(/\.(dt-[a-z0-9-]+)/g)].map((m) => m[1] ?? ''))
+    const declared = new Set([...tokenRule.matchAll(/\.((?:dt|dtx)-[a-z0-9-]+)/g)].map((m) => m[1] ?? ''))
     const missing = roots.filter((root) => !declared.has(root))
     expect(
       missing,

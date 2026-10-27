@@ -177,11 +177,19 @@ function libraryOf(state: UdState): {
   confirmed: number
   total: number
   updatedAt: string
+  status: 'accepted' | 'active' | 'legacy'
+  acceptedVersion: number | null
 }[] {
   return state
     .listCourses()
     .map((course) => {
       const nodes = state.listNodes(course.id)
+      const learningPath = state.readPath(course.id)
+      const status: 'accepted' | 'active' | 'legacy' = learningPath?.acceptedVersion != null
+        ? 'accepted'
+        : learningPath !== undefined && (learningPath.brief !== null || learningPath.assessment !== null || learningPath.curricula.length > 0)
+          ? 'active'
+          : 'legacy'
       return {
         id: course.id,
         title: course.title,
@@ -189,6 +197,8 @@ function libraryOf(state: UdState): {
         confirmed: nodes.filter((node) => node.state === 'confirmed').length,
         total: nodes.length,
         updatedAt: course.updatedAt,
+        status,
+        acceptedVersion: learningPath?.acceptedVersion ?? null,
       }
     })
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))

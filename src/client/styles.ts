@@ -12,6 +12,7 @@
  * the standalone preview where no DSH theme is present.
  */
 
+import { DESIGN_CSS } from './design-styles.js'
 import { PATH_CSS } from './path-styles.js'
 
 /** Marker attribute so the sheet is injected exactly once, and is findable. */
@@ -33,7 +34,9 @@ const CSS = `/* The tokens are declared on every root the plugin renders: the pa
    So: anything that renders as a root of the plugin belongs in this list. */
 .dt-root-wrap,
 .dt-root,
-.dt-tab {
+.dt-tab,
+.dtx-map,
+.dtx-tab {
   /* Token names verified against the shipped design system
      (packages/client/ui-theme/src/styles/design-platform.css). Three of the
      earlier names did not exist (bg-elevated, bg-sunken, border-secondary,
@@ -125,7 +128,9 @@ body[data-ds-dark-theme] {
    restate them at the same level; an inherited body value is shadowed. */
 body[data-ds-dark-theme] .dt-root-wrap,
 body[data-ds-dark-theme] .dt-root,
-body[data-ds-dark-theme] .dt-tab {
+body[data-ds-dark-theme] .dt-tab,
+body[data-ds-dark-theme] .dtx-map,
+body[data-ds-dark-theme] .dtx-tab {
   --dt-brand: #6a84ff;
   --dt-brand-ink: #8fa4ff;
   --dt-brand-soft: color-mix(in srgb, var(--dt-brand) 14%, var(--dt-bg));
@@ -1244,7 +1249,7 @@ export function injectStyles(): () => void {
 
   const element = document.createElement('style')
   element.setAttribute(STYLE_ATTR, '')
-  element.textContent = CSS + PATH_CSS
+  element.textContent = CSS + PATH_CSS + DESIGN_CSS
   document.head.appendChild(element)
   return () => element.remove()
 }

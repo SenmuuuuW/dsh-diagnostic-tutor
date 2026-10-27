@@ -5,6 +5,33 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — the Learning map now follows the new UI design
+
+The plugin surfaces were rebuilt around the design handoff:
+
+- **Library**: welcome hero with the conversation prompt and a project list with
+  status pills (accepted route / in progress / legacy) and last-studied time.
+- **Learning map shell**: page header (project name + back to chat), tab bar, and
+  a persistent context rail beside the main column.
+- **Route page**: stage bar, one Next-step card, goal form, diagnosis explainer,
+  proposal card, and the route as module cards with lesson cards (replacing the
+  large SVG canvas). The rail shows the stage checklist on the goal step, an
+  empty current-lesson card before learning, and the selected lesson preview /
+  current lesson afterwards.
+- **Knowledge & evidence**: master-detail list with search and a detail pane for
+  related position, prerequisites, evidence and the mastery caveat.
+- **Current lesson tab**: lesson title, status/route pills, session progress,
+  tutor blocks, and the green "answer in the chat" card.
+- **States**: waiting with spinner and elapsed time, classified turn errors,
+  version conflict, route complete, empty/legacy projects.
+- Host: the overview library card now carries the learning-path status and
+  accepted version.
+
+Tests were rewritten for the new surfaces: 576 tests pass with typecheck; the
+real-browser route check now covers 21 cases across 1440/900/400 widths and
+light/dark themes.
+
+
 ### Changed — the route page is compressed to what matters
 
 Reading the page felt like reading a paper: a repeated page title and intro,
