@@ -341,6 +341,13 @@ describe('udt_lesson_update', () => {
           { id: 'f', type: 'formula', content: { tex: '\\frac{a}{b}', display: true } },
         ],
       })
+      const written = await wired.tool('udt_lesson_update', {
+        blocks: [
+          textBlock('t', 'Use \\(X w\\) here.'),
+          { id: 'f', type: 'formula', content: { tex: '\\frac{a}{b}', display: true } },
+        ],
+      })
+      expect(String(written.markdown)).toContain('\\frac{a}{b}')
       const lesson = wired.state.lessonForNode(mathId)!
       const text = lesson.blocks[0] as Block
       const formula = lesson.blocks[1] as Block

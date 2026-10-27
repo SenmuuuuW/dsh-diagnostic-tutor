@@ -32,6 +32,7 @@ import {
   LessonSchema,
 } from './lesson.js'
 import { renderMathFragments, renderTexToMathML } from './math.js'
+import { blocksMarkdown } from './lesson-markdown.js'
 import type { KnownBlock, LessonRecord } from './lesson.js'
 import { newNode, PROJECT_BINDINGS, PROJECT_SELECTIONS } from './state.js'
 import type { Evidence, NodeRecord, ProjectSelection, SessionProjectResolution, UdState } from './state.js'
@@ -1127,6 +1128,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
           mode: { type: 'string', required: true },
           blockCount: { type: 'integer', required: true, description: 'Blocks in the lesson after this call.' },
           addedCount: { type: 'integer', required: true },
+          markdown: { type: 'string', required: true, description: 'Plain Markdown projection for harnesses without the panel.' },
           origin: { type: 'string', required: true },
           ...PROJECT_BINDING_PROPERTIES,
         },
@@ -1237,6 +1239,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
         mode,
         blockCount: lesson.blocks.length,
         addedCount: parsed.length,
+        markdown: blocksMarkdown(lesson.blocks),
         origin: lesson.origin,
         ...await state.adoptProject(sessionId, courseId, now, project),
       }
