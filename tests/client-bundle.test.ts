@@ -228,11 +228,10 @@ describe('the client plugin registers into the DSH slots', () => {
     // freshly mounted client has before its first fetch — it must show the
     // first-use state rather than an empty box.
     const tabHtml = renderToStaticMarkup(createElement(tab?.Component as never, {} as never))
-    expect(tabHtml).toContain('dt-tab')
-    // The docked tab with no project open is the library, not a welcome.
-    expect(tabHtml).toContain('Your learning')
-    // With nothing at all it says so rather than showing an empty shell.
-    expect(tabHtml).toContain('Nothing here yet')
+    expect(tabHtml).toContain('dtx-tab')
+    // With no project open the tab says what it needs rather than showing an empty shell.
+    expect(tabHtml).toContain('No lesson yet')
+    expect(tabHtml).toContain('Open learning map')
 
     // The map page has its own identity in the bar, so a learner who switched
     // to it knows which page they are on. With no project open there is no
@@ -240,8 +239,7 @@ describe('the client plugin registers into the DSH slots', () => {
     // switch; the welcome body offers the way to the chat.
     const mapHtml = renderToStaticMarkup(createElement(map?.Component as never, {} as never))
     expect(mapHtml).toContain('Learning map')
-    expect(mapHtml).toContain('Nothing to map yet.')
-    expect(mapHtml).not.toContain('Open current lesson')
+    expect(mapHtml).toContain('Start your learning')
     expect(mapHtml).toContain('dt-lang-toggle')
   })
 })

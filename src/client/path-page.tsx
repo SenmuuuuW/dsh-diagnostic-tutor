@@ -447,9 +447,6 @@ function LessonRail({ plan, item, attempt, activeAttempt, mode, version, doneCou
       {mode === 'preview' && onStart !== undefined && <div style={{ marginTop: 14 }}>
         <button type="button" className="dtx-primary" style={{ width: '100%' }} disabled={readOnly} onClick={onStart}>{text.startLesson}</button>
       </div>}
-      {mode === 'current' && onOpenLesson !== undefined && <div style={{ marginTop: 14 }}>
-        <button type="button" className="dtx-primary" style={{ width: '100%' }} onClick={onOpenLesson}>{text.continueLesson}</button>
-      </div>}
     </section>
   )
 }
