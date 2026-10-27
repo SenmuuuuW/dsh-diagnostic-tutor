@@ -180,6 +180,13 @@ describe('guarded path HTTP API', () => {
       ...run,
       attempts: run.attempts.map((attempt) => ({ ...attempt, updatedAt: '2026-10-18T11:00:00.000Z' })),
     }))
+    const teachBack = await call('/path/start', 'POST', {
+      ...identity(), version: 1, itemId: 'vectors', operationId: 'teach-back-vectors', teachBack: true,
+    })
+    expect(teachBack.status).toBe(200)
+    expect(prompts.at(-1)?.text).toContain("Let's do a teach-back")
+    expect(prompts.at(-1)?.text).toContain('Do NOT explain the unit again first')
+
     const paused = await call('/path/pause', 'POST', identity())
     expect(paused.status).toBe(200)
     expect(paused.json.run.attempts.find((attempt: { id: string }) => attempt.id === started.json.run.activeAttemptId)?.status).toBe('interrupted')

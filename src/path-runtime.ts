@@ -167,7 +167,7 @@ export async function stampPathRequest(state: UdState, courseId: string, session
   }
 }
 
-export interface BeginItemInput { courseId: string; sessionId: string; expectedRevision: number; version: number; itemId: string; operationId: string; review?: boolean | undefined; resume?: boolean | undefined; checkin?: boolean | undefined }
+export interface BeginItemInput { courseId: string; sessionId: string; expectedRevision: number; version: number; itemId: string; operationId: string; review?: boolean | undefined; resume?: boolean | undefined; checkin?: boolean | undefined; teachBack?: boolean | undefined }
 export async function beginCourseItem(state: UdState, input: BeginItemInput) {
   let shouldPrompt = false
   const now = new Date().toISOString()
@@ -190,8 +190,11 @@ export async function beginCourseItem(state: UdState, input: BeginItemInput) {
       // A double click while a prompt is in flight is not a new teaching turn.
       // A deliberate resume may come much later: if the learner left the
       // conversation and came back, `prompted` is already true forever, so it
-      // must not block the follow-up. The short cooldown only absorbs repeats.
-      const cooling = !paused && (current.dispatchId !== null || current.prompted) && Date.parse(now) - Date.parse(current.updatedAt) < 3000
+      // must not block the follow-up. Teach-back and check-in are explicit
+      // learning actions and bypass the short cooldown once the prompt landed.
+      const inflight = current.dispatchId !== null && Date.parse(now) - Date.parse(current.updatedAt) < 3000
+      const explicit = input.teachBack === true || input.checkin === true
+      const cooling = !paused && (inflight || (!explicit && current.prompted && Date.parse(now) - Date.parse(current.updatedAt) < 3000))
       if (cooling) {
         return { ...run, attempts: run.attempts.map((attempt) => attempt.id === current.id ? { ...attempt, operations: [...attempt.operations, input.operationId] } : attempt) }
       }
@@ -208,11 +211,13 @@ export async function beginCourseItem(state: UdState, input: BeginItemInput) {
   const path = state.readPath(input.courseId)!
   const route = path.curricula.find((entry) => entry.version === attempt.version)!
   const item = route.items.find((entry) => entry.id === attempt.itemId)!
-  const prompt = input.checkin === true
-    ? checkinPrompt(input, path, route, item, attempt)
-    : (attempt.units.length > 0 || attempt.status === 'interrupted' || input.resume === true)
-      ? resumePrompt(input, path, route, item, attempt)
-      : startPrompt(input, path, route, item, attempt)
+  const prompt = input.teachBack === true
+    ? teachBackPrompt(input, path, route, item, attempt)
+    : input.checkin === true
+      ? checkinPrompt(input, path, route, item, attempt)
+      : (attempt.units.length > 0 || attempt.status === 'interrupted' || input.resume === true)
+        ? resumePrompt(input, path, route, item, attempt)
+        : startPrompt(input, path, route, item, attempt)
   return { run, attempt, shouldPrompt, prompt }
 }
 
@@ -238,6 +243,15 @@ function resumePrompt(input: BeginItemInput, path: LearningPath, route: Curricul
   const lastTitle = last?.lesson.title ?? item.title
   const check = lastUnitCheck(attempt)
   return `Let's continue ${lessonLine(input, route, item)}\nThis is a resume, not a restart. Attempt id: ${attempt.id}. Already written units: ${attempt.units.length}. Last unit: "${lastTitle}".${check === null ? '' : ` Last check I was asked: "${check}".`}\nMy goal and budget: ${briefContext(path.brief)}\n\nRead udt_path_get and the conversation history. Do this in the conversation:\n1. In one sentence, say where we stopped, using the context you already have.\n2. Ask me ONE short check-in question about the last unit (prefer ask_user_question). If I already answered that check in this conversation, acknowledge it briefly and ask whether to continue instead.\n3. Wait for my answer. Do not write a new unit, do not repeat old teaching, and do not restart this lesson until I answer.\n\nWhen I answer, append the next small unit with udt_lesson_update(attemptId=${attempt.id}); never replace or rewrite earlier units. Keep teaching one small unit at a time in the chat, ending with one check, and use the lesson tab only as the reference snapshot.`
+}
+
+/** The learner explains the unit back; the tutor must diagnose, not lecture. */
+function teachBackPrompt(input: BeginItemInput, path: LearningPath, route: Curriculum, item: Curriculum['items'][number], attempt: CourseAttempt): string {
+  const last = attempt.units.at(-1)
+  const lastTitle = last?.lesson.title ?? item.title
+  const check = lastUnitCheck(attempt)
+  const node = attempt.nodeId === null ? '' : ` Bound node id: ${attempt.nodeId}.`
+  return `Let's do a teach-back of ${lessonLine(input, route, item)}\nAttempt id: ${attempt.id}. Last unit: "${lastTitle}".${check === null ? '' : ` The check I was asked: "${check}".`}${node}\nMy goal and budget: ${briefContext(path.brief)}\n\nDo NOT explain the unit again first. Invite me to explain it in my own words, as if I were teaching it to you. When I answer, do exactly this:\n1. Name one thing I got right, specifically.\n2. Name one specific gap, fuzzy phrase, or misconception — quote my words when you can.\n3. Ask ONE follow-up question: either "why does that work?" or a new-context application. Wait for my answer.\n4. Record what I showed with udt_map_update(op=add-evidence, ${attempt.nodeId === null ? "nodeId=<the bound node>" : `nodeId=${attempt.nodeId}`}, evidenceKind='explanation', evidenceNote=<what I actually explained>, readiness=<advance|advance-with-caution|review-first|more-practice>). Explanation alone never sets state to confirmed.\n\nDo not write a new lesson unit and do not continue with new material in this turn. The point is to make my thinking visible, not to deliver more content. After the follow-up, say in one sentence what we should do next and wait for me.`
 }
 
 /** A deliberate pause-and-check before continuing. */

@@ -79,7 +79,7 @@ export async function handlePathApi(route: string, req: IncomingMessage, res: Se
       send(res, 200, paused)
       return true
     } else if (route === '/path/start') {
-      const input = identity.extend({ version: z.number().int().positive(), itemId: z.string().min(1).max(200), operationId: z.string().min(1).max(200), review: z.boolean().optional(), resume: z.boolean().optional(), checkin: z.boolean().optional() }).parse(raw)
+      const input = identity.extend({ version: z.number().int().positive(), itemId: z.string().min(1).max(200), operationId: z.string().min(1).max(200), review: z.boolean().optional(), resume: z.boolean().optional(), checkin: z.boolean().optional(), teachBack: z.boolean().optional() }).parse(raw)
       const result = await beginCourseItem(state, input)
       let prompted = result.attempt.prompted
       let reason: string | undefined = result.attempt.promptReason ?? undefined
@@ -90,7 +90,7 @@ export async function handlePathApi(route: string, req: IncomingMessage, res: Se
       }
       deps.onEvent?.('path.start-lesson', {
         courseId: base.courseId, sessionId: base.sessionId, version: input.version, itemId: input.itemId,
-        attemptId: result.attempt.id, resume: input.resume === true, checkin: input.checkin === true,
+        attemptId: result.attempt.id, resume: input.resume === true, checkin: input.checkin === true, teachBack: input.teachBack === true,
         prompted, ...(reason === undefined ? {} : { reason: reason.slice(0, 240) }),
       })
       send(res, 200, { ...pathView(state, base.courseId, base.sessionId), prompted, ...(reason ? { promptReason: reason } : {}) })
