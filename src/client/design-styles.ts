@@ -397,6 +397,12 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-route-meta { flex-wrap:wrap; }
 .dtx-next h2 { overflow-wrap:anywhere; }
 
+.dt-block-formula { padding:12px 14px; }
+.dt-block-formula .dt-formula-body { margin-top:6px; overflow-x:auto; font-size:1.05em; }
+.dt-block-formula .dt-formula-body math { display:block; margin:0 auto; }
+.dt-math math { display:inline-block; vertical-align:middle; }
+.dt-math-source { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.95em; }
+
 /* tables and fenced code are produced by the shared block renderer, so style
    them wherever a lesson body is shown (old inline panel included). */
 .dt-md-table-wrap { margin:12px 0 14px; overflow-x:auto; border:1px solid var(--dt-border,#e8eaee); border-radius:10px; }

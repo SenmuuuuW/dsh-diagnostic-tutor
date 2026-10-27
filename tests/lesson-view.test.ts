@@ -162,6 +162,42 @@ describe('examples and diagrams announce themselves', () => {
   })
 })
 
+describe('formula blocks and inline math use host MathML', () => {
+  it('renders a formula block without showing the TeX delimiters', () => {
+    const html = render({
+      id: 'f',
+      type: 'formula',
+      content: { tex: 'x^2', display: true, mathml: '<math><semantics><msup><mi>x</mi><mn>2</mn></msup></semantics></math>' },
+    } as unknown as Block)
+    expect(html).toContain('<math')
+    expect(html).toContain('<msup')
+    expect(html).not.toContain('x^2')
+  })
+
+  it('uses the stored MathML fragment for inline and display text math', () => {
+    const mathml = '<math><mi>x</mi></math>'
+    const inlineBlock = {
+      id: 't', type: 'text',
+      content: { md: 'Use \\(x\\) here.', math: [{ tex: 'x', display: false, mathml }] },
+    } as unknown as Block
+    const html = render(inlineBlock)
+    expect(html).toContain('<math')
+    expect(html).not.toContain('\\(')
+    expect(html).toContain('dt-math')
+  })
+
+  it('strips scripts, events and links from a hostile MathML string', () => {
+    const html = render({
+      id: 'f', type: 'formula',
+      content: { tex: 'x', mathml: '<math><script>alert(1)</script><mi onmouseover="alert(2)">x</mi><a href="https://evil">link</a></math>' },
+    } as unknown as Block)
+    expect(html).not.toContain('<script')
+    expect(html).not.toContain('onmouseover')
+    expect(html).not.toContain('href')
+    expect(html).toContain('x')
+  })
+})
+
 describe('the lesson keeps its shape', () => {
   it('renders every block in order, tagged by type', () => {
     const html = renderToStaticMarkup(
@@ -178,8 +214,8 @@ describe('the lesson keeps its shape', () => {
   })
 
   it('still degrades for a block type it does not know', () => {
-    const html = render({ id: 'x', type: 'formula', content: {} } as unknown as Block)
-    expect(html).toContain('formula')
+    const html = render({ id: 'x', type: 'video', content: {} } as unknown as Block)
+    expect(html).toContain('video')
     expect(html).toContain('no')
   })
 

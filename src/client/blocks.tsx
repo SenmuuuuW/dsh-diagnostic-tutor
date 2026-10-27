@@ -16,6 +16,8 @@
 
 import { useState, type ReactNode } from 'react'
 
+import { MathMLView } from './mathml.jsx'
+
 import type { Block, HandoffView, NextStepView } from '../contract.js'
 import { useLang } from './i18n.js'
 import { useLearningText } from './learning-text.js'
@@ -55,7 +57,7 @@ type Renderer = (props: BlockRenderProps) => ReactNode
  */
 const INLINE_PATTERN = /(\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`]+`|\\\([\s\S]*?\\\))/g
 
-function inline(text: string): ReactNode[] {
+function inline(text: string, math?: readonly { tex: string; display: boolean; mathml: string }[]): ReactNode[] {
   return text
     .split(INLINE_PATTERN)
     .filter(Boolean)
@@ -68,9 +70,14 @@ function inline(text: string): ReactNode[] {
       }
       if (part.startsWith('`') && part.endsWith('`')) return <code key={index}>{part.slice(1, -1)}</code>
       if (part.startsWith('\\(') && part.endsWith('\\)')) {
+        const tex = part.slice(2, -2).trim()
+        const fragment = math?.find((entry) => !entry.display && entry.tex === tex)
         return (
           <span className="dt-math" key={index}>
-            {part.slice(2, -2)}
+            <MathMLView
+              mathml={fragment?.mathml}
+              fallback={<span className="dt-math-source">{part.slice(2, -2)}</span>}
+            />
           </span>
         )
       }
@@ -252,7 +259,7 @@ function toRuns(md: string): Line[][] {
  * Blank-line separated runs become paragraphs, `###` becomes a real heading,
  * `-` and `1.` become real lists, and `\[...\]` becomes a display-math panel.
  */
-function Paragraphs({ md }: { md: string }): ReactNode {
+function Paragraphs({ md, math }: { md: string; math?: readonly { tex: string; display: boolean; mathml: string }[] | undefined }): ReactNode {
   return (
     <>
       {toRuns(md).map((run, index) => {
@@ -261,14 +268,15 @@ function Paragraphs({ md }: { md: string }): ReactNode {
           const Tag = first.level === 2 ? 'h3' : 'h4'
           return (
             <Tag className={`dt-md-h${first.level}`} key={index}>
-              {inline(first.text)}
+              {inline(first.text, math)}
             </Tag>
           )
         }
         if (first.kind === 'math') {
+          const fragment = math?.find((entry) => entry.display && entry.tex === first.text)
           return (
             <div className="dt-math-block" key={index}>
-              {first.text}
+              <MathMLView mathml={fragment?.mathml} fallback={<span className="dt-math-source">{first.text}</span>} />
             </div>
           )
         }
@@ -284,9 +292,9 @@ function Paragraphs({ md }: { md: string }): ReactNode {
           return (
             <div className="dt-md-table-wrap" key={index}>
               <table className="dt-md-table">
-                <thead><tr>{(head ?? []).map((cell, column) => <th key={column}>{inline(cell)}</th>)}</tr></thead>
+                <thead><tr>{(head ?? []).map((cell, column) => <th key={column}>{inline(cell, math)}</th>)}</tr></thead>
                 <tbody>
-                  {body.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, column) => <td key={column}>{inline(cell)}</td>)}</tr>)}
+                  {body.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, column) => <td key={column}>{inline(cell, math)}</td>)}</tr>)}
                 </tbody>
               </table>
             </div>
@@ -296,7 +304,7 @@ function Paragraphs({ md }: { md: string }): ReactNode {
           return (
             <ul className="dt-md-ul" key={index}>
               {run.map((line, inner) => (
-                <li key={inner}>{inline('text' in line ? line.text : '')}</li>
+                <li key={inner}>{inline('text' in line ? line.text : '', math)}</li>
               ))}
             </ul>
           )
@@ -305,14 +313,14 @@ function Paragraphs({ md }: { md: string }): ReactNode {
           return (
             <ol className="dt-md-ol" key={index}>
               {run.map((line, inner) => (
-                <li key={inner}>{inline('text' in line ? line.text : '')}</li>
+                <li key={inner}>{inline('text' in line ? line.text : '', math)}</li>
               ))}
             </ol>
           )
         }
         return (
           <p className="dt-block-md" key={index}>
-            {inline(run.map((line) => ('text' in line ? line.text : '')).join(' '))}
+            {inline(run.map((line) => ('text' in line ? line.text : '')).join(' '), math)}
           </p>
         )
       })}
@@ -324,7 +332,7 @@ function TextBlockView({ block }: BlockRenderProps): ReactNode {
   if (block.type !== 'text') return null
   return (
     <div className="dt-block dt-block-text">
-      <Paragraphs md={block.content.md} />
+      <Paragraphs md={block.content.md} math={block.content.math ?? undefined} />
     </div>
   )
 }
@@ -428,6 +436,23 @@ function CheckBlockView({ block }: BlockRenderProps): ReactNode {
   )
 }
 
+function FormulaBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'formula') return null
+  return (
+    <div className="dt-block dt-block-formula">
+      <BlockLabel icon={<span aria-hidden="true">∑</span>}>{text.formula}</BlockLabel>
+      <div className="dt-formula-body">
+        <MathMLView
+          mathml={block.content.mathml}
+          fallback={<div className="dt-math-block"><span className="dt-math-source">{block.content.tex}</span></div>}
+        />
+      </div>
+      {block.content.caption !== undefined && <p className="dt-caption">{block.content.caption}</p>}
+    </div>
+  )
+}
+
 /**
  * The registry. Adding a block type means adding one entry here.
  *
@@ -439,6 +464,7 @@ export const BLOCK_RENDERERS: Record<string, Renderer> = {
   example: ExampleBlockView,
   diagram: DiagramBlockView,
   check: CheckBlockView,
+  formula: FormulaBlockView,
 }
 
 /** Shown for a block type this build does not know. Never throws. */

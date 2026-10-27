@@ -287,8 +287,8 @@ describe('block renderers', () => {
     { id: 'd', type: 'check', content: { prompt: 'What do you already know?', expect: 'reasoning' } },
   ]
 
-  it('registers exactly the four v0.0.4 block types', () => {
-    expect(Object.keys(BLOCK_RENDERERS).sort()).toEqual(['check', 'diagram', 'example', 'text'])
+  it('registers every known block renderer', () => {
+    expect(Object.keys(BLOCK_RENDERERS).sort()).toEqual(['check', 'diagram', 'example', 'formula', 'text'])
   })
 
   it('renders every type in order', () => {
@@ -317,7 +317,7 @@ describe('an unknown block degrades instead of breaking the lesson', () => {
   // A lesson authored by a newer host must still render here.
   const future = [
     { id: 'a', type: 'text', content: { md: 'Before.' } },
-    { id: 'b', type: 'formula', content: { latex: 'x^2' } },
+    { id: 'b', type: 'video', content: { url: 'x' } },
     { id: 'c', type: 'text', content: { md: 'After.' } },
   ] as unknown as Block[]
 
@@ -325,7 +325,7 @@ describe('an unknown block degrades instead of breaking the lesson', () => {
     const html = lesson(future)
     expect(html).toContain('Before.')
     expect(html).toContain('After.')
-    expect(html).toContain('formula')
+    expect(html).toContain('video')
     expect(html).toContain('no renderer')
   })
 

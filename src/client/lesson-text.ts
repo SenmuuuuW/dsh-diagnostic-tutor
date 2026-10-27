@@ -18,6 +18,7 @@ const en = {
   // ---- lesson blocks ---------------------------------------------------
   workedExample: 'Worked example',
   diagram: 'Diagram',
+  formula: 'Formula',
   mermaidSourcePrefix: 'Source shown as text — this build ships no ',
   mermaidSourceSuffix: ' renderer.',
   yourTurn: 'Your turn',
@@ -68,6 +69,7 @@ const zh: typeof en = {
   // ---- lesson blocks ---------------------------------------------------
   workedExample: '例题解析',
   diagram: '示意图',
+  formula: '公式',
   mermaidSourcePrefix: '源码以文本形式显示 —— 本构建未附带 ',
   mermaidSourceSuffix: ' 渲染器。',
   yourTurn: '轮到你了',
