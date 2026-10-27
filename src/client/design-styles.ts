@@ -398,6 +398,13 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-next h2 { overflow-wrap:anywhere; }
 
 .dt-block-code .dt-pre { margin-top:6px; }
+.dt-block-quiz { padding:12px 14px; }
+.dt-quiz-option { display:flex; align-items:flex-start; gap:8px; margin:4px 0; cursor:pointer; }
+.dt-quiz-option input { margin-top:4px; }
+.dt-quiz-input { width:100%; margin:4px 0 8px; padding:8px 10px; border:1px solid var(--dt-border,#e8eaee); border-radius:7px; background:var(--dt-bg,#fff); color:var(--dt-text,#1c1f23); font:inherit; }
+.dt-quiz-recorded { margin:8px 0 0; color:var(--dt-good,#1f8b4c); font-size:12px; }
+.dt-flashcard-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.dt-flashcard-front { margin:6px 0; font-weight:600; }
 .dt-block-quiz .dt-quiz-question { margin:10px 0; }
 .dt-quiz-prompt { margin:0 0 6px; }
 .dt-quiz-options { margin:0 0 8px; padding-left:22px; }

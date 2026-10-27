@@ -27,8 +27,20 @@ import { readinessLabel } from './map-text.js'
 import { continuationLabel, formatDuration } from './model.js'
 
 /** Props every renderer receives. */
+export interface BlockInteraction {
+  attemptId: string
+  responses: readonly {
+    blockId: string
+    kind: string
+    answers: readonly { questionId: string; value: string }[]
+    submittedAt: string
+  }[]
+  submit(blockId: string, answers: { questionId: string; value: string }[]): Promise<void>
+}
+
 export interface BlockRenderProps<B extends KnownBlock = KnownBlock> {
   block: B
+  interaction?: BlockInteraction | undefined
 }
 
 type Renderer = (props: BlockRenderProps<KnownBlock>) => ReactNode
@@ -468,38 +480,101 @@ function CodeBlockView({ block }: BlockRenderProps): ReactNode {
   )
 }
 
-function QuizBlockView({ block }: BlockRenderProps): ReactNode {
+function QuizBlockView({ block, interaction }: BlockRenderProps): ReactNode {
   const text = useLessonText()
+  const [values, setValues] = useState<Record<string, string>>({})
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [sent, setSent] = useState(false)
   if (block.type !== 'quiz') return null
+  const recorded = interaction?.responses.find((response) => response.blockId === block.id)
+  const submitted = sent || recorded !== undefined
+  const select = (questionId: string, value: string) => setValues((current) => ({ ...current, [questionId]: value }))
+  const complete = block.content.questions.every((question) => {
+    const value = recorded?.answers.find((answer) => answer.questionId === question.id)?.value ?? values[question.id]
+    return typeof value === 'string' && value.length > 0
+  })
+  const submit = async () => {
+    if (interaction === undefined || busy || !complete) return
+    setBusy(true); setError('')
+    try {
+      await interaction.submit(block.id, block.content.questions.map((question) => ({
+        questionId: question.id,
+        value: recorded?.answers.find((answer) => answer.questionId === question.id)?.value ?? values[question.id] ?? '',
+      })))
+      setSent(true)
+    } catch {
+      setError(text.answerFailed)
+    } finally { setBusy(false) }
+  }
   return (
     <div className="dt-block dt-block-quiz">
       <BlockLabel icon={<span aria-hidden="true">?</span>}>{text.quiz}{block.content.title === undefined ? '' : ` · ${block.content.title}`}</BlockLabel>
-      {block.content.questions.map((question, index) => (
-        <div className="dt-quiz-question" key={question.id}>
-          <p className="dt-quiz-prompt"><b>{index + 1}.</b> {inline(question.prompt)}</p>
-          {question.options !== undefined && (
-            <ul className="dt-quiz-options">
-              {question.options.map((option) => <li key={option}>{inline(option)}</li>)}
-            </ul>
-          )}
-        </div>
-      ))}
-      <p className="dt-caption">{text.quizAnswerInChat}</p>
+      {block.content.questions.map((question, index) => {
+        const chosen = recorded?.answers.find((answer) => answer.questionId === question.id)?.value ?? values[question.id] ?? ''
+        return (
+          <div className="dt-quiz-question" key={question.id}>
+            <p className="dt-quiz-prompt"><b>{index + 1}.</b> {inline(question.prompt)}</p>
+            {question.options !== undefined
+              ? <div className="dt-quiz-options" role="radiogroup" aria-label={question.prompt}>
+                  {question.options.map((option) => (
+                    <label className="dt-quiz-option" key={option}>
+                      <input type="radio" name={`${block.id}-${question.id}`} value={option} checked={chosen === option} disabled={submitted || interaction === undefined} onChange={() => select(question.id, option)} />
+                      <span>{inline(option)}</span>
+                    </label>
+                  ))}
+                </div>
+              : <input className="dt-quiz-input" aria-label={question.prompt} value={chosen} disabled={submitted || interaction === undefined} onChange={(event) => select(question.id, event.target.value)} />}
+          </div>
+        )
+      })}
+      {interaction === undefined
+        ? <p className="dt-caption">{text.quizAnswerInChat}</p>
+        : submitted
+          ? <p className="dt-quiz-recorded" role="status">{text.answerRecorded}</p>
+          : <button type="button" className="dt-secondary" disabled={busy || !complete} onClick={() => void submit()}>{text.submitAnswer}</button>}
+      {error !== '' && <p className="dt-caption" role="alert">{error}</p>}
     </div>
   )
 }
 
-function FlashcardBlockView({ block }: BlockRenderProps): ReactNode {
+function FlashcardBlockView({ block, interaction }: BlockRenderProps): ReactNode {
   const text = useLessonText()
+  const [revealed, setRevealed] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
   if (block.type !== 'flashcard') return null
+  const recorded = interaction?.responses.find((response) => response.blockId === block.id)
+  const submit = async (value: 'again' | 'got-it') => {
+    if (interaction === undefined || busy) return
+    setBusy(true); setError('')
+    try {
+      await interaction.submit(block.id, [{ questionId: block.id, value }])
+      setRevealed(true)
+    } catch {
+      setError(text.answerFailed)
+    } finally { setBusy(false) }
+  }
   return (
     <div className="dt-block dt-block-flashcard">
       <BlockLabel icon={<span aria-hidden="true">▣</span>}>{text.flashcard}</BlockLabel>
-      <details className="dt-flashcard">
-        <summary>{inline(block.content.front)}</summary>
-        <p className="dt-flashcard-back">{inline(block.content.back)}</p>
-      </details>
+      <div className="dt-flashcard">
+        <p className="dt-flashcard-front">{inline(block.content.front)}</p>
+        {interaction === undefined
+          ? <details><summary>{text.showAnswer}</summary><p className="dt-flashcard-back">{inline(block.content.back)}</p></details>
+          : (revealed || recorded !== undefined)
+            ? <p className="dt-flashcard-back">{inline(block.content.back)}</p>
+            : <button type="button" className="dt-secondary" onClick={() => setRevealed(true)}>{text.showAnswer}</button>}
+        {interaction !== undefined && (revealed || recorded !== undefined) && recorded === undefined && (
+          <div className="dt-flashcard-actions">
+            <button type="button" className="dt-secondary" disabled={busy} onClick={() => void submit('again')}>{text.flashcardAgain}</button>
+            <button type="button" className="dt-secondary" disabled={busy} onClick={() => void submit('got-it')}>{text.flashcardGotIt}</button>
+          </div>
+        )}
+        {recorded !== undefined && <p className="dt-quiz-recorded" role="status">{text.answerRecorded}</p>}
+      </div>
       {block.content.tags !== undefined && <p className="dt-caption">{block.content.tags.join(' · ')}</p>}
+      {error !== '' && <p className="dt-caption" role="alert">{error}</p>}
     </div>
   )
 }
@@ -578,7 +653,7 @@ function UnknownBlockView({ block }: { block: StoredBlock }): ReactNode {
  * @param props.block - the block to render.
  * @returns the rendered block.
  */
-export function BlockView({ block }: { block: StoredBlock }): ReactNode {
+export function BlockView({ block, interaction }: { block: StoredBlock; interaction?: BlockInteraction | undefined }): ReactNode {
   if (!isKnownBlock(block)) {
     return <div data-block-type={block.type}><UnknownBlockView block={block} /></div>
   }
@@ -586,7 +661,7 @@ export function BlockView({ block }: { block: StoredBlock }): ReactNode {
   if (renderer === undefined) {
     return <div data-block-type={block.type}><UnknownBlockView block={block} /></div>
   }
-  return <div data-block-type={block.type}>{renderer({ block })}</div>
+  return <div data-block-type={block.type}>{renderer({ block, interaction })}</div>
 }
 
 /**
@@ -595,11 +670,11 @@ export function BlockView({ block }: { block: StoredBlock }): ReactNode {
  * @param props.blocks - the blocks to render.
  * @returns the rendered list.
  */
-export function LessonBody({ blocks }: { blocks: readonly StoredBlock[] }): ReactNode {
+export function LessonBody({ blocks, interaction }: { blocks: readonly StoredBlock[]; interaction?: BlockInteraction | undefined }): ReactNode {
   return (
     <>
       {blocks.map((block) => (
-        <BlockView key={block.id} block={block} />
+        <BlockView key={block.id} block={block} interaction={interaction} />
       ))}
     </>
   )

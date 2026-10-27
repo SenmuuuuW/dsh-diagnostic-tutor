@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import type { CourseAttempt, Curriculum, CurriculumItem } from '../path.js'
 import { LessonBody } from './blocks.jsx'
+import type { BlockInteraction } from './blocks.jsx'
 import { isKnownBlock } from '../block-types.js'
 import { Icon } from './design-icons.jsx'
 import { useDesignText } from './design-text.js'
@@ -150,6 +151,24 @@ export function LearningTab({
     }
   }, [])
 
+  const blockInteraction: BlockInteraction | undefined = attempt === undefined || view === null || pathClient?.answer === undefined || courseId === undefined || activeSession === undefined
+    ? undefined
+    : {
+        attemptId: attempt.id,
+        responses: attempt.responses ?? [],
+        submit: async (blockId, answers) => {
+          try {
+            await pathClient.answer!({
+              sessionId: activeSession, courseId, expectedRevision: view.path.revision,
+              attemptId: attempt.id, blockId, answers,
+            })
+          } catch (error) {
+            setNotice(error instanceof Error ? error.message : text.answerFailed)
+            throw error
+          }
+        },
+      }
+
   if (courseId === undefined) {
     return <EmptyTab title={text.tabEmptyTitle} body={text.tabEmptyBody} action={onOpenMapPage === undefined ? undefined : { label: text.openLearningMap, run: onOpenMapPage }} />
   }
@@ -206,9 +225,9 @@ export function LearningTab({
               {unit.lesson.blocks.map((block) => isKnownBlock(block) && block.type === 'diagram'
                 ? <details className="dtx-tab-fold" key={block.id}>
                     <summary>{text.lessonDiagram}{block.content.caption !== undefined ? ` · ${block.content.caption}` : ''}</summary>
-                    <LessonBody blocks={[block]} />
+                    <LessonBody blocks={[block]} interaction={blockInteraction} />
                   </details>
-                : <LessonBody key={block.id} blocks={[block]} />)}
+                : <LessonBody key={block.id} blocks={[block]} interaction={blockInteraction} />)}
             </article>)}
           </>}
       {attempt.outcome !== null && <div className="dtx-tab-outcome"><b>{text.outcomeLabel}</b>{attempt.outcome}</div>}

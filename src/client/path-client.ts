@@ -14,6 +14,11 @@ export interface PathRequestParams extends PathWriteParams {
   operationId: string
 }
 export interface AcceptPathParams extends PathWriteParams { version: number }
+export interface AnswerBlockParams extends PathWriteParams {
+  attemptId: string
+  blockId: string
+  answers: { questionId: string; value: string }[]
+}
 export interface StartPathParams extends AcceptPathParams {
   itemId: string
   operationId: string
@@ -35,6 +40,8 @@ export interface PathClient {
   start(params: StartPathParams): Promise<PromptedPathView>
   /** Pause the active attempt without ending it. */
   pause?(params: PathWriteParams): Promise<PathView>
+  /** Record one quiz/flashcard submission; never grades or changes state. */
+  answer?(params: AnswerBlockParams): Promise<PathView>
 }
 
 /** Retain HTTP status so a stale write can refresh without losing form edits. */
@@ -84,4 +91,5 @@ export const defaultPathClient: PathClient = {
   accept: (params) => request('/accept', params),
   start: (params) => request<PromptedPathView>('/start', params),
   pause: (params) => request('/pause', params),
+  answer: (params) => request('/answer', params),
 }
