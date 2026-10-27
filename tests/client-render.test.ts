@@ -288,7 +288,7 @@ describe('block renderers', () => {
   ]
 
   it('registers every known block renderer', () => {
-    expect(Object.keys(BLOCK_RENDERERS).sort()).toEqual(['check', 'diagram', 'example', 'formula', 'text'])
+    expect(Object.keys(BLOCK_RENDERERS).sort()).toEqual(['check', 'code', 'comparison', 'diagram', 'example', 'flashcard', 'formula', 'quiz', 'resource', 'text'])
   })
 
   it('renders every type in order', () => {

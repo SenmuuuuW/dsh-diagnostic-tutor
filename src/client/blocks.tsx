@@ -454,6 +454,93 @@ function FormulaBlockView({ block }: BlockRenderProps): ReactNode {
   )
 }
 
+function CodeBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'code') return null
+  return (
+    <div className="dt-block dt-block-code">
+      <BlockLabel icon={<span aria-hidden="true">⌘</span>}>
+        {text.code}{block.content.language === undefined ? '' : ` · ${block.content.language}`}
+      </BlockLabel>
+      <pre className="dt-pre"><code>{block.content.source}</code></pre>
+      {block.content.caption !== undefined && <p className="dt-caption">{block.content.caption}</p>}
+    </div>
+  )
+}
+
+function QuizBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'quiz') return null
+  return (
+    <div className="dt-block dt-block-quiz">
+      <BlockLabel icon={<span aria-hidden="true">?</span>}>{text.quiz}{block.content.title === undefined ? '' : ` · ${block.content.title}`}</BlockLabel>
+      {block.content.questions.map((question, index) => (
+        <div className="dt-quiz-question" key={question.id}>
+          <p className="dt-quiz-prompt"><b>{index + 1}.</b> {inline(question.prompt)}</p>
+          {question.options !== undefined && (
+            <ul className="dt-quiz-options">
+              {question.options.map((option) => <li key={option}>{inline(option)}</li>)}
+            </ul>
+          )}
+        </div>
+      ))}
+      <p className="dt-caption">{text.quizAnswerInChat}</p>
+    </div>
+  )
+}
+
+function FlashcardBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'flashcard') return null
+  return (
+    <div className="dt-block dt-block-flashcard">
+      <BlockLabel icon={<span aria-hidden="true">▣</span>}>{text.flashcard}</BlockLabel>
+      <details className="dt-flashcard">
+        <summary>{inline(block.content.front)}</summary>
+        <p className="dt-flashcard-back">{inline(block.content.back)}</p>
+      </details>
+      {block.content.tags !== undefined && <p className="dt-caption">{block.content.tags.join(' · ')}</p>}
+    </div>
+  )
+}
+
+function ResourceBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'resource') return null
+  return (
+    <div className="dt-block dt-block-resource">
+      <BlockLabel icon={<span aria-hidden="true">↗</span>}>{text.resource}</BlockLabel>
+      <p className="dt-resource-title">{inline(block.content.title)}</p>
+      {(block.content.locator !== undefined || block.content.sourceId !== undefined) && (
+        <p className="dt-caption">{text.sourceRef}{block.content.locator === undefined ? '' : ` · ${block.content.locator}`}</p>
+      )}
+      {block.content.url !== undefined && <p className="dt-caption">{block.content.url}</p>}
+      {block.content.note !== undefined && <p className="dt-caption">{inline(block.content.note)}</p>}
+    </div>
+  )
+}
+
+function ComparisonBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'comparison') return null
+  return (
+    <div className="dt-block dt-block-comparison">
+      <BlockLabel icon={<span aria-hidden="true">⇄</span>}>{text.comparison}</BlockLabel>
+      <div className="dt-md-table-wrap">
+        <table className="dt-md-table">
+          <thead><tr>{block.content.columns.map((column) => <th key={column}>{inline(column)}</th>)}</tr></thead>
+          <tbody>
+            {block.content.rows.map((row, rowIndex) => (
+              <tr key={rowIndex}>{row.map((cell, column) => <td key={column}>{inline(cell)}</td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {block.content.caption !== undefined && <p className="dt-caption">{block.content.caption}</p>}
+    </div>
+  )
+}
+
 /**
  * The registry. Adding a block type means adding one entry here.
  *
@@ -466,6 +553,11 @@ export const BLOCK_RENDERERS: Record<string, Renderer> = {
   diagram: DiagramBlockView,
   check: CheckBlockView,
   formula: FormulaBlockView,
+  code: CodeBlockView,
+  quiz: QuizBlockView,
+  flashcard: FlashcardBlockView,
+  resource: ResourceBlockView,
+  comparison: ComparisonBlockView,
 }
 
 /** Shown for a block type this build does not know. Never throws. */

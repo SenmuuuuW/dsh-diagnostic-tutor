@@ -397,6 +397,17 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-route-meta { flex-wrap:wrap; }
 .dtx-next h2 { overflow-wrap:anywhere; }
 
+.dt-block-code .dt-pre { margin-top:6px; }
+.dt-block-quiz .dt-quiz-question { margin:10px 0; }
+.dt-quiz-prompt { margin:0 0 6px; }
+.dt-quiz-options { margin:0 0 8px; padding-left:22px; }
+.dt-quiz-options li { margin:3px 0; }
+.dt-block-flashcard .dt-flashcard { margin-top:6px; padding:10px 12px; border:1px solid var(--dt-border,#e8eaee); border-radius:8px; }
+.dt-flashcard summary { cursor:pointer; font-weight:600; }
+.dt-flashcard-back { margin:8px 0 0; color:var(--dt-muted,#6b7280); }
+.dt-resource-title { margin:6px 0 2px; font-weight:600; }
+.dt-block-comparison .dt-md-table-wrap { margin-top:8px; }
+
 .dt-block-formula { padding:12px 14px; }
 .dt-block-formula .dt-formula-body { margin-top:6px; overflow-x:auto; font-size:1.05em; }
 .dt-block-formula .dt-formula-body math { display:block; margin:0 auto; }

@@ -198,6 +198,46 @@ describe('formula blocks and inline math use host MathML', () => {
   })
 })
 
+describe('the added content blocks announce their kind and content', () => {
+  it('renders code as source, not as an application', () => {
+    const html = render({ id: 'c', type: 'code', content: { language: 'python', source: 'print(1)' } } as unknown as Block)
+    expect(html).toContain('Code')
+    expect(html).toContain('python')
+    expect(html).toContain('print(1)')
+    expect(html).not.toContain('<script')
+  })
+
+  it('renders a quiz prompt and options without leaking the answer key', () => {
+    const html = render({
+      id: 'q', type: 'quiz',
+      content: { questions: [{ id: 'q1', kind: 'mcq', prompt: 'Which shape?', options: ['(5,2)', '(2,5)'], answer: '(5,2)', rubric: 'shape reasoning' }] },
+    } as unknown as Block)
+    expect(html).toContain('Which shape?')
+    expect(html).toContain('(5,2)')
+    expect(html).not.toContain('shape reasoning')
+    expect(html).toContain('Answer in the chat')
+  })
+
+  it('renders a flashcard front and back', () => {
+    const html = render({ id: 'f', type: 'flashcard', content: { front: 'front text', back: 'back text', tags: ['math'] } } as unknown as Block)
+    expect(html).toContain('Flashcard')
+    expect(html).toContain('front text')
+    expect(html).toContain('back text')
+    expect(html).toContain('math')
+  })
+
+  it('renders a resource and a comparison table', () => {
+    const resource = render({ id: 'r', type: 'resource', content: { title: 'Reading', locator: 'chapter 1', note: 'Start here' } } as unknown as Block)
+    expect(resource).toContain('Reading')
+    expect(resource).toContain('chapter 1')
+    expect(resource).toContain('Start here')
+    const comparison = render({ id: 'c', type: 'comparison', content: { columns: ['A', 'B'], rows: [['1', '2']] } } as unknown as Block)
+    expect(comparison).toContain('<table')
+    expect(comparison).toContain('<th')
+    expect(comparison).toContain('1')
+  })
+})
+
 describe('the lesson keeps its shape', () => {
   it('renders every block in order, tagged by type', () => {
     const html = renderToStaticMarkup(
