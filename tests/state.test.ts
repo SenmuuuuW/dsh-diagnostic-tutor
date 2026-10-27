@@ -49,6 +49,7 @@ describe('domain declaration', () => {
       PROJECTS_TABLE,
       'learning_paths',
       'course_runs',
+      'sources',
     ])
   })
 

@@ -399,6 +399,11 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 
 .dt-block-code .dt-pre { margin-top:6px; }
 .dt-block-quiz { padding:12px 14px; }
+.dt-source-refs { margin-top:8px; border-top:1px dashed var(--dt-border,#e8eaee); padding-top:8px; }
+.dt-source-ref { display:inline-block; margin:2px 6px 2px 0; padding:3px 8px; border:1px solid var(--dt-border,#e8eaee); border-radius:999px; background:var(--dt-surface,#f7f8fa); color:var(--dt-brand-ink,#3155f5); font-size:11.5px; cursor:pointer; }
+.dt-source-preview { margin-top:8px; padding:10px 12px; border:1px solid var(--dt-border,#e8eaee); border-radius:8px; background:var(--dt-surface,#f7f8fa); }
+.dt-source-preview-title { margin:0 0 2px; font-weight:600; }
+.dt-source-preview pre { max-height:240px; overflow:auto; margin:8px 0 0; white-space:pre-wrap; font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace; }
 .dt-quiz-option { display:flex; align-items:flex-start; gap:8px; margin:4px 0; cursor:pointer; }
 .dt-quiz-option input { margin-top:4px; }
 .dt-quiz-input { width:100%; margin:4px 0 8px; padding:8px 10px; border:1px solid var(--dt-border,#e8eaee); border-radius:7px; background:var(--dt-bg,#fff); color:var(--dt-text,#1c1f23); font:inherit; }

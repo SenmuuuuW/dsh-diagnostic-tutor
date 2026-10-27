@@ -29,6 +29,7 @@ import { continuationLabel, formatDuration } from './model.js'
 /** Props every renderer receives. */
 export interface BlockInteraction {
   attemptId: string
+  loadSource?(sourceId: string): Promise<{ id: string; title: string; locator: string; content?: string }>
   responses: readonly {
     blockId: string
     kind: string
@@ -653,15 +654,51 @@ function UnknownBlockView({ block }: { block: StoredBlock }): ReactNode {
  * @param props.block - the block to render.
  * @returns the rendered block.
  */
+function SourceRefs({ block, interaction }: { block: StoredBlock; interaction?: BlockInteraction | undefined }): ReactNode {
+  const text = useLessonText()
+  const [open, setOpen] = useState<string | null>(null)
+  const [preview, setPreview] = useState<{ title: string; locator: string; content: string } | null>(null)
+  const [error, setError] = useState('')
+  const refs = block.sourceRefs ?? []
+  if (refs.length === 0) return null
+  const load = async (sourceId: string) => {
+    if (open === sourceId) { setOpen(null); setPreview(null); return }
+    setOpen(sourceId); setPreview(null); setError('')
+    if (interaction?.loadSource === undefined) return
+    try {
+      const source = await interaction.loadSource(sourceId)
+      setPreview({ title: source.title, locator: source.locator, content: source.content ?? '' })
+    } catch { setError(text.answerFailed) }
+  }
+  return (
+    <div className="dt-source-refs">
+      <p className="dt-block-label">{text.sourceRef}</p>
+      {refs.map((ref) => (
+        <button type="button" className="dt-source-ref" key={`${ref.sourceId}:${ref.locator}`} onClick={() => void load(ref.sourceId)}>
+          {ref.locator}
+        </button>
+      ))}
+      {open !== null && preview !== null && (
+        <div className="dt-source-preview">
+          <p className="dt-source-preview-title">{preview.title}</p>
+          <p className="dt-caption">{preview.locator}</p>
+          <pre>{preview.content.slice(0, 4000)}</pre>
+        </div>
+      )}
+      {error !== '' && <p className="dt-caption" role="alert">{error}</p>}
+    </div>
+  )
+}
+
 export function BlockView({ block, interaction }: { block: StoredBlock; interaction?: BlockInteraction | undefined }): ReactNode {
   if (!isKnownBlock(block)) {
-    return <div data-block-type={block.type}><UnknownBlockView block={block} /></div>
+    return <div data-block-type={block.type}><UnknownBlockView block={block} /><SourceRefs block={block} interaction={interaction} /></div>
   }
   const renderer = BLOCK_RENDERERS[block.type]
   if (renderer === undefined) {
-    return <div data-block-type={block.type}><UnknownBlockView block={block} /></div>
+    return <div data-block-type={block.type}><UnknownBlockView block={block} /><SourceRefs block={block} interaction={interaction} /></div>
   }
-  return <div data-block-type={block.type}>{renderer({ block, interaction })}</div>
+  return <div data-block-type={block.type}>{renderer({ block, interaction })}<SourceRefs block={block} interaction={interaction} /></div>
 }
 
 /**

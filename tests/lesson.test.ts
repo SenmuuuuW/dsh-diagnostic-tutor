@@ -109,6 +109,11 @@ describe('block schema', () => {
     expect(BlockSchema.safeParse({ id: 'a', type: 'text', content: { md: '' } }).success).toBe(false)
   })
 
+  it('accepts block-level source references and rejects malformed ones', () => {
+    expect(BlockSchema.safeParse({ id: 't', type: 'text', content: { md: 'quoted' }, sourceRefs: [{ sourceId: 'source-one', locator: 'lines 1-4' }] }).success).toBe(true)
+    expect(BlockSchema.safeParse({ id: 't', type: 'text', content: { md: 'quoted' }, sourceRefs: [{ sourceId: '', locator: '' }] }).success).toBe(false)
+  })
+
   it('strips unknown envelope fields instead of storing them', () => {
     const parsed = BlockSchema.safeParse({
       id: 'a',

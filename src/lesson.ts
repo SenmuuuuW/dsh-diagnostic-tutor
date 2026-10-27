@@ -84,11 +84,21 @@ export const MAX_LESSON_BYTES = 262_144
 /* Blocks                                                                     */
 /* -------------------------------------------------------------------------- */
 
+/** A citation into one stored source. */
+export const SourceRefSchema = z.object({
+  sourceId: z.string().min(1).max(120),
+  /** Line range, heading, page or the original URL fragment. */
+  locator: z.string().min(1).max(300),
+}).strict()
+export type SourceRef = z.infer<typeof SourceRefSchema>
+
 /** Fields every block carries, whatever its type. */
 const blockBase = {
   id: z.string().min(1),
   /** Renderer-free annotations; never interpreted by the schema. */
   metadata: z.record(z.string(), z.unknown()).optional(),
+  /** Footnotes into learner-supplied sources; validated against the store before write. */
+  sourceRefs: z.array(SourceRefSchema).max(6).optional(),
 }
 
 export const MathFragmentSchema = z.object({
@@ -280,6 +290,7 @@ export const UnknownBlockSchema = z.object({
   type: z.string().min(1).max(120),
   content: z.unknown(),
   metadata: z.record(z.string(), z.unknown()).optional(),
+  sourceRefs: z.array(SourceRefSchema).max(6).optional(),
 }).superRefine((block, ctx) => {
   if (KNOWN_BLOCK_TYPES.has(block.type)) ctx.addIssue({ code: 'custom', message: 'Use the schema for this known block type' })
 })

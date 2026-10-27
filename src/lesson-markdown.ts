@@ -21,6 +21,7 @@ export function blocksMarkdown(blocks: readonly StoredBlock[]): string {
   for (const block of blocks) {
     if (!isKnownBlock(block)) {
       parts.push(`[unsupported block: ${block.type}]`)
+      if (block.sourceRefs !== undefined) parts.push(`Sources: ${block.sourceRefs.map((ref) => ref.locator).join(', ')}`)
       continue
     }
     switch (block.type) {
@@ -66,6 +67,7 @@ export function blocksMarkdown(blocks: readonly StoredBlock[]): string {
         parts.push(table(block.content.columns, block.content.rows))
         break
     }
+    if (block.sourceRefs !== undefined) parts.push(`Sources: ${block.sourceRefs.map((ref) => ref.locator).join(', ')}`)
   }
   return parts.join('\n\n')
 }

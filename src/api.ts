@@ -645,6 +645,13 @@ export function createApiHandler(deps: ApiDeps) {
     if (method === 'POST' && route === '/project') return await handleSelectProject(state, req, res)
     if (method === 'GET' && route === '/export') return handleExport(state, res)
     if (method === 'POST' && route === '/reset') return await handleReset(state, res)
+    if (method === 'GET' && route === '/source') {
+      const sourceId = url.searchParams.get('id')
+      if (sourceId === null || sourceId.length === 0) return fail(res, 400, 'missing-id')
+      const source = state.readSource(sourceId)
+      if (source === undefined) return fail(res, 404, 'no-such-source')
+      return sendJson(res, 200, { ok: true, source })
+    }
     if (method === 'GET' && route === '/node') {
       const nodeId = url.searchParams.get('id')
       if (nodeId === null || nodeId.length === 0) return fail(res, 400, 'missing-id')

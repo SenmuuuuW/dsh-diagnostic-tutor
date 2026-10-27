@@ -305,6 +305,27 @@ describe('udt_lesson_update', () => {
     }
   })
 
+  it('accepts citations only to sources that exist', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const { mathId } = await seed(state)
+      const wired = await wire(harness, state)
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
+      const source = await wired.tool('udt_source_add', { kind: 'text', text: 'A cited paragraph.', title: 'Reading' })
+      await wired.tool('udt_lesson_update', {
+        blocks: [{ id: 't', type: 'text', content: { md: 'Quoted.' }, sourceRefs: [{ sourceId: source.id, locator: 'paragraph 1' }] }],
+      })
+      const lesson = wired.state.lessonForNode(mathId)!
+      expect(lesson.blocks[0]?.sourceRefs?.[0]?.sourceId).toBe(source.id)
+      await expect(wired.tool('udt_lesson_update', {
+        blocks: [{ id: 'bad', type: 'text', content: { md: 'Quoted.' }, sourceRefs: [{ sourceId: 'missing', locator: 'nowhere' }] }],
+      })).rejects.toThrow(/unknown source/)
+    } finally {
+      await harness.close()
+    }
+  })
+
   it('stores every newly supported content block', async () => {
     const harness = await createHarness()
     try {

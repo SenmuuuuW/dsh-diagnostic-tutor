@@ -156,6 +156,9 @@ export function LearningTab({
     : {
         attemptId: attempt.id,
         responses: attempt.responses ?? [],
+        ...(pathClient.source === undefined ? {} : {
+          loadSource: async (sourceId: string) => (await pathClient.source!(sourceId)).source,
+        }),
         submit: async (blockId, answers) => {
           try {
             await pathClient.answer!({

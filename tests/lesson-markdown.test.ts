@@ -11,7 +11,7 @@ const blocks: StoredBlock[] = [
   { id: 'card', type: 'flashcard', content: { front: 'front', back: 'back' } },
   { id: 'r', type: 'resource', content: { title: 'Reading', locator: 'chapter 1' } },
   { id: 'cmp', type: 'comparison', content: { columns: ['A', 'B'], rows: [['1', '2']] } },
-  { id: 'future', type: 'video', content: { src: 'clip.mp4' } },
+  { id: 'future', type: 'video', content: { src: 'clip.mp4' }, sourceRefs: [{ sourceId: 's1', locator: 'line 2' }] },
 ]
 
 describe('Markdown projection for harnesses without the panel', () => {
@@ -26,6 +26,7 @@ describe('Markdown projection for harnesses without the panel', () => {
     expect(markdown).toContain('Reading')
     expect(markdown).toContain('| A | B |')
     expect(markdown).toContain('[unsupported block: video]')
+    expect(markdown).toContain('Sources: line 2')
   })
 
   it('does not turn the projection into a score or a state claim', () => {

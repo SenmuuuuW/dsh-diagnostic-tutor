@@ -46,6 +46,7 @@ import {
 } from './vocabulary.js'
 import type { EvidenceKind, NodeRelation, NodeState, Readiness } from './vocabulary.js'
 import { planningTools } from './path-tools.js'
+import { sourceTools } from './source-tools.js'
 import { activeAttempt } from './path.js'
 import { requireAttempt, writeCourseTeaching } from './path-runtime.js'
 
@@ -860,6 +861,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['text'] },
         content: {
           type: 'object',
@@ -873,6 +885,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['example'] },
         content: {
           type: 'object',
@@ -890,6 +913,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['diagram'] },
         content: {
           type: 'object',
@@ -907,6 +941,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['check'] },
         content: {
           type: 'object',
@@ -924,6 +969,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['formula'] },
         content: {
           type: 'object',
@@ -941,6 +997,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['code'] },
         content: {
           type: 'object',
@@ -958,6 +1025,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['quiz'] },
         content: {
           type: 'object',
@@ -970,6 +1048,17 @@ const BLOCK_PARAM_SPEC = {
                 type: 'object', additionalProperties: false,
                 properties: {
                   id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
                   kind: { type: 'string', required: true, enum: ['mcq', 'short'] },
                   prompt: { type: 'string', required: true },
                   options: { type: 'array', items: { type: 'string' } },
@@ -988,6 +1077,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['flashcard'] },
         content: {
           type: 'object',
@@ -1005,6 +1105,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['resource'] },
         content: {
           type: 'object',
@@ -1024,6 +1135,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['comparison'] },
         content: {
           type: 'object',
@@ -1075,6 +1197,27 @@ function prepareMath(candidate: unknown, index: number): unknown {
     return { ...block, content: { ...content, mathml } }
   }
   return candidate
+}
+
+/**
+ * Source references are cross-table facts: the block schema can only check
+ * their shape, so the write boundary checks that every cited source exists.
+ * A dangling citation is refused rather than rendered as a broken footnote.
+ */
+function assertSources(state: UdState, block: KnownBlock, index: number): void {
+  const references = block.sourceRefs ?? []
+  for (const reference of references) {
+    const source = state.readSource(reference.sourceId)
+    if (source === undefined || source.status !== 'ready') {
+      throw new Error(`block[${index}] references unknown source "${reference.sourceId}" — add it with udt_source_add first`)
+    }
+  }
+  if (block.type === 'resource' && block.content.sourceId !== undefined) {
+    const source = state.readSource(block.content.sourceId)
+    if (source === undefined || source.status !== 'ready') {
+      throw new Error(`block[${index}] references unknown source "${block.content.sourceId}" — add it with udt_source_add first`)
+    }
+  }
 }
 
 function udtLessonUpdateTool(state: UdState): ToolDefinition {
@@ -1191,6 +1334,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
         return result.data
       })
 
+      parsed.forEach((block, index) => assertSources(state, block, index))
       if (Buffer.byteLength(JSON.stringify(parsed), 'utf8') > MAX_LESSON_BYTES) {
         throw new Error(`blocks are too large; the whole unit must stay under ${MAX_LESSON_BYTES} bytes`)
       }
@@ -1474,6 +1618,7 @@ export function registerTools(host: ToolsHost, state: UdState): number {
     udtDecideNextTool(state),
   ]
   const planning = planningTools(state)
-  for (const tool of [...core, ...planning]) host.tools.register(tool)
-  return core.length + planning.length
+  const sources = sourceTools(state)
+  for (const tool of [...core, ...planning, ...sources]) host.tools.register(tool)
+  return core.length + planning.length + sources.length
 }

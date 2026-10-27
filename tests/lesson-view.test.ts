@@ -238,6 +238,21 @@ describe('the added content blocks announce their kind and content', () => {
   })
 })
 
+describe('source citations are footnotes, not lost metadata', () => {
+  it('renders each source locator under the block', () => {
+    const html = render({
+      id: 't', type: 'text', content: { md: 'A quoted paragraph.' },
+      sourceRefs: [
+        { sourceId: 'source-one', locator: 'paragraph 1' },
+        { sourceId: 'source-two', locator: 'section 3' },
+      ],
+    } as unknown as Block)
+    expect(html).toContain('Sources')
+    expect(html).toContain('paragraph 1')
+    expect(html).toContain('section 3')
+  })
+})
+
 describe('the lesson keeps its shape', () => {
   it('renders every block in order, tagged by type', () => {
     const html = renderToStaticMarkup(
