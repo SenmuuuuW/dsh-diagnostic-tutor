@@ -61,9 +61,9 @@ function map(): NodeRecord[] {
 }
 
 describe('block schema', () => {
-  it('supports exactly the four v0.0.4 block types', () => {
-    expect([...SUPPORTED_BLOCK_TYPES].sort()).toEqual(['check', 'diagram', 'example', 'text'])
-    expect(BLOCK_SCHEMAS).toHaveLength(4)
+  it('supports the known block types, including formula', () => {
+    expect([...SUPPORTED_BLOCK_TYPES].sort()).toEqual(['check', 'diagram', 'example', 'formula', 'text'])
+    expect(BLOCK_SCHEMAS).toHaveLength(5)
   })
 
   it('accepts a well-formed block of each type', () => {
@@ -72,6 +72,7 @@ describe('block schema', () => {
       { id: 'b', type: 'example', content: { title: 't', steps: ['one'] } },
       { id: 'c', type: 'diagram', content: { format: 'ascii', spec: 'x' } },
       { id: 'd', type: 'check', content: { prompt: 'q' } },
+      { id: 'e', type: 'formula', content: { tex: 'x^2' } },
     ]
     for (const sample of samples) {
       expect(BlockSchema.safeParse(sample).success).toBe(true)

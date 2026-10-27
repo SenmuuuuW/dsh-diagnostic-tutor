@@ -62,6 +62,9 @@ export const MAX_PROMPT_CHARS = 1000
 export const MAX_TITLE_CHARS = 200
 export const MAX_STEP_CHARS = 400
 export const MAX_STEPS = 12
+export const MAX_MATH_TEX_CHARS = 2000
+export const MAX_MATHML_CHARS = 12000
+export const MAX_MATH_FRAGMENTS = 24
 
 /* -------------------------------------------------------------------------- */
 /* Blocks                                                                     */
@@ -74,12 +77,35 @@ const blockBase = {
   metadata: z.record(z.string(), z.unknown()).optional(),
 }
 
+export const MathFragmentSchema = z.object({
+  /** Source TeX without delimiters. */
+  tex: z.string().min(1).max(MAX_MATH_TEX_CHARS),
+  display: z.boolean(),
+  /** Host-rendered `<math>...</math>` subtree; optional for legacy records. */
+  mathml: z.string().min(1).max(MAX_MATHML_CHARS),
+})
+export type MathFragmentRecord = z.infer<typeof MathFragmentSchema>
+
 export const TextBlockSchema = z.object({
   ...blockBase,
   type: z.literal('text'),
   content: z.object({
     /** Markdown. Math uses the skill's convention: `\(...\)` / `\[...\]`. */
     md: z.string().min(1).max(MAX_TEXT_CHARS),
+    /** Host pre-render of formulas in `md`, keyed by exact TeX and display mode. */
+    math: z.array(MathFragmentSchema).max(MAX_MATH_FRAGMENTS).optional(),
+  }),
+})
+
+export const FormulaBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('formula'),
+  content: z.object({
+    tex: z.string().min(1).max(MAX_MATH_TEX_CHARS),
+    display: z.boolean().optional(),
+    /** Host-rendered MathML; the client shows the TeX fallback when absent. */
+    mathml: z.string().min(1).max(MAX_MATHML_CHARS).optional(),
+    caption: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
   }),
 })
 
@@ -126,6 +152,7 @@ export const BLOCK_SCHEMAS = [
   ExampleBlockSchema,
   DiagramBlockSchema,
   CheckBlockSchema,
+  FormulaBlockSchema,
 ] as const
 
 export const BlockSchema = z.discriminatedUnion('type', [
@@ -133,12 +160,14 @@ export const BlockSchema = z.discriminatedUnion('type', [
   ExampleBlockSchema,
   DiagramBlockSchema,
   CheckBlockSchema,
+  FormulaBlockSchema,
 ])
 
 export type TextBlock = z.infer<typeof TextBlockSchema>
 export type ExampleBlock = z.infer<typeof ExampleBlockSchema>
 export type DiagramBlock = z.infer<typeof DiagramBlockSchema>
 export type CheckBlock = z.infer<typeof CheckBlockSchema>
+export type FormulaBlock = z.infer<typeof FormulaBlockSchema>
 export type Block = z.infer<typeof BlockSchema>
 export type BlockType = Block['type']
 

@@ -30,6 +30,7 @@ import {
   MAX_BLOCKS_PER_UPDATE,
   LessonSchema,
 } from './lesson.js'
+import { renderMathFragments, renderTexToMathML } from './math.js'
 import type { Block, LessonRecord } from './lesson.js'
 import { newNode, PROJECT_BINDINGS, PROJECT_SELECTIONS } from './state.js'
 import type { Evidence, NodeRecord, ProjectSelection, SessionProjectResolution, UdState } from './state.js'
@@ -915,6 +916,23 @@ const BLOCK_PARAM_SPEC = {
         },
       },
     },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        type: { type: 'string', required: true, enum: ['formula'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            tex: { type: 'string', required: true, description: 'TeX source without delimiters.' },
+            display: { type: 'boolean' },
+            caption: { type: 'string' },
+          },
+        },
+      },
+    },
   ],
 } as const
 
@@ -930,6 +948,32 @@ const BLOCK_PARAM_SPEC = {
  * and the next unit follows. `replace` exists for revising a unit that was
  * wrong, not for regenerating a course.
  */
+/**
+ * Attach host-rendered MathML to the two block types that carry formulas.
+ *
+ * This runs before `BlockSchema.parse`, so an invalid formula block is refused
+ * with the block index, while a bad inline expression in a text block is left
+ * as source for the client's styled fallback.
+ */
+function prepareMath(candidate: unknown, index: number): unknown {
+  if (candidate === null || typeof candidate !== 'object') return candidate
+  const block = candidate as { type?: unknown; content?: unknown }
+  if (block.type === 'text' && block.content !== null && typeof block.content === 'object') {
+    const content = block.content as Record<string, unknown>
+    if (typeof content.md !== 'string') return candidate
+    const math = renderMathFragments(content.md)
+    const { math: _old, ...rest } = content
+    return { ...block, content: math.length === 0 ? rest : { ...rest, math } }
+  }
+  if (block.type === 'formula' && block.content !== null && typeof block.content === 'object') {
+    const content = block.content as Record<string, unknown>
+    if (typeof content.tex !== 'string') return candidate
+    const mathml = renderTexToMathML(content.tex, content.display === true)
+    return { ...block, content: { ...content, mathml } }
+  }
+  return candidate
+}
+
 function udtLessonUpdateTool(state: UdState): ToolDefinition {
   return defineTool({
     name: 'udt_lesson_update',
@@ -938,7 +982,8 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       'The blocks appear in the panel beside the diagnosis map, so the learner reads them while ' +
       'answering in the chat — write for that surface, not as a chat message.\n' +
       'Block types: **text** {md}, **example** {title, steps[], takeaway?}, ' +
-      '**diagram** {format: ascii|mermaid, spec, caption?}, **check** {prompt, expect?, hint?}.\n' +
+      '**diagram** {format: ascii|mermaid, spec, caption?}, **check** {prompt, expect?, hint?}, ' +
+      '**formula** {tex, display?, caption?}.\n' +
       `At most ${MAX_BLOCKS_PER_UPDATE} blocks per call and ${MAX_BLOCKS_PER_LESSON} per lesson; a teaching unit is a few ` +
       'blocks, not a chapter.\n' +
       '**Write your first unit as soon as you know it** rather than composing the whole thing first: ' +
@@ -1027,8 +1072,10 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       }
 
       // Strict, and it names the offending block: a model that sent one bad
-      // block should not have to guess which.
-      const parsed: Block[] = input.blocks.map((candidate, index) => {
+      // block should not have to guess which. Host-owned MathML is generated
+      // here so the model never supplies markup the client would trust.
+      const prepared = input.blocks.map((candidate, index) => prepareMath(candidate, index))
+      const parsed: Block[] = prepared.map((candidate, index) => {
         const result = BlockSchema.safeParse(candidate)
         if (!result.success) {
           const issue = result.error.issues[0]

@@ -304,6 +304,30 @@ describe('udt_lesson_update', () => {
     }
   })
 
+  it('pre-renders formulas to host-owned MathML before storing them', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const { mathId } = await seed(state)
+      const wired = await wire(harness, state)
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
+      await wired.tool('udt_lesson_update', {
+        blocks: [
+          textBlock('t', 'Use \\(X w\\) here.'),
+          { id: 'f', type: 'formula', content: { tex: '\\frac{a}{b}', display: true } },
+        ],
+      })
+      const lesson = wired.state.lessonForNode(mathId)!
+      const text = lesson.blocks[0]
+      const formula = lesson.blocks[1]
+      expect(text?.type === 'text' && text.content.math?.[0]?.mathml).toMatch(/^<math/)
+      expect(formula?.type === 'formula' && formula.content.mathml).toMatch(/^<math/)
+      expect(formula?.type === 'formula' && formula.content.mathml).not.toContain('<span')
+    } finally {
+      await harness.close()
+    }
+  })
+
   it('rejects malformed blocks, naming the offending one', async () => {
     // The declared `oneOf` parameter schema rejects a bad block before
     // `execute` runs, and the registry names its path. The zod pass in the
