@@ -183,8 +183,10 @@ async function tabCase() {
   await waitFor(`!!document.querySelector('.dtx-tab h2')`, 'lesson title did not render')
   const text = await cdp.evaluate(`document.querySelector('.dtx-tab').textContent`)
   assert.match(text, /In this lesson|本课内容/)
+  const scroll = await cdp.evaluate(`(() => { const el = document.querySelector('.dtx-tab'); const css = getComputedStyle(el); return { overflowY: css.overflowY, clientHeight: el.clientHeight, scrollHeight: el.scrollHeight } })()`)
+  assert.equal(scroll.overflowY, 'auto', `${currentCase}: lesson tab must scroll its own content`)
   await screenshot(`${currentCase}-tab`)
-  return { title: await cdp.evaluate(`document.querySelector('.dtx-tab h2')?.textContent ?? ''`) }
+  return { title: await cdp.evaluate(`document.querySelector('.dtx-tab h2')?.textContent ?? ''`), scroll }
 }
 async function languageCase() {
   await waitFor(`!!document.querySelector('.dt-lang-toggle')`, 'language toggle missing')

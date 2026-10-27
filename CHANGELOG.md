@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed — the docked lesson tab scrolls
+
+The redesigned Current lesson tab filled its sidebar seat but never declared
+overflow, so a long tutor lesson was clipped at the bottom with no scrollbar.
+`.dtx-tab` now owns its vertical (and horizontal) scroll, filling the seat with
+`height:100%; min-height:0`.
+
+
 ### Changed — smaller type across the new UI
 
 The first pass of the redesign read too large on the desktop window. The type
