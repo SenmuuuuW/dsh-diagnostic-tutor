@@ -24,14 +24,15 @@ import type { Violation } from './diagnosis.js'
 import { withLesson } from './handoff.js'
 import {
   BLOCK_SCHEMAS,
-  BlockSchema,
+  KnownBlockSchema,
   LESSON_ORIGINS,
   MAX_BLOCKS_PER_LESSON,
   MAX_BLOCKS_PER_UPDATE,
+  MAX_LESSON_BYTES,
   LessonSchema,
 } from './lesson.js'
 import { renderMathFragments, renderTexToMathML } from './math.js'
-import type { Block, LessonRecord } from './lesson.js'
+import type { KnownBlock, LessonRecord } from './lesson.js'
 import { newNode, PROJECT_BINDINGS, PROJECT_SELECTIONS } from './state.js'
 import type { Evidence, NodeRecord, ProjectSelection, SessionProjectResolution, UdState } from './state.js'
 import {
@@ -933,6 +934,106 @@ const BLOCK_PARAM_SPEC = {
         },
       },
     },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        type: { type: 'string', required: true, enum: ['code'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            language: { type: 'string' },
+            source: { type: 'string', required: true },
+            caption: { type: 'string' },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        type: { type: 'string', required: true, enum: ['quiz'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            title: { type: 'string' },
+            questions: {
+              type: 'array', required: true,
+              items: {
+                type: 'object', additionalProperties: false,
+                properties: {
+                  id: { type: 'string', required: true },
+                  kind: { type: 'string', required: true, enum: ['mcq', 'short'] },
+                  prompt: { type: 'string', required: true },
+                  options: { type: 'array', items: { type: 'string' } },
+                  answer: { type: 'string' },
+                  rubric: { type: 'string' },
+                  explanation: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        type: { type: 'string', required: true, enum: ['flashcard'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            front: { type: 'string', required: true },
+            back: { type: 'string', required: true },
+            tags: { type: 'array', items: { type: 'string' } },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        type: { type: 'string', required: true, enum: ['resource'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            title: { type: 'string', required: true },
+            sourceId: { type: 'string' },
+            locator: { type: 'string' },
+            url: { type: 'string' },
+            note: { type: 'string' },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        type: { type: 'string', required: true, enum: ['comparison'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            columns: { type: 'array', required: true, items: { type: 'string' } },
+            rows: { type: 'array', required: true, items: { type: 'array', items: { type: 'string' } } },
+            caption: { type: 'string' },
+          },
+        },
+      },
+    },
   ],
 } as const
 
@@ -983,7 +1084,9 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       'answering in the chat — write for that surface, not as a chat message.\n' +
       'Block types: **text** {md}, **example** {title, steps[], takeaway?}, ' +
       '**diagram** {format: ascii|mermaid, spec, caption?}, **check** {prompt, expect?, hint?}, ' +
-      '**formula** {tex, display?, caption?}.\n' +
+      '**formula** {tex, display?, caption?}, **code** {language?, source, caption?}, ' +
+      '**quiz** {title?, questions[]}, **flashcard** {front, back, tags?}, ' +
+      '**resource** {title, sourceId?, locator?, url?, note?}, **comparison** {columns[], rows[][], caption?}.\n' +
       `At most ${MAX_BLOCKS_PER_UPDATE} blocks per call and ${MAX_BLOCKS_PER_LESSON} per lesson; a teaching unit is a few ` +
       'blocks, not a chapter.\n' +
       '**Write your first unit as soon as you know it** rather than composing the whole thing first: ' +
@@ -1075,8 +1178,8 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       // block should not have to guess which. Host-owned MathML is generated
       // here so the model never supplies markup the client would trust.
       const prepared = input.blocks.map((candidate, index) => prepareMath(candidate, index))
-      const parsed: Block[] = prepared.map((candidate, index) => {
-        const result = BlockSchema.safeParse(candidate)
+      const parsed: KnownBlock[] = prepared.map((candidate, index) => {
+        const result = KnownBlockSchema.safeParse(candidate)
         if (!result.success) {
           const issue = result.error.issues[0]
           const where = issue === undefined ? '' : `${issue.path.join('.') || '(root)'}: ${issue.message}`
@@ -1084,6 +1187,10 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
         }
         return result.data
       })
+
+      if (Buffer.byteLength(JSON.stringify(parsed), 'utf8') > MAX_LESSON_BYTES) {
+        throw new Error(`blocks are too large; the whole unit must stay under ${MAX_LESSON_BYTES} bytes`)
+      }
 
       const buildLesson = (existing: LessonRecord | undefined): LessonRecord => {
         const blocks = mode === 'replace' ? parsed : [...(existing?.blocks ?? []), ...parsed]

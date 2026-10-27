@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import type { CourseAttempt, Curriculum, CurriculumItem } from '../path.js'
 import { LessonBody } from './blocks.jsx'
+import { isKnownBlock } from '../block-types.js'
 import { Icon } from './design-icons.jsx'
 import { useDesignText } from './design-text.js'
 import { LanguageToggle } from './language-toggle.js'
@@ -202,7 +203,7 @@ export function LearningTab({
             <h3 className="dtx-tab-section"><span className="dtx-section-icon"><Icon name="book" size={16} /></span>{text.lessonContents}</h3>
             {units.map((unit) => <article key={unit.lesson.nodeId}>
               {units.length > 1 && <h3 className="dtx-tab-section">{unit.lesson.title}</h3>}
-              {unit.lesson.blocks.map((block) => block.type === 'diagram'
+              {unit.lesson.blocks.map((block) => isKnownBlock(block) && block.type === 'diagram'
                 ? <details className="dtx-tab-fold" key={block.id}>
                     <summary>{text.lessonDiagram}{block.content.caption !== undefined ? ` · ${block.content.caption}` : ''}</summary>
                     <LessonBody blocks={[block]} />

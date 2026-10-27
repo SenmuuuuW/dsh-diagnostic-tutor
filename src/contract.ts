@@ -11,7 +11,7 @@
  * record, a domain handle or a path; it receives exactly what the panel draws.
  */
 
-export type { Block, BlockType, LessonRecord } from './lesson.js'
+export type { Block, BlockType, KnownBlock, LessonRecord, StoredBlock } from './lesson.js'
 
 /** One node as the map draws it. */
 export interface NodeView {

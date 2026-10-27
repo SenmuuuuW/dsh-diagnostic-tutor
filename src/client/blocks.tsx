@@ -18,7 +18,8 @@ import { useState, type ReactNode } from 'react'
 
 import { MathMLView } from './mathml.jsx'
 
-import type { Block, HandoffView, NextStepView } from '../contract.js'
+import type { Block, HandoffView, KnownBlock, NextStepView, StoredBlock } from '../contract.js'
+import { isKnownBlock } from '../block-types.js'
 import { useLang } from './i18n.js'
 import { useLearningText } from './learning-text.js'
 import { useLessonText } from './lesson-text.js'
@@ -26,11 +27,11 @@ import { readinessLabel } from './map-text.js'
 import { continuationLabel, formatDuration } from './model.js'
 
 /** Props every renderer receives. */
-export interface BlockRenderProps<B extends Block = Block> {
+export interface BlockRenderProps<B extends KnownBlock = KnownBlock> {
   block: B
 }
 
-type Renderer = (props: BlockRenderProps) => ReactNode
+type Renderer = (props: BlockRenderProps<KnownBlock>) => ReactNode
 
 /**
  * Inline formatting: `**bold**`, `*italic*`, `` `code` ``, and inline math.
@@ -468,7 +469,7 @@ export const BLOCK_RENDERERS: Record<string, Renderer> = {
 }
 
 /** Shown for a block type this build does not know. Never throws. */
-function UnknownBlockView({ block }: BlockRenderProps): ReactNode {
+function UnknownBlockView({ block }: { block: StoredBlock }): ReactNode {
   const text = useLessonText()
   const type = (block as { type?: unknown }).type
   return (
@@ -485,8 +486,14 @@ function UnknownBlockView({ block }: BlockRenderProps): ReactNode {
  * @param props.block - the block to render.
  * @returns the rendered block.
  */
-export function BlockView({ block }: { block: Block }): ReactNode {
-  const renderer = BLOCK_RENDERERS[block.type] ?? UnknownBlockView
+export function BlockView({ block }: { block: StoredBlock }): ReactNode {
+  if (!isKnownBlock(block)) {
+    return <div data-block-type={block.type}><UnknownBlockView block={block} /></div>
+  }
+  const renderer = BLOCK_RENDERERS[block.type]
+  if (renderer === undefined) {
+    return <div data-block-type={block.type}><UnknownBlockView block={block} /></div>
+  }
   return <div data-block-type={block.type}>{renderer({ block })}</div>
 }
 
@@ -496,7 +503,7 @@ export function BlockView({ block }: { block: Block }): ReactNode {
  * @param props.blocks - the blocks to render.
  * @returns the rendered list.
  */
-export function LessonBody({ blocks }: { blocks: Block[] }): ReactNode {
+export function LessonBody({ blocks }: { blocks: readonly StoredBlock[] }): ReactNode {
   return (
     <>
       {blocks.map((block) => (

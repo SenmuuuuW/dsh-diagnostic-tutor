@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import type { UdState } from './state.js'
 import { LessonSchema } from './lesson.js'
+import { isKnownBlock } from './block-types.js'
 import type { LessonRecord } from './lesson.js'
 import {
   activeAttempt, AssessmentSchema, briefReady, CurriculumInputSchema, emptyPath,
@@ -224,8 +225,8 @@ export async function beginCourseItem(state: UdState, input: BeginItemInput) {
 function lastUnitCheck(attempt: CourseAttempt): string | null {
   const unit = attempt.units.at(-1)
   if (unit === undefined) return null
-  const check = [...unit.lesson.blocks].reverse().find((block) => block.type === 'check')
-  return check?.type === 'check' ? check.content.prompt : null
+  const check = [...unit.lesson.blocks].reverse().find((block) => isKnownBlock(block) && block.type === 'check')
+  return check !== undefined && isKnownBlock(check) && check.type === 'check' ? check.content.prompt : null
 }
 
 function lessonLine(input: BeginItemInput, route: Curriculum, item: Curriculum['items'][number]): string {
