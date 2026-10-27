@@ -5,6 +5,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — a layout and reading pass on the learning surfaces
+
+A real-data screenshot pass found the remaining problems: pipe tables were
+printed as a wall of `|`, the docked lesson tab stretched long prose across the
+whole width, every route module was expanded at once, and the check card still
+used the old dark header.
+
+- Markdown tables and fenced code now render as a real table and a code block.
+- The docked lesson tab is a reading column capped at 720px, and the tab owns
+  its vertical scroll.
+- Route modules collapse to their header; the current module is open, and
+  **Expand all** reveals the rest. Module descriptions clamp to two lines.
+- Compact spacing across the library, goal form, route cards, lesson cards,
+  knowledge list and rail.
+- The check card now renders with the green lesson style instead of the old
+  dark block chrome.
+- Shortened the remaining explanatory copy (proposal, plan note, mastery note,
+  answer-in-chat hint, no-route hint, goal help).
+
+578 tests, typecheck and 21 browser cases pass.
+
+
 ### Fixed — the docked lesson tab scrolls
 
 The redesigned Current lesson tab filled its sidebar seat but never declared

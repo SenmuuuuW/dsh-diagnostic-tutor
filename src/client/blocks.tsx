@@ -85,6 +85,18 @@ type Line =
   | { kind: 'ordered'; marker: string; text: string }
   | { kind: 'math'; text: string }
   | { kind: 'text'; text: string }
+  | { kind: 'table'; rows: string[][] }
+  | { kind: 'code'; text: string; language: string }
+
+/** Split one pipe-table row into trimmed cells. */
+function tableCells(line: string): string[] {
+  return line.replace(/^\|/, '').replace(/\|$/, '').split('|').map((cell) => cell.trim())
+}
+
+/** The `| --- | :---: |` separator that turns pipe rows into a table. */
+function tableSeparator(cells: string[]): boolean {
+  return cells.length > 0 && cells.every((cell) => /^:?-{3,}:?$/.test(cell))
+}
 
 /**
  * Classify one line.
@@ -151,6 +163,44 @@ function toRuns(md: string): Line[][] {
     }
 
     const trimmed = line.trim()
+    // Fenced code is line-shaped and must be consumed before ordinary prose.
+    if (trimmed.startsWith('```')) {
+      const language = trimmed.slice(3).trim()
+      const body: string[] = []
+      let cursor = index + 1
+      let closed = false
+      while (cursor < lines.length) {
+        const next = lines[cursor]!
+        if (next.trim().startsWith('```')) { cursor += 1; closed = true; break }
+        body.push(next)
+        cursor += 1
+      }
+      if (closed) {
+        flush()
+        runs.push([{ kind: 'code', text: body.join('\n'), language }])
+        index = cursor - 1
+        continue
+      }
+    }
+    // A pipe table is a header row, a separator row, and data rows. Treating
+    // it as prose is the difference between a readable table and a wall of `|`.
+    if (trimmed.startsWith('|') && trimmed.includes('|')) {
+      const raw: string[] = []
+      let cursor = index
+      while (cursor < lines.length && lines[cursor]!.trim().startsWith('|') && lines[cursor]!.trim().includes('|')) {
+        raw.push(lines[cursor]!.trim())
+        cursor += 1
+      }
+      const rows = raw.map(tableCells)
+      flush()
+      if (rows.length >= 2 && tableSeparator(rows[1]!)) {
+        runs.push([{ kind: 'table', rows: [rows[0]!, ...rows.slice(2)] }])
+      } else {
+        for (const row of raw) runs.push([{ kind: 'text', text: row }])
+      }
+      index = cursor - 1
+      continue
+    }
     if (trimmed.startsWith('\\[') && !trimmed.includes('\\]')) {
       const span = [trimmed]
       let cursor = index + 1
@@ -222,11 +272,31 @@ function Paragraphs({ md }: { md: string }): ReactNode {
             </div>
           )
         }
+        if (first.kind === 'code') {
+          return (
+            <pre className="dt-md-code" key={index}>
+              <code>{first.text}</code>
+            </pre>
+          )
+        }
+        if (first.kind === 'table') {
+          const [head, ...body] = first.rows
+          return (
+            <div className="dt-md-table-wrap" key={index}>
+              <table className="dt-md-table">
+                <thead><tr>{(head ?? []).map((cell, column) => <th key={column}>{inline(cell)}</th>)}</tr></thead>
+                <tbody>
+                  {body.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, column) => <td key={column}>{inline(cell)}</td>)}</tr>)}
+                </tbody>
+              </table>
+            </div>
+          )
+        }
         if (first.kind === 'bullet') {
           return (
             <ul className="dt-md-ul" key={index}>
               {run.map((line, inner) => (
-                <li key={inner}>{inline(line.text)}</li>
+                <li key={inner}>{inline('text' in line ? line.text : '')}</li>
               ))}
             </ul>
           )
@@ -235,14 +305,14 @@ function Paragraphs({ md }: { md: string }): ReactNode {
           return (
             <ol className="dt-md-ol" key={index}>
               {run.map((line, inner) => (
-                <li key={inner}>{inline(line.text)}</li>
+                <li key={inner}>{inline('text' in line ? line.text : '')}</li>
               ))}
             </ol>
           )
         }
         return (
           <p className="dt-block-md" key={index}>
-            {inline(run.map((line) => line.text).join(' '))}
+            {inline(run.map((line) => ('text' in line ? line.text : '')).join(' '))}
           </p>
         )
       })}

@@ -239,13 +239,15 @@ function GoalForm({ draft, dirty, busy, readOnly, onChange, onSave, text, lang }
           <label htmlFor="dtx-background">{text.fieldBackground}</label>
           <textarea id="dtx-background" className="dtx-input" {...field('background')} placeholder={text.fieldBackgroundPlaceholder} />
         </div>
-        <div className="dtx-field">
-          <label htmlFor="dtx-weekly">{text.fieldWeekly}</label>
-          <select id="dtx-weekly" className="dtx-input" {...field('weeklyMinutes')}>{options(WEEKLY_OPTIONS)}</select>
-        </div>
-        <div className="dtx-field">
-          <label htmlFor="dtx-session">{text.fieldSession}</label>
-          <select id="dtx-session" className="dtx-input" {...field('sessionMinutes')}>{options(SESSION_OPTIONS)}</select>
+        <div className="dtx-form-grid">
+          <div className="dtx-field">
+            <label htmlFor="dtx-weekly">{text.fieldWeekly}</label>
+            <select id="dtx-weekly" className="dtx-input" {...field('weeklyMinutes')}>{options(WEEKLY_OPTIONS)}</select>
+          </div>
+          <div className="dtx-field">
+            <label htmlFor="dtx-session">{text.fieldSession}</label>
+            <select id="dtx-session" className="dtx-input" {...field('sessionMinutes')}>{options(SESSION_OPTIONS)}</select>
+          </div>
         </div>
         <details className="dtx-more">
           <summary>{text.moreSettings}</summary>
@@ -348,32 +350,46 @@ function RouteModules({ plan, attempts, activeAttemptId, selectedItemId, onSelec
     const items = plan.items.filter((item) => item.moduleId === module.id)
     return { module, items, done: items.length > 0 && items.every((item) => done.has(item.id)) }
   })
-  const totalMin = plan.items.reduce((sum, item) => sum + item.minutes.min, 0)
+  const activeItemId = activeAttemptId === null ? null : attempts.find((attempt) => attempt.id === activeAttemptId)?.itemId ?? null
+  const currentModuleId = activeItemId === null ? null : plan.items.find((item) => item.id === activeItemId)?.moduleId ?? null
+  const initial = () => new Set(currentModuleId === null ? (modules[0] === undefined ? [] : [modules[0].module.id]) : [currentModuleId])
+  const [expanded, setExpanded] = useState<Set<string>>(initial)
+  useEffect(() => { setExpanded(initial()) }, [plan.version])
+  const allOpen = modules.length > 0 && modules.every((entry) => expanded.has(entry.module.id))
+  const toggle = (id: string) => setExpanded((current) => {
+    const next = new Set(current)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    return next
+  })
   return (
     <section className="dtx-card dtx-route-card">
       <div className="dtx-route-head">
         <h3>{text.routeListTitle}</h3>
         <div className="dtx-route-meta">
           {showProgress ? <><span>{text.sessionProgress(done.size, plan.items.length)}</span><span>·</span><span>{text.routeLabel(version)}</span></> : <span>{text.routeLabel(version)}</span>}
+          <button type="button" className="dtx-link" onClick={() => setExpanded(allOpen ? new Set() : new Set(modules.map((entry) => entry.module.id)))}>
+            {allOpen ? text.collapseAll : text.expandAll}
+          </button>
         </div>
       </div>
-      <p className="dtx-route-note">{showProgress ? text.plannedNote : `${text.plannedNote} ${timeText(totalMin, text, lang)}`}</p>
       <div className="dtx-modules">
         {modules.map(({ module, items, done: moduleDone }) => {
           const moduleMinutes = items.reduce((sum, item) => sum + item.minutes.min, 0)
-          const rows: CurriculumItem[][] = []
-          for (let index = 0; index < items.length; index += 2) rows.push(items.slice(index, index + 2))
+          const open = expanded.has(module.id)
+          const current = module.id === currentModuleId
           return (
-            <div className="dtx-module" data-done={moduleDone ? 'true' : undefined} key={module.id}>
-              <div className="dtx-module-head">
+            <div className="dtx-module" data-done={moduleDone ? 'true' : undefined} data-open={open ? 'true' : undefined} data-current={current ? 'true' : undefined} key={module.id}>
+              <button type="button" className="dtx-module-toggle" aria-expanded={open} onClick={() => toggle(module.id)}>
                 <span className="dtx-module-num">{moduleDone ? <Icon name="check" size={14} /> : plan.modules.findIndex((entry) => entry.id === module.id) + 1}</span>
-                <span>
+                <span className="dtx-module-main">
                   <span className="dtx-module-title">{module.title}</span>
-                  <span className="dtx-module-desc" style={{ display: 'block' }}>{module.overview}</span>
+                  {open && <span className="dtx-module-desc">{module.overview}</span>}
                 </span>
                 <span className="dtx-module-meta">{text.moduleMeta(duration(moduleMinutes, lang), items.length)}</span>
-              </div>
-              <div className="dtx-lessons">
+                <span className="dtx-module-chevron"><Icon name="chevron-right" size={15} /></span>
+              </button>
+              {open && <div className="dtx-lessons">
                 {items.map((item) => {
                   const state = lessonState(attempts, activeAttemptId, plan.version, item.id)
                   return (
@@ -385,12 +401,12 @@ function RouteModules({ plan, attempts, activeAttemptId, selectedItemId, onSelec
                           <span className="dtx-lesson-title">{item.title}</span>
                           <span className="dtx-lesson-minutes">{duration(item.minutes.min, lang)}</span>
                         </span>
-                        <span className="dtx-lesson-topics" style={{ display: 'block' }}>{item.topics.slice(0, 3).join('、')}</span>
+                        <span className="dtx-lesson-topics">{item.topics.slice(0, 3).join('、')}</span>
                       </span>
                     </button>
                   )
                 })}
-              </div>
+              </div>}
             </div>
           )
         })}
@@ -398,18 +414,18 @@ function RouteModules({ plan, attempts, activeAttemptId, selectedItemId, onSelec
     </section>
   )
 }
+
 function timeText(minutes: number, text: DesignText, lang: Lang): string {
   return `${text.totalDuration} ${duration(minutes, lang)}`
 }
 
-function LessonRail({ plan, item, attempt, activeAttempt, mode, version, doneCount, text, lang, onStart, onOpenChat, onOpenLesson, readOnly }: {
+function LessonRail({ plan, item, attempt, activeAttempt, mode, version, text, lang, onStart, onOpenChat, onOpenLesson, readOnly }: {
   plan: Curriculum
   item: CurriculumItem
   attempt: CourseAttempt | undefined
   activeAttempt: CourseAttempt | undefined
   mode: 'preview' | 'current'
   version: number
-  doneCount: number
   text: DesignText
   lang: Lang
   onStart: (() => void) | undefined
@@ -432,7 +448,6 @@ function LessonRail({ plan, item, attempt, activeAttempt, mode, version, doneCou
         <span className="dtx-pill" data-tone={state === 'completed' ? 'green' : state === 'current' ? 'blue' : 'gray'}>{lessonStateLabel(state, text)}</span>
         <span className="dtx-pill" data-tone="gray">{text.routeLabel(version)}</span>
       </div>
-      {mode === 'current' && <div className="dtx-rail-progress"><span>{text.sessionProgress(doneCount, plan.items.length)}</span><span><b>{text.routeLabel(version)}</b></span></div>}
       <div className="dtx-rail-divider" />
       <h3 className="dtx-rail-section">{text.lessonContents}</h3>
       {outline.map((line, index) => <div className="dtx-rail-item" key={index}>
@@ -443,9 +458,6 @@ function LessonRail({ plan, item, attempt, activeAttempt, mode, version, doneCou
       {mode === 'current' && <div className="dtx-answer-card">
         <p className="dtx-answer-title"><Icon name="chat" size={16} />{text.answerInChat}</p>
         <p className="dtx-answer-body">{text.answerInChatBody}</p>
-      </div>}
-      {mode === 'preview' && onStart !== undefined && <div style={{ marginTop: 14 }}>
-        <button type="button" className="dtx-primary" style={{ width: '100%' }} disabled={readOnly} onClick={onStart}>{text.startLesson}</button>
       </div>}
     </section>
   )
@@ -759,10 +771,9 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
         secondary={onOpenChat === undefined ? undefined : { label: text.backToChat, run: onOpenChat }} />
     } else if (activeAttempt !== undefined && activeItem !== null) {
       nextCard = <NextCard title={activeItem.title} body={`${text.currentLesson} · ${text.lessonStatusCurrent}`}
-        primary={{ label: text.continueLesson, run: onOpenLesson ?? onOpenChat ?? (() => {}) }}
-        secondary={onOpenChat === undefined ? undefined : { label: text.backToChat, run: onOpenChat }} />
+        primary={{ label: text.continueLesson, run: onOpenLesson ?? onOpenChat ?? (() => {}) }} />
     } else if (activePlan !== null && nextLesson !== null) {
-      nextCard = <NextCard title={nextLesson.title} body={doneItems.length === 0 ? text.proposalBody : text.sessionProgress(doneItems.length, activePlan.items.length)}
+      nextCard = <NextCard title={nextLesson.title} body={doneItems.length === 0 ? text.startFirstBody : text.sessionProgress(doneItems.length, activePlan.items.length)}
         primary={{ label: doneItems.length === 0 ? text.startLesson : text.startNextLesson, run: () => start(activePlan.version, nextLesson.id, false), disabled: busyAction || readOnly }} />
     } else {
       nextCard = <NextCard title={text.proposalTitle} body={text.noRouteBody} primary={onOpenChat === undefined ? undefined : { label: text.openChat, run: onOpenChat }} />
@@ -777,7 +788,7 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
     const attempt = latestAttempt(view?.run?.attempts ?? [], activePlan.version, selectedItem.id)
     const mode = stage === 'learning' && activeAttempt !== undefined && activeAttempt.itemId === selectedItem.id ? 'current' : 'preview'
     return <LessonRail plan={activePlan} item={selectedItem} attempt={attempt} activeAttempt={activeAttempt} mode={mode} version={activePlan.version}
-      doneCount={doneItems.length} text={text} lang={lang}
+      text={text} lang={lang}
       onStart={stage === 'learning' && activeAttempt === undefined ? () => start(activePlan.version, selectedItem.id, false) : undefined}
       onOpenChat={onOpenChat} onOpenLesson={onOpenLesson} readOnly={readOnly} />
   })()
