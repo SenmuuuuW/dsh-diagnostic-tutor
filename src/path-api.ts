@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { z } from 'zod'
 import type { ApiDeps } from './api.js'
 import { activeAttempt } from './path.js'
+import { AnswerSubmissionSchema, recordBlockResponse } from './interactions.js'
 import {
   acceptCurriculum, beginCourseItem, pathView, pauseCourseItem, reservePathRequest, saveAssessment,
   saveBrief, selectedProject, stampCoursePrompt, stampPathRequest,
@@ -73,6 +74,12 @@ export async function handlePathApi(route: string, req: IncomingMessage, res: Se
       })
       send(res, 200, { ...pathView(state, base.courseId, base.sessionId), prompted, ...(reason ? { promptReason: reason } : {}) })
       return true
+    } else if (route === '/path/answer') {
+      const input = identity.extend(AnswerSubmissionSchema.shape).parse(raw)
+      const view = await recordBlockResponse(state, { ...base, ...input })
+      deps.onEvent?.('path.answer', { courseId: base.courseId, sessionId: base.sessionId, attemptId: input.attemptId, blockId: input.blockId })
+      send(res, 200, view)
+      return true
     } else if (route === '/path/pause') {
       const paused = await pauseCourseItem(state, base)
       deps.onEvent?.('path.pause', { courseId: base.courseId, sessionId: base.sessionId })
@@ -101,7 +108,7 @@ export async function handlePathApi(route: string, req: IncomingMessage, res: Se
     const message = cause instanceof z.ZodError ? cause.issues.map((entry) => `${entry.path.join('.')}: ${entry.message}`).join('; ') : (cause as Error).message
     const code = message.split(':')[0] ?? 'invalid-planning-request'
     deps.onEvent?.('path.error', { route, code: code.slice(0, 80) })
-    const status = code === 'revision-conflict' || code === 'project-selection-changed' || code === 'stale-curriculum' ? 409 : code === 'no-such-course' ? 404 : 400
+    const status = code === 'revision-conflict' || code === 'project-selection-changed' || code === 'stale-curriculum' || code === 'stale-attempt' ? 409 : code === 'no-such-course' ? 404 : 400
     send(res, status, { ok: false, error: { code, message } })
   }
   return true

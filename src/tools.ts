@@ -33,6 +33,7 @@ import {
 } from './lesson.js'
 import { renderMathFragments, renderTexToMathML } from './math.js'
 import { blocksMarkdown } from './lesson-markdown.js'
+import { AnswerSubmissionSchema, recordBlockResponse } from './interactions.js'
 import type { KnownBlock, LessonRecord } from './lesson.js'
 import { newNode, PROJECT_BINDINGS, PROJECT_SELECTIONS } from './state.js'
 import type { Evidence, NodeRecord, ProjectSelection, SessionProjectResolution, UdState } from './state.js'
@@ -1255,6 +1256,59 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
 
 
 /* -------------------------------------------------------------------------- */
+/* udt_quiz_update                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Record a learner's quiz/flashcard submission. This is storage, not judgement:
+ * it never changes a node state, never marks mastery and never advances a lesson.
+ * The tutor can read the submission through udt_path_get and decide what to say.
+ */
+function udtQuizUpdateTool(state: UdState): ToolDefinition {
+  return defineTool({
+    name: 'udt_quiz_update',
+    description:
+      'Record the learner\'s answers for a quiz or flashcard block on the active course attempt. ' +
+      'This only records what was submitted; it does NOT grade, does not change a node state, and does not advance the lesson. ' +
+      'Use the active attemptId from udt_path_get; stale or inactive attempts are refused. ' +
+      'For a quiz, answer each question id with one of the offered options (or free text for a short question). ' +
+      'For a flashcard, answer with the card block id and value again | got-it.',
+    parameters: {
+      attemptId: { type: 'string', required: true },
+      blockId: { type: 'string', required: true },
+      answers: {
+        type: 'array', required: true,
+        items: {
+          type: 'object', additionalProperties: false,
+          properties: {
+            questionId: { type: 'string', required: true },
+            value: { type: 'string', required: true },
+          },
+        },
+      },
+    },
+    output: { schema: { type: 'object', additionalProperties: true } as const, render: (_args, value) => [{ type: 'text' as const, text: JSON.stringify(value) }] },
+    execute: async (args, exec) => {
+      const input = args as { attemptId?: string; blockId?: string; answers?: unknown }
+      const sessionId = sessionOf(exec)
+      if (sessionId === undefined) throw new Error('quiz-write-requires-a-conversation')
+      const project = state.resolveProject(sessionId)
+      if (project.course === undefined) throw new Error('no-selected-project: open a project first')
+      const path = state.readPath(project.course.id)
+      if (path === undefined) throw new Error('no-learning-path: ask for a route first')
+      const submission = AnswerSubmissionSchema.parse(input)
+      const view = await recordBlockResponse(state, {
+        courseId: project.course.id,
+        sessionId,
+        expectedRevision: path.revision,
+        ...submission,
+      })
+      return JSON.parse(JSON.stringify(view))
+    },
+  })
+}
+
+/* -------------------------------------------------------------------------- */
 /* udt_decide_next                                                            */
 /* -------------------------------------------------------------------------- */
 
@@ -1416,6 +1470,7 @@ export function registerTools(host: ToolsHost, state: UdState): number {
     udtMapGetTool(state),
     udtMapUpdateTool(state),
     udtLessonUpdateTool(state),
+    udtQuizUpdateTool(state),
     udtDecideNextTool(state),
   ]
   const planning = planningTools(state)
