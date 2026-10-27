@@ -51,7 +51,7 @@ function attemptFor(attempts: readonly CourseAttempt[], activeId: string | null)
 function EmptyTab({ title, body, action }: { title: string; body: string; action?: { label: string; run: () => void } | undefined }): ReactNode {
   return (
     <div className="dtx-tab">
-      <div className="dtx-tab-empty">
+      <div className="dtx-tab-inner dtx-tab-empty">
         <span className="dtx-tab-empty-icon"><Icon name="book" size={32} /></span>
         <h2>{title}</h2>
         <p>{body}</p>
@@ -112,6 +112,7 @@ export function LearningTab({
   const tone = attempt.status === 'completed' ? 'green' : attempt.status === 'interrupted' ? 'amber' : 'blue'
   return (
     <div className="dtx-tab">
+      <div className="dtx-tab-inner">
       <h2>{item.title}</h2>
       <p className="dtx-tab-head-meta">{learning.overview?.course?.title ?? ''}{module !== null ? ` · ${module.title}` : ''} · {codeFor(route, item)}</p>
       <div className="dtx-tab-pills">
@@ -139,6 +140,7 @@ export function LearningTab({
         <button type="button" className="dtx-secondary" onClick={onOpenMapPage}><Icon name="map" size={15} />{text.openLearningMap}</button>
         <LanguageToggle />
       </div>}
+      </div>
     </div>
   )
 }

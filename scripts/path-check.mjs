@@ -163,11 +163,15 @@ async function proposalCase() {
 async function learningCase() {
   await waitFor(`!!document.querySelector('.dtx-next')`, 'learning next-step did not render')
   await waitFor(`document.querySelectorAll('.dtx-lesson').length > 0`, 'route modules did not render')
+  const collapsed = await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`)
+  const expanded = await cdp.evaluate(`(() => { const button = [...document.querySelectorAll('button')].find((entry) => (entry.textContent || '').trim() === 'Expand all' || (entry.textContent || '').trim() === '展开全部'); if (!button) return false; button.click(); return true })()`)
+  assert.equal(expanded, true, `${currentCase}: route modules have no expand-all control`)
+  await waitFor(`document.querySelectorAll('.dtx-lesson').length > ${collapsed}`, 'expanding modules did not reveal lessons')
   const first = await cdp.evaluate(`(() => { const el = document.querySelector('.dtx-lesson'); return el ? el.textContent.trim().slice(0, 40) : '' })()`)
   const rail = await cdp.evaluate(`document.querySelector('.dtx-rail')?.textContent?.slice(0, 200) ?? ''`)
   assert.ok(rail.length > 20, `${currentCase}: lesson rail is empty`)
   await screenshot(`${currentCase}-learning`)
-  return { lessons: await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`), first, rail: rail.slice(0, 40) }
+  return { lessons: await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`), collapsed, first, rail: rail.slice(0, 40) }
 }
 async function knowledgeCase() {
   await click('Knowledge & evidence')

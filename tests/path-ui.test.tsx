@@ -204,6 +204,7 @@ describe('route proposal', () => {
     await mount()
     expect(container.querySelector('.dtx-proposal')?.textContent).toContain('Review and accept the learning route')
     expect(container.textContent).toContain('Foundations')
+    await click('Expand all')
     expect(container.querySelectorAll('.dtx-lesson')).toHaveLength(3)
     expect(container.textContent).toContain('2 h')
     expect(container.textContent).toContain('Accept route')
@@ -215,12 +216,13 @@ describe('route proposal', () => {
 
   it('previews a lesson in the rail when it is selected', async () => {
     await mount()
+    await click('Expand all')
     const lesson = [...container.querySelectorAll<HTMLButtonElement>('.dtx-lesson')].find((entry) => entry.textContent?.includes('Train the classifier'))!
     await act(async () => lesson.click())
     expect(rail()?.textContent).toContain('Lesson preview')
     expect(rail()?.textContent).toContain('Train the classifier')
     expect(rail()?.textContent).toContain('Define a model')
-    expect(rail()?.textContent).toContain('This is a plan, not evidence of mastery.')
+    expect(rail()?.textContent).toContain('Plan only, not evidence of mastery.')
   })
 
   it('flags lessons that do not fit the preferred session length', async () => {

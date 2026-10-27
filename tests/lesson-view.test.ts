@@ -24,6 +24,21 @@ const text = (md: string): Block => ({ id: 'b', type: 'text', content: { md } })
 const render = (block: Block): string => renderToStaticMarkup(createElement(BlockView, { block }))
 
 describe('a text block is displayed as a lesson, not as source', () => {
+  it('renders pipe tables as real tables instead of a wall of pipes', () => {
+    const html = render(text('| 闸门 | 判据 |\n| --- | --- |\n| 学位 | 研究员要 PhD |\n| 身份 | 公民或绿卡 |'))
+    expect(html).toContain('<table')
+    expect(html).toContain('<th')
+    expect(html).toContain('研究员要 PhD')
+    expect(html).not.toContain('| --- |')
+  })
+
+  it('renders fenced code as a code block', () => {
+    const html = render(text('```python\nX = [[1, 2], [3, 4]]\n```'))
+    expect(html).toContain('dt-md-code')
+    expect(html).toContain('X = [[1, 2], [3, 4]]')
+    expect(html).not.toContain('```')
+  })
+
   it('turns ### into a heading instead of printing the hashes', () => {
     const html = render(text('### 先把问题缩到最小'))
     expect(html).toContain('<h4')
