@@ -134,6 +134,28 @@ describe('active lesson', () => {
     expect(container.textContent.toLowerCase()).toContain('answer in the chat')
     expect(container.textContent).toContain('Open learning map')
   })
+  it('lets the tutor continue or check in, and can pause the lesson', async () => {
+    const view = pathView()
+    const base = makeClient(view)
+    const start = vi.fn(async (..._args: any[]) => ({ ...view, prompted: true }))
+    const pause = vi.fn(async (..._args: any[]) => ({ ...view, run: { ...view.run!, attempts: [attempt({ status: 'interrupted' })] } }))
+    const onOpenChat = vi.fn()
+    await act(async () => {
+      root.render(createElement(LearningTab, {
+        client: { ...base, pathClient: { ...base.pathClient!, start, pause } },
+        sessionId: 's1', onOpenMapPage: () => {}, onOpenChat,
+      }))
+      await Promise.resolve(); await Promise.resolve()
+    })
+    await act(async () => { button('Let the tutor continue').click(); await Promise.resolve() })
+    expect(start.mock.calls[0]![0]).toMatchObject({ resume: true, version: 1, itemId: 'i1' })
+    expect(onOpenChat).toHaveBeenCalled()
+    await act(async () => { button('Check in with me').click(); await Promise.resolve() })
+    expect(start.mock.calls.at(-1)![0]).toMatchObject({ resume: true, checkin: true })
+    await act(async () => { button('Pause this lesson').click(); await Promise.resolve() })
+    expect(pause).toHaveBeenCalledTimes(1)
+  })
+
   it('folds a long diagram until the learner opens it', async () => {
     const withDiagram = {
       ...lesson,

@@ -157,6 +157,49 @@ describe('guarded path HTTP API', () => {
     expect(state.readCourseRun(COURSE, SECOND)).toBeUndefined()
   })
 
+  it('resumes and pauses an active lesson through the conversation', async () => {
+    await prepareAccepted()
+    const started = await call('/path/start', 'POST', {
+      ...identity(), version: 1, itemId: 'vectors', operationId: 'start-vectors',
+    })
+    expect(started.status).toBe(200)
+    expect(prompts.at(-1)?.text).toContain('You lead this lesson in the conversation')
+    // Make the previous prompt old enough to be a deliberate return, not a double click.
+    await state.mutateCourseRun(COURSE, SESSION, (run) => ({
+      ...run,
+      attempts: run.attempts.map((attempt) => ({ ...attempt, updatedAt: '2026-10-18T11:00:00.000Z' })),
+    }))
+    const resumed = await call('/path/start', 'POST', {
+      ...identity(), version: 1, itemId: 'vectors', operationId: 'resume-vectors', resume: true,
+    })
+    expect(resumed.status).toBe(200)
+    expect(prompts.at(-1)?.text).toContain('resume, not a restart')
+    expect(prompts.at(-1)?.text).toContain('ONE short check-in question')
+
+    await state.mutateCourseRun(COURSE, SESSION, (run) => ({
+      ...run,
+      attempts: run.attempts.map((attempt) => ({ ...attempt, updatedAt: '2026-10-18T11:00:00.000Z' })),
+    }))
+    const paused = await call('/path/pause', 'POST', identity())
+    expect(paused.status).toBe(200)
+    expect(paused.json.run.attempts.find((attempt: { id: string }) => attempt.id === started.json.run.activeAttemptId)?.status).toBe('interrupted')
+    const afterPause = await call('/path/start', 'POST', {
+      ...identity(), version: 1, itemId: 'vectors', operationId: 'resume-after-pause', resume: true,
+    })
+    expect(afterPause.status).toBe(200)
+    expect(prompts.at(-1)?.text).toContain('resume, not a restart')
+
+    await state.mutateCourseRun(COURSE, SESSION, (run) => ({
+      ...run,
+      attempts: run.attempts.map((attempt) => ({ ...attempt, updatedAt: '2026-10-18T11:00:00.000Z' })),
+    }))
+    const checked = await call('/path/start', 'POST', {
+      ...identity(), version: 1, itemId: 'vectors', operationId: 'checkin-vectors', checkin: true,
+    })
+    expect(checked.status).toBe(200)
+    expect(prompts.at(-1)?.text).toContain('Pause new teaching')
+  })
+
   it('rejects unsupported methods, routes, invalid bodies, unselected writes, and untrusted origins', async () => {
     expect((await call('/path', 'PUT')).json.error.code).toBe('method-not-allowed')
     expect((await call('/path/brief', 'GET')).status).toBe(405)

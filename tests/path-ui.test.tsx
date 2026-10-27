@@ -232,18 +232,33 @@ describe('route proposal', () => {
 })
 
 describe('learning', () => {
-  it('continues the active lesson without starting another attempt', async () => {
-    const onOpenLesson = vi.fn()
+  it('reconnects the tutor when continuing the active lesson', async () => {
+    const onStarted = vi.fn()
     host = pathView([curriculum(1, true)], {}, { activeAttemptId: 'attempt-one', attempts: [attempt({ units: [{
       id: 'u1', writtenAt: NOW,
       lesson: { id: 'lesson-represent', courseId: 'synthetic-course', nodeId: 'vectors', title: 'Represent the data', origin: 'tutor', createdAt: NOW, updatedAt: NOW, blocks: [{ id: 'b1', type: 'text', content: { md: 'Start with a small example.' } }] },
     }] })] })
-    await mount({ onOpenLesson })
+    await mount({ onStarted })
     expect(nextCard()?.textContent).toContain('Represent the data')
     expect(nextCard()?.textContent).toContain('Continue this lesson')
     await click('Continue this lesson')
-    expect(onOpenLesson).toHaveBeenCalledTimes(1)
-    expect(client.start).not.toHaveBeenCalled()
+    expect(vi.mocked(client.start).mock.calls[0]![0]).toMatchObject({ resume: true, version: 1, itemId: 'represent' })
+    expect(onStarted).toHaveBeenCalledTimes(1)
+  })
+
+  it('pauses the active lesson and resumes it explicitly', async () => {
+    const pause = vi.fn(async () => {
+      host = { ...host, run: { ...host.run!, activeAttemptId: 'attempt-one', attempts: [attempt({ status: 'interrupted' })] } }
+      return structuredClone(host)
+    })
+    client.pause = pause
+    host = pathView([curriculum(1, true)], {}, { activeAttemptId: 'attempt-one', attempts: [attempt({ units: [{ id: 'u1', writtenAt: NOW, lesson: { id: 'lesson', courseId: 'synthetic-course', nodeId: 'vectors', title: 'Represent the data', origin: 'tutor', createdAt: NOW, updatedAt: NOW, blocks: [{ id: 'b1', type: 'text', content: { md: 'Start.' } }] } }] })] })
+    await mount()
+    await click('Pause this lesson')
+    expect(pause).toHaveBeenCalledTimes(1)
+    expect(nextCard()?.textContent).toContain('Paused')
+    await click('Continue this lesson')
+    expect(vi.mocked(client.start).mock.calls.at(-1)![0]).toMatchObject({ resume: true })
   })
 
   it('starts the next unfinished lesson after earlier completions', async () => {

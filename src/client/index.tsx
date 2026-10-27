@@ -347,6 +347,7 @@ export function apply(ctx: Context): void {
           {...props}
           uiSession={uiSession}
           onOpenMapPage={() => layout?.selectPanel(mapPanelRef)}
+          onOpenChat={() => layout?.selectPanel(null)}
           onOpenSession={openLearningSession}
         />
       )

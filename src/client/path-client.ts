@@ -18,6 +18,8 @@ export interface StartPathParams extends AcceptPathParams {
   itemId: string
   operationId: string
   review?: boolean
+  resume?: boolean
+  checkin?: boolean
 }
 export interface PromptedPathView extends PathView {
   prompted: boolean
@@ -30,6 +32,8 @@ export interface PathClient {
   skipAssessment(params: PathWriteParams): Promise<PathView>
   accept(params: AcceptPathParams): Promise<PathView>
   start(params: StartPathParams): Promise<PromptedPathView>
+  /** Pause the active attempt without ending it. */
+  pause?(params: PathWriteParams): Promise<PathView>
 }
 
 /** Retain HTTP status so a stale write can refresh without losing form edits. */
@@ -78,4 +82,5 @@ export const defaultPathClient: PathClient = {
   skipAssessment: (params) => request('/skip-assessment', params),
   accept: (params) => request('/accept', params),
   start: (params) => request<PromptedPathView>('/start', params),
+  pause: (params) => request('/pause', params),
 }
