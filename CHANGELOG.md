@@ -11,7 +11,7 @@ Pausing in the lesson tab used to wait for the next 2s poll before the UI knew
 the attempt was interrupted, so for a moment there was no visible way back.
 The tab now flips to **Paused** locally as soon as the pause request succeeds,
 hides the teaching actions, and shows **Continue this lesson** immediately; the
-next poll reconciles with the server. Resuming keeps the same attempt.
+a small cross-surface signal refreshes the other learning panel immediately, so pausing in the map also flips the tab to Continue. Resuming keeps the same attempt.
 
 
 ### Added — teach-back: the learner explains it back

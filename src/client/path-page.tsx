@@ -4,6 +4,7 @@ import type { NodeView } from '../contract.js'
 import type { Assessment, CourseAttempt, Curriculum, CurriculumItem, GoalBrief, PathView } from '../path.js'
 import { Icon } from './design-icons.jsx'
 import { useDesignText } from './design-text.js'
+import { announcePathState } from './path-events.js'
 import type { DesignText } from './design-text.js'
 import { useLang } from './i18n.js'
 import type { Lang } from './i18n.js'
@@ -648,7 +649,7 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
         ...(intent === 'checkin' ? { resume: true, checkin: true } : {}),
         message: response.promptReason ?? pathText.tutorUnreachable,
       })
-      else { setNotice(pathText.lessonRequested); onStarted?.() }
+      else { announcePathState(false); setNotice(pathText.lessonRequested); onStarted?.() }
     })
   }
   const acceptVersion = (version: number) => {
@@ -715,7 +716,7 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
   }
   const pauseActive = () => {
     if (activeAttempt === undefined || client.pause === undefined) return
-    void mutate('pause', (params) => client.pause!(params), () => setNotice(text.lessonPausedNotice))
+    void mutate('pause', (params) => client.pause!(params), () => { announcePathState(true); setNotice(text.lessonPausedNotice) })
   }
   const errorAdvice = (raw: string): string => {
     const kind = classifyTutorError(raw)
