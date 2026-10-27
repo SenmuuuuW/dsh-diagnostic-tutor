@@ -19,6 +19,7 @@ import { useCoursePath } from './course-learning.js'
 import type { PanelClient } from './use-learning.js'
 import { defaultClient, useLearning } from './use-learning.js'
 import { useCurrentSessionId } from './use-session.js'
+import { announcePathState, PATH_PAUSED_EVENT, PATH_RESUMED_EVENT } from './path-events.js'
 import type { OverviewResponse } from '../contract.js'
 
 /** The tab chip's text. */
@@ -115,7 +116,7 @@ export function LearningTab({
         resume: true, ...(kind === 'checkin' ? { checkin: true } : {}), ...(kind === 'teachback' ? { teachBack: true } : {}),
       })
       if (!result.prompted) setNotice(result.promptReason ?? text.tabTutorUnreachable)
-      else { setPausedLocal(false); onOpenChat?.() }
+      else { announcePathState(false); setPausedLocal(false); onOpenChat?.() }
     } catch (error) {
       setNotice(error instanceof Error ? error.message : text.tabTutorUnreachable)
     } finally { setBusy(false) }
@@ -125,6 +126,7 @@ export function LearningTab({
     setBusy(true); setNotice('')
     try {
       await pathClient.pause({ sessionId: activeSession, courseId, expectedRevision: view.path.revision })
+      announcePathState(true)
       setPausedLocal(true)
       setNotice(text.lessonPausedNotice)
     } catch (error) {
@@ -136,6 +138,16 @@ export function LearningTab({
     if (attempt?.status === 'interrupted') setPausedLocal(true)
     else if (attempt?.status === 'working' || attempt?.status === 'requested') setPausedLocal(false)
   }, [attempt?.status])
+  useEffect(() => {
+    const paused = () => setPausedLocal(true)
+    const resumed = () => setPausedLocal(false)
+    window.addEventListener(PATH_PAUSED_EVENT, paused)
+    window.addEventListener(PATH_RESUMED_EVENT, resumed)
+    return () => {
+      window.removeEventListener(PATH_PAUSED_EVENT, paused)
+      window.removeEventListener(PATH_RESUMED_EVENT, resumed)
+    }
+  }, [])
 
   if (courseId === undefined) {
     return <EmptyTab title={text.tabEmptyTitle} body={text.tabEmptyBody} action={onOpenMapPage === undefined ? undefined : { label: text.openLearningMap, run: onOpenMapPage }} />

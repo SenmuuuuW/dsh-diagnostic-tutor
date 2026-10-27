@@ -6,6 +6,7 @@ import type { PathClient } from './path-client.js'
 import { DataFooter, LessonBody } from './blocks.js'
 import { LanguageToggle } from './language-toggle.js'
 import { useLessonText } from './lesson-text.js'
+import { PATH_PAUSED_EVENT, PATH_RESUMED_EVENT } from './path-events.js'
 
 export function useCoursePath(client: PathClient | undefined, courseId: string | undefined, sessionId?: string): PathView | null {
   const scope = `${courseId ?? ''}:${sessionId ?? ''}`
@@ -25,7 +26,15 @@ export function useCoursePath(client: PathClient | undefined, courseId: string |
     }
     void refresh()
     const timer = setInterval(() => { void refresh() }, 2000)
-    return () => { live = false; clearInterval(timer) }
+    const signal = () => { void refresh() }
+    window.addEventListener(PATH_PAUSED_EVENT, signal)
+    window.addEventListener(PATH_RESUMED_EVENT, signal)
+    return () => {
+      live = false
+      clearInterval(timer)
+      window.removeEventListener(PATH_PAUSED_EVENT, signal)
+      window.removeEventListener(PATH_RESUMED_EVENT, signal)
+    }
   }, [client, courseId, scope, sessionId])
   return snapshot?.scope === scope ? snapshot.view : null
 }
