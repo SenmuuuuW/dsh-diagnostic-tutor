@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed — smaller type across the new UI
+
+The first pass of the redesign read too large on the desktop window. The type
+scale is now roughly one step smaller throughout: base copy 13px, Next-step
+titles 23px, rail titles 20px, module titles 14px, lesson titles 13px, and the
+metadata/eyebrow sizes 10.5–12px. Layout and behaviour are unchanged.
+
+
 ### Changed — the Learning map now follows the new UI design
 
 The plugin surfaces were rebuilt around the design handoff:
