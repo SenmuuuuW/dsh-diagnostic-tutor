@@ -190,7 +190,7 @@ describe('the two lesson surfaces switch in place', () => {
     await expectSurfaceSwitches(
       LearningTab,
       { client: PANEL_CLIENT, initialOverview: EMPTY_OVERVIEW },
-      'Your learning',
+      'No lesson yet',
     )
   })
 

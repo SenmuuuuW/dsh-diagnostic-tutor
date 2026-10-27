@@ -1,227 +1,150 @@
 // @vitest-environment jsdom
-/**
- * The diagnosis map's own page.
- *
- * The map used to live inside the teaching column, where it read as a footnote
- * under the lesson. These tests pin the separate page: a tree of its own, the
- * selected node's evidence beside it, and a way back to the teaching view and
- * the conversation. Nothing here decides anything — the page only reads the
- * same learning state every other surface reads.
- */
-
+/** The redesigned Learning map shell: library, route shell and knowledge master-detail. */
 import { act, createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-// React needs to be told this is a test environment, or `act` warns on every
-// update and state flushes are not batched.
-;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
-
-import type { NodeDetailResponse, NodeView, OverviewResponse } from '../src/contract.js'
-import { resetLanguageForTests } from '../src/client/i18n.js'
+import type { NodeDetailResponse, NodeView, OverviewResponse, ProjectCardView } from '../src/contract.js'
+import { resetLanguageForTests, setLang } from '../src/client/i18n.js'
 import { LearningMapPanel } from '../src/client/map-panel.js'
 import type { PanelClient } from '../src/client/use-learning.js'
 
 const NOW = '2026-01-01T00:00:00.000Z'
-
 const nodes: NodeView[] = [
   { id: 'ml:goal', title: 'Machine Learning', relation: 'goal', state: 'explained', parentId: null, evidenceCount: 1, updatedAt: NOW },
   { id: 'ml:math', title: 'Math Foundations', relation: 'prerequisite', state: 'blocked', parentId: 'ml:goal', evidenceCount: 1, updatedAt: NOW },
   { id: 'ml:math:la', title: 'Linear Algebra', relation: 'part-of', state: 'checked', parentId: 'ml:math', evidenceCount: 2, updatedAt: NOW },
   { id: 'ml:python', title: 'Python', relation: 'prerequisite', state: 'confirmed', parentId: 'ml:goal', evidenceCount: 3, updatedAt: NOW },
 ]
-
-const overview: OverviewResponse = {
-  ok: true,
-  selection: 'project',
-  course: {
-    id: 'ml',
-    title: 'Machine Learning',
-    goal: 'Learn ML from weak math foundations',
-    status: 'active',
-    createdAt: NOW,
-    updatedAt: NOW,
-  },
-  nodes,
-  focus: null,
-  nextStep: null,
-  handoff: null,
-  teachingBrain: true,
-  lessonCount: 0,
-  library: [],
+const library: ProjectCardView[] = [
+  { id: 'ml', title: 'Machine Learning', goal: 'Learn ML', confirmed: 1, total: 4, updatedAt: '2026-10-25T00:00:00.000Z', status: 'accepted', acceptedVersion: 1 },
+  { id: 'astro', title: '天文学', goal: 'Learn astronomy', confirmed: 0, total: 1, updatedAt: '2026-10-20T00:00:00.000Z', status: 'legacy', acceptedVersion: null },
+]
+function overview(overrides: Partial<OverviewResponse> = {}): OverviewResponse {
+  return {
+    ok: true, selection: 'project',
+    course: { id: 'ml', title: 'Machine Learning', goal: 'Learn ML from weak math foundations', status: 'active', createdAt: NOW, updatedAt: NOW },
+    nodes, focus: null, nextStep: null, handoff: null, teachingBrain: true, lessonCount: 0, library,
+    ...overrides,
+  }
 }
-
 function detail(nodeId: string): NodeDetailResponse {
   const node = nodes.find((entry) => entry.id === nodeId) ?? nodes[0]!
   const parent = nodes.find((entry) => entry.id === node.parentId) ?? null
-  const children = nodes.filter((entry) => entry.parentId === node.id)
   return {
     ok: true,
-    node: {
-      ...node,
-      evidence: [
-        { kind: 'diagnosis', at: NOW, note: 'Recorded against this node.', readiness: 'diagnose-again' },
-      ],
-    },
+    node: { ...node, evidence: [{ kind: 'diagnosis', at: NOW, note: 'Recorded against this node.', readiness: 'diagnose-again' }] },
     parent,
-    children,
+    children: nodes.filter((entry) => entry.parentId === node.id),
     lessonExists: false,
   }
 }
-
-const client: PanelClient = {
-  fetchOverview: () => Promise.resolve(overview),
-  fetchNode: (nodeId) => Promise.resolve(detail(nodeId)),
-  fetchLesson: () => Promise.resolve({ ok: true, lesson: null }),
-  startFocus: () => Promise.reject(new Error('the map page never starts a focus')),
+function makeClient(initial: OverviewResponse): PanelClient {
+  return {
+    fetchOverview: () => Promise.resolve(initial),
+    fetchNode: (nodeId) => Promise.resolve(detail(nodeId)),
+    fetchLesson: () => Promise.resolve({ ok: true, lesson: null }),
+    startFocus: () => Promise.reject(new Error('the map page never starts a focus')),
+    selectProject: vi.fn(async () => ({ ok: true })),
+  }
 }
-
 let container: HTMLDivElement
 let root: Root
-
 beforeEach(() => {
   container = document.createElement('div')
   document.body.appendChild(container)
   root = createRoot(container)
 })
-
 afterEach(() => {
   act(() => root.unmount())
   container.remove()
   resetLanguageForTests()
 })
-
-async function mount(props: Partial<Parameters<typeof LearningMapPanel>[0]> = {}): Promise<void> {
+async function mount(client: PanelClient, initial: OverviewResponse, props: Partial<Parameters<typeof LearningMapPanel>[0]> = {}) {
   await act(async () => {
-    root.render(createElement(LearningMapPanel, { client, initialOverview: overview, sessionId: 's1', ...props }))
+    root.render(createElement(LearningMapPanel, { client, initialOverview: initial, sessionId: 's1', ...props }))
+    await Promise.resolve()
   })
 }
+async function clickButton(text: string) {
+  const target = [...container.querySelectorAll<HTMLButtonElement>('button')].find((entry) => entry.textContent?.trim() === text)
+  expect(target, text).toBeDefined()
+  await act(async () => target!.click())
+}
 
-describe('the map page', () => {
-  it('renders the map as its own page, with a census and every node', async () => {
-    await mount()
-    expect(container.querySelector('.dt-path-page')).not.toBeNull()
-    await act(async () => { [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Knowledge & evidence')?.click() })
-    expect(container.querySelector('.dt-map-root')).not.toBeNull()
-    expect(container.querySelectorAll('.dt-map-row')).toHaveLength(nodes.length)
-    // The census is state counts, not a score.
-    expect(container.querySelector('.dt-statebar')).not.toBeNull()
+describe('library', () => {
+  const noCourse = overview({ selection: 'none', course: null, nodes: [], library })
+  it('lists projects with status and last-studied metadata', async () => {
+    await mount(makeClient(noCourse), noCourse, { onOpenChat: () => {} })
+    expect(container.textContent).toContain('Welcome back')
+    expect(container.textContent).toContain('My learning projects')
     expect(container.textContent).toContain('Machine Learning')
-    expect(container.textContent).toContain('4 nodes')
+    expect(container.textContent).toContain('Route accepted')
+    expect(container.textContent).toContain('Legacy project')
+    expect(container.textContent).toContain('Last studied:')
   })
+  it('opens a project from the row', async () => {
+    const client = makeClient(noCourse)
+    await mount(client, noCourse)
+    const row = [...container.querySelectorAll<HTMLButtonElement>('.dtx-project-row')].find((entry) => entry.textContent?.includes('Machine Learning'))
+    await act(async () => row!.click())
+    expect(client.selectProject).toHaveBeenCalledWith('s1', 'ml')
+  })
+  it('offers the conversation when there are no projects', async () => {
+    const empty = overview({ selection: 'none', course: null, nodes: [], library: [] })
+    const onOpenChat = vi.fn()
+    await mount(makeClient(empty), empty, { onOpenChat })
+    expect(container.textContent).toContain('Start your learning')
+    await clickButton('Back to chat')
+    expect(onOpenChat).toHaveBeenCalled()
+  })
+})
 
-  it('shows the selected node evidence beside the tree', async () => {
-    await mount()
-    await act(async () => { [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Knowledge & evidence')?.click() })
-    expect(container.querySelector('.dt-map-detail')?.textContent).toContain('Machine Learning')
+describe('project header', () => {
+  it('names the project, keeps the tabs and goes back to the conversation', async () => {
+    const onOpenChat = vi.fn()
+    await mount(makeClient(overview()), overview(), { onOpenChat })
+    expect(container.textContent).toContain('Learning map')
+    expect(container.textContent).toContain('Machine Learning')
+    expect(container.querySelectorAll('.dtx-tabbtn')).toHaveLength(2)
+    await clickButton('Back to chat')
+    expect(onOpenChat).toHaveBeenCalled()
+  })
+})
 
-    const rows = [...container.querySelectorAll<HTMLButtonElement>('.dt-map-row')]
-    const linear = rows.find((row) => row.textContent?.includes('Linear Algebra'))
+describe('knowledge & evidence', () => {
+  async function openKnowledge() {
+    await mount(makeClient(overview()), overview())
+    await clickButton('Knowledge & evidence')
+  }
+  it('lists nodes on the left and the selected node evidence on the right', async () => {
+    await openKnowledge()
+    expect(container.textContent).toContain('Knowledge (4)')
+    expect(container.querySelectorAll('.dtx-node-row')).toHaveLength(4)
+    const row = [...container.querySelectorAll<HTMLButtonElement>('.dtx-node-row')].find((entry) => entry.textContent?.includes('Linear Algebra'))
+    await act(async () => row!.click())
+    expect(container.querySelector('.dtx-knowledge-detail')?.textContent).toContain('Linear Algebra')
+    expect(container.querySelector('.dtx-knowledge-detail')?.textContent).toContain('Recorded against this node.')
+    expect(container.querySelector('.dtx-knowledge-detail')?.textContent).toContain('Evidence (1)')
+    expect(container.querySelector('.dtx-knowledge-detail')?.textContent).toContain('Mastery needs evidence')
+  })
+  it('filters nodes by search', async () => {
+    await openKnowledge()
+    const input = container.querySelector<HTMLInputElement>('.dtx-search input')!
     await act(async () => {
-      linear?.click()
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, 'python')
+      input.dispatchEvent(new Event('input', { bubbles: true }))
     })
-    expect(container.querySelector('.dt-map-detail')?.textContent).toContain('Linear Algebra')
-    expect(container.querySelector('.dt-map-detail')?.textContent).toContain('Recorded against this node.')
+    expect(container.querySelectorAll('.dtx-node-row')).toHaveLength(1)
+    expect(container.textContent).toContain('Python')
   })
-
-  it('opens the conversation that owns the current lesson instead of this one', async () => {
-    const opened: string[] = []
-    const navigated: string[] = []
-    const resolving: PanelClient = {
-      ...client,
-      resolveProjectSession: (courseId, sessionId) => {
-        expect(courseId).toBe('ml')
-        expect(sessionId).toBe('s1')
-        return Promise.resolve({ sessionId: 'session-owner' })
-      },
-    }
-    await mount({
-      client: resolving,
-      onOpenLesson: () => opened.push('lesson'),
-      onOpenSession: (sessionId) => { navigated.push(sessionId); return true },
-    })
-    const lesson = [...container.querySelectorAll<HTMLButtonElement>('button')]
-      .find((button) => button.textContent?.trim() === 'Open current lesson')
-    await act(async () => {
-      lesson?.click()
-      await Promise.resolve()
-      await Promise.resolve()
-      await Promise.resolve()
-    })
-    expect(navigated).toEqual(['session-owner'])
-    expect(opened).toEqual([])
-  })
-
-  it('keeps the local hand-off when this conversation already owns the lesson', async () => {
-    const opened: string[] = []
-    const navigated: string[] = []
-    const resolving: PanelClient = {
-      ...client,
-      resolveProjectSession: () => Promise.resolve({ sessionId: 's1' }),
-    }
-    await mount({
-      client: resolving,
-      onOpenLesson: () => opened.push('lesson'),
-      onOpenSession: (sessionId) => { navigated.push(sessionId); return true },
-    })
-    const lesson = [...container.querySelectorAll<HTMLButtonElement>('button')]
-      .find((button) => button.textContent?.trim() === 'Open current lesson')
-    await act(async () => {
-      lesson?.click()
-      await Promise.resolve()
-      await Promise.resolve()
-      await Promise.resolve()
-    })
-    expect(navigated).toEqual([])
-    expect(opened).toEqual(['lesson'])
-  })
-
-  it('offers the way back to the current lesson and the conversation', async () => {
-    const opened: string[] = []
-    await mount({
-      onOpenLesson: () => opened.push('lesson'),
-      onOpenChat: () => opened.push('chat'),
-    })
-    const buttons = [...container.querySelectorAll<HTMLButtonElement>('button')]
-    const lesson = buttons.find((button) => button.textContent?.trim() === 'Open current lesson')
-    const chat = buttons.find((button) => button.textContent?.trim() === 'Back to the conversation')
-    expect(lesson).toBeDefined()
-    expect(chat).toBeDefined()
-    await act(async () => {
-      lesson?.click()
-      chat?.click()
-    })
-    expect(opened).toEqual(['lesson', 'chat'])
-  })
-
-  it('says there is nothing to map when no project is open', async () => {
-    await mount({
-      initialOverview: { ...overview, selection: 'none', course: null, nodes: [], focus: null },
-    })
-    expect(container.textContent).toContain('Nothing to map yet.')
-    expect(container.querySelector('.dt-map-root')).toBeNull()
-  })
-
-  it('switches its own copy between English and Chinese without a reload', async () => {
-    await mount()
-    // The route tab tries the real client, which has no host in this test; the
-    // language check lives on the knowledge view so it asserts copy, not a
-    // network failure.
-    await act(async () => { [...container.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent === 'Knowledge & evidence')?.click() })
-    const pane = () => container.querySelector('.dt-map-pane')?.textContent ?? ''
-    expect(pane()).toContain('Diagnosis map')
-    expect(pane()).not.toMatch(/[\u4e00-\u9fff]/)
-
-    const toggle = container.querySelector<HTMLButtonElement>('.dt-lang-toggle')
-    expect(toggle?.textContent).toBe('中文')
-    await act(async () => toggle?.click())
-    expect(pane()).toContain('诊断地图')
-    expect(container.querySelector('.dt-lang-toggle')?.textContent).toBe('EN')
-
-    const back = container.querySelector<HTMLButtonElement>('.dt-lang-toggle')
-    // No host is attached in a unit test, so the preference stays local.
-    await act(async () => back?.click())
-    expect(pane()).toContain('Diagnosis map')
-    expect(pane()).not.toMatch(/[\u4e00-\u9fff]/)
+  it('switches copy between English and Chinese', async () => {
+    await openKnowledge()
+    expect(container.textContent).toContain('Knowledge (4)')
+    await act(async () => setLang('zh'))
+    expect(container.textContent).toContain('知识节点 (4)')
+    expect(container.querySelector('.dtx-search input')?.getAttribute('placeholder')).toBe('搜索知识点')
+    await act(async () => setLang('en'))
+    expect(container.textContent).toContain('Knowledge (4)')
   })
 })

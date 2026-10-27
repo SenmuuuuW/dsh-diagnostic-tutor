@@ -1,212 +1,261 @@
 /**
- * The Learning map page: the plugin's only main-column page.
+ * The Learning map page, redesigned as one page with a persistent context rail.
  *
- * It answers two questions in one place — "what is my route" (course route tab)
- * and "what do I actually know" (knowledge & evidence tab). The lesson itself
- * lives in the docked tab beside the conversation, so this page never doubles
- * as a second teaching surface.
- *
- * Nothing here decides anything; every view reads the same `useLearning` state
- * the docked tab reads (`pathClient` supplies the planning view for the route
- * tab).
+ * Two tabs share one shell: the route (learning path) and the knowledge map.
+ * The shell owns the header, tabs and library; the route tab owns its own
+ * main/rail split. Nothing here decides anything — every value comes from the
+ * same `useLearning` / `PathPage` runtime the other surfaces read.
  */
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 
 import { DataFooter } from './blocks.jsx'
+import { Icon } from './design-icons.jsx'
+import type { IconName } from './design-icons.jsx'
+import { useDesignText, nodeStateText } from './design-text.js'
+import type { DesignText } from './design-text.js'
 import { useLang } from './i18n.js'
 import { LanguageToggle } from './language-toggle.js'
-import { evidenceKindLabel, readinessLabel, stateLabel, useMapText } from './map-text.js'
+import { evidenceKindLabel } from './map-text.js'
+import { formatWhen, relationLabel, stateExplanation } from './model.js'
 import { PathPage } from './path-page.js'
 import type { PathClient } from './path-client.js'
-import type { NodeDetailResponse, NodeView } from '../contract.js'
-import { buildMapTree, flattenTree, formatWhen, relationLabel, stateExplanation } from './model.js'
+import type { NodeDetailResponse, NodeView, ProjectCardView } from '../contract.js'
 import type { PanelClient } from './use-learning.js'
 import type { SessionActivity } from './use-session-activity.js'
 import { defaultClient, useLearning } from './use-learning.js'
-import { EmptyArt, NodeLocator, StateBar, StateGlyph } from './visuals.jsx'
 
 /** The key the map page registers under in `main`, and its panellist id. */
 export const MAP_PANEL_ID = 'diagnostic-tutor-map'
 
 export interface LearningMapPanelProps {
-  /** Defaults to the real HTTP client. */
   client?: PanelClient
-  /** Pre-supplied overview, so the preview and tests skip the first fetch. */
   initialOverview?: Parameters<typeof useLearning>[0]['initialOverview']
-  /** The session the tutor should be woken in, when the host half knows one. */
   sessionId?: string | undefined
-  /** Show the conversation again. */
   onOpenChat?: (() => void) | undefined
-  /** Return to the conversation with the current-lesson tab open. */
   onOpenLesson?: (() => void) | undefined
-  /** Switch to the conversation a project's learning belongs to; false when the shell cannot navigate. */
   onOpenSession?: ((sessionId: string) => boolean) | undefined
-  /** Live turn state of the conversation this page is showing, when observable. */
   sessionActivity?: SessionActivity | undefined
   pathClient?: PathClient | undefined
 }
 
-/**
- * One row of the map. Kept local rather than shared with the docked tab: the
- * two have different widths and different amounts of room for the relation
- * line, and neither is a copy of the other's information.
- */
-function MapRows({
-  nodes,
-  selectedId,
-  focusNodeId,
-  onSelect,
-}: {
-  nodes: readonly NodeView[]
-  selectedId: string | null
-  focusNodeId: string | null
-  onSelect: (id: string) => void
-}): ReactNode {
-  const text = useMapText()
-  const lang = useLang()
-  const rows = flattenTree(buildMapTree([...nodes]))
-  if (rows.length === 0) {
-    return (
-      <>
-        <EmptyArt kind="map" />
-        <p className="dt-empty">{text.emptyMap}</p>
-      </>
-    )
-  }
+type MapView = 'curriculum' | 'knowledge'
+
+function whenText(iso: string, text: DesignText): string {
+  const stamp = Date.parse(iso)
+  if (!Number.isFinite(stamp)) return ''
+  const days = Math.max(0, Math.floor((Date.now() - stamp) / 86_400_000))
+  if (days < 1) return text.whenToday
+  if (days < 2) return text.whenYesterday
+  if (days < 7) return text.whenDays(days)
+  return text.whenWeeks(Math.max(1, Math.floor(days / 7)))
+}
+
+function projectIcon(title: string): IconName {
+  if (/天文|astro|物理|physics|宇宙|太空/i.test(title)) return 'planet'
+  if (/机器学习|machine|math|数学|算法|数据|data|经济|金融|code|编程/i.test(title)) return 'graph'
+  return 'book'
+}
+
+function statusOf(project: ProjectCardView): 'accepted' | 'active' | 'legacy' {
+  if (project.status !== undefined) return project.status
+  return project.confirmed > 0 ? 'active' : 'legacy'
+}
+
+function StatusPill({ status, text }: { status: 'accepted' | 'active' | 'legacy'; text: DesignText }): ReactNode {
+  const label = status === 'accepted' ? text.statusAccepted : status === 'active' ? text.statusActive : text.statusLegacy
   return (
-    <div className="dt-map-list" role="list">
-      {rows.map(({ node, depth }) => (
-        <button
-          key={node.id}
-          type="button"
-          role="listitem"
-          className="dt-node dt-map-row"
-          style={{ paddingLeft: `${10 + depth * 16}px` }}
-          data-depth={depth > 0 ? Math.min(depth, 4) : undefined}
-          data-attention={node.state === 'blocked' || node.state === 'weak' ? 'true' : undefined}
-          aria-current={node.id === selectedId}
-          data-focused={node.id === focusNodeId ? 'true' : undefined}
-          onClick={() => onSelect(node.id)}
-        >
-          <span className={`dt-dot dt-state-${node.state}`}>
-            <StateGlyph state={node.state} />
-          </span>
-          <span className="dt-node-title">
-            {node.title}
-            <span className="dt-node-rel">
-              {relationLabel(node.relation, lang)} · {text.evidenceCount(node.evidenceCount)}
-            </span>
-          </span>
-          <span className={`dt-tab-state dt-state-${node.state}`}>{stateLabel(node.state, lang)}</span>
-        </button>
-      ))}
-    </div>
+    <span className="dtx-pill" data-tone={status === 'accepted' ? 'green' : status === 'active' ? 'blue' : 'gray'}>
+      {status === 'accepted' ? <Icon name="check" size={13} /> : status === 'legacy' ? <Icon name="clock" size={13} /> : <Icon name="route" size={13} />}
+      {label}
+    </span>
   )
 }
 
-/** The selected node's record, without the teaching column beside it. */
-function MapDetail({
-  detail,
-  loading,
-  note,
-  error,
-  isFocused,
-  onSelect,
-}: {
-  detail: NodeDetailResponse | null
-  loading: boolean
-  note: string | null
+function LibraryPage({ library, onOpenChat, onOpen, error }: {
+  library: ProjectCardView[]
+  onOpenChat?: (() => void) | undefined
+  onOpen: (id: string) => void
   error: string | null
-  isFocused: boolean
-  onSelect: (id: string) => void
 }): ReactNode {
-  const text = useMapText()
-  const lang = useLang()
-  if (detail === null) {
-    return (
-      <div className="dt-empty-state">
-        <EmptyArt kind="evidence" />
-        <p className="dt-empty-title">{loading ? text.loadingMap : text.nothingSelected}</p>
-        <p className="dt-empty">{text.pickNode}</p>
-      </div>
-    )
+  const text = useDesignText()
+  if (error !== null) return <div className="dtx-empty-page"><p className="dtx-alert">{error}</p></div>
+  if (library.length === 0) {
+    return <div className="dtx-empty-page">
+      <div className="dtx-empty-icon"><Icon name="book" size={38} /></div>
+      <h1 className="dtx-empty-title">{text.libraryEmptyTitle}</h1>
+      <p className="dtx-empty-body">{text.libraryEmptyBody}</p>
+      {onOpenChat !== undefined && <button type="button" className="dtx-primary" onClick={onOpenChat}>{text.backToChat}</button>}
+    </div>
   }
   return (
     <>
-      <div className="dt-detail-hero">
-        <span className={`dt-detail-glyph dt-state-${detail.node.state}`} aria-hidden="true">
-          <StateGlyph state={detail.node.state} />
-        </span>
-        <div className="dt-detail-hero-id">
-          <p className="dt-eyebrow">{text.selectedNode}</p>
-          <h2>{detail.node.title}</h2>
+      <section className="dtx-card dtx-hero">
+        <p className="dtx-eyebrow">{text.libraryEyebrow}</p>
+        <h1>{text.libraryTitle}</h1>
+        <p>{text.libraryBody}</p>
+        <div className="dtx-hero-row">
+          <div className="dtx-hero-prompt">
+            <span className="dtx-hero-prompt-icon"><Icon name="chat" size={18} /></span>
+            <span>
+              <span className="dtx-hero-prompt-title">{text.libraryPromptTitle}</span>
+              <span className="dtx-hero-prompt-sub">{text.libraryPromptExample}</span>
+            </span>
+          </div>
+          {onOpenChat !== undefined && <button type="button" className="dtx-primary" onClick={onOpenChat}>{text.backToChat}</button>}
         </div>
+      </section>
+      <div className="dtx-section-head"><h2>{text.librarySection}</h2></div>
+      <div className="dtx-project-list">
+        {library.map((project) => {
+          const status = statusOf(project)
+          return (
+            <button key={project.id} type="button" className="dtx-project-row" onClick={() => onOpen(project.id)}>
+              <span className="dtx-project-icon" data-kind={projectIcon(project.title)}><Icon name={projectIcon(project.title)} size={28} /></span>
+              <span className="dtx-project-main">
+                <span className="dtx-project-title">{project.title}</span>
+                <span className="dtx-project-meta">{text.lastStudied(whenText(project.updatedAt, text))}</span>
+              </span>
+              <span className="dtx-project-status"><StatusPill status={status} text={text} /></span>
+              <span className="dtx-project-action">{text.continueLearning}<Icon name="chevron-right" size={16} /></span>
+            </button>
+          )
+        })}
       </div>
-      <div className="dt-meta">
-        <span className={`dt-tab-state dt-state-${detail.node.state}`}>
-          {stateLabel(detail.node.state, lang)}
-        </span>
-        <span className="dt-chip">{relationLabel(detail.node.relation, lang)}</span>
-        {detail.parent !== null && (
-          <span className="dt-chip">{text.parent(detail.parent.title)}</span>
-        )}
-        {detail.children.length > 0 && (
-          <span className="dt-chip">{text.children(detail.children.length)}</span>
-        )}
-      </div>
-
-      <p className="dt-why">{stateExplanation(detail.node.state, lang)}</p>
-
-      <NodeLocator
-        parent={
-          detail.parent === null
-            ? null
-            : { id: detail.parent.id, title: detail.parent.title, state: detail.parent.state }
-        }
-        node={{ id: detail.node.id, title: detail.node.title, state: detail.node.state }}
-        children={detail.children.map((child) => ({
-          id: child.id,
-          title: child.title,
-          state: child.state,
-        }))}
-        onSelect={onSelect}
-        label={text.whereThisSits}
-      />
-
-      <p className="dt-section-title">{text.evidence(detail.node.evidence.length)}</p>
-      {detail.node.evidence.length === 0 ? (
-        <>
-          <EmptyArt kind="evidence" />
-          <p className="dt-empty">{text.nothingRecorded}</p>
-        </>
-      ) : (
-        <ul className="dt-evidence">
-          {detail.node.evidence.map((entry, index) => (
-            <li key={index}>
-              <span className="dt-ev-kind">{evidenceKindLabel(entry.kind, lang)}</span>
-              {entry.readiness !== undefined && (
-                <span className="dt-ev-readiness">{readinessLabel(entry.readiness, lang)}</span>
-              )}
-              {entry.note !== undefined && <span className="dt-ev-note">{entry.note}</span>}
-              <span className="dt-ev-when">{formatWhen(entry.at, Date.now(), lang)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {note !== null && <p className="dt-caption">{note}</p>}
-      {error !== null && <p className="dt-empty">{error}</p>}
-      {isFocused && <p className="dt-caption">{text.teachingNode}</p>}
     </>
   )
 }
 
+function statePillTone(state: string): 'green' | 'blue' | 'gray' | 'amber' {
+  if (state === 'confirmed' || state === 'checked' || state === 'practiced') return 'green'
+  if (state === 'explained') return 'blue'
+  if (state === 'weak' || state === 'blocked') return 'amber'
+  return 'gray'
+}
+
+function NodeIcon({ state }: { state: string }): ReactNode {
+  if (state === 'confirmed' || state === 'checked' || state === 'practiced') return <span className="dtx-node-icon" data-state={state}><Icon name="check" size={13} /></span>
+  if (state === 'weak' || state === 'blocked') return <span className="dtx-node-icon" data-state={state}><Icon name="warning" size={13} /></span>
+  if (state === 'explained') return <span className="dtx-node-icon" data-state={state}><span style={{ width: 6, height: 6, borderRadius: 999, background: 'currentColor' }} /></span>
+  return <span className="dtx-node-icon" data-state={state} />
+}
+
+function KnowledgeDetail({ detail, loading, error, text, lang }: {
+  detail: NodeDetailResponse | null
+  loading: boolean
+  error: string | null
+  text: DesignText
+  lang: 'en' | 'zh'
+}): ReactNode {
+  if (detail === null) {
+    return <div className="dtx-knowledge-empty">
+      <div className="dtx-rail-empty-icon"><Icon name="layers" size={28} /></div>
+      {error !== null ? <p>{error}</p> : <p>{loading ? text.loading : text.selectNode}</p>}
+    </div>
+  }
+  const node = detail.node
+  const prereq = detail.parent !== null && (node.relation === 'prerequisite' || node.relation === 'part-of') ? [detail.parent] : []
+  return (
+    <>
+      <div className="dtx-detail-head">
+        <h2>{node.title}</h2>
+        <span className="dtx-pill" data-tone={statePillTone(node.state)}>{nodeStateText(node.state, text)}</span>
+      </div>
+      <p className="dtx-detail-desc">{stateExplanation(node.state, lang)}</p>
+      <div className="dtx-detail-section">
+        <h3>{text.relatedPosition}</h3>
+        <div className="dtx-breadcrumb">
+          <Icon name="layers" size={15} />
+          {detail.parent !== null && <><span>{detail.parent.title}</span><span>›</span></>}
+          <b>{node.title}</b>
+        </div>
+      </div>
+      {prereq.length > 0 && <div className="dtx-detail-section">
+        <h3>{text.prerequisiteKnowledge}</h3>
+        <div className="dtx-chips">
+          {prereq.map((entry) => <span key={entry.id} className="dtx-chip" data-state={entry.state === 'confirmed' ? 'confirmed' : undefined}>
+            <NodeIcon state={entry.state} />{entry.title}
+          </span>)}
+        </div>
+      </div>}
+      <div className="dtx-detail-section">
+        <h3>{text.evidenceTitle(node.evidence.length)}</h3>
+        {node.evidence.length === 0 && <p className="dtx-muted dtx-small">{text.noEvidence}</p>}
+        <div className="dtx-evidence">
+          {[...node.evidence].reverse().map((entry, index) => (
+            <div className="dtx-evidence-card" key={index}>
+              <span className="dtx-evidence-icon"><Icon name={entry.kind === 'practice' || entry.kind === 'check' ? 'book' : 'chat'} size={17} /></span>
+              <span className="dtx-evidence-main">
+                <span className="dtx-evidence-title">{evidenceKindLabel(entry.kind, lang)}</span>
+                {entry.note !== undefined && entry.note !== '' && <span className="dtx-evidence-note">{entry.note}</span>}
+              </span>
+              <span className="dtx-evidence-side">
+                <span className="dtx-pill" data-tone={statePillTone(node.state)}>{nodeStateText(node.state, text)}</span>
+                <span className="dtx-evidence-when">{formatWhen(entry.at, Date.now(), lang)}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="dtx-info-box">
+        <span className="dtx-info-icon"><Icon name="info" size={17} /></span>
+        <span><span className="dtx-info-title">{text.evidenceInfoTitle}</span><span className="dtx-info-body">{text.evidenceInfoBody}</span></span>
+      </div>
+    </>
+  )
+}
+
+function KnowledgePage({ nodes, selectedId, detail, loading, error, onSelect }: {
+  nodes: NodeView[]
+  selectedId: string | null
+  detail: NodeDetailResponse | null
+  loading: boolean
+  error: string | null
+  onSelect: (id: string) => void
+}): ReactNode {
+  const text = useDesignText()
+  const lang = useLang()
+  const [query, setQuery] = useState('')
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase()
+    return needle === '' ? nodes : nodes.filter((node) => node.title.toLowerCase().includes(needle))
+  }, [nodes, query])
+  return (
+    <div className="dtx-content">
+      <div className="dtx-knowledge">
+        <section className="dtx-card dtx-knowledge-list">
+          <header className="dtx-knowledge-head">
+            <h2>{text.knowledgeTitle(nodes.length)}</h2>
+            <label className="dtx-search">
+              <Icon name="search" size={16} />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={text.searchKnowledge} aria-label={text.searchKnowledge} />
+            </label>
+          </header>
+          <div className="dtx-node-list">
+            {filtered.length === 0 && <p className="dtx-muted dtx-small" style={{ padding: '16px 18px' }}>{text.noNodesYet}</p>}
+            {filtered.map((node) => (
+              <button key={node.id} type="button" className="dtx-node-row" aria-current={node.id === selectedId || undefined} onClick={() => onSelect(node.id)}>
+                <NodeIcon state={node.state} />
+                <span className="dtx-node-main">
+                  <span className="dtx-node-title">{node.title}</span>
+                  <span className="dtx-node-sub">{relationLabel(node.relation, lang)} · {node.evidenceCount}</span>
+                </span>
+                <span className="dtx-pill" data-tone={statePillTone(node.state)}>{nodeStateText(node.state, text)}</span>
+                <span className="dtx-node-chevron"><Icon name="chevron-right" size={16} /></span>
+              </button>
+            ))}
+          </div>
+        </section>
+        <section className="dtx-card dtx-knowledge-detail">
+          <KnowledgeDetail detail={detail} loading={loading} error={error} text={text} lang={lang} />
+        </section>
+      </div>
+    </div>
+  )
+}
+
 /**
- * The map page.
- *
- * @param props - injectable client, pre-supplied overview, session id and the
- *   two navigation actions the panel owns.
- * @returns the map's own main-column page.
+ * The map page shell.
  */
 export function LearningMapPanel({
   client,
@@ -218,14 +267,11 @@ export function LearningMapPanel({
   sessionActivity,
   pathClient,
 }: LearningMapPanelProps): ReactNode {
-  const text = useMapText()
-  const lang = useLang()
-  const [page, setPage] = useState<'curriculum' | 'knowledge'>('curriculum')
+  const text = useDesignText()
+  const [page, setPage] = useState<MapView>('curriculum')
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview, onOpenSession })
   const { overview, focus, detail, selectedId, note, error, loading, library } = state
 
-  // Pick something on arrival, so the right column is a record rather than an
-  // empty placeholder. Same rule as the other surfaces: the focused node first.
   const arrival = selectedId
   const select = state.select
   useEffect(() => {
@@ -234,13 +280,6 @@ export function LearningMapPanel({
     if (first !== undefined) select(focus?.nodeId ?? first)
   }, [arrival, select, overview, focus])
 
-  /**
-   * Enter the project's current lesson.
-   *
-   * If the project's lesson was started in another conversation, switch there
-   * instead of opening an empty current-lesson tab here. The stored session is
-   * resolved read-only; falling back to this conversation is the old behaviour.
-   */
   const enterCurrentLesson = (): void => {
     const courseId = overview?.course?.id
     const resolve = (client ?? defaultClient).resolveProjectSession
@@ -249,9 +288,7 @@ export function LearningMapPanel({
         try {
           const resolved = await resolve(courseId, sessionId)
           if (resolved.sessionId !== null && resolved.sessionId !== sessionId && onOpenSession(resolved.sessionId)) return
-        } catch {
-          // Unresolvable (or an older host): stay in this conversation.
-        }
+        } catch { /* stay here */ }
         onOpenLesson?.()
       })()
       return
@@ -261,51 +298,15 @@ export function LearningMapPanel({
 
   if (overview?.course == null) {
     return (
-      <div className="dt-root-wrap">
-        <header className="dt-bar">
-          <div className="dt-bar-id">
-            <span className="dt-bar-name">{text.pageTitle}</span>
-            <span className="dt-bar-sep" aria-hidden="true">
-              ·
-            </span>
-            <span className="dt-bar-note">{text.noProject}</span>
-          </div>
-          <div className="dt-bar-actions">
-            <LanguageToggle />
-          </div>
+      <div className="dtx-map">
+        <header className="dtx-topbar">
+          <div className="dtx-topbar-title"><span className="dtx-topbar-page">{text.pageTitle}</span></div>
+          <div className="dtx-topbar-actions"><LanguageToggle /></div>
         </header>
-        <div className="dt-root dt-root-welcome">
-          <div className="dt-welcome">
-            <EmptyArt kind="welcome" />
-            <p className="dt-welcome-eyebrow">{text.pageTitle}</p>
-            <h1 className="dt-welcome-title">{text.welcomeTitle}</h1>
-            <p className="dt-welcome-body">{text.welcomeBody}</p>
-            {library.length > 0 && (
-              <>
-                <p className="dt-section-title">{text.orOpenProject}</p>
-                <ul className="dt-library">
-                  {library.map((project) => (
-                    <li key={project.id}>
-                      <button
-                        type="button"
-                        className="dt-project"
-                        onClick={() => void state.enterProject(project.id)}
-                      >
-                        <span className="dt-project-name">{project.title}</span>
-                        <span className="dt-project-count">
-                          {text.confirmedOf(project.confirmed, project.total)}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-            {onOpenChat !== undefined && (
-              <button type="button" className="dt-primary dt-here-action" onClick={onOpenChat}>
-                {text.goToChat}
-              </button>
-            )}
+        <div className="dtx-scroll">
+          <div className="dtx-content">
+            <LibraryPage library={library} onOpenChat={onOpenChat} onOpen={(id) => void state.enterProject(id)} error={error} />
+            <footer className="dtx-small dtx-muted" style={{ marginTop: 28 }}><DataFooter onExport={state.exportData} onReset={state.resetAll} /></footer>
           </div>
         </div>
       </div>
@@ -313,95 +314,33 @@ export function LearningMapPanel({
   }
 
   const nodes = overview.nodes ?? []
-  const rows = flattenTree(buildMapTree([...nodes]))
-  const focusNode = focus === null ? undefined : nodes.find((node) => node.id === focus.nodeId)
-  const confirmed = nodes.filter((node) => node.state === 'confirmed').length
-
   return (
-    <div className="dt-root-wrap dt-map-root-wrap">
-      <header className="dt-bar">
-        <div className="dt-bar-id">
-          <span className="dt-bar-name">{text.pageTitle}</span>
-          <span className="dt-bar-sep" aria-hidden="true">
-            ·
-          </span>
-          <span className="dt-bar-note">{overview.course.title}</span>
+    <div className="dtx-map">
+      <header className="dtx-topbar">
+        <div className="dtx-topbar-title">
+          <span className="dtx-topbar-page">{text.pageTitle}</span>
+          <span className="dtx-topbar-divider" aria-hidden="true" />
+          <span className="dtx-topbar-project">{overview.course.title}</span>
         </div>
-        <div className="dt-bar-actions">
-          {onOpenLesson !== undefined && (
-            <button type="button" className="dt-bar-back" onClick={enterCurrentLesson}>
-              {text.openLesson}
-            </button>
-          )}
-          {onOpenChat !== undefined && (
-            <button type="button" className="dt-bar-back" onClick={onOpenChat}>
-              {text.backToChat}
-            </button>
-          )}
+        <div className="dtx-topbar-actions">
+          {onOpenChat !== undefined && <button type="button" className="dtx-back" onClick={onOpenChat}><Icon name="arrow-left" size={16} /><span>{text.backToChat}</span></button>}
           <LanguageToggle />
         </div>
       </header>
-      <nav className="dt-path-tabs" aria-label={text.mapViews}>
-        <button type="button" aria-current={page === 'curriculum' ? 'page' : undefined} onClick={() => setPage('curriculum')}>{text.courseRoute}</button>
-        <button type="button" aria-current={page === 'knowledge' ? 'page' : undefined} onClick={() => setPage('knowledge')}>{text.knowledgeEvidence}</button>
+      <nav className="dtx-tabs" aria-label={text.pageTitle}>
+        <button type="button" className="dtx-tabbtn" aria-current={page === 'curriculum' ? 'page' : undefined} onClick={() => setPage('curriculum')}>{text.tabRoute}</button>
+        <button type="button" className="dtx-tabbtn" aria-current={page === 'knowledge' ? 'page' : undefined} onClick={() => setPage('knowledge')}>{text.tabKnowledge}</button>
       </nav>
-      {page === 'curriculum' ? (
-        <PathPage courseId={overview.course.id} title={overview.course.title} nodes={nodes}
-          sessionId={sessionId} client={pathClient} onOpenChat={onOpenChat}
-          onStarted={onOpenLesson ?? onOpenChat} onOpenLesson={onOpenLesson}
-          {...(sessionActivity === undefined ? {} : { sessionActivity })} />
-      ) : <div className="dt-map-root">
-        <section className="dt-map-pane">
-          <header className="dt-course-card dt-map-cover">
-            <p className="dt-eyebrow">{text.diagnosisMap}</p>
-            <h1 className="dt-course-title">{overview.course.title}</h1>
-            <p className="dt-shared">{text.sharedAcrossConversations}</p>
-            <p className="dt-goal">
-              <b>{text.goalLabel}</b> {overview.course.goal}
-            </p>
-          </header>
-
-          <p className="dt-eyebrow dt-eyebrow-here">{text.thisConversation}</p>
-          {focus === null ? (
-            <p className="dt-here-empty">{text.noFocus}</p>
-          ) : (
-            <p className="dt-here-focus">
-              <span className="dt-here-node">{focusNode?.title ?? focus.nodeId}</span>
-              {focusNode !== undefined && (
-                <span className={`dt-tab-state dt-state-${focusNode.state}`}>
-                  {stateLabel(focusNode.state, lang)}
-                </span>
-              )}
-            </p>
-          )}
-
-          <p className="dt-section-title">
-            {text.census(rows.length)} <span>{text.confirmedByEvidence(confirmed)}</span>
-          </p>
-          <StateBar nodes={nodes} />
-          <MapRows
-            nodes={nodes}
-            selectedId={selectedId}
-            focusNodeId={focus?.nodeId ?? null}
-            onSelect={select}
-          />
-          <p className="dt-caption">{text.mapGrowth}</p>
-        </section>
-
-        <aside className="dt-map-detail dt-pane">
-          <MapDetail
-            detail={detail}
-            loading={loading}
-            note={note}
-            error={error}
-            isFocused={focus !== null && focus.nodeId === selectedId}
-            onSelect={select}
-          />
-        </aside>
-      </div>}
-      <footer className="dt-foot">
-        <DataFooter onExport={state.exportData} onReset={state.resetAll} />
-      </footer>
+      <div className="dtx-scroll">
+        {page === 'curriculum'
+          ? <PathPage courseId={overview.course.id} title={overview.course.title} nodes={nodes}
+              sessionId={sessionId} client={pathClient} onOpenChat={onOpenChat}
+              onStarted={enterCurrentLesson} onOpenLesson={onOpenLesson === undefined ? undefined : enterCurrentLesson}
+              onOpenEvidence={() => setPage('knowledge')}
+              {...(sessionActivity === undefined ? {} : { sessionActivity })} />
+          : <KnowledgePage nodes={nodes} selectedId={selectedId} detail={detail} loading={loading} error={error} onSelect={select} />}
+        {page === 'curriculum' && <div className="dtx-content" style={{ paddingTop: 0 }}><footer className="dtx-small dtx-muted"><DataFooter onExport={state.exportData} onReset={state.resetAll} /></footer></div>}
+      </div>
     </div>
   )
 }

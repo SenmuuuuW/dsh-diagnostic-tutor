@@ -114,6 +114,16 @@ export interface ProjectCardView {
   /** Nodes on the map. */
   total: number
   updatedAt: string
+  /**
+   * The library card's learning-path summary.
+   *
+   * `accepted`: a route version is accepted (continue learning).
+   * `active`: a path exists but no route is accepted yet (diagnosis/route work).
+   * `legacy`: only the diagnosis map exists; no learning path.
+   */
+  status?: 'accepted' | 'active' | 'legacy'
+  /** Accepted route version, when there is one. */
+  acceptedVersion?: number | null
 }
 
 /**
