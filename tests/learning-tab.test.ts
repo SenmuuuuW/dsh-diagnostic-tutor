@@ -134,6 +134,20 @@ describe('active lesson', () => {
     expect(container.textContent.toLowerCase()).toContain('answer in the chat')
     expect(container.textContent).toContain('Open learning map')
   })
+  it('folds a long diagram until the learner opens it', async () => {
+    const withDiagram = {
+      ...lesson,
+      blocks: [...lesson.blocks, { id: 'd1', type: 'diagram' as const, content: { format: 'ascii' as const, spec: 'wide ascii diagram', caption: '路线图' } }],
+    }
+    await mount(pathView({ activeAttemptId: 'a1', attempts: [attempt({ units: [{ id: 'u1', writtenAt: NOW, lesson: withDiagram }] })] }))
+    const fold = container.querySelector<HTMLDetailsElement>('.dtx-tab-fold')
+    expect(fold).not.toBeNull()
+    expect(fold?.open).toBe(false)
+    expect(fold?.querySelector('summary')?.textContent).toContain('路线图')
+    await act(async () => { if (fold !== null) fold.open = true })
+    expect(container.textContent).toContain('wide ascii diagram')
+  })
+
   it('shows the waiting state while the tutor has not written a unit', async () => {
     await mount(pathView({ activeAttemptId: 'a1', attempts: [attempt({ units: [] })] }))
     expect(container.textContent).toContain('The tutor is preparing this lesson…')
