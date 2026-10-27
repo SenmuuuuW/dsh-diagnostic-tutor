@@ -12,6 +12,7 @@
  */
 
 export type { Block, BlockType, KnownBlock, LessonRecord, StoredBlock } from './lesson.js'
+export type { TaskView } from './plan.js'
 
 /** One node as the map draws it. */
 export interface NodeView {
@@ -161,6 +162,8 @@ export interface OverviewResponse {
    * for.
    */
   library: ProjectCardView[]
+  /** Learner-owned plan items shown by Today. Optional for older callers. */
+  tasks?: import('./plan.js').TaskView[]
   /**
    * Whether the teaching brain is available to this conversation's live Agent.
    *

@@ -172,6 +172,7 @@ async function visit(storageFile, journalFile) {
       courseRuns: Object.keys(tables.course_runs ?? {}).length,
       sources: Object.keys(tables.sources ?? {}).length,
       sourceBytes: Object.values(tables.sources ?? {}).reduce((sum, source) => sum + (Number(source.bytes) || 0), 0),
+      tasks: Object.keys(tables.tasks ?? {}).length,
     },
     issues,
     projects,

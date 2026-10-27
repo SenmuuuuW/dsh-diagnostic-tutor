@@ -57,6 +57,8 @@ import { LessonSchema } from './lesson.js'
 import type { LessonKey, LessonRecord } from './lesson.js'
 import { SOURCES_TABLE, SourceRecordSchema } from './source-schema.js'
 import type { SourceRecord } from './source-schema.js'
+import { TASKS_TABLE, TaskSchema } from './plan.js'
+import type { TaskRecord } from './plan.js'
 import { HandoffSchema } from './handoff.js'
 import type { HandoffKey, HandoffRecord } from './handoff.js'
 import { focusKey, handoffKey, isLegacyExecutionKey, nextStepKey } from './execution-key.js'
@@ -292,11 +294,13 @@ export interface UdExport {
   readonly courseRuns: readonly CourseRun[]
   /** Learner-supplied source material, with citations pointing into it. */
   readonly sources: readonly SourceRecord[]
+  readonly tasks: readonly TaskRecord[]
 }
 
 export type CourseKey = string
 export type NodeKey = string
 export type SourceKey = string
+export type TaskKey = string
 
 /* -------------------------------------------------------------------------- */
 /* Domain declaration                                                         */
@@ -403,6 +407,7 @@ export const udtDomain = defineDomain({
     learning_paths: domainTable<string, LearningPath>(LearningPathSchema),
     course_runs: domainTable<string, CourseRun>(CourseRunSchema),
     [SOURCES_TABLE]: domainTable<SourceKey, SourceRecord>(SourceRecordSchema),
+    [TASKS_TABLE]: domainTable<TaskKey, TaskRecord>(TaskSchema),
   },
 })
 
@@ -633,6 +638,12 @@ export interface UdState {
   readSource(id: SourceKey): SourceRecord | undefined
   writeSource(record: SourceRecord): Promise<SourceRecord>
 
+  /* plan ------------------------------------------------------------------ */
+  listTasks(): TaskRecord[]
+  readTask(id: TaskKey): TaskRecord | undefined
+  writeTask(record: TaskRecord): Promise<TaskRecord>
+  deleteTask(id: TaskKey): Promise<void>
+
   /** Immutable planning snapshots; writes are validated and revision checked inside one queue. */
   readPath(courseId: string): LearningPath | undefined
   mutatePath(courseId: string, expectedRevision: number, change: (current: LearningPath) => LearningPath): Promise<LearningPath>
@@ -699,6 +710,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
   const paths: KvTable<string, LearningPath> = domain.table('learning_paths')
   const runs: KvTable<string, CourseRun> = domain.table('course_runs')
   const sources: KvTable<SourceKey, SourceRecord> = domain.table(SOURCES_TABLE)
+  const tasks: KvTable<TaskKey, TaskRecord> = domain.table(TASKS_TABLE)
   let planningGeneration = 0
   const runKey = (courseId: string, sessionId: string) => JSON.stringify([sessionId, courseId])
   const learner: DomainGlobal<LearnerProfile> = domain.global
@@ -990,6 +1002,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
         learningPaths: [...paths.entries()].map(([, record]) => structuredClone(record)),
         courseRuns: [...runs.entries()].map(([, record]) => structuredClone(record)),
         sources: [...sources.entries()].map(([, record]) => structuredClone(record)),
+        tasks: [...tasks.entries()].map(([, record]) => structuredClone(record)),
       }
     },
 
@@ -998,7 +1011,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       // and project selections so late writes cannot resurrect deleted plans.
       ++planningGeneration
       await withProjectWrite(async () => {
-        for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs, projects, paths, runs, sources]) {
+        for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs, projects, paths, runs, sources, tasks]) {
           for (const key of [...table.keys()]) await table.delete(key)
         }
         await learner.set({ initializedAt: UNINITIALIZED, updatedAt: now })
@@ -1073,6 +1086,22 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
     async writeSource(record) {
       await sources.put(record.id, record)
       return record
+    },
+
+    listTasks: () => [...tasks.entries()].map(([, record]) => structuredClone(record)),
+
+    readTask: (id) => {
+      const record = tasks.get(id)
+      return record === undefined ? undefined : structuredClone(record)
+    },
+
+    async writeTask(record) {
+      await tasks.put(record.id, record)
+      return record
+    },
+
+    async deleteTask(id) {
+      await tasks.delete(id)
     },
 
     readPath: (courseId) => {

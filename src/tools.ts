@@ -47,6 +47,7 @@ import {
 import type { EvidenceKind, NodeRelation, NodeState, Readiness } from './vocabulary.js'
 import { planningTools } from './path-tools.js'
 import { sourceTools } from './source-tools.js'
+import { planTools } from './plan-tools.js'
 import { activeAttempt } from './path.js'
 import { requireAttempt, writeCourseTeaching } from './path-runtime.js'
 
@@ -1619,6 +1620,7 @@ export function registerTools(host: ToolsHost, state: UdState): number {
   ]
   const planning = planningTools(state)
   const sources = sourceTools(state)
-  for (const tool of [...core, ...planning, ...sources]) host.tools.register(tool)
-  return core.length + planning.length + sources.length
+  const plan = planTools(state)
+  for (const tool of [...core, ...planning, ...sources, ...plan]) host.tools.register(tool)
+  return core.length + planning.length + sources.length + plan.length
 }

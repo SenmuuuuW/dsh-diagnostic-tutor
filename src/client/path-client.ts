@@ -39,6 +39,11 @@ export interface SourceView {
   status: 'ready' | 'error'
   content?: string
 }
+export interface PlanIcs {
+  filename: string
+  text: string
+}
+
 export interface PromptedPathView extends PathView {
   prompted: boolean
   promptReason?: string
@@ -56,6 +61,8 @@ export interface PathClient {
   answer?(params: AnswerBlockParams): Promise<PathView>
   /** Read one stored source for a footnote preview. */
   source?(sourceId: string): Promise<{ ok: true; source: SourceView }>
+  /** Download the open, dated Today plan as an ICS calendar. */
+  exportPlan?(): Promise<PlanIcs>
 }
 
 /** Retain HTTP status so a stale write can refresh without losing form edits. */
@@ -106,6 +113,16 @@ async function requestSource(sourceId: string): Promise<{ ok: true; source: Sour
   } finally { clearTimeout(timeout) }
 }
 
+async function requestPlanIcs(): Promise<PlanIcs> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12_000)
+  try {
+    const response = await fetch(`${API}/plan/ics`, { headers: { accept: 'text/calendar' }, signal: controller.signal })
+    if (!response.ok) throw new PathClientError(`Calendar export failed (HTTP ${response.status}).`, 'calendar_failed', response.status)
+    return { filename: 'dsh-diagnostic-tutor-plan.ics', text: await response.text() }
+  } finally { clearTimeout(timeout) }
+}
+
 export const defaultPathClient: PathClient = {
   get(courseId, sessionId) {
     const query = new URLSearchParams({ courseId })
@@ -120,4 +137,5 @@ export const defaultPathClient: PathClient = {
   pause: (params) => request('/pause', params),
   answer: (params) => request('/answer', params),
   source: requestSource,
+  exportPlan: requestPlanIcs,
 }

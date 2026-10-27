@@ -351,6 +351,11 @@
           handoff: scenario.handoff ?? null,
           teachingBrain: scenario.teachingBrain === undefined ? true : scenario.teachingBrain,
           lessonCount: lessons.size,
+          tasks: [
+            { id: 'preview-task-1', title: 'Read the matrix-shape note from the source', dueAt: '2026-10-28T09:00:00.000Z', estimateMin: 20, status: 'open', createdAt: now },
+            { id: 'preview-task-2', title: 'Try the two observations check', dueAt: '2026-10-28T19:00:00.000Z', estimateMin: 15, status: 'open', createdAt: now },
+            { id: 'preview-task-3', title: 'Review the last unit before tomorrow', status: 'open', createdAt: now },
+          ],
         }),
 
       fetchNode: (nodeId) => {
