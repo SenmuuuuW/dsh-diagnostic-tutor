@@ -130,12 +130,13 @@ see is a *diagnosis map*, not a syllabus.
 
 Stated plainly, because each one is a real edge a user can reach.
 
-**Math is styled, not typeset.** The tutor writes LaTeX by convention — `\(...\)`
-inline, `\[...\]` display — and the runtime sets it apart in a monospace face
-with its own background. It does **not** render it. Real typesetting needs a
-library plus fonts and CSS, and the client bundle is a single JavaScript file
-with nowhere to serve those from. This is the most visible rough edge in any
-STEM lesson.
+**Math is rendered as MathML on the host.** The tutor writes LaTeX by convention
+— `\(...\)` inline, `\[...\]` display — and the host pre-renders it with
+KaTeX's MathML output before storing the block. The browser renders native
+MathML through a tag/attribute whitelist; no font or CSS is fetched. Invalid
+TeX inside a text block falls back to the old styled source; an invalid
+`formula` block is refused at write time. Browser MathML quality varies, and
+this build ships no KaTeX CSS/fonts.
 
 **Skill presence requires a live Agent.** The runtime checks the open
 conversation's Agent scope on each overview, including its workspace. Before an
@@ -359,7 +360,7 @@ route around them:
 
 ### Tools
 
-Six, and none of them decides anything about teaching.
+Thirteen. None of them decides anything about teaching; they record or report.
 
 | Tool | Does |
 | --- | --- |
@@ -367,8 +368,15 @@ Six, and none of them decides anything about teaching.
 | `udt_goal_create` | records a goal and plants only the map root; may also select it for this conversation |
 | `udt_map_get` | reads the selected project's map, or an explicitly named shared course, with each node's relation, state and evidence |
 | `udt_map_update` | `add-nodes` · `set-state` · `add-evidence` |
-| `udt_lesson_update` | writes teaching into the learning surface as blocks |
+| `udt_lesson_update` | writes teaching into the learning surface as blocks; pre-renders math; attaches source citations |
+| `udt_quiz_update` | records a quiz/flashcard submission; never grades and never changes node state |
 | `udt_decide_next` | records where the learner should go next, and why |
+| `udt_path_get` | reads the goal brief, assessment, routes and this conversation's active attempt |
+| `udt_path_update` | saves a brief, assessment or route proposal |
+| `udt_course_run_update` | binds a diagnosed node to an attempt, or completes with evidence |
+| `udt_source_add` | stores pasted text or one explicitly named local `.md`/`.txt` file; deduplicates by SHA-256 |
+| `udt_source_list` | lists source metadata without content |
+| `udt_source_get` | returns one stored source for citation |
 
 The division is the architecture: the tutor decides **what** to teach, when to
 check, and what an answer showed; the runtime decides **what may be stored** and
@@ -566,15 +574,21 @@ keyed by `type`:
 
 | Type | Content |
 | --- | --- |
-| `text` | `md` — markdown, with the skill's `\(...\)` math convention |
+| `text` | `md` — markdown, plus host `math[]` fragments for typeset formulas |
 | `example` | `title`, `steps[]`, `takeaway?` |
 | `diagram` | `format` (`ascii` \| `mermaid`), `spec`, `caption?` |
 | `check` | `prompt`, `expect?`, `hint?` — the stop-and-wait surface |
+| `formula` | `tex`, `display?`, host-rendered `mathml`, `caption?` |
+| `code` | `language?`, `source`, `caption?` — displayed, never executed |
+| `quiz` | `title?`, `questions[]` (`mcq`/`short`); answers are recorded, never graded by the runtime |
+| `flashcard` | `front`, `back`, `tags?`; self-report is recorded, not scheduled as mastery |
+| `resource` | `title`, optional `sourceId`/`locator`/`url`/`note` |
+| `comparison` | `columns[]`, `rows[][]`, `caption?` |
 
-Adding Formula, Code, Comparison, Practice or Resource later means adding one
-registry entry, never rewriting the lesson renderer. An **unknown type renders a
-readable placeholder** rather than throwing, so a lesson authored by a newer
-host still renders here.
+Blocks may also carry `sourceRefs: [{sourceId, locator}]`; every reference is
+checked against the `sources` table at write time. The stored schema accepts an
+**unknown type** from a newer host and the client renders a readable placeholder;
+the current model tool still writes only known types.
 
 ### Browser API
 
@@ -587,6 +601,8 @@ The browser's core calls, at `/diagnostic-tutor/api` (the full route list is in
 | `GET /node?id=` | one node with its evidence, parent and children |
 | `GET /project/session?courseId=` | the conversation that should resume a project (read-only) |
 | `POST /lesson {nodeId}` | the prototype lesson, built once and reused after that |
+| `GET /source?id=` | one stored source and its text, for a citation preview |
+| `POST /path/answer` | record a quiz/flashcard submission on the active attempt |
 
 Every request passes a **trust fence**: a bare `ctx.webServer.register()` route
 inherits no authentication, so the route checks that the request arrived at a
@@ -742,7 +758,7 @@ shows a loader row exists.
 | `v0.1.0` | first stable release, installable from npm |
 | `v0.1.1` | **published** — packaged release with the docked learning surface |
 | `main` (unreleased) | learning-path flow: goal/time brief, evidence-referenced assessment, versioned course routes with per-lesson Overviews, session-scoped attempts and teaching snapshots, English/Simplified-Chinese interface, one page + one lesson surface |
-| next | settings, math typesetting, automatic replan suggestions (the tutor already proposes revisions on request; no runtime auto-replan) |
+| next | settings, citations/RAG, review scheduling, automatic replan suggestions (the tutor already proposes revisions on request; no runtime auto-replan) |
 
 ## Trust
 
@@ -750,7 +766,10 @@ DSH does not sandbox plugin code: an installed plugin runs in-process with your
 privileges, and a bare `ctx.webServer.register()` route inherits no
 authentication. This plugin's commitments:
 
-- reads and writes only its own storage domain;
+- reads and writes only its own storage domain, with one explicit exception:
+  `udt_source_add(path)` reads exactly one regular `.md`/`.markdown`/`.txt` file
+  the caller names, once, then stores its text in that domain. It never scans a
+  directory, follows a symlink, accepts a URL, or fetches anything;
 - serves its browser half only from loopback-fenced routes it checks itself;
 - makes no outbound network requests;
 - writes no files outside the harness's own storage;

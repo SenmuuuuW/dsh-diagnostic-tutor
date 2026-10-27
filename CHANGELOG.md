@@ -5,6 +5,31 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — Phase 1: rich content, math, quiz/flashcard and sources
+
+- **Math**: the host pre-renders `\(...\)` / `\[...\]` (and `formula` blocks)
+  with KaTeX's `output:'mathml'`; the browser renders native MathML through a
+  tag/attribute whitelist. No fonts, CSS or external requests were added.
+  Invalid TeX in text falls back to the old styled source; an invalid formula
+  block is refused at write time.
+- **Blocks**: ten known types now (text, example, diagram, check, formula, code,
+  quiz, flashcard, resource, comparison), with size caps and a 256 KiB unit
+  ceiling. Stored unknown types from a newer host are accepted and the client
+  degrades to a readable placeholder; the current model tool writes known types.
+- **Quiz / flashcard**: `udt_quiz_update` and `POST /path/answer` record the
+  learner's submission in `attempt.responses` and append a neutral `practice`
+  observation. They never grade, never change node state and never advance the
+  lesson. Submissions survive refresh/resume.
+- **Sources**: additive `sources` table and `udt_source_add/list/get`; pasted
+  text and one explicitly named local `.md`/`.txt` file (SHA-256 dedupe, size
+  cap) are stored locally. `block.sourceRefs` are checked against the table at
+  write time; `GET /source` serves the original text through the trust fence.
+- **No-UI fallback**: `udt_lesson_update` includes a Markdown projection of the
+  written blocks so a harness without the panel can still read the content.
+- 620 tests, typecheck, build and 21 browser cases pass. `pnpm doctor` still
+  reports the pre-existing stale AP physics request; no learner data was touched.
+
+
 ### Fixed — pause always offers an immediate continue
 
 Pausing in the lesson tab used to wait for the next 2s poll before the UI knew
