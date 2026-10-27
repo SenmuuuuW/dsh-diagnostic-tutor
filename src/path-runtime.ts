@@ -167,7 +167,7 @@ export async function stampPathRequest(state: UdState, courseId: string, session
   }
 }
 
-export interface BeginItemInput { courseId: string; sessionId: string; expectedRevision: number; version: number; itemId: string; operationId: string; review?: boolean | undefined }
+export interface BeginItemInput { courseId: string; sessionId: string; expectedRevision: number; version: number; itemId: string; operationId: string; review?: boolean | undefined; resume?: boolean | undefined; checkin?: boolean | undefined }
 export async function beginCourseItem(state: UdState, input: BeginItemInput) {
   let shouldPrompt = false
   const now = new Date().toISOString()
@@ -184,13 +184,19 @@ export async function beginCourseItem(state: UdState, input: BeginItemInput) {
     if (!plan?.items.some((item) => item.id === input.itemId)) throw new Error('no-such-course-item')
     linkedNodes(state, input.courseId, plan)
     const current = activeAttempt(run)
-    const continuing = current && current.version === input.version && current.itemId === input.itemId && ['requested', 'working'].includes(current.status) && !input.review
+    const continuing = current && current.version === input.version && current.itemId === input.itemId && ['requested', 'working', 'interrupted'].includes(current.status) && !input.review
     if (continuing) {
-      if (current.prompted || (current.dispatchId && Date.parse(now) - Date.parse(current.updatedAt) < 30000)) {
+      const paused = current.status === 'interrupted'
+      // A double click while a prompt is in flight is not a new teaching turn.
+      // A deliberate resume may come much later: if the learner left the
+      // conversation and came back, `prompted` is already true forever, so it
+      // must not block the follow-up. The short cooldown only absorbs repeats.
+      const cooling = !paused && (current.dispatchId !== null || current.prompted) && Date.parse(now) - Date.parse(current.updatedAt) < 3000
+      if (cooling) {
         return { ...run, attempts: run.attempts.map((attempt) => attempt.id === current.id ? { ...attempt, operations: [...attempt.operations, input.operationId] } : attempt) }
       }
       shouldPrompt = true
-      return { ...run, attempts: run.attempts.map((attempt) => attempt.id === current.id ? { ...attempt, operations: [...attempt.operations, input.operationId], dispatchId: input.operationId, promptReason: null, updatedAt: now } : attempt), updatedAt: now }
+      return { ...run, activeAttemptId: current.id, attempts: run.attempts.map((attempt) => attempt.id === current.id ? { ...attempt, status: 'working', operations: [...attempt.operations, input.operationId], dispatchId: input.operationId, promptReason: null, updatedAt: now } : attempt), updatedAt: now }
     }
     if (path.acceptedVersion !== input.version || !plan.acceptedAt) throw new Error('accept-the-current-route-before-starting')
     if (!briefReady(path.brief) || plan.briefRevision !== path.briefRevision || plan.assessmentRevision !== path.assessmentRevision) throw new Error('stale-curriculum: review a plan for the updated goal first')
@@ -202,8 +208,57 @@ export async function beginCourseItem(state: UdState, input: BeginItemInput) {
   const path = state.readPath(input.courseId)!
   const route = path.curricula.find((entry) => entry.version === attempt.version)!
   const item = route.items.find((entry) => entry.id === attempt.itemId)!
-  const prompt = `Let's start ${item.title}, lesson ${route.items.indexOf(item) + 1} of ${route.items.length} in ${route.title}.\nCourse context: courseId=${input.courseId}, version=${attempt.version}, itemId=${attempt.itemId}, attemptId=${attempt.id}.\nMy goal and budget: ${briefContext(path.brief)}\nLesson Overview: ${JSON.stringify(item)}\nRead udt_path_get. Diagnose relevant knowledge before teaching; reuse a diagnosed node or add a justified node with udt_map_update, never plant the course outline in the diagnosis graph. Explicitly bind the chosen node using udt_course_run_update(action=bind-node, attemptId=${attempt.id}), then write teaching with udt_lesson_update(attemptId=${attempt.id}). Teach one unit and end with a check I answer in the chat. Update actual evidence after my response. Finish a course item only using udt_course_run_update(action=complete, attemptId=${attempt.id}) with check/transfer evidence and a reason. After completion, compare that evidence with remaining prerequisites, outcomes and time budget; if it materially changes the route, reread udt_path_get and propose a revised draft with a concrete changeReason. Do not create a redundant revision when the route still fits. Explain the suggestion; the learner must accept any proposal. Completion is not mastery and never auto-starts another lesson.`
+  const prompt = input.checkin === true
+    ? checkinPrompt(input, path, route, item, attempt)
+    : (attempt.units.length > 0 || attempt.status === 'interrupted' || input.resume === true)
+      ? resumePrompt(input, path, route, item, attempt)
+      : startPrompt(input, path, route, item, attempt)
   return { run, attempt, shouldPrompt, prompt }
+}
+
+function lastUnitCheck(attempt: CourseAttempt): string | null {
+  const unit = attempt.units.at(-1)
+  if (unit === undefined) return null
+  const check = [...unit.lesson.blocks].reverse().find((block) => block.type === 'check')
+  return check?.type === 'check' ? check.content.prompt : null
+}
+
+function lessonLine(input: BeginItemInput, route: Curriculum, item: Curriculum['items'][number]): string {
+  return `${item.title}, lesson ${route.items.indexOf(item) + 1} of ${route.items.length} in ${route.title}.\nCourse context: courseId=${input.courseId}, version=${route.version}, itemId=${item.id}.`
+}
+
+/** The first turn: make the chat the classroom, not a request to read the tab. */
+function startPrompt(input: BeginItemInput, path: LearningPath, route: Curriculum, item: Curriculum['items'][number], attempt: CourseAttempt): string {
+  return `Let's start ${lessonLine(input, route, item)}\nMy goal and budget: ${briefContext(path.brief)}\nLesson Overview: ${JSON.stringify(item)}\n\nYou lead this lesson in the conversation. In the lesson tab, write only a reference snapshot of the unit you just taught; the tab is not the lecture.\n\nFirst turn:\n1. In the chat, say in one or two sentences what I will be able to do by the end of this lesson.\n2. Teach ONE small unit: a short explanation and one concrete example.\n3. Then stop and ask me ONE check question (use ask_user_question when the answer fits a short card), and wait for my answer. Never dump the whole lesson in one turn.\n\nRead udt_path_get. Diagnose relevant knowledge before teaching; reuse a diagnosed node or add a justified node with udt_map_update, never plant the course outline in the diagnosis graph. Explicitly bind the chosen node using udt_course_run_update(action=bind-node, attemptId=${attempt.id}), then write the same small unit with udt_lesson_update(attemptId=${attempt.id}) including its check block. Update actual evidence after my response. Finish a course item only using udt_course_run_update(action=complete, attemptId=${attempt.id}) with check/transfer evidence and a reason. After completion, compare that evidence with remaining prerequisites, outcomes and time budget; if it materially changes the route, reread udt_path_get and propose a revised draft with a concrete changeReason. Do not create a redundant revision when the route still fits. Explain the suggestion; the learner must accept any proposal. Completion is not mastery and never auto-starts another lesson.`
+}
+
+/** Returning after a break: reconnect through the conversation, not by restarting. */
+function resumePrompt(input: BeginItemInput, path: LearningPath, route: Curriculum, item: Curriculum['items'][number], attempt: CourseAttempt): string {
+  const last = attempt.units.at(-1)
+  const lastTitle = last?.lesson.title ?? item.title
+  const check = lastUnitCheck(attempt)
+  return `Let's continue ${lessonLine(input, route, item)}\nThis is a resume, not a restart. Attempt id: ${attempt.id}. Already written units: ${attempt.units.length}. Last unit: "${lastTitle}".${check === null ? '' : ` Last check I was asked: "${check}".`}\nMy goal and budget: ${briefContext(path.brief)}\n\nRead udt_path_get and the conversation history. Do this in the conversation:\n1. In one sentence, say where we stopped, using the context you already have.\n2. Ask me ONE short check-in question about the last unit (prefer ask_user_question). If I already answered that check in this conversation, acknowledge it briefly and ask whether to continue instead.\n3. Wait for my answer. Do not write a new unit, do not repeat old teaching, and do not restart this lesson until I answer.\n\nWhen I answer, append the next small unit with udt_lesson_update(attemptId=${attempt.id}); never replace or rewrite earlier units. Keep teaching one small unit at a time in the chat, ending with one check, and use the lesson tab only as the reference snapshot.`
+}
+
+/** A deliberate pause-and-check before continuing. */
+function checkinPrompt(input: BeginItemInput, path: LearningPath, route: Curriculum, item: Curriculum['items'][number], attempt: CourseAttempt): string {
+  const check = lastUnitCheck(attempt)
+  return `Let's check in on ${lessonLine(input, route, item)}\nAttempt id: ${attempt.id}. Written units: ${attempt.units.length}.${check === null ? '' : ` Last check I was asked: "${check}".`}\n\nPause new teaching. Read udt_path_get and the conversation history. Ask me ONE short check-in question about the current unit (prefer ask_user_question), then wait for my answer. Do not write a new unit and do not continue with new material until I answer.`
+}
+
+export interface PauseItemInput { courseId: string; sessionId: string; expectedRevision: number }
+/** Mark the current attempt paused without ending it. `interrupted` is the existing attempt state. */
+export async function pauseCourseItem(state: UdState, input: PauseItemInput): Promise<PathView> {
+  selectedProject(state, input.courseId, input.sessionId)
+  const path = state.readPath(input.courseId)
+  if (path === undefined || path.revision !== input.expectedRevision) throw new Error('revision-conflict: refresh the learning path')
+  const now = new Date().toISOString()
+  await state.mutateCourseRun(input.courseId, input.sessionId, (run) => {
+    const current = activeAttempt(run)
+    if (current === undefined || !['requested', 'working'].includes(current.status)) throw new Error('no-active-lesson: there is no lesson to pause')
+    return { ...run, attempts: run.attempts.map((attempt) => attempt.id === current.id ? { ...attempt, status: 'interrupted', dispatchId: null, updatedAt: now } : attempt), updatedAt: now }
+  })
+  return pathView(state, input.courseId, input.sessionId)
 }
 export async function stampCoursePrompt(state: UdState, input: BeginItemInput, attemptId: string, prompted: boolean, reason?: string) {
   if (!state.readCourse(input.courseId) || state.resolveProject(input.sessionId).course?.id !== input.courseId) return

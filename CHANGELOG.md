@@ -5,6 +5,31 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — the tutor leads, resumes and pauses
+
+The lesson loop was still a reading surface: continuing after a break opened the
+same tab and never brought the tutor back. The loop now reconnects through the
+conversation:
+
+- **Start**: the prompt makes the chat the classroom — one sentence on the
+  outcome, one small unit, one concrete example, one check question, then wait.
+  The lesson tab is only the reference snapshot.
+- **Resume**: clicking continue after a break (or after an app restart) wakes
+  the tutor with the current lesson, attempt, units already written and the last
+  check. It must say where we stopped, ask one check-in question and wait; it
+  may not restart or rewrite earlier units.
+- A short cooldown absorbs double clicks, while a deliberate return after a few
+  seconds still prompts.
+- **Pause**: new `POST /diagnostic-tutor/api/path/pause`, plus route-card and
+  tab actions: *let the tutor continue*, *check in with me*, *pause*, *back to
+  chat*. A paused attempt shows its status and resumes with the same attempt.
+- The route card and tab show how many units were taught and the last unit
+  title, so returning learners get context before the tutor speaks.
+- New API route count: 19.
+
+582 tests, typecheck and 21 browser cases pass.
+
+
 ### Fixed — the stage strip is no longer covered by the rail
 
 At roughly 1024px the four-stage strip was wider than the main column, so its

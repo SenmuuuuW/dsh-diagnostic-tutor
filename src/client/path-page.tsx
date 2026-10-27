@@ -34,7 +34,7 @@ type GoalDraft = {
   targetDate: string; durationWeeks: string; weeklyMinutes: string; sessionMinutes: string; preferences: string
 }
 type PromptIssue = { kind: 'diagnosis' | 'plan'; message: string } | {
-  kind: 'start'; message: string; version: number; itemId: string; review: boolean
+  kind: 'start'; message: string; version: number; itemId: string; review: boolean; resume?: boolean; checkin?: boolean
 }
 
 const WEEKLY_OPTIONS = [
@@ -634,10 +634,20 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
       else setNotice(pathText.requestSent(kind))
     })
   }
-  const start = (version: number, itemId: string, review: boolean) => {
-    void mutate('start', (params) => client.start({ ...params, version, itemId, operationId: operationId(), ...(review ? { review: true } : {}) }), (result) => {
+  const start = (version: number, itemId: string, review: boolean, intent?: 'resume' | 'checkin') => {
+    void mutate('start', (params) => client.start({
+      ...params, version, itemId, operationId: operationId(),
+      ...(review ? { review: true } : {}),
+      ...(intent === 'resume' ? { resume: true } : {}),
+      ...(intent === 'checkin' ? { resume: true, checkin: true } : {}),
+    }), (result) => {
       const response = result as PromptedPathView
-      if (!response.prompted) setPromptIssue({ kind: 'start', version, itemId, review, message: response.promptReason ?? pathText.tutorUnreachable })
+      if (!response.prompted) setPromptIssue({
+        kind: 'start', version, itemId, review,
+        ...(intent === 'resume' ? { resume: true } : {}),
+        ...(intent === 'checkin' ? { resume: true, checkin: true } : {}),
+        message: response.promptReason ?? pathText.tutorUnreachable,
+      })
       else { setNotice(pathText.lessonRequested); onStarted?.() }
     })
   }
@@ -697,7 +707,15 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
   const retryPlan = () => ask('plan')
   const retryStart = () => {
     if (activeAttempt === undefined) return
-    start(activeAttempt.version, activeAttempt.itemId, false)
+    start(activeAttempt.version, activeAttempt.itemId, false, 'resume')
+  }
+  const resumeActive = (checkin = false) => {
+    if (activeAttempt === undefined) return
+    start(activeAttempt.version, activeAttempt.itemId, false, checkin ? 'checkin' : 'resume')
+  }
+  const pauseActive = () => {
+    if (activeAttempt === undefined || client.pause === undefined) return
+    void mutate('pause', (params) => client.pause!(params), () => setNotice(text.lessonPausedNotice))
   }
   const errorAdvice = (raw: string): string => {
     const kind = classifyTutorError(raw)
@@ -769,8 +787,20 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
         primary={onOpenEvidence === undefined ? undefined : { label: text.viewEvidence, run: onOpenEvidence }}
         secondary={onOpenChat === undefined ? undefined : { label: text.backToChat, run: onOpenChat }} />
     } else if (activeAttempt !== undefined && activeItem !== null) {
-      nextCard = <NextCard title={activeItem.title} body={`${text.currentLesson} · ${text.lessonStatusCurrent}`}
-        primary={{ label: text.continueLesson, run: onOpenLesson ?? onOpenChat ?? (() => {}) }} />
+      const paused = activeAttempt.status === 'interrupted'
+      const lastUnit = activeAttempt.units.at(-1)?.lesson.title
+      const contextLine = [
+        text.currentLesson,
+        paused ? text.lessonPaused : text.lessonStatusCurrent,
+        text.unitsWritten(activeAttempt.units.length),
+        ...(lastUnit === undefined ? [] : [text.lastTaught(lastUnit)]),
+      ].join(' · ')
+      nextCard = <NextCard title={activeItem.title} body={contextLine}
+        primary={{ label: paused ? text.resumeLesson : text.continueLesson, run: () => resumeActive(false), disabled: busyAction || readOnly }}
+        secondary={!paused && client.pause !== undefined
+          ? { label: text.pauseLesson, run: pauseActive, disabled: busyAction || readOnly }
+          : undefined}
+        tertiary={paused ? undefined : { label: text.checkIn, run: () => resumeActive(true), disabled: busyAction || readOnly }} />
     } else if (activePlan !== null && nextLesson !== null) {
       nextCard = <NextCard title={nextLesson.title} body={doneItems.length === 0 ? text.startFirstBody : text.sessionProgress(doneItems.length, activePlan.items.length)}
         primary={{ label: doneItems.length === 0 ? text.startLesson : text.startNextLesson, run: () => start(activePlan.version, nextLesson.id, false), disabled: busyAction || readOnly }} />
@@ -821,7 +851,7 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
       {error !== '' && <p className="dtx-alert" role="alert">{error}</p>}
       {pollError !== '' && <p className="dtx-alert" role="status">{view === null ? pathText.couldNotLoadPath : pathText.updatesPaused}{pollError} <button type="button" className="dtx-link" onClick={() => { void refresh() }}>{pathText.retryLoading}</button></p>}
       {notice !== '' && <p className="dtx-status" role="status">{notice}</p>}
-      {promptIssue !== null && <p className="dtx-alert" role="alert">{promptIssue.message} <button type="button" className="dtx-link" disabled={busyAction || readOnly} onClick={() => { if (promptIssue.kind === 'start') start(promptIssue.version, promptIssue.itemId, promptIssue.review); else ask(promptIssue.kind) }}>{pathText.retryTutorRequest}</button></p>}
+      {promptIssue !== null && <p className="dtx-alert" role="alert">{promptIssue.message} <button type="button" className="dtx-link" disabled={busyAction || readOnly} onClick={() => { if (promptIssue.kind === 'start') start(promptIssue.version, promptIssue.itemId, promptIssue.review, promptIssue.checkin === true ? 'checkin' : promptIssue.resume === true ? 'resume' : undefined); else ask(promptIssue.kind) }}>{pathText.retryTutorRequest}</button></p>}
       {view === null
         ? pollError === '' && <p className="dtx-status" role="status">{pathText.loadingPath}</p>
         : <div className="dtx-route">

@@ -336,6 +336,11 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-tab .dt-check-hint { margin:0; padding:9px 0 0; border-top:1px dashed #bbf7d0; background:transparent; color:#15803d; }
 .dtx-tab .dt-rail-progress { display:none; }
 
+.dtx-tab-teachhint { margin:8px 0 0; color:var(--dt-muted,#6b7280); font-size:12px; }
+.dtx-tab-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.dtx-tab-actions .dtx-primary, .dtx-tab-actions .dtx-secondary { min-height:36px; padding:0 12px; font-size:12.5px !important; }
+.dtx-tab-notice { margin:8px 0 0; padding:8px 10px; border-radius:8px; background:#fffbeb; border:1px solid #fde68a; color:#92400e; font-size:12px; }
+
 /* the lesson is a reading surface: cap line length when the tab is wide */
 .dtx-tab-inner { width:100%; max-width:720px; margin:0 auto; }
 .dtx-tab .dt-md-table-wrap { margin:12px 0 14px; overflow-x:auto; border:1px solid var(--dt-border,#e8eaee); border-radius:10px; }

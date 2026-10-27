@@ -7,7 +7,7 @@
  * narrow and only renders the lesson itself.
  */
 
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import type { CourseAttempt, Curriculum, CurriculumItem } from '../path.js'
 import { LessonBody } from './blocks.jsx'
@@ -33,6 +33,8 @@ export interface LearningTabProps {
   initialOverview?: OverviewResponse | undefined
   onOpenMapPage?: (() => void) | undefined
   onOpenSession?: ((sessionId: string) => boolean) | undefined
+  /** Return to the conversation, where the tutor actually teaches. */
+  onOpenChat?: (() => void) | undefined
 }
 
 function duration(value: number, lang: 'en' | 'zh'): string {
@@ -72,6 +74,7 @@ export function LearningTab({
   initialOverview,
   onOpenMapPage,
   onOpenSession,
+  onOpenChat,
 }: LearningTabProps): ReactNode {
   const text = useDesignText()
   const lang = useLang()
@@ -97,6 +100,35 @@ export function LearningTab({
     return [...latest.values()]
   }, [attempt])
   const done = view === null ? 0 : new Set((view.run?.attempts ?? []).filter((entry) => entry.status === 'completed' && entry.version === (attempt?.version ?? view.path.acceptedVersion)).map((entry) => entry.itemId)).size
+  const pathClient = (client ?? defaultClient).pathClient
+  const [busy, setBusy] = useState(false)
+  const [notice, setNotice] = useState('')
+  const operationId = () => typeof globalThis.crypto?.randomUUID === 'function' ? globalThis.crypto.randomUUID() : `tab-${Date.now().toString(36)}`
+  const nudge = async (kind: 'continue' | 'checkin') => {
+    if (pathClient === undefined || view === null || attempt === undefined || courseId === undefined || activeSession === undefined) return
+    setBusy(true); setNotice('')
+    try {
+      const result = await pathClient.start({
+        sessionId: activeSession, courseId, expectedRevision: view.path.revision,
+        version: attempt.version, itemId: attempt.itemId, operationId: operationId(),
+        resume: true, ...(kind === 'checkin' ? { checkin: true } : {}),
+      })
+      if (!result.prompted) setNotice(result.promptReason ?? text.tabTutorUnreachable)
+      else onOpenChat?.()
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : text.tabTutorUnreachable)
+    } finally { setBusy(false) }
+  }
+  const pause = async () => {
+    if (pathClient?.pause === undefined || view === null || courseId === undefined || activeSession === undefined) return
+    setBusy(true); setNotice('')
+    try {
+      await pathClient.pause({ sessionId: activeSession, courseId, expectedRevision: view.path.revision })
+      setNotice(text.lessonPausedNotice)
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : text.tabPauseFailed)
+    } finally { setBusy(false) }
+  }
 
   if (courseId === undefined) {
     return <EmptyTab title={text.tabEmptyTitle} body={text.tabEmptyBody} action={onOpenMapPage === undefined ? undefined : { label: text.openLearningMap, run: onOpenMapPage }} />
@@ -118,8 +150,19 @@ export function LearningTab({
       <div className="dtx-tab-pills">
         <span className="dtx-pill" data-tone={tone}>{status}</span>
         <span className="dtx-pill" data-tone="gray">{text.routeLabel(route.version)}</span>
+        <span className="dtx-pill" data-tone="gray">{text.unitsWritten(attempt.units.length)}</span>
       </div>
+      <p className="dtx-tab-teachhint">{text.teacherLeads} {text.teacherLeadsHint}</p>
       <div className="dtx-tab-progress"><span>{text.sessionProgress(done, route.items.length)}</span><span>{text.routeLabel(route.version)}</span></div>
+      <div className="dtx-tab-actions">
+        <button type="button" className="dtx-primary" disabled={busy || (attempt.status === 'completed')} onClick={() => void nudge('continue')}>
+          {attempt.status === 'interrupted' ? text.resumeLesson : text.resumeTeaching}
+        </button>
+        <button type="button" className="dtx-secondary" disabled={busy || attempt.status === 'completed'} onClick={() => void nudge('checkin')}>{text.checkIn}</button>
+        {attempt.status !== 'completed' && pathClient?.pause !== undefined && <button type="button" className="dtx-link" disabled={busy} onClick={() => void pause()}>{text.pauseLesson}</button>}
+        {onOpenChat !== undefined && <button type="button" className="dtx-link" onClick={onOpenChat}>{text.backToChat}</button>}
+      </div>
+      {notice !== '' && <p className="dtx-tab-notice">{notice}</p>}
       <div className="dtx-tab-divider" />
       {units.length === 0
         ? <div className="dtx-tab-empty" style={{ minHeight: 260 }}>
