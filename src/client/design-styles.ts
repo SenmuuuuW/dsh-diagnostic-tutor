@@ -69,7 +69,8 @@ export const DESIGN_CSS = `
 .dtx-project-action:hover { background:#e0e7ff; }
 
 /* ---------- stage bar ---------- */
-.dtx-stagebar { display:flex; align-items:center; gap:13px; padding:12px 16px; background:var(--dt-bg,#fff); border:1px solid var(--dt-border,#e8eaee); border-radius:12px; }
+.dtx-stagebar { display:flex; align-items:center; gap:8px; padding:11px 14px; min-width:0; overflow-x:auto; scrollbar-width:none; background:var(--dt-bg,#fff); border:1px solid var(--dt-border,#e8eaee); border-radius:12px; }
+.dtx-stagebar::-webkit-scrollbar { display:none; }
 .dtx-stage { display:flex; align-items:center; gap:10px; min-width:0; }
 .dtx-stage-num { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:50%; flex:none; border:1px solid #d3d8e0; background:#f3f4f6; color:#6b7280; font-size:12.5px; font-weight:700; }
 .dtx-stage-label { font-size:13.5px; font-weight:500; color:#9aa1ac; white-space:nowrap; }
@@ -201,7 +202,7 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-lesson-top { display:flex; align-items:baseline; gap:8px; }
 .dtx-lesson-code { color:var(--dt-muted,#6b7280); font-size:11.5px; font-variant-numeric:tabular-nums; }
 .dtx-lesson-title { font-size:13px; font-weight:700; color:var(--dt-text,#1c1f23); }
-.dtx-lesson-minutes { margin-left:auto; color:var(--dt-muted,#6b7280); font-size:11.5px; white-space:nowrap; }
+.dtx-lesson-minutes { margin-left:auto; flex:none; color:var(--dt-muted,#6b7280); font-size:11.5px; white-space:nowrap; }
 .dtx-lesson-topics { margin-top:3px; color:var(--dt-muted,#6b7280); font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 /* ---------- rail ---------- */
@@ -320,6 +321,12 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-next[data-layout=stack] .dtx-next-copy { display:flex; flex-direction:column; }
 .dtx-next[data-layout=stack] .dtx-next-body { margin-bottom:2px; }
 
+/* a long ASCII diagram is reference material: keep the lesson short, expand on demand */
+.dtx-tab-fold { margin:12px 0; padding:10px 13px; border:1px solid var(--dt-border,#e8eaee); border-radius:10px; background:var(--dt-surface,#f7f8fa); }
+.dtx-tab-fold summary { cursor:pointer; color:var(--dt-brand-ink,#3155f5); font-size:12.5px; font-weight:600; }
+.dtx-tab-fold[open] summary { margin-bottom:8px; }
+.dtx-tab-fold .dt-block { margin:4px 0 0; }
+
 /* override the legacy check-block chrome inside the new tab */
 .dtx-tab .dt-check-head { background:transparent; color:#15803d; padding:0; }
 .dtx-tab .dt-check-tag { color:#15803d; font-size:11px; letter-spacing:.04em; }
@@ -373,13 +380,13 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-evidence-title, .dtx-evidence-note, .dtx-rail-item-title, .dtx-rail-item-desc,
 .dtx-module-title, .dtx-module-desc { display:block; }
 .dtx-stagebar .dtx-stage { flex:0 0 auto; }
-.dtx-stagebar .dtx-stage-line { flex:1 1 30px; min-width:20px; height:1px; background:#d8dce3; }
+.dtx-stagebar .dtx-stage-line { flex:1 1 18px; min-width:14px; height:1px; background:#d8dce3; }
 .dtx-next[data-kind=complete] .dtx-next-copy { display:flex; flex-direction:column; }
 
 
 .dtx-main, .dtx-route-card, .dtx-module, .dtx-lesson, .dtx-next, .dtx-card, .dtx-rail-card { min-width:0; }
-.dtx-lesson-top { flex-wrap:wrap; gap:4px 8px; }
-.dtx-lesson-title { overflow-wrap:anywhere; }
+.dtx-lesson-top { flex-wrap:nowrap; gap:6px; align-items:baseline; }
+.dtx-lesson-title { flex:1 1 auto; min-width:0; overflow-wrap:anywhere; }
 .dtx-module-head, .dtx-route-head { flex-wrap:wrap; }
 .dtx-module-meta { text-align:right; }
 .dtx-route-meta { flex-wrap:wrap; }
@@ -397,6 +404,11 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 
 /* ---------- responsive ---------- */
 @media (max-width:1120px) {
+  .dtx-stagebar { gap:6px; padding:10px 12px; }
+  .dtx-stage { gap:7px; }
+  .dtx-stage-num { width:26px; height:26px; font-size:11.5px; }
+  .dtx-stage-label { font-size:12.5px; }
+  .dtx-stagebar .dtx-stage-line { min-width:10px; }
   .dtx-rail { flex-basis:300px; width:300px; }
   .dtx-topbar, .dtx-tabs, .dtx-content { padding-left:22px; padding-right:22px; }
   .dtx-knowledge-list { flex-basis:400px; }
@@ -426,10 +438,11 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
   .dtx-topbar-divider { display:none; }
   .dtx-topbar-project { font-size:13.5px; }
   .dtx-back span { display:none; }
-  .dtx-stagebar { padding:12px; gap:6px; overflow:auto; }
-  .dtx-stage-label { font-size:11.5px; }
-  .dtx-stage-num { width:26px; height:26px; font-size:11.5px; }
-  .dtx-stage-line { min-width:10px; }
+  .dtx-stagebar { display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; overflow:visible; padding:10px 12px; }
+  .dtx-stage { min-width:0; }
+  .dtx-stage-label { font-size:11.5px; white-space:normal; }
+  .dtx-stage-num { width:24px; height:24px; font-size:11px; }
+  .dtx-stage-line { display:none; }
   .dtx-hero { padding:20px; }
   .dtx-hero h1 { font-size:22px; }
   .dtx-project-row { flex-wrap:wrap; gap:12px; }
@@ -439,7 +452,6 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
   .dtx-more-grid { grid-template-columns:1fr; }
   .dtx-lesson-topics { white-space:normal; }
   .dtx-lessons { grid-template-columns:1fr; }
-  .dtx-stagebar { scrollbar-width:none; }
   .dtx-next h2, .dtx-rail-title, .dtx-detail-head h2 { overflow-wrap:anywhere; }
 }
 `

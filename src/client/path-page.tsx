@@ -152,7 +152,6 @@ function StageBar({ stage, text }: { stage: 'goal' | 'diagnosis' | 'route' | 'le
             <div className="dtx-stage" data-state={state}>
               <span className="dtx-stage-num">{state === 'done' ? <Icon name="check" size={15} /> : position + 1}</span>
               <span className="dtx-stage-label">{label}</span>
-              {state === 'done' && <span className="dtx-stage-check"><Icon name="check" size={15} /></span>}
             </div>
             {position < text.stages.length - 1 && <span className="dtx-stage-line" />}
           </Fragment>

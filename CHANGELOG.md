@@ -5,6 +5,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed — the stage strip is no longer covered by the rail
+
+At roughly 1024px the four-stage strip was wider than the main column, so its
+last stage slid under the sticky **Current lesson** rail. The strip now
+compresses at medium widths, scrolls invisibly if it still cannot fit, and
+becomes a two-column grid on narrow screens. The redundant tick after each
+completed label is gone.
+
+### Changed — long diagrams fold
+
+A diagram in a lesson is now a compact **Diagram · caption** disclosure instead
+of a wall of ASCII by default; the learner opens it when needed. Lesson-card
+titles keep the duration on the first line instead of letting it drop below the
+title.
+
+579 tests, typecheck and 21 browser cases pass.
+
+
 ### Changed — a layout and reading pass on the learning surfaces
 
 A real-data screenshot pass found the remaining problems: pipe tables were

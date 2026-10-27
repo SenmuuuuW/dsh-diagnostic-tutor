@@ -132,7 +132,12 @@ export function LearningTab({
             <h3 className="dtx-tab-section"><span className="dtx-section-icon"><Icon name="book" size={16} /></span>{text.lessonContents}</h3>
             {units.map((unit) => <article key={unit.lesson.nodeId}>
               {units.length > 1 && <h3 className="dtx-tab-section">{unit.lesson.title}</h3>}
-              <LessonBody blocks={unit.lesson.blocks} />
+              {unit.lesson.blocks.map((block) => block.type === 'diagram'
+                ? <details className="dtx-tab-fold" key={block.id}>
+                    <summary>{text.lessonDiagram}{block.content.caption !== undefined ? ` · ${block.content.caption}` : ''}</summary>
+                    <LessonBody blocks={[block]} />
+                  </details>
+                : <LessonBody key={block.id} blocks={[block]} />)}
             </article>)}
           </>}
       {attempt.outcome !== null && <div className="dtx-tab-outcome"><b>{text.outcomeLabel}</b>{attempt.outcome}</div>}
