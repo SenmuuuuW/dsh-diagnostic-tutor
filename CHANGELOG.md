@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed — pause always offers an immediate continue
+
+Pausing in the lesson tab used to wait for the next 2s poll before the UI knew
+the attempt was interrupted, so for a moment there was no visible way back.
+The tab now flips to **Paused** locally as soon as the pause request succeeds,
+hides the teaching actions, and shows **Continue this lesson** immediately; the
+next poll reconciles with the server. Resuming keeps the same attempt.
+
+
 ### Added — teach-back: the learner explains it back
 
 The first step of the teach-back loop is live. From the lesson tab the learner

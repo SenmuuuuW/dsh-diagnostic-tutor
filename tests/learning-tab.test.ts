@@ -156,6 +156,9 @@ describe('active lesson', () => {
     expect(start.mock.calls.at(-1)![0]).toMatchObject({ resume: true, teachBack: true })
     await act(async () => { button('Pause this lesson').click(); await Promise.resolve() })
     expect(pause).toHaveBeenCalledTimes(1)
+    // No waiting for the 2s poll: the paused state and the resume action are immediate.
+    await act(async () => { button('Continue this lesson').click(); await Promise.resolve() })
+    expect(start.mock.calls.at(-1)![0]).toMatchObject({ resume: true })
   })
 
   it('folds a long diagram until the learner opens it', async () => {
