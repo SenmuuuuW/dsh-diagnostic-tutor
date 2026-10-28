@@ -203,6 +203,17 @@ async function languageCase() {
   return { language: true }
 }
 
+async function reviewCase() {
+  await click('Review')
+  await waitFor(`document.body.innerText.includes('Due now')`, 'review page')
+  assert.equal(await cdp.evaluate(`[...document.querySelectorAll('.dtx-review-front')].length`), 1)
+  await screenshot(`${currentCase}-review`)
+  await click('Show the back')
+  await waitFor(`document.body.innerText.includes('Good')`, 'review back')
+  assert.equal(await cdp.evaluate(`[...document.querySelectorAll('.dtx-grade')].length`), 4)
+  await screenshot(`${currentCase}-review-back`)
+}
+
 const plans = [
   { scenario: 'library', case: libraryCase, widths: [1440, 400], themes: ['light', 'dark'] },
   { scenario: 'path-setup', case: goalCase, widths: [1440, 900], themes: ['light'] },
@@ -212,6 +223,7 @@ const plans = [
   { scenario: 'curriculum', case: knowledgeCase, widths: [1440, 400], themes: ['light'], after: 'learningCase' },
   { scenario: 'curriculum', surface: 'tab', case: tabCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'curriculum', case: languageCase, widths: [1440], themes: ['light'] },
+  { scenario: 'curriculum', case: reviewCase, widths: [1440, 400], themes: ['light'] },
 ]
 
 try {

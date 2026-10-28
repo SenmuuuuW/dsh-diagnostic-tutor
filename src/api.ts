@@ -38,6 +38,9 @@ import type { Journal } from './journal.js'
 import { guarded } from './trust-fence.js'
 import { handlePathApi } from './path-api.js'
 import { buildIcs, sortTasks, taskView } from './plan.js'
+import { REVIEW_RATINGS, dueCards, scheduleReview } from './review.js'
+import type { ReviewCard } from './review.js'
+import type { ReviewCardView } from './contract.js'
 
 /** The slice of `webServer` this module uses, declared structurally. */
 export interface WebServerLike {
@@ -203,6 +206,15 @@ function libraryOf(state: UdState): {
       }
     })
     .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))
+}
+
+function reviewView(card: ReviewCard): ReviewCardView {
+  return {
+    id: card.id, front: card.front, back: card.back, dueAt: card.dueAt,
+    ...(card.courseId === undefined ? {} : { courseId: card.courseId }),
+    ...(card.nodeId === undefined ? {} : { nodeId: card.nodeId }),
+    ...(card.sourceRefs === undefined ? {} : { sourceRefs: card.sourceRefs }),
+  }
 }
 
 async function handleOverview(state: UdState, deps: ApiDeps, sessionId: string | undefined, res: ServerResponse): Promise<void> {
@@ -657,6 +669,23 @@ export function createApiHandler(deps: ApiDeps) {
       const status = input?.status === 'open' || input?.status === 'archived' ? input.status : 'done'
       await state.writeTask({ ...task, status, updatedAt: new Date().toISOString() })
       return sendJson(res, 200, { ok: true, tasks: sortTasks(state.listTasks()).map(taskView) })
+    }
+    if (method === 'GET' && route === '/review') {
+      const cards = dueCards(state.listReviewCards()).slice(0, 20).map(reviewView)
+      return sendJson(res, 200, { ok: true, cards, count: cards.length })
+    }
+    if (method === 'POST' && route === '/review/grade') {
+      const input = await readJsonBody(req)
+      const cardId = input === undefined ? undefined : stringField(input, 'cardId')
+      const rating = input === undefined ? undefined : stringField(input, 'rating')
+      if (cardId === undefined) return fail(res, 400, 'missing-card-id')
+      if (rating === undefined || !(REVIEW_RATINGS as readonly string[]).includes(rating)) return fail(res, 400, 'invalid-rating')
+      const card = state.readReviewCard(cardId)
+      if (card === undefined) return fail(res, 404, 'no-such-review-card')
+      const graded = scheduleReview(card, rating as (typeof REVIEW_RATINGS)[number])
+      await state.writeReviewCard(graded.card)
+      await state.writeReviewLog(graded.log)
+      return sendJson(res, 200, { ok: true, card: reviewView(graded.card), remaining: dueCards(state.listReviewCards()).length })
     }
     if (method === 'GET' && route === '/plan/ics') {
       const calendar = buildIcs(state.listTasks(), new Date())

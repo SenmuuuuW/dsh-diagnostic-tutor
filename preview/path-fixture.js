@@ -201,6 +201,12 @@
       async exportPlan() {
         return { filename: 'dsh-diagnostic-tutor-plan.ics', text: 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n' }
       },
+      async reviewNext() {
+        return { ok: true, count: 1, cards: [{ id: 'preview-card-1', front: '为什么矩阵乘法要求内维相等？', back: '因为每一行要与权重向量的每个元素逐项相乘并求和；内维就是被消去的那个维度。', dueAt: new Date().toISOString() }] }
+      },
+      async reviewGrade() {
+        return { ok: true, remaining: 0, card: { id: 'preview-card-1', front: '为什么矩阵乘法要求内维相等？', back: '因为每一行要与权重向量的每个元素逐项相乘并求和；内维就是被消去的那个维度。', dueAt: new Date().toISOString() } }
+      },
     }
   }
   window.PATH_FIXTURE_SCENARIOS = SCENARIOS.slice()

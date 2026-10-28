@@ -39,6 +39,10 @@ export interface SourceView {
   status: 'ready' | 'error'
   content?: string
 }
+export interface ReviewGradeParams {
+  cardId: string
+  rating: 'again' | 'hard' | 'good' | 'easy'
+}
 export interface TaskMutation {
   taskId: string
   status?: 'open' | 'done' | 'archived'
@@ -69,6 +73,10 @@ export interface PathClient {
   exportPlan?(): Promise<PlanIcs>
   /** Mark one plan item done (or reopen it). Plan state only; never teaching state. */
   updateTask?(params: TaskMutation): Promise<{ ok: true; tasks: import('../contract.js').TaskView[] }>
+  /** Due review cards; read-only. */
+  reviewNext?(): Promise<{ ok: true; cards: import('../contract.js').ReviewCardView[]; count: number }>
+  /** Record one review grade and reschedule the card. */
+  reviewGrade?(params: ReviewGradeParams): Promise<{ ok: true; card: import('../contract.js').ReviewCardView; remaining: number }>
 }
 
 /** Retain HTTP status so a stale write can refresh without losing form edits. */
@@ -137,6 +145,37 @@ async function requestTaskMutation(params: TaskMutation): Promise<{ ok: true; ta
   } finally { clearTimeout(timeout) }
 }
 
+async function requestReviewNext(): Promise<{ ok: true; cards: import('../contract.js').ReviewCardView[]; count: number }> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12_000)
+  try {
+    const response = await fetch(`${API}/review`, { headers: { accept: 'application/json' }, signal: controller.signal })
+    const value = await response.json() as { ok?: unknown; cards?: unknown; count?: unknown; error?: { message?: string; code?: string } }
+    if (!response.ok || value?.ok !== true || !Array.isArray(value.cards)) {
+      throw new PathClientError(value?.error?.message ?? `Review request failed (HTTP ${response.status}).`, value?.error?.code ?? 'review_failed', response.status)
+    }
+    return { ok: true, cards: value.cards as import('../contract.js').ReviewCardView[], count: typeof value.count === 'number' ? value.count : value.cards.length }
+  } finally { clearTimeout(timeout) }
+}
+
+async function requestReviewGrade(params: ReviewGradeParams): Promise<{ ok: true; card: import('../contract.js').ReviewCardView; remaining: number }> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12_000)
+  try {
+    const response = await fetch(`${API}/review/grade`, {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify(params),
+      signal: controller.signal,
+    })
+    const value = await response.json() as { ok?: unknown; card?: unknown; remaining?: unknown; error?: { message?: string; code?: string } }
+    if (!response.ok || value?.ok !== true || value.card === undefined) {
+      throw new PathClientError(value?.error?.message ?? `Review grade failed (HTTP ${response.status}).`, value?.error?.code ?? 'review_grade_failed', response.status)
+    }
+    return { ok: true, card: value.card as import('../contract.js').ReviewCardView, remaining: typeof value.remaining === 'number' ? value.remaining : 0 }
+  } finally { clearTimeout(timeout) }
+}
+
 async function requestPlanIcs(): Promise<PlanIcs> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 12_000)
@@ -163,4 +202,6 @@ export const defaultPathClient: PathClient = {
   source: requestSource,
   exportPlan: requestPlanIcs,
   updateTask: requestTaskMutation,
+  reviewNext: requestReviewNext,
+  reviewGrade: requestReviewGrade,
 }
