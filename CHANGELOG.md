@@ -5,6 +5,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — Phase 3: task completion and review queue model
+
+- Today plan items can be marked done/reopened by the learner through
+  `POST /plan/task`; the Today card now exposes a per-item **Done** action.
+- Additive `review_cards` and `review_log` tables plus
+  `udt_review_add` / `udt_review_next` / `udt_review_grade`.
+- A dependency-free local interval scheduler handles `again | hard | good |
+  easy`; it changes only scheduling fields and never marks a node confirmed or
+  completes a lesson.
+- No review surface yet: the queue is model/API-accessible, with the UI deferred
+  to the next slice.
+- 632 tests, typecheck, build and 21 browser cases pass.
+
+
 ### Added — Phase 2: Today plan and ICS export
 
 - Additive `tasks` table and `udt_plan_get` / `udt_plan_update`; plans are
