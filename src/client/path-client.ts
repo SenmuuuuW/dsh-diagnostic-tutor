@@ -39,6 +39,10 @@ export interface SourceView {
   status: 'ready' | 'error'
   content?: string
 }
+export interface TaskMutation {
+  taskId: string
+  status?: 'open' | 'done' | 'archived'
+}
 export interface PlanIcs {
   filename: string
   text: string
@@ -63,6 +67,8 @@ export interface PathClient {
   source?(sourceId: string): Promise<{ ok: true; source: SourceView }>
   /** Download the open, dated Today plan as an ICS calendar. */
   exportPlan?(): Promise<PlanIcs>
+  /** Mark one plan item done (or reopen it). Plan state only; never teaching state. */
+  updateTask?(params: TaskMutation): Promise<{ ok: true; tasks: import('../contract.js').TaskView[] }>
 }
 
 /** Retain HTTP status so a stale write can refresh without losing form edits. */
@@ -113,6 +119,24 @@ async function requestSource(sourceId: string): Promise<{ ok: true; source: Sour
   } finally { clearTimeout(timeout) }
 }
 
+async function requestTaskMutation(params: TaskMutation): Promise<{ ok: true; tasks: import('../contract.js').TaskView[] }> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12_000)
+  try {
+    const response = await fetch(`${API}/plan/task`, {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify(params),
+      signal: controller.signal,
+    })
+    const value = await response.json() as { ok?: unknown; tasks?: unknown; error?: { message?: string; code?: string } }
+    if (!response.ok || value?.ok !== true || !Array.isArray(value.tasks)) {
+      throw new PathClientError(value?.error?.message ?? `Plan update failed (HTTP ${response.status}).`, value?.error?.code ?? 'plan_update_failed', response.status)
+    }
+    return value as { ok: true; tasks: import('../contract.js').TaskView[] }
+  } finally { clearTimeout(timeout) }
+}
+
 async function requestPlanIcs(): Promise<PlanIcs> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 12_000)
@@ -138,4 +162,5 @@ export const defaultPathClient: PathClient = {
   answer: (params) => request('/answer', params),
   source: requestSource,
   exportPlan: requestPlanIcs,
+  updateTask: requestTaskMutation,
 }

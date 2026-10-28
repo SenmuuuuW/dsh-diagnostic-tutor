@@ -48,6 +48,8 @@ const WEEKLY_OPTIONS = [
   { value: '720', zh: '8–12 小时', en: '8–12 hours' },
   { value: '900', zh: '12 小时以上', en: '12+ hours' },
 ]
+const EMPTY_TASKS: readonly TaskView[] = []
+
 const SESSION_OPTIONS = [
   { value: '', zh: '未设置', en: 'Not set' },
   { value: '30', zh: '15–30 分钟', en: '15–30 min' },
@@ -516,7 +518,7 @@ export function PathPage(props: PathPageProps): ReactNode {
   return <PathPageBody {...props} designText={text} pathText={pathText} lang={lang} />
 }
 
-function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpenLesson, onOpenEvidence, sessionActivity, client = defaultPathClient, tasks = [], designText: text, pathText, lang }: PathPageProps & { designText: DesignText; pathText: PathText; lang: Lang }): ReactNode {
+function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpenLesson, onOpenEvidence, sessionActivity, client = defaultPathClient, tasks = EMPTY_TASKS, designText: text, pathText, lang }: PathPageProps & { designText: DesignText; pathText: PathText; lang: Lang }): ReactNode {
   const [view, setView] = useState<PathView | null>(null)
   const [draft, setDraft] = useState<GoalDraft>(() => draftFromBrief(null))
   const [dirty, setDirty] = useState(false)
@@ -527,6 +529,8 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
   const [pollError, setPollError] = useState('')
   const [notice, setNotice] = useState('')
   const [promptIssue, setPromptIssue] = useState<PromptIssue | null>(null)
+  const [taskList, setTaskList] = useState<readonly TaskView[]>(tasks)
+  useEffect(() => { setTaskList(tasks) }, [tasks])
   const currentView = useRef<PathView | null>(null)
   const dirtyRef = useRef(false)
   const editGeneration = useRef(0)
@@ -716,6 +720,18 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
     if (activeAttempt === undefined) return
     start(activeAttempt.version, activeAttempt.itemId, false, checkin ? 'checkin' : 'resume')
   }
+  const completeTask = (taskId: string) => {
+    if (client.updateTask === undefined) return
+    void (async () => {
+      try {
+        const result = await client.updateTask!({ taskId, status: 'done' })
+        setTaskList(result.tasks)
+      } catch {
+        setNotice(text.planExportFailed)
+      }
+    })()
+  }
+
   const exportPlan = () => {
     if (client.exportPlan === undefined) return
     void (async () => {
@@ -878,7 +894,7 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
         ? pollError === '' && <p className="dtx-status" role="status">{pathText.loadingPath}</p>
         : <div className="dtx-route">
           <div className="dtx-main">
-            <TodayCard tasks={tasks} onExport={client.exportPlan === undefined ? undefined : exportPlan} />
+            <TodayCard tasks={taskList} onExport={client.exportPlan === undefined ? undefined : exportPlan} onComplete={client.updateTask === undefined ? undefined : completeTask} />
             <StageBar stage={stage} text={text} />
             {stage === 'goal' ? <GoalForm draft={draft} dirty={dirty} busy={busy === 'save'} readOnly={readOnly} onChange={changeDraft} onSave={saveBrief} text={text} lang={lang} /> : nextCard}
             {stage === 'diagnosis' && !diagnosisWaiting && diagnosisFailure === null && <DiagnosisInfo text={text} />}

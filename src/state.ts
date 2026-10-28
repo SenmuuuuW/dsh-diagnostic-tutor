@@ -59,6 +59,8 @@ import { SOURCES_TABLE, SourceRecordSchema } from './source-schema.js'
 import type { SourceRecord } from './source-schema.js'
 import { TASKS_TABLE, TaskSchema } from './plan.js'
 import type { TaskRecord } from './plan.js'
+import { REVIEW_CARDS_TABLE, REVIEW_LOG_TABLE, ReviewCardSchema, ReviewLogSchema } from './review.js'
+import type { ReviewCard, ReviewLog } from './review.js'
 import { HandoffSchema } from './handoff.js'
 import type { HandoffKey, HandoffRecord } from './handoff.js'
 import { focusKey, handoffKey, isLegacyExecutionKey, nextStepKey } from './execution-key.js'
@@ -295,12 +297,16 @@ export interface UdExport {
   /** Learner-supplied source material, with citations pointing into it. */
   readonly sources: readonly SourceRecord[]
   readonly tasks: readonly TaskRecord[]
+  readonly reviewCards: readonly ReviewCard[]
+  readonly reviewLog: readonly ReviewLog[]
 }
 
 export type CourseKey = string
 export type NodeKey = string
 export type SourceKey = string
 export type TaskKey = string
+export type ReviewCardKey = string
+export type ReviewLogKey = string
 
 /* -------------------------------------------------------------------------- */
 /* Domain declaration                                                         */
@@ -408,6 +414,8 @@ export const udtDomain = defineDomain({
     course_runs: domainTable<string, CourseRun>(CourseRunSchema),
     [SOURCES_TABLE]: domainTable<SourceKey, SourceRecord>(SourceRecordSchema),
     [TASKS_TABLE]: domainTable<TaskKey, TaskRecord>(TaskSchema),
+    [REVIEW_CARDS_TABLE]: domainTable<ReviewCardKey, ReviewCard>(ReviewCardSchema),
+    [REVIEW_LOG_TABLE]: domainTable<ReviewLogKey, ReviewLog>(ReviewLogSchema),
   },
 })
 
@@ -644,6 +652,13 @@ export interface UdState {
   writeTask(record: TaskRecord): Promise<TaskRecord>
   deleteTask(id: TaskKey): Promise<void>
 
+  /* review ---------------------------------------------------------------- */
+  listReviewCards(): ReviewCard[]
+  readReviewCard(id: ReviewCardKey): ReviewCard | undefined
+  writeReviewCard(record: ReviewCard): Promise<ReviewCard>
+  listReviewLog(): ReviewLog[]
+  writeReviewLog(record: ReviewLog): Promise<ReviewLog>
+
   /** Immutable planning snapshots; writes are validated and revision checked inside one queue. */
   readPath(courseId: string): LearningPath | undefined
   mutatePath(courseId: string, expectedRevision: number, change: (current: LearningPath) => LearningPath): Promise<LearningPath>
@@ -711,6 +726,8 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
   const runs: KvTable<string, CourseRun> = domain.table('course_runs')
   const sources: KvTable<SourceKey, SourceRecord> = domain.table(SOURCES_TABLE)
   const tasks: KvTable<TaskKey, TaskRecord> = domain.table(TASKS_TABLE)
+  const reviewCards: KvTable<ReviewCardKey, ReviewCard> = domain.table(REVIEW_CARDS_TABLE)
+  const reviewLog: KvTable<ReviewLogKey, ReviewLog> = domain.table(REVIEW_LOG_TABLE)
   let planningGeneration = 0
   const runKey = (courseId: string, sessionId: string) => JSON.stringify([sessionId, courseId])
   const learner: DomainGlobal<LearnerProfile> = domain.global
@@ -1003,6 +1020,8 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
         courseRuns: [...runs.entries()].map(([, record]) => structuredClone(record)),
         sources: [...sources.entries()].map(([, record]) => structuredClone(record)),
         tasks: [...tasks.entries()].map(([, record]) => structuredClone(record)),
+        reviewCards: [...reviewCards.entries()].map(([, record]) => structuredClone(record)),
+        reviewLog: [...reviewLog.entries()].map(([, record]) => structuredClone(record)),
       }
     },
 
@@ -1011,7 +1030,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       // and project selections so late writes cannot resurrect deleted plans.
       ++planningGeneration
       await withProjectWrite(async () => {
-        for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs, projects, paths, runs, sources, tasks]) {
+        for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs, projects, paths, runs, sources, tasks, reviewCards, reviewLog]) {
           for (const key of [...table.keys()]) await table.delete(key)
         }
         await learner.set({ initializedAt: UNINITIALIZED, updatedAt: now })
@@ -1102,6 +1121,25 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
 
     async deleteTask(id) {
       await tasks.delete(id)
+    },
+
+    listReviewCards: () => [...reviewCards.entries()].map(([, record]) => structuredClone(record)),
+
+    readReviewCard: (id) => {
+      const record = reviewCards.get(id)
+      return record === undefined ? undefined : structuredClone(record)
+    },
+
+    async writeReviewCard(record) {
+      await reviewCards.put(record.id, record)
+      return record
+    },
+
+    listReviewLog: () => [...reviewLog.entries()].map(([, record]) => structuredClone(record)),
+
+    async writeReviewLog(record) {
+      await reviewLog.put(record.id, record)
+      return record
     },
 
     readPath: (courseId) => {
