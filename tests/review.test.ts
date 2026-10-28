@@ -101,6 +101,11 @@ describe('review HTTP surface', () => {
       const after = { statusCode: 0, body: '', setHeader() {}, end(chunk: string) { this.body += chunk } }
       await handler({ method: 'GET', url: `${API_PREFIX}/review`, headers: { host: '127.0.0.1:3080' }, async *[Symbol.asyncIterator]() {} } as unknown as IncomingMessage, after as unknown as ServerResponse)
       expect(JSON.parse(after.body).cards).toHaveLength(0)
+      const undo = { statusCode: 0, body: '', setHeader() {}, end(chunk: string) { this.body += chunk } }
+      await handler({ method: 'POST', url: `${API_PREFIX}/review/undo`, headers: { host: '127.0.0.1:3080' }, async *[Symbol.asyncIterator]() { yield Buffer.from(JSON.stringify({ cardId }), 'utf8') } } as unknown as IncomingMessage, undo as unknown as ServerResponse)
+      expect(undo.statusCode).toBe(200)
+      expect(state.readReviewCard(cardId)?.reps).toBe(0)
+      expect(state.listReviewLog()).toHaveLength(0)
     } finally { await harness.close() }
   })
 })

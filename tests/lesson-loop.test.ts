@@ -333,7 +333,7 @@ describe('udt_lesson_update', () => {
       const { mathId } = await seed(state)
       const wired = await wire(harness, state)
       await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
-      await wired.tool('udt_lesson_update', {
+      const written = await wired.tool('udt_lesson_update', {
         blocks: [
           { id: 'code', type: 'code', content: { language: 'python', source: 'print(1)' } },
           { id: 'quiz', type: 'quiz', content: { questions: [{ id: 'q1', kind: 'mcq', prompt: 'Which?', options: ['A', 'B'] }] } },
@@ -342,8 +342,15 @@ describe('udt_lesson_update', () => {
           { id: 'cmp', type: 'comparison', content: { columns: ['a', 'b'], rows: [['1', '2']] } },
         ],
       })
+      expect(written.reviewCardCount).toBe(1)
+      expect(wired.state.listReviewCards()).toHaveLength(1)
+      expect(wired.state.listReviewCards()[0]).toMatchObject({ front: 'front', back: 'back', nodeId: mathId })
+      // Writing the same flashcard again refreshes it instead of duplicating it.
+      await wired.tool('udt_lesson_update', { mode: 'replace', blocks: [{ id: 'card', type: 'flashcard', content: { front: 'front 2', back: 'back' } }] })
+      expect(wired.state.listReviewCards()).toHaveLength(1)
+      expect(wired.state.listReviewCards()[0]?.front).toBe('front 2')
       const lesson = wired.state.lessonForNode(mathId)!
-      expect(lesson.blocks.map((block) => block.type)).toEqual(['code', 'quiz', 'flashcard', 'resource', 'comparison'])
+      expect(lesson.blocks.map((block) => block.type)).toEqual(['flashcard'])
     } finally {
       await harness.close()
     }

@@ -13,6 +13,7 @@ export function ReviewPage({ client, onOpenRoute }: { client: PathClient; onOpen
   const [revealed, setRevealed] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [undo, setUndo] = useState<string | null>(null)
   const load = useCallback(async () => {
     if (client.reviewNext === undefined) { setLoading(false); return }
     setLoading(true); setError('')
@@ -32,6 +33,7 @@ export function ReviewPage({ client, onOpenRoute }: { client: PathClient; onOpen
     setBusy(true); setError('')
     try {
       const result = await client.reviewGrade({ cardId: card.id, rating })
+      setUndo(card.id)
       setCards((current) => current.slice(1))
       setRevealed(false)
       if (result.remaining > 0) void load()
@@ -52,6 +54,7 @@ export function ReviewPage({ client, onOpenRoute }: { client: PathClient; onOpen
       </header>
       {loading && <p className="dtx-status">{text.reviewLoading}</p>}
       {error !== '' && <div className="dtx-alert" role="alert">{error} <button type="button" className="dtx-link" onClick={() => void load()}>{text.reviewRetry}</button></div>}
+      {undo !== null && <div className="dtx-review-undo" role="status"><span>{text.reviewUndone}</span><button type="button" className="dtx-link" onClick={() => { void (async () => { if (client.reviewUndo === undefined) return; try { await client.reviewUndo(undo); setUndo(null); await load() } catch { setError(text.reviewUndoFailed) } })() }}>{text.reviewUndo}</button></div>}
       {!loading && error === '' && card === undefined && (
         <div className="dtx-review-empty">
           <span className="dtx-tab-empty-icon"><Icon name="check" size={30} /></span>

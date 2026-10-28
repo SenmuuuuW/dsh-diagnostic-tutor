@@ -670,6 +670,22 @@ export function createApiHandler(deps: ApiDeps) {
       await state.writeTask({ ...task, status, updatedAt: new Date().toISOString() })
       return sendJson(res, 200, { ok: true, tasks: sortTasks(state.listTasks()).map(taskView) })
     }
+    if (method === 'POST' && route === '/review/undo') {
+      const input = await readJsonBody(req)
+      const cardId = input === undefined ? undefined : stringField(input, 'cardId')
+      if (cardId === undefined) return fail(res, 400, 'missing-card-id')
+      const card = state.readReviewCard(cardId)
+      if (card === undefined) return fail(res, 404, 'no-such-review-card')
+      const log = state.listReviewLog().filter((entry) => entry.cardId === cardId).sort((left, right) => left.at.localeCompare(right.at)).at(-1)
+      if (log === undefined || log.previousIntervalDays === undefined || log.previousEase === undefined || log.previousReps === undefined || log.previousLapses === undefined) return fail(res, 409, 'cannot-undo')
+      const restored = {
+        ...card, dueAt: log.previousDue, intervalDays: log.previousIntervalDays, ease: log.previousEase,
+        reps: log.previousReps, lapses: log.previousLapses, updatedAt: new Date().toISOString(),
+      }
+      await state.writeReviewCard(restored)
+      await state.deleteReviewLog(log.id)
+      return sendJson(res, 200, { ok: true, card: reviewView(restored), remaining: dueCards(state.listReviewCards()).length })
+    }
     if (method === 'GET' && route === '/review') {
       const cards = dueCards(state.listReviewCards()).slice(0, 20).map(reviewView)
       return sendJson(res, 200, { ok: true, cards, count: cards.length })
