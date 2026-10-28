@@ -52,7 +52,7 @@
 | 层 | 位置 | 负责 | 不负责 |
 | --- | --- | --- | --- |
 | Browser half | 浏览器 bundle | 渲染主页面/右栏 tab、轮询数据、发起请求、展示错误/等待、i18n/主题 | 不直接读写本机文件、不调模型 |
-| Host half | Node 插件 | `apply` 注册、18 个模型工具、25 条本地 HTTP 路由、UDT state、journal、diagnostics | 不做教学决策、不自己调用模型（只通过用户动作唤醒） |
+| Host half | Node 插件 | `apply` 注册、18 个模型工具、26 条本地 HTTP 路由、UDT state、journal、diagnostics | 不做教学决策、不自己调用模型（只通过用户动作唤醒） |
 
 ### 2.2 数据与运行
 
@@ -360,3 +360,8 @@ node_modules/vitest/vitest.mjs run --no-file-parallelism   # 635 tests
 - 只记录评分与重排 due，不判掌握；无分数、无百分比。
 
 ![Phase 4 Review](screens/phase4-review.png)
+
+## 18. Phase 5 Review sync/undo（2026-10-28）
+
+- 导师写入 flashcard block 时自动生成复习卡；同一 node+block 幂等更新。
+- 复习评分记录后可撤销一次；旧日志没有调度历史时拒绝撤销。

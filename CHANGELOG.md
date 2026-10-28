@@ -5,6 +5,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — Phase 5: flashcard sync and review undo
+
+- Writing a `flashcard` block now projects one review card, idempotently keyed by
+  node + block id. Replacing the lesson refreshes front/back/sourceRefs while
+  preserving the existing schedule; removed cards are not silently deleted.
+- `POST /review/undo` restores the scheduling fields recorded before the latest
+  grade (older logs without that history cannot be undone) and deletes that log.
+- The Review tab shows an **Undo last grade** action after a grade.
+- 635 tests, 23 browser cases, typecheck and build pass.
+
+
 ### Added — Phase 4: the Review tab
 
 - The Learning map gains a third tab, **Review**: due cards show the front,
