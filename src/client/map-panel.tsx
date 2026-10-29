@@ -19,7 +19,9 @@ import { LanguageToggle } from './language-toggle.js'
 import { evidenceKindLabel } from './map-text.js'
 import { formatWhen, relationLabel, stateExplanation } from './model.js'
 import { PathPage } from './path-page.js'
+import { ReviewPage } from './review-panel.jsx'
 import type { PathClient } from './path-client.js'
+import { defaultPathClient } from './path-client.js'
 import type { NodeDetailResponse, NodeView, ProjectCardView } from '../contract.js'
 import type { PanelClient } from './use-learning.js'
 import type { SessionActivity } from './use-session-activity.js'
@@ -39,7 +41,7 @@ export interface LearningMapPanelProps {
   pathClient?: PathClient | undefined
 }
 
-type MapView = 'curriculum' | 'knowledge'
+type MapView = 'curriculum' | 'knowledge' | 'review'
 
 function whenText(iso: string, text: DesignText): string {
   const stamp = Date.parse(iso)
@@ -271,6 +273,7 @@ export function LearningMapPanel({
   const [page, setPage] = useState<MapView>('curriculum')
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview, onOpenSession })
   const { overview, focus, detail, selectedId, note, error, loading, library } = state
+  const reviewClient = pathClient ?? defaultClient.pathClient ?? defaultPathClient
 
   const arrival = selectedId
   const select = state.select
@@ -330,6 +333,7 @@ export function LearningMapPanel({
       <nav className="dtx-tabs" aria-label={text.pageTitle}>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'curriculum' ? 'page' : undefined} onClick={() => setPage('curriculum')}>{text.tabRoute}</button>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'knowledge' ? 'page' : undefined} onClick={() => setPage('knowledge')}>{text.tabKnowledge}</button>
+        <button type="button" className="dtx-tabbtn" aria-current={page === 'review' ? 'page' : undefined} onClick={() => setPage('review')}>{text.tabReview}</button>
       </nav>
       <div className="dtx-scroll">
         {page === 'curriculum'
@@ -338,7 +342,9 @@ export function LearningMapPanel({
               onStarted={enterCurrentLesson} onOpenLesson={onOpenLesson === undefined ? undefined : enterCurrentLesson}
               onOpenEvidence={() => setPage('knowledge')}
               {...(sessionActivity === undefined ? {} : { sessionActivity })} />
-          : <KnowledgePage nodes={nodes} selectedId={selectedId} detail={detail} loading={loading} error={error} onSelect={select} />}
+          : page === 'knowledge'
+            ? <KnowledgePage nodes={nodes} selectedId={selectedId} detail={detail} loading={loading} error={error} onSelect={select} />
+            : <ReviewPage client={reviewClient} onOpenRoute={() => setPage('curriculum')} />}
         {page === 'curriculum' && <div className="dtx-content" style={{ paddingTop: 0 }}><footer className="dtx-small dtx-muted"><DataFooter onExport={state.exportData} onReset={state.resetAll} /></footer></div>}
       </div>
     </div>

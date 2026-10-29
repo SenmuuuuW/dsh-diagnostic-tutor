@@ -1,4 +1,8 @@
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { describe, expect, it } from 'vitest'
+
+import { API_PREFIX, createApiHandler } from '../src/api.js'
+import { guarded } from '../src/trust-fence.js'
 
 import { REVIEW_CARDS_TABLE, REVIEW_LOG_TABLE, ReviewCardSchema, dueCards, scheduleReview } from '../src/review.js'
 import type { ReviewCard } from '../src/review.js'
@@ -71,6 +75,32 @@ describe('review tools', () => {
       await expect(tools.get('udt_review_add')!.execute({ cards: [{ front: 'Q', back: 'A', sourceRefs: [{ sourceId: 'missing', locator: 'x' }] }] })).rejects.toThrow(/unknown source/)
       await expect(tools.get('udt_review_grade')!.execute({ cardId: 'missing', rating: 'good' })).rejects.toThrow(/no-such-review-card/)
       expect(state.listReviewCards()).toHaveLength(0)
+    } finally { await harness.close() }
+  })
+})
+
+describe('review HTTP surface', () => {
+  it('lists due cards and records a grade through the trust fence', async () => {
+    const { harness, state, tools } = await open()
+    try {
+      const added = await tools.get('udt_review_add')!.execute({ cards: [{ front: 'Q', back: 'A' }] })
+      const cardId = (added.cards as { id: string }[])[0]!.id
+      const handler = guarded(createApiHandler({ state, prompt: () => ({ prompted: false }) }))
+      const list = { statusCode: 0, body: '', setHeader() {}, end(chunk: string) { this.body += chunk } }
+      await handler({ method: 'GET', url: `${API_PREFIX}/review`, headers: { host: '127.0.0.1:3080' }, async *[Symbol.asyncIterator]() {} } as unknown as IncomingMessage, list as unknown as ServerResponse)
+      expect(list.statusCode).toBe(200)
+      expect(JSON.parse(list.body).cards).toHaveLength(1)
+      const grade = { statusCode: 0, body: '', setHeader() {}, end(chunk: string) { this.body += chunk } }
+      await handler({
+        method: 'POST', url: `${API_PREFIX}/review/grade`, headers: { host: '127.0.0.1:3080' },
+        async *[Symbol.asyncIterator]() { yield Buffer.from(JSON.stringify({ cardId, rating: 'easy' }), 'utf8') },
+      } as unknown as IncomingMessage, grade as unknown as ServerResponse)
+      expect(grade.statusCode).toBe(200)
+      expect(JSON.parse(grade.body).card.id).toBe(cardId)
+      expect(state.listReviewLog()).toHaveLength(1)
+      const after = { statusCode: 0, body: '', setHeader() {}, end(chunk: string) { this.body += chunk } }
+      await handler({ method: 'GET', url: `${API_PREFIX}/review`, headers: { host: '127.0.0.1:3080' }, async *[Symbol.asyncIterator]() {} } as unknown as IncomingMessage, after as unknown as ServerResponse)
+      expect(JSON.parse(after.body).cards).toHaveLength(0)
     } finally { await harness.close() }
   })
 })

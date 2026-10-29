@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — Phase 4: the Review tab
+
+- The Learning map gains a third tab, **Review**: due cards show the front,
+  reveal the back, and record `again | hard | good | easy`.
+- `GET /review` and `POST /review/grade` expose the existing queue through the
+  trust fence; scheduling remains local interval arithmetic, not mastery.
+- The review surface shows no score or percentage and never confirms a node.
+- 635 tests, 23 browser cases, typecheck and build pass.
+
+
 ### Added — Phase 3: task completion and review queue model
 
 - Today plan items can be marked done/reopened by the learner through

@@ -610,6 +610,8 @@ The browser's core calls, at `/diagnostic-tutor/api` (the full route list is in
 | `GET /source?id=` | one stored source and its text, for a citation preview |
 | `POST /path/answer` | record a quiz/flashcard submission on the active attempt |
 | `GET /plan/ics` | download open, dated Today plan items as an ICS calendar |
+| `GET /review` | due review cards (read-only) |
+| `POST /review/grade` | record a review rating and reschedule |
 | `POST /plan/task` | mark a Today plan item done (learner action; plan only) |
 
 Every request passes a **trust fence**: a bare `ctx.webServer.register()` route
@@ -766,7 +768,7 @@ shows a loader row exists.
 | `v0.1.0` | first stable release, installable from npm |
 | `v0.1.1` | **published** — packaged release with the docked learning surface |
 | `main` (unreleased) | learning-path flow: goal/time brief, evidence-referenced assessment, versioned course routes with per-lesson Overviews, session-scoped attempts and teaching snapshots, English/Simplified-Chinese interface, one page + one lesson surface |
-| next | settings, review UI, automatic replan suggestions (the tutor already proposes revisions on request; no runtime auto-replan) |
+| next | settings, automatic replan suggestions (the tutor already proposes revisions on request; no runtime auto-replan) |
 
 ## Trust
 

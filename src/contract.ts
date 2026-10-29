@@ -13,6 +13,15 @@
 
 export type { Block, BlockType, KnownBlock, LessonRecord, StoredBlock } from './lesson.js'
 export type { TaskView } from './plan.js'
+export interface ReviewCardView {
+  id: string
+  front: string
+  back: string
+  dueAt: string
+  courseId?: string
+  nodeId?: string
+  sourceRefs?: { sourceId: string; locator: string }[]
+}
 
 /** One node as the map draws it. */
 export interface NodeView {
