@@ -3,7 +3,8 @@
 > 验证对象：`dsh-diagnostic-tutor@0.1.1`，Phase 1–6 本地堆叠分支。
 > 功能代码 tip：`4bf7574`；验证时分支 tip：`22a76a3`。
 > 验证日期：2026-10-29。宿主：macOS 15.0，Node `v24.16.0`。
-> 插件通过本地路径 link 进临时 profile；没有 push、合并或改 version。
+> 插件通过本地路径 link 或本地 tarball 进临时 profile；没有 push、合并或改 version。
+> 完整会话使用一次性测试 API key，仅注入隔离进程环境；key 不写入仓库、profile 或文档。
 
 ## 1. 方法
 
@@ -57,17 +58,35 @@ dsh --profile compat --no-open --port <port>
 
 tarball 内容确认包含 `lib/index.js`、`lib/client.js`、类型声明、`LICENSE`、`package.json`。
 
+### 2.2 完整真实会话（rc3 / alpha.2）
+
+对 `0.2.1-rc.3` 与 `0.1.7-alpha.2` 使用一次性测试 key 注入隔离 web 进程，真实模型 `DeepSeek-V4.1-Flash` 驱动会话，浏览器自动化执行：
+
+1. 新建会话并发送任务；
+2. 模型实际调用 `udt_goal_create`、`udt_map_update`、`udt_lesson_update`；
+3. 写入 formula + flashcard lesson；
+4. Learning map 打开 Review，翻面后评分 `Good`，再撤销；
+5. 打开 Insights；
+6. 检查 API 与落盘数据。
+
+| DSH | 项目/节点/lesson | flashcard → 复习卡 | Review 评分/撤销 | Insights | client exceptions |
+| --- | --- | --- | --- | --- | --- |
+| `0.2.1-rc.3` | 1 / 2 / 1 | 自动生成 1 张 | 通过 | 通过 | 无 |
+| `0.1.7-alpha.2` | 1 / 2 / 1 | 自动生成 1 张 | 通过 | 通过 | 无 |
+
+`/overview` 返回项目与节点，`/review` 返回自动生成的卡片，`/insights` 返回复习/证据计数；`/diagnostics` 的 `issues` 为空。
+
 ## 3. 本次没有覆盖
 
-- **没有登录/模型**：隔离 profile 没有 API key，因此没有完整走“真实会话 → Learning map → 写 lesson → Review 评分 → Insights”的模型驱动流程。只验证了 host 插件加载、本地路由、storage/domain 打开和客户端壳启动。
-- tarball 安装只验证了 `0.2.1-rc.3` 与 `0.1.7-alpha.2`；`0.2.1-rc.2`、`0.2.0-rc.2` 是 `link:` 验证。
+- **rc2/rc20 没有跑完整真实会话**：`0.2.1-rc.2` 与 `0.2.0-rc.2` 只完成了 boot/API；两者是 `link:` 安装（tarball 只覆盖 rc3/alpha.2），不是完整模型会话。rc3/alpha.2 已完成。
+- tarball 安装只验证了 `0.2.1-rc.3` 与 `0.1.7-alpha.2`；`0.2.1-rc.2`、`0.2.0-rc.2` 是 `link:` 验证。rc2/rc20 也没有完整真实会话。
 - **没有覆盖 0.1.5/0.1.6 线**：README 的正式矩阵只承诺 `0.1.7-alpha.2` 及以上与 `0.2.x`；其它版本不在本轮范围。
-- 这是 **merge gate 的前半段**，不能替代每个目标版本上的完整 UI/会话验收。
+- rc3/alpha.2 的完整会话是实际模型驱动，但仍是一次性 API key 与测试项目；不证明长期配额、真实登录状态或所有 provider。
 
 ## 4. 结论
 
-Phase 1–6 没有引入新的 `@deepseek-ai/*` 包；四个目标版本的 host 插件加载、本地 HTTP 路由、domain v1 初始化和客户端启动均通过；其中 rc3 与 alpha.2 还通过了 tarball 安装。合并/发布前剩下的验证是：在至少 `0.2.1-rc.3` 与 `0.1.7-alpha.2` 上，用真实登录会话走一遍 lesson → Review → Insights。
+Phase 1–6 没有引入新的 `@deepseek-ai/*` 包；四个目标版本的 host 插件加载、本地 HTTP 路由、domain v1 初始化和客户端启动均通过；rc3 与 alpha.2 还通过了 tarball 安装，并用真实模型完成 lesson → Review 评分/撤销 → Insights。rc2/rc20 的完整真实会话仍是可选的补充验证，而不是当前 merge gate 的空白。
 
 ## 5. 清理
 
-临时产物在 `/tmp/udt-compat`（CLI 安装、隔离 profiles、日志、token）。它们不属于仓库，也不包含真实 learner data；验证结束后可删除，不会影响 `~/.dsh/profiles` 或 `~/.dsh/storages`。
+临时产物在 `/tmp/udt-compat`（CLI 安装、隔离 profiles、日志、token、测试 key 文件）。它们不属于仓库；验证结束后删除，不会影响 `~/.dsh/profiles` 或 `~/.dsh/storages`。测试 key 只存在于该临时目录并在清理时删除。
