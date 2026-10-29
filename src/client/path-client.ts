@@ -77,6 +77,8 @@ export interface PathClient {
   reviewNext?(): Promise<{ ok: true; cards: import('../contract.js').ReviewCardView[]; count: number }>
   /** Record one review grade and reschedule the card. */
   reviewGrade?(params: ReviewGradeParams): Promise<{ ok: true; card: import('../contract.js').ReviewCardView; remaining: number }>
+  /** Undo the latest grade for one card when its log carries the prior schedule. */
+  reviewUndo?(cardId: string): Promise<{ ok: true; card: import('../contract.js').ReviewCardView; remaining: number }>
 }
 
 /** Retain HTTP status so a stale write can refresh without losing form edits. */
@@ -158,6 +160,24 @@ async function requestReviewNext(): Promise<{ ok: true; cards: import('../contra
   } finally { clearTimeout(timeout) }
 }
 
+async function requestReviewUndo(cardId: string): Promise<{ ok: true; card: import('../contract.js').ReviewCardView; remaining: number }> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12_000)
+  try {
+    const response = await fetch(`${API}/review/undo`, {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify({ cardId }),
+      signal: controller.signal,
+    })
+    const value = await response.json() as { ok?: unknown; card?: unknown; remaining?: unknown; error?: { message?: string; code?: string } }
+    if (!response.ok || value?.ok !== true || value.card === undefined) {
+      throw new PathClientError(value?.error?.message ?? `Review undo failed (HTTP ${response.status}).`, value?.error?.code ?? 'review_undo_failed', response.status)
+    }
+    return { ok: true, card: value.card as import('../contract.js').ReviewCardView, remaining: typeof value.remaining === 'number' ? value.remaining : 0 }
+  } finally { clearTimeout(timeout) }
+}
+
 async function requestReviewGrade(params: ReviewGradeParams): Promise<{ ok: true; card: import('../contract.js').ReviewCardView; remaining: number }> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 12_000)
@@ -204,4 +224,5 @@ export const defaultPathClient: PathClient = {
   updateTask: requestTaskMutation,
   reviewNext: requestReviewNext,
   reviewGrade: requestReviewGrade,
+  reviewUndo: requestReviewUndo,
 }

@@ -18,7 +18,7 @@ DSH Runtime
 │   ├── 模型工具（18 个）         src/tools.ts（7）+ src/path-tools.ts（3）+ src/source-tools.ts（3）+ src/plan-tools.ts（2）+ src/review-tools.ts（3）
 │   ├── 唤醒模型                 src/prompt.ts（旧循环焦点）
 │   │                            src/path-runtime.ts（初诊 / 路线 / 开课提示词）
-│   └── HTTP API                 src/api.ts + src/path-api.ts（25 条路由）
+│   └── HTTP API                 src/api.ts + src/path-api.ts（26 条路由）
 │
 ├── 模型 / UDT skill（仓库外）
 │   └── 只能通过工具读写状态；运行时不复制、不内置教学逻辑
@@ -75,7 +75,7 @@ DSH Runtime
 | `course_runs` | sessionId+courseId | 会话级课次尝试 + 教学快照 + 作答记录 | `/path/start`、`udt_course_run_update`、`udt_lesson_update(attemptId)`、`udt_quiz_update` |
 | `sources` | sourceId | 学习者提供的本地/粘贴文本、哈希与引用原文 | `udt_source_add`（additive v1 表） |
 | `tasks` | taskId | 今天/计划项与到期时间；不参与教学判断 | `udt_plan_update`（additive v1 表） |
-| `review_cards` | cardId | 复习卡与本地间隔调度字段 | `udt_review_add/grade`（additive v1 表） |
+| `review_cards` | cardId | 复习卡与本地间隔调度字段；flashcard 写入时按 node+block 幂等投影 | `udt_review_add/grade`、`udt_lesson_update`（additive v1 表） |
 | `review_log` | logId | 每次复习评分与前后 due | `udt_review_grade`（additive v1 表） |
 | global `learner` | 单例 | 初始化标记、`preferredLanguage`、activeCourseId | `/preferences/*`、初始化 |
 
@@ -129,6 +129,7 @@ DSH Runtime
 | `/plan/task` | POST | 学习者标记计划项完成/重新打开（只改计划状态） |
 | `/review` | GET | 到期复习卡（只读） |
 | `/review/grade` | POST | 记录复习评分并重排 due（不改 node 状态） |
+| `/review/undo` | POST | 用上一次 review_log 恢复评分前的调度 |
 
 ## 8. 一次完整流程
 
@@ -216,6 +217,7 @@ DSH Runtime
 - Phase 2（2026-10-27）：Today 计划（`tasks` additive table、`udt_plan_get/update`、`/plan/ics`）；学习路线顶部显示今日任务与日历导出；计划不参与教学判断。
 - Phase 3（2026-10-27）：Today 任务完成/重新打开；复习卡与 `review_log` additive 表、`udt_review_add/next/grade`、无依赖的本地间隔调度；尚无独立复习 UI。
 - Phase 4（2026-10-28）：学习地图第三个 tab「复习」；复习卡正面/背面与四档评分；`/review`、`/review/grade`；仍只调度、不判掌握。
+- Phase 5（2026-10-28）：flashcard block 自动幂等投影为复习卡；`/review/undo` 用 review_log 恢复上一次评分前的调度。
 - 验证记录：635 个 Vitest 测试、23 组浏览器场景（含复习场景）、类型检查、生产构建、地图/面板视觉审计。
 - 监控（2026-10-25）：host 写本地无内容事件日志（`<dsh-home>/logs/diagnostic-tutor-events.jsonl`，
   1 MB 上限、单次轮转，测试环境禁用），`GET /diagnostics` 返回阶段/请求/事件报告，

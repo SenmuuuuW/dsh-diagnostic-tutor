@@ -43,6 +43,11 @@ export const ReviewLogSchema = z.object({
   nextDue: z.string(),
   intervalDays: z.number().min(0),
   ease: z.number().min(1.3).max(3.2),
+  /** Present on logs written by the current build; old logs may lack them. */
+  previousIntervalDays: z.number().min(0).optional(),
+  previousEase: z.number().min(1.3).max(3.2).optional(),
+  previousReps: z.number().int().min(0).optional(),
+  previousLapses: z.number().int().min(0).optional(),
 }).strict()
 export type ReviewLog = z.infer<typeof ReviewLogSchema>
 export type ReviewRating = (typeof REVIEW_RATINGS)[number]
@@ -88,6 +93,10 @@ export function scheduleReview(card: ReviewCard, rating: ReviewRating, now = new
     nextDue: updated.dueAt,
     intervalDays,
     ease,
+    previousIntervalDays: card.intervalDays,
+    previousEase: card.ease,
+    previousReps: card.reps,
+    previousLapses: card.lapses,
   }
   return { card: updated, log }
 }

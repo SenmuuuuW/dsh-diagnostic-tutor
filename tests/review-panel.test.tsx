@@ -34,13 +34,17 @@ describe('review page', () => {
   it('reveals the back and records a grade without showing a score', async () => {
     const reviewNext = vi.fn(async () => ({ ok: true as const, cards: [card], count: 1 }))
     const reviewGrade = vi.fn(async () => ({ ok: true as const, card, remaining: 0 }))
-    const client = { reviewNext, reviewGrade } as unknown as PathClient
+    const reviewUndo = vi.fn(async () => ({ ok: true as const, card, remaining: 1 }))
+    const client = { reviewNext, reviewGrade, reviewUndo } as unknown as PathClient
     await mount(client)
     expect(container.textContent).toContain('What is a shape?')
     await act(async () => { button('Show the back').click(); await Promise.resolve() })
     expect(container.textContent).toContain('A tuple of dimensions.')
     await act(async () => { button('Good').click(); await Promise.resolve() })
     expect(reviewGrade).toHaveBeenCalledWith({ cardId: 'card-1', rating: 'good' })
+    expect(container.textContent).toContain('Undo last grade')
+    await act(async () => { button('Undo last grade').click(); await Promise.resolve() })
+    expect(reviewUndo).toHaveBeenCalledWith('card-1')
     expect(container.textContent).not.toMatch(/\d+\s*%/)
   })
 

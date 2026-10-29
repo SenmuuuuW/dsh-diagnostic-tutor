@@ -49,6 +49,7 @@ import { planningTools } from './path-tools.js'
 import { sourceTools } from './source-tools.js'
 import { planTools } from './plan-tools.js'
 import { reviewTools } from './review-tools.js'
+import { syncLessonFlashcards } from './review-sync.js'
 import { activeAttempt } from './path.js'
 import { requireAttempt, writeCourseTeaching } from './path-runtime.js'
 
@@ -1274,6 +1275,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
           mode: { type: 'string', required: true },
           blockCount: { type: 'integer', required: true, description: 'Blocks in the lesson after this call.' },
           addedCount: { type: 'integer', required: true },
+          reviewCardCount: { type: 'integer', required: true, description: 'Flashcards now linked to review cards.' },
           markdown: { type: 'string', required: true, description: 'Plain Markdown projection for harnesses without the panel.' },
           origin: { type: 'string', required: true },
           ...PROJECT_BINDING_PROPERTIES,
@@ -1386,6 +1388,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
         mode,
         blockCount: lesson.blocks.length,
         addedCount: parsed.length,
+        reviewCardCount: (await syncLessonFlashcards(state, { courseId, nodeId, lesson, now })).length,
         markdown: blocksMarkdown(lesson.blocks),
         origin: lesson.origin,
         ...await state.adoptProject(sessionId, courseId, now, project),

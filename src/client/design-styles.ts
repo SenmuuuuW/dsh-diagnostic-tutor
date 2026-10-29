@@ -353,6 +353,7 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-grade { display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-height:52px; padding:8px 10px; border:1px solid var(--dt-border,#e8eaee); border-radius:9px; background:var(--dt-bg,#fff); color:var(--dt-text,#1c1f23); cursor:pointer; text-align:left; }
 .dtx-grade span { color:var(--dt-muted,#6b7280); font-size:10.5px; }
 .dtx-grade-again { border-color:#fca5a5; } .dtx-grade-hard { border-color:#fcd34d; } .dtx-grade-good { border-color:#93c5fd; } .dtx-grade-easy { border-color:#86efac; }
+.dtx-review-undo { display:flex; align-items:center; gap:10px; margin:0 0 14px; padding:8px 10px; border:1px solid var(--dt-border,#e8eaee); border-radius:8px; background:var(--dt-surface,#f7f8fa); font-size:12px; }
 .dtx-review-more { margin:14px 0 0; color:var(--dt-muted,#6b7280); font-size:12px; }
 @media (max-width:620px) { .dtx-review { padding:18px 14px 32px; } .dtx-review-head { flex-direction:column; } .dtx-review-grades { grid-template-columns:repeat(2, minmax(0,1fr)); } }
 

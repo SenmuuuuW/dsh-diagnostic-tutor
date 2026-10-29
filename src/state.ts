@@ -658,6 +658,7 @@ export interface UdState {
   writeReviewCard(record: ReviewCard): Promise<ReviewCard>
   listReviewLog(): ReviewLog[]
   writeReviewLog(record: ReviewLog): Promise<ReviewLog>
+  deleteReviewLog(id: ReviewLogKey): Promise<void>
 
   /** Immutable planning snapshots; writes are validated and revision checked inside one queue. */
   readPath(courseId: string): LearningPath | undefined
@@ -1140,6 +1141,10 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
     async writeReviewLog(record) {
       await reviewLog.put(record.id, record)
       return record
+    },
+
+    async deleteReviewLog(id) {
+      await reviewLog.delete(id)
     },
 
     readPath: (courseId) => {
