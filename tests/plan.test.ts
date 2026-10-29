@@ -87,6 +87,11 @@ describe('Today API surface', () => {
       expect(calendar.statusCode).toBe(200)
       expect(calendar.headers['content-type']).toContain('text/calendar')
       expect(calendar.body).toContain('Plan item')
+      const taskId = (JSON.parse(overview.body).tasks as { id: string }[])[0]!.id
+      const completed = { statusCode: 0, body: '', setHeader() {}, end(chunk: string) { this.body += chunk } }
+      await handler({ method: 'POST', url: `${API_PREFIX}/plan/task`, headers: { host: '127.0.0.1:3080' }, async *[Symbol.asyncIterator]() { yield Buffer.from(JSON.stringify({ taskId, status: 'done' }), 'utf8') } } as unknown as IncomingMessage, completed as unknown as ServerResponse)
+      expect(completed.statusCode).toBe(200)
+      expect(JSON.parse(completed.body).tasks[0].status).toBe('done')
       expect(state.exportState(NOW).tasks).toHaveLength(1)
     } finally { await harness.close() }
   })

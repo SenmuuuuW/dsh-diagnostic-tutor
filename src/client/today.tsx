@@ -16,7 +16,7 @@ function dueLabel(value: string, lang: 'en' | 'zh'): string {
   } catch { return value }
 }
 
-export function TodayCard({ tasks, onExport }: { tasks: readonly TaskView[]; onExport?: (() => void) | undefined }): ReactNode {
+export function TodayCard({ tasks, onExport, onComplete }: { tasks: readonly TaskView[]; onExport?: (() => void) | undefined; onComplete?: ((taskId: string) => void) | undefined }): ReactNode {
   const text = useDesignText()
   const lang = useLang()
   const open = tasks.filter((task) => task.status === 'open')
@@ -40,6 +40,11 @@ export function TodayCard({ tasks, onExport }: { tasks: readonly TaskView[]; onE
             <span className="dtx-today-dot" aria-hidden="true" />
             <span className="dtx-today-title">{task.title}</span>
             {task.dueAt !== undefined && <span className="dtx-today-due">{dueLabel(task.dueAt, lang)}{task.estimateMin === undefined ? '' : ` · ${task.estimateMin} min`}</span>}
+            {onComplete !== undefined && (
+              <button type="button" className="dtx-today-done" aria-label={`${text.markTaskDone}: ${task.title}`} onClick={() => onComplete(task.id)}>
+                <Icon name="check" size={13} /> {text.markTaskDone}
+              </button>
+            )}
           </li>
         ))}
       </ul>

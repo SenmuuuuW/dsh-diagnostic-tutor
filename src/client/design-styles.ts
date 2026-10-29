@@ -346,6 +346,8 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-today-dot { width:7px; height:7px; border-radius:50%; background:var(--dt-brand,#4d6bfe); flex:none; }
 .dtx-today-title { flex:1 1 auto; min-width:0; overflow-wrap:anywhere; }
 .dtx-today-due { color:var(--dt-muted,#6b7280); font-size:11.5px; white-space:nowrap; }
+.dtx-today-done { display:inline-flex; align-items:center; gap:4px; padding:2px 7px; border:1px solid var(--dt-border,#e8eaee); border-radius:999px; background:var(--dt-bg,#fff); color:var(--dt-muted,#6b7280); font-size:11px; cursor:pointer; white-space:nowrap; }
+.dtx-today-done:hover { color:var(--dt-good,#1f8b4c); border-color:var(--dt-good,#1f8b4c); }
 .dtx-today-more { margin:6px 0 0; color:var(--dt-muted,#6b7280); font-size:11.5px; }
 .dtx-today .dtx-link { display:inline-flex; align-items:center; gap:5px; font-size:12px; }
 

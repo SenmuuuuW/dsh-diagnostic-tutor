@@ -648,6 +648,16 @@ export function createApiHandler(deps: ApiDeps) {
     if (method === 'POST' && route === '/project') return await handleSelectProject(state, req, res)
     if (method === 'GET' && route === '/export') return handleExport(state, res)
     if (method === 'POST' && route === '/reset') return await handleReset(state, res)
+    if (method === 'POST' && route === '/plan/task') {
+      const input = await readJsonBody(req)
+      const taskId = input === undefined ? undefined : stringField(input, 'taskId')
+      if (taskId === undefined) return fail(res, 400, 'missing-task-id')
+      const task = state.readTask(taskId)
+      if (task === undefined) return fail(res, 404, 'no-such-task')
+      const status = input?.status === 'open' || input?.status === 'archived' ? input.status : 'done'
+      await state.writeTask({ ...task, status, updatedAt: new Date().toISOString() })
+      return sendJson(res, 200, { ok: true, tasks: sortTasks(state.listTasks()).map(taskView) })
+    }
     if (method === 'GET' && route === '/plan/ics') {
       const calendar = buildIcs(state.listTasks(), new Date())
       res.statusCode = 200

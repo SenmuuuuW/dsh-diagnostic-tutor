@@ -52,7 +52,7 @@
 | 层 | 位置 | 负责 | 不负责 |
 | --- | --- | --- | --- |
 | Browser half | 浏览器 bundle | 渲染主页面/右栏 tab、轮询数据、发起请求、展示错误/等待、i18n/主题 | 不直接读写本机文件、不调模型 |
-| Host half | Node 插件 | `apply` 注册、15 个模型工具、22 条本地 HTTP 路由、UDT state、journal、diagnostics | 不做教学决策、不自己调用模型（只通过用户动作唤醒） |
+| Host half | Node 插件 | `apply` 注册、18 个模型工具、23 条本地 HTTP 路由、UDT state、journal、diagnostics | 不做教学决策、不自己调用模型（只通过用户动作唤醒） |
 
 ### 2.2 数据与运行
 
@@ -320,7 +320,7 @@ node scripts/doctor.mjs
 
 # 代码层
 pnpm typecheck && pnpm build
-node_modules/vitest/vitest.mjs run --no-file-parallelism   # 627 tests
+node_modules/vitest/vitest.mjs run --no-file-parallelism   # 632 tests
 ```
 
 截图画面使用测试 fixture 项目（Machine Learning / 天文学），实际内容由你本机的项目决定。
@@ -348,3 +348,8 @@ node_modules/vitest/vitest.mjs run --no-file-parallelism   # 627 tests
 - 计划只记录任务与时间，不参与教学判断；DSH schedule 仍是 session-local。
 
 ![Phase 2 Today](screens/phase2-today.png)
+
+## 16. Phase 3 additions（2026-10-27）
+
+- Today 任务可按项完成（只改计划状态）。
+- 复习卡与 review_log 已落盘，并用本地间隔调度；尚无独立复习 UI（下一片）。

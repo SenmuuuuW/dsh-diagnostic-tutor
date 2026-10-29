@@ -15,12 +15,13 @@ const tasks: TaskView[] = [
 
 describe('Today card', () => {
   it('shows open tasks only and asks for a calendar export', () => {
-    const html = renderToStaticMarkup(createElement(TodayCard, { tasks, onExport: () => {} }))
+    const html = renderToStaticMarkup(createElement(TodayCard, { tasks, onExport: () => {}, onComplete: () => {} }))
     expect(html).toContain('Today')
     expect(html).toContain('Read chapter 2')
     expect(html).toContain('Finish exercise')
     expect(html).not.toContain('Already done')
     expect(html).toContain('Export calendar')
+    expect(html).toContain('Done')
     expect(html).not.toMatch(/\d+\s*%/)
   })
 

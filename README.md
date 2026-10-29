@@ -360,7 +360,7 @@ route around them:
 
 ### Tools
 
-Fifteen. None of them decides anything about teaching; they record or report.
+Eighteen. None of them decides anything about teaching; they record or report.
 
 | Tool | Does |
 | --- | --- |
@@ -379,6 +379,9 @@ Fifteen. None of them decides anything about teaching; they record or report.
 | `udt_source_get` | returns one stored source for citation |
 | `udt_plan_get` | reads the learner-owned Today plan |
 | `udt_plan_update` | adds, completes or removes plan items; planning is policy, not teaching |
+| `udt_review_add` | queues review cards; scheduling is policy, not mastery |
+| `udt_review_next` | reads cards due now |
+| `udt_review_grade` | records a review rating and reschedules; never confirms a node |
 
 The division is the architecture: the tutor decides **what** to teach, when to
 check, and what an answer showed; the runtime decides **what may be stored** and
@@ -591,7 +594,7 @@ Blocks may also carry `sourceRefs: [{sourceId, locator}]`; every reference is
 checked against the `sources` table at write time. The stored schema accepts an
 **unknown type** from a newer host and the client renders a readable placeholder;
 the current model tool still writes only known types.
-The Learning map also shows a compact **Today** card when `udt_plan_update` has created open plan items, with an **Export calendar** action for dated items. DSH's own `schedule` is session-local, so this is an explicit calendar export rather than a push notification.
+The Learning map also shows a compact **Today** card when `udt_plan_update` has created open plan items, with a done action and an **Export calendar** action for dated items. DSH's own `schedule` is session-local, so this is an explicit calendar export rather than a push notification. Review cards and their local interval scheduler are stored but have no separate review surface yet.
 
 ### Browser API
 
@@ -607,6 +610,7 @@ The browser's core calls, at `/diagnostic-tutor/api` (the full route list is in
 | `GET /source?id=` | one stored source and its text, for a citation preview |
 | `POST /path/answer` | record a quiz/flashcard submission on the active attempt |
 | `GET /plan/ics` | download open, dated Today plan items as an ICS calendar |
+| `POST /plan/task` | mark a Today plan item done (learner action; plan only) |
 
 Every request passes a **trust fence**: a bare `ctx.webServer.register()` route
 inherits no authentication, so the route checks that the request arrived at a
@@ -762,7 +766,7 @@ shows a loader row exists.
 | `v0.1.0` | first stable release, installable from npm |
 | `v0.1.1` | **published** — packaged release with the docked learning surface |
 | `main` (unreleased) | learning-path flow: goal/time brief, evidence-referenced assessment, versioned course routes with per-lesson Overviews, session-scoped attempts and teaching snapshots, English/Simplified-Chinese interface, one page + one lesson surface |
-| next | settings, review scheduling, automatic replan suggestions (the tutor already proposes revisions on request; no runtime auto-replan) |
+| next | settings, review UI, automatic replan suggestions (the tutor already proposes revisions on request; no runtime auto-replan) |
 
 ## Trust
 

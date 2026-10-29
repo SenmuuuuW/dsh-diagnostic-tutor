@@ -51,6 +51,8 @@ describe('domain declaration', () => {
       'course_runs',
       'sources',
       'tasks',
+      'review_cards',
+      'review_log',
     ])
   })
 
