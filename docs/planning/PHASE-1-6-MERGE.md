@@ -124,7 +124,7 @@ node scripts/path-check.mjs http://127.0.0.1:8391/ /tmp/udt-merge-check
 - `path-check` 数量不低于该阶段表；
 - 真实 learner data 不被测试写入；`pnpm doctor` 只读。
 
-## 5. DSH 兼容矩阵（合并前必须重跑）
+## 5. DSH 兼容矩阵（boot 已跑；完整会话仍需一次）
 
 README 的兼容承诺：
 
@@ -132,7 +132,9 @@ README 的兼容承诺：
 | --- | --- | --- |
 | `0.1.1` | `0.2.1-rc.3`、`0.2.1-rc.2`、`0.2.0-rc.2`，测试套件也覆盖 `0.1.7-alpha.2` | `^22.19.0 \|\| >=24.0.0` |
 
-Phase 1–6 的改动没有新增 `@deepseek-ai/*` 包，但增加了很多 host 侧代码：`defineTool` 参数/输出、`webServer` 路由、`storageDomain` 表。合并前需要至少在 `0.2.1-rc.3` 与 `0.1.7-alpha.2` 上重新跑：
+**2026-10-29 已完成四版本 boot 矩阵**：`0.2.1-rc.3`、`0.2.1-rc.2`、`0.2.0-rc.2`、`0.1.7-alpha.2` 均通过插件加载、`/overview`、`/diagnostics`、`/plan/ics` 和客户端启动；详见 [`COMPATIBILITY.md`](COMPATIBILITY.md)。
+
+剩余检查：真实登录会话下的完整流程，至少在 `0.2.1-rc.3` 与 `0.1.7-alpha.2` 上各跑一次：
 
 1. 安装插件并加载；
 2. 打开 Learning map；
@@ -141,7 +143,7 @@ Phase 1–6 的改动没有新增 `@deepseek-ai/*` 包，但增加了很多 host
 5. 导出一份 storage 并重载；
 6. 确认 `pnpm doctor` 和客户端 bundle 正常。
 
-结果写回 `docs/planning/COMPATIBILITY.md`（如尚不存在则新建），不要把“未测”写成“通过”。
+完整会话结果写回 [`COMPATIBILITY.md`](COMPATIBILITY.md)；不要把“未测”写成“通过”。
 
 ## 6. 存储与回滚
 
@@ -203,6 +205,7 @@ Revert this branch/commit; export storage first.
 - [x] 在 Phase 1–6 分支上逐层重跑测试（6/6 通过，见 1.1 表）
 - [x] 在 Phase 6 分支上重跑完整验收（639 tests、25 browser、build）
 - [ ] 在真实 worktree 中按第 4 节用 `pnpm install --frozen-lockfile` 再跑一次
-- [ ] 在 DSH `0.2.1-rc.3` 与 `0.1.7-alpha.2` 上各跑一次安装/加载/lesson/review/insights
+- [x] 四版本 boot 矩阵（2026-10-29，见 `COMPATIBILITY.md`）
+- [ ] 在 DSH `0.2.1-rc.3` 与 `0.1.7-alpha.2` 上用真实会话跑 lesson/review/insights
 - [ ] 备份 `~/.dsh/storages/udt.json`
 - [ ] 按顺序开 6 个 PR（或先只开 Phase 1）
