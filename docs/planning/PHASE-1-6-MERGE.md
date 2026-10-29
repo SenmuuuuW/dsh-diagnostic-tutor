@@ -1,10 +1,20 @@
-# Phase 1–6 合并准备
+# Phase 1–6 合并执行记录
 
-> 状态：全部为本地堆叠分支，未 push、未合并、未改 `version`。
-> 截至 Phase 6 功能 tip `4bf7574`，相对 `main`（`3f0ef8a`）共 20 个 commit、69 个文件、+4262/−100；加上本文档所在 commit 后分支共 21 个 commit。
-> 本文只给合并顺序、验收和兼容性清单；执行合并/推送前需单独确认。
+> 状态（2026-10-29）：Phase 1–5 已合并到 `main`，Phase 6 PR 待合并；`version` 仍为 `0.1.1`。
+> 本文最初是推送前的合并计划；下面的分支 hash 与逐分支复验是 rebase 前的历史记录，rebase 后内容等价、commit hash 已变化。
 
-## 1. 分支拓扑
+合并执行记录：
+
+| 阶段 | PR | 结果 |
+| --- | --- | --- |
+| Phase 1 | [#34](https://github.com/SenmuuuuW/dsh-diagnostic-tutor/pull/34) | 已合并 `7adb8dd` |
+| Phase 2 | [#35](https://github.com/SenmuuuuW/dsh-diagnostic-tutor/pull/35) | 已合并 `4093ee2` |
+| Phase 3 | [#36](https://github.com/SenmuuuuW/dsh-diagnostic-tutor/pull/36) | 已合并 `cf3ad78` |
+| Phase 4 | [#37](https://github.com/SenmuuuuW/dsh-diagnostic-tutor/pull/37) | 已合并 `a04655a` |
+| Phase 5 | [#38](https://github.com/SenmuuuuW/dsh-diagnostic-tutor/pull/38) | 已合并 `58e63ee` |
+| Phase 6 | [#39](https://github.com/SenmuuuuW/dsh-diagnostic-tutor/pull/39) | 待合并 |
+
+## 1. 分支拓扑（rebase 前历史）
 
 分支是一条线，不是并行分叉：
 
@@ -44,12 +54,13 @@ main 3f0ef8a
 
 > 说明：worktree 中直接运行 `tsdown` + `vitest`，因为共享 `node_modules` 时 pnpm 的依赖状态检查会拒绝 `pnpm test`；这不是产品/测试失败。真实合并后仍按第 4 节用 `pnpm install --frozen-lockfile && pnpm test` 验收。
 
-当前 HEAD 自检结果：
+当前 Phase 6 分支自检结果：
 
+- Phase 1–5 已合并到 `main`；Phase 6 已 rebase 到 `main`
 - `git diff --check main..HEAD`：通过
 - `git diff main..HEAD -- package.json`：`version` 仍为 `0.1.1`；新增 host-only `katex@^0.16.47`
 - 新增的 `@deepseek-ai/dsh-tools` 使用与 `main` 既有模式一致；没有引入新的 DSH 包
-- 未配置 upstream；所有改动都在本地
+- Phase 6 分支等待 PR #39 review
 
 ## 2. 推荐合并策略
 
@@ -134,7 +145,7 @@ README 的兼容承诺：
 
 **2026-10-29 已完成四版本 boot 矩阵**：`0.2.1-rc.3`、`0.2.1-rc.2`、`0.2.0-rc.2`、`0.1.7-alpha.2` 均通过插件加载、`/overview`、`/diagnostics`、`/plan/ics` 和客户端启动；rc3/alpha.2 还通过了 tarball 安装。详见 [`COMPATIBILITY.md`](COMPATIBILITY.md)。
 
-剩余检查：`0.2.1-rc.3` 与 `0.1.7-alpha.2` 已经用真实模型完成完整流程；`rc2/rc20` 如需更强结论可补：
+剩余可选检查：`rc2/rc20` 如需更强结论可补（`rc3/alpha.2` 已完成真实模型完整流程）：
 
 1. 安装插件并加载；
 2. 打开 Learning map；
@@ -198,7 +209,7 @@ Revert this branch/commit; export storage first.
 - FSRS 精确调度：当前是本地间隔启发式，不是 FSRS。
 - flashcard 删除后自动 suspend/删除复习卡：未做，当前只增不删。
 - 跨 harness（非 DSH）支持：未做。
-- 发布/npm/packaging：未做；本轮明确不改 version、不 push。
+- 发布/npm/packaging：未做；本轮不改 version，但分支已按阶段 push。
 
 ## 9. 当前立即可做的检查
 
@@ -208,6 +219,5 @@ Revert this branch/commit; export storage first.
 - [x] 四版本 boot 矩阵（2026-10-29，见 `COMPATIBILITY.md`）
 - [x] rc3/alpha.2 的 tarball 安装与客户端加载
 - [x] rc3/alpha.2 真实模型会话：lesson → Review 评分/撤销 → Insights
-- [ ] 在 DSH `0.2.1-rc.3` 与 `0.1.7-alpha.2` 上用真实会话跑 lesson/review/insights
 - [ ] 备份 `~/.dsh/storages/udt.json`
-- [ ] 按顺序开 6 个 PR（或先只开 Phase 1）
+- [x] 按顺序开 PR：Phase 1–5 已合并，Phase 6 PR #39 待合并

@@ -1,7 +1,7 @@
 # DSH 兼容矩阵验证
 
 > 验证对象：`dsh-diagnostic-tutor@0.1.1`，Phase 1–6 本地堆叠分支。
-> 功能代码 tip：`4bf7574`；验证时分支 tip：`22a76a3`。
+> 功能代码：Phase 6（验证时 tip `4bf7574`；rebase 后等价提交 `52fb1d4`）。
 > 验证日期：2026-10-29。宿主：macOS 15.0，Node `v24.16.0`。
 > 插件通过本地路径 link 或本地 tarball 进临时 profile；没有 push、合并或改 version。
 > 完整会话使用一次性测试 API key，仅注入隔离进程环境；key 不写入仓库、profile 或文档。
