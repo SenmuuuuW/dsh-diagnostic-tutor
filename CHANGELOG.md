@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added — Phase 6: read-only Insights
+
+- The Learning map gains a fourth tab, **Insights**.
+- `GET /insights?courseId=` projects review due/lapsed, recent reviews, evidence
+  counts, nodes already recorded as weak/blocked, recent attempts, plan items and
+  sources. It never computes a score or percentage and never infers weakness.
+- 639 tests, 25 browser cases, typecheck and build pass.
+
+
 ### Added — Phase 5: flashcard sync and review undo
 
 - Writing a `flashcard` block now projects one review card, idempotently keyed by

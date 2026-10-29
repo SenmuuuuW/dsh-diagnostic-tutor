@@ -613,6 +613,7 @@ The browser's core calls, at `/diagnostic-tutor/api` (the full route list is in
 | `GET /review` | due review cards (read-only) |
 | `POST /review/grade` | record a review rating and reschedule |
 | `POST /review/undo` | restore the previous schedule after the latest grade |
+| `GET /insights?courseId=` | read-only course insight counts |
 | `POST /plan/task` | mark a Today plan item done (learner action; plan only) |
 
 Every request passes a **trust fence**: a bare `ctx.webServer.register()` route

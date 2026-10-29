@@ -52,7 +52,7 @@
 | 层 | 位置 | 负责 | 不负责 |
 | --- | --- | --- | --- |
 | Browser half | 浏览器 bundle | 渲染主页面/右栏 tab、轮询数据、发起请求、展示错误/等待、i18n/主题 | 不直接读写本机文件、不调模型 |
-| Host half | Node 插件 | `apply` 注册、18 个模型工具、26 条本地 HTTP 路由、UDT state、journal、diagnostics | 不做教学决策、不自己调用模型（只通过用户动作唤醒） |
+| Host half | Node 插件 | `apply` 注册、18 个模型工具、27 条本地 HTTP 路由、UDT state、journal、diagnostics | 不做教学决策、不自己调用模型（只通过用户动作唤醒） |
 
 ### 2.2 数据与运行
 
@@ -320,7 +320,7 @@ node scripts/doctor.mjs
 
 # 代码层
 pnpm typecheck && pnpm build
-node_modules/vitest/vitest.mjs run --no-file-parallelism   # 635 tests
+node_modules/vitest/vitest.mjs run --no-file-parallelism   # 639 tests
 ```
 
 截图画面使用测试 fixture 项目（Machine Learning / 天文学），实际内容由你本机的项目决定。
@@ -365,3 +365,10 @@ node_modules/vitest/vitest.mjs run --no-file-parallelism   # 635 tests
 
 - 导师写入 flashcard block 时自动生成复习卡；同一 node+block 幂等更新。
 - 复习评分记录后可撤销一次；旧日志没有调度历史时拒绝撤销。
+
+## 19. Phase 6 Insights（2026-10-28）
+
+- 学习地图第四个 tab「洞察」：复习/证据/薄弱节点/最近课次/计划/来源的只读计数。
+- 不计算分数或百分比，不推断新的薄弱项。
+
+![Phase 6 Insights](screens/phase6-insights.png)
