@@ -207,6 +207,18 @@
       async reviewGrade() {
         return { ok: true, remaining: 0, card: { id: 'preview-card-1', front: '为什么矩阵乘法要求内维相等？', back: '因为每一行要与权重向量的每个元素逐项相乘并求和；内维就是被消去的那个维度。', dueAt: new Date().toISOString() } }
       },
+      async insights(courseId) {
+        const at = new Date().toISOString()
+        return {
+          ok: true, courseId, courseTitle: 'Machine Learning', generatedAt: at,
+          review: { due: 2, overdue: 1, total: 7, lapsed: [{ id: 'preview-card-1', front: '为什么矩阵乘法要求内维相等？', lapses: 3, dueAt: at }] },
+          recentReviews: [{ at, rating: 'again', front: '为什么矩阵乘法要求内维相等？' }, { at, rating: 'good', front: '点积的形状规则是什么？' }],
+          evidence: { total: 8, last7Days: 3, byKind: [{ kind: 'practice', count: 4 }, { kind: 'diagnosis', count: 2 }, { kind: 'check', count: 2 }] },
+          weakNodes: [{ id: 'ml:math', title: 'Matrix shapes and products', state: 'weak', evidenceCount: 3, updatedAt: at }],
+          recentAttempts: [{ attemptId: 'preview-attempt', status: 'working', updatedAt: at, units: 2, responses: 1 }],
+          tasks: { open: 3, dueToday: 1 }, sources: { count: 1, bytes: 1200 },
+        }
+      },
     }
   }
   window.PATH_FIXTURE_SCENARIOS = SCENARIOS.slice()
