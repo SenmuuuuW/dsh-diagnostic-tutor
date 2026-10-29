@@ -69,6 +69,10 @@ describe('tool surface', () => {
         'udt_map_update',
         'udt_path_get',
         'udt_path_update',
+        'udt_quiz_update',
+        'udt_source_add',
+        'udt_source_get',
+        'udt_source_list',
         'udt_status',
       ])
     } finally {

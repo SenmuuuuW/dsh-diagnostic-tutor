@@ -1,6 +1,6 @@
 # DSH Diagnostic Tutor — 当前 UI 基线（交给最终 UI 设计用）
 
-> 版本：plugin `0.1.1` · DSH `0.2.1-rc.3` · 基线 commit `ae5e2dd`
+> 版本：plugin `0.1.1` · DSH `0.2.1-rc.3` · Phase 1 分支 `feat/phase1-content-sources`
 > 这份文档只描述**现在真实存在的界面、状态和交互约束**，不代表最终视觉方向。
 > 目标：让你在不猜产品逻辑的前提下，重画最终 UI 样板。
 
@@ -52,7 +52,7 @@
 | 层 | 位置 | 负责 | 不负责 |
 | --- | --- | --- | --- |
 | Browser half | 浏览器 bundle | 渲染主页面/右栏 tab、轮询数据、发起请求、展示错误/等待、i18n/主题 | 不直接读写本机文件、不调模型 |
-| Host half | Node 插件 | `apply` 注册、9 个模型工具、18 条本地 HTTP 路由、UDT state、journal、diagnostics | 不做教学决策、不自己调用模型（只通过用户动作唤醒） |
+| Host half | Node 插件 | `apply` 注册、13 个模型工具、21 条本地 HTTP 路由、UDT state、journal、diagnostics | 不做教学决策、不自己调用模型（只通过用户动作唤醒） |
 
 ### 2.2 数据与运行
 
@@ -157,7 +157,7 @@ UI 设计不能把上述逻辑收进按钮里；按钮只能**请求**模型做�
 | 完成态 | 完成提示；是否下一课由导师决定 | — |
 | 空/加载失败 | 可恢复错误 + 重试 | — |
 
-课次内容块只有四种：`text`、`example`、`diagram`、`check`。**检查块没有输入框**，学习者在对话里回答。
+课次内容块有十种：`text`、`example`、`diagram`、`check`、`formula`、`code`、`quiz`、`flashcard`、`resource`、`comparison`。**check 仍没有输入框**；quiz/闪卡可在 tab 内作答，运行时只记录，不判分。
 
 ### 5.3 知识与证据 tab
 
@@ -320,7 +320,24 @@ node scripts/doctor.mjs
 
 # 代码层
 pnpm typecheck && pnpm build
-node_modules/vitest/vitest.mjs run --no-file-parallelism   # 631 tests
+node_modules/vitest/vitest.mjs run --no-file-parallelism   # 620 tests
 ```
 
 截图画面使用测试 fixture 项目（Machine Learning / 天文学），实际内容由你本机的项目决定。
+
+---
+
+## 14. Phase 1 additions（2026-10-27）
+
+这轮新增的内容形态与输入层，不改变上面的两 surface 约束：
+
+- 行内/块级公式由 host 预渲染 MathML，client 只做白名单渲染（`screens/phase1-math-quiz.png`）。
+- 十种 block；quiz/闪卡在 tab 内可作答，但作答只记录为 attempt.responses + 中性 practice evidence，不会改 node 状态或自动推进。
+- sources 表 + `sourceRefs` 脚注；source 原文通过 `GET /source` 回看。`udt_source_add` 是唯一的本地文件读取例外（单个显式 .md/.txt，无目录扫描、无外联）。
+- 无 UI harness 时，`udt_lesson_update` 结果带 Markdown 投影。
+
+新增截图：
+
+- `screens/phase1-math-quiz.png` — 当前课次 tab：公式、quiz、闪卡、来源脚注
+- `screens/phase1-math-quiz-dark.png` — 同上深色
+- `screens/phase1-sources.png` — 知识/来源引用（fixture）

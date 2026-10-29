@@ -397,6 +397,35 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-route-meta { flex-wrap:wrap; }
 .dtx-next h2 { overflow-wrap:anywhere; }
 
+.dt-block-code .dt-pre { margin-top:6px; }
+.dt-block-quiz { padding:12px 14px; }
+.dt-source-refs { margin-top:8px; border-top:1px dashed var(--dt-border,#e8eaee); padding-top:8px; }
+.dt-source-ref { display:inline-block; margin:2px 6px 2px 0; padding:3px 8px; border:1px solid var(--dt-border,#e8eaee); border-radius:999px; background:var(--dt-surface,#f7f8fa); color:var(--dt-brand-ink,#3155f5); font-size:11.5px; cursor:pointer; }
+.dt-source-preview { margin-top:8px; padding:10px 12px; border:1px solid var(--dt-border,#e8eaee); border-radius:8px; background:var(--dt-surface,#f7f8fa); }
+.dt-source-preview-title { margin:0 0 2px; font-weight:600; }
+.dt-source-preview pre { max-height:240px; overflow:auto; margin:8px 0 0; white-space:pre-wrap; font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace; }
+.dt-quiz-option { display:flex; align-items:flex-start; gap:8px; margin:4px 0; cursor:pointer; }
+.dt-quiz-option input { margin-top:4px; }
+.dt-quiz-input { width:100%; margin:4px 0 8px; padding:8px 10px; border:1px solid var(--dt-border,#e8eaee); border-radius:7px; background:var(--dt-bg,#fff); color:var(--dt-text,#1c1f23); font:inherit; }
+.dt-quiz-recorded { margin:8px 0 0; color:var(--dt-good,#1f8b4c); font-size:12px; }
+.dt-flashcard-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.dt-flashcard-front { margin:6px 0; font-weight:600; }
+.dt-block-quiz .dt-quiz-question { margin:10px 0; }
+.dt-quiz-prompt { margin:0 0 6px; }
+.dt-quiz-options { margin:0 0 8px; padding-left:22px; }
+.dt-quiz-options li { margin:3px 0; }
+.dt-block-flashcard .dt-flashcard { margin-top:6px; padding:10px 12px; border:1px solid var(--dt-border,#e8eaee); border-radius:8px; }
+.dt-flashcard summary { cursor:pointer; font-weight:600; }
+.dt-flashcard-back { margin:8px 0 0; color:var(--dt-muted,#6b7280); }
+.dt-resource-title { margin:6px 0 2px; font-weight:600; }
+.dt-block-comparison .dt-md-table-wrap { margin-top:8px; }
+
+.dt-block-formula { padding:12px 14px; }
+.dt-block-formula .dt-formula-body { margin-top:6px; overflow-x:auto; font-size:1.05em; }
+.dt-block-formula .dt-formula-body math { display:block; margin:0 auto; }
+.dt-math math { display:inline-block; vertical-align:middle; }
+.dt-math-source { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.95em; }
+
 /* tables and fenced code are produced by the shared block renderer, so style
    them wherever a lesson body is shown (old inline panel included). */
 .dt-md-table-wrap { margin:12px 0 14px; overflow-x:auto; border:1px solid var(--dt-border,#e8eaee); border-radius:10px; }

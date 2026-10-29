@@ -17,6 +17,7 @@ import {
 } from '../src/lesson.js'
 import { newNode } from '../src/state.js'
 import type { CourseRecord, NodeRecord } from '../src/state.js'
+import type { Block } from '../src/lesson.js'
 
 const NOW = '2026-01-01T00:00:00.000Z'
 
@@ -61,9 +62,9 @@ function map(): NodeRecord[] {
 }
 
 describe('block schema', () => {
-  it('supports exactly the four v0.0.4 block types', () => {
-    expect([...SUPPORTED_BLOCK_TYPES].sort()).toEqual(['check', 'diagram', 'example', 'text'])
-    expect(BLOCK_SCHEMAS).toHaveLength(4)
+  it('supports the ten known block types', () => {
+    expect([...SUPPORTED_BLOCK_TYPES].sort()).toEqual(['check', 'code', 'comparison', 'diagram', 'example', 'flashcard', 'formula', 'quiz', 'resource', 'text'])
+    expect(BLOCK_SCHEMAS).toHaveLength(10)
   })
 
   it('accepts a well-formed block of each type', () => {
@@ -72,16 +73,32 @@ describe('block schema', () => {
       { id: 'b', type: 'example', content: { title: 't', steps: ['one'] } },
       { id: 'c', type: 'diagram', content: { format: 'ascii', spec: 'x' } },
       { id: 'd', type: 'check', content: { prompt: 'q' } },
+      { id: 'e', type: 'formula', content: { tex: 'x^2' } },
+      { id: 'f', type: 'code', content: { source: 'print(1)' } },
+      { id: 'g', type: 'quiz', content: { questions: [{ id: 'q1', kind: 'mcq', prompt: 'Which?', options: ['A', 'B'] }] } },
+      { id: 'h', type: 'flashcard', content: { front: 'front', back: 'back' } },
+      { id: 'i', type: 'resource', content: { title: 'Reading' } },
+      { id: 'j', type: 'comparison', content: { columns: ['a', 'b'], rows: [['1', '2']] } },
     ]
     for (const sample of samples) {
       expect(BlockSchema.safeParse(sample).success).toBe(true)
     }
   })
 
-  it('rejects an unknown type rather than passing it through', () => {
-    expect(BlockSchema.safeParse({ id: 'x', type: 'formula', content: { latex: 'x' } }).success).toBe(
-      false,
-    )
+  it('accepts an unknown type from a newer host, preserving its envelope', () => {
+    const parsed = BlockSchema.safeParse({ id: 'x', type: 'video', content: { src: 'clip.mp4' } })
+    expect(parsed.success).toBe(true)
+    if (parsed.success) {
+      expect(parsed.data.type).toBe('video')
+      expect(parsed.data.content).toEqual({ src: 'clip.mp4' })
+    }
+    expect(BlockSchema.safeParse({ id: '', type: 'video', content: {} }).success).toBe(false)
+  })
+
+  it('rejects a malformed known block rather than treating it as unknown', () => {
+    expect(BlockSchema.safeParse({ id: 'x', type: 'formula', content: { latex: 'x' } }).success).toBe(false)
+    expect(BlockSchema.safeParse({ id: 'q', type: 'quiz', content: { questions: [{ id: 'q1', kind: 'mcq', prompt: 'Which?' }] } }).success).toBe(false)
+    expect(BlockSchema.safeParse({ id: 'c', type: 'comparison', content: { columns: ['a', 'b'], rows: [['1']] } }).success).toBe(false)
   })
 
   it('rejects a malformed payload for a known type', () => {
@@ -90,6 +107,11 @@ describe('block schema', () => {
       BlockSchema.safeParse({ id: 'b', type: 'example', content: { title: 't', steps: [] } }).success,
     ).toBe(false)
     expect(BlockSchema.safeParse({ id: 'a', type: 'text', content: { md: '' } }).success).toBe(false)
+  })
+
+  it('accepts block-level source references and rejects malformed ones', () => {
+    expect(BlockSchema.safeParse({ id: 't', type: 'text', content: { md: 'quoted' }, sourceRefs: [{ sourceId: 'source-one', locator: 'lines 1-4' }] }).success).toBe(true)
+    expect(BlockSchema.safeParse({ id: 't', type: 'text', content: { md: 'quoted' }, sourceRefs: [{ sourceId: '', locator: '' }] }).success).toBe(false)
   })
 
   it('strips unknown envelope fields instead of storing them', () => {
@@ -155,20 +177,20 @@ describe('prototype lesson', () => {
 
   it('projects stored state rather than inventing content', () => {
     // Every fact in the lesson must be traceable to the record it came from.
-    const text = lesson.blocks[0]
+    const text = lesson.blocks[0] as Block
     expect(text?.type === 'text' && text.content.md).toContain('Math Foundations')
     expect(text?.type === 'text' && text.content.md).toContain('blocked')
 
-    const example = lesson.blocks[1]
+    const example = lesson.blocks[1] as Block
     expect(example?.type === 'example' && example.content.steps[0]).toContain('shaky maths')
 
-    const diagram = lesson.blocks[2]
+    const diagram = lesson.blocks[2] as Block
     expect(diagram?.type === 'diagram' && diagram.content.spec).toContain('Machine Learning')
     expect(diagram?.type === 'diagram' && diagram.content.spec).toContain('◀ this node')
   })
 
   it('ends on a check that waits for the learner', () => {
-    const check = lesson.blocks[3]
+    const check = lesson.blocks[3] as Block
     expect(check?.type).toBe('check')
     expect(check?.type === 'check' && check.content.expect).toBe('reasoning')
     expect(check?.metadata?.stopAndWait).toBe(true)
@@ -177,7 +199,7 @@ describe('prototype lesson', () => {
   it('says so plainly when a node has no evidence', () => {
     const bare = nodes[2] as NodeRecord
     const built = buildPrototypeLesson({ course, node: bare, nodes, now: NOW })
-    const example = built.blocks[1]
+    const example = built.blocks[1] as Block
     expect(example?.type === 'example' && example.content.steps[0]).toContain('No observation')
   })
 })

@@ -118,6 +118,22 @@ export const LearningPathSchema = z.object({
 })
 export type LearningPath = z.infer<typeof LearningPathSchema>
 
+export const BlockAnswerSchema = z.object({
+  questionId: z.string().min(1).max(200),
+  value: z.string().min(1).max(2000),
+}).strict()
+export type BlockAnswer = z.infer<typeof BlockAnswerSchema>
+
+/** A learner's submission for one interactive block. Recording only; no judgement. */
+export const BlockResponseSchema = z.object({
+  id: short,
+  blockId: short,
+  kind: z.enum(['quiz', 'flashcard']),
+  answers: z.array(BlockAnswerSchema).min(1).max(16),
+  submittedAt: z.string(),
+}).strict()
+export type BlockResponse = z.infer<typeof BlockResponseSchema>
+
 export const CourseAttemptSchema = z.object({
   id: short, operationId: short, operations: z.array(short).max(100), dispatchId: short.nullable(), version: z.number().int().min(1), itemId: short,
   status: z.enum(['requested', 'working', 'completed', 'interrupted']),
@@ -127,6 +143,8 @@ export const CourseAttemptSchema = z.object({
   outcome: z.string().max(2000).nullable(), evidence: z.array(EvidenceRefSchema).max(40),
   // Snapshot each teaching write. A later replace or another conversation cannot rewrite history.
   units: z.array(z.object({ id: short, writtenAt: z.string(), lesson: LessonSchema })).max(160),
+  /** Interactive block submissions. Optional so old v1 attempts keep opening. */
+  responses: z.array(BlockResponseSchema).max(50).optional(),
 })
 export type CourseAttempt = z.infer<typeof CourseAttemptSchema>
 export const CourseRunSchema = z.object({

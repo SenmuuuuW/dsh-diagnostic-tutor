@@ -27,6 +27,8 @@
 
 import { z } from 'zod'
 
+import { KNOWN_BLOCK_TYPE_NAMES } from './block-types.js'
+
 import type { CourseRecord, NodeRecord } from './state.js'
 
 /* -------------------------------------------------------------------------- */
@@ -62,17 +64,51 @@ export const MAX_PROMPT_CHARS = 1000
 export const MAX_TITLE_CHARS = 200
 export const MAX_STEP_CHARS = 400
 export const MAX_STEPS = 12
+export const MAX_MATH_TEX_CHARS = 2000
+export const MAX_MATHML_CHARS = 12000
+export const MAX_MATH_FRAGMENTS = 24
+export const MAX_ID_CHARS = 120
+export const MAX_CODE_CHARS = 6000
+export const MAX_CODE_LANGUAGE_CHARS = 40
+export const MAX_QUIZ_QUESTIONS = 8
+export const MAX_QUIZ_OPTIONS = 8
+export const MAX_QUIZ_ANSWER_CHARS = 2000
+export const MAX_FLASHCARD_SIDE_CHARS = 2000
+export const MAX_FLASHCARD_TAGS = 8
+export const MAX_COMPARISON_COLUMNS = 8
+export const MAX_COMPARISON_ROWS = 20
+export const MAX_COMPARISON_CELL_CHARS = 500
+export const MAX_LESSON_BYTES = 262_144
 
 /* -------------------------------------------------------------------------- */
 /* Blocks                                                                     */
 /* -------------------------------------------------------------------------- */
+
+/** A citation into one stored source. */
+export const SourceRefSchema = z.object({
+  sourceId: z.string().min(1).max(120),
+  /** Line range, heading, page or the original URL fragment. */
+  locator: z.string().min(1).max(300),
+}).strict()
+export type SourceRef = z.infer<typeof SourceRefSchema>
 
 /** Fields every block carries, whatever its type. */
 const blockBase = {
   id: z.string().min(1),
   /** Renderer-free annotations; never interpreted by the schema. */
   metadata: z.record(z.string(), z.unknown()).optional(),
+  /** Footnotes into learner-supplied sources; validated against the store before write. */
+  sourceRefs: z.array(SourceRefSchema).max(6).optional(),
 }
+
+export const MathFragmentSchema = z.object({
+  /** Source TeX without delimiters. */
+  tex: z.string().min(1).max(MAX_MATH_TEX_CHARS),
+  display: z.boolean(),
+  /** Host-rendered `<math>...</math>` subtree; optional for legacy records. */
+  mathml: z.string().min(1).max(MAX_MATHML_CHARS),
+})
+export type MathFragmentRecord = z.infer<typeof MathFragmentSchema>
 
 export const TextBlockSchema = z.object({
   ...blockBase,
@@ -80,6 +116,20 @@ export const TextBlockSchema = z.object({
   content: z.object({
     /** Markdown. Math uses the skill's convention: `\(...\)` / `\[...\]`. */
     md: z.string().min(1).max(MAX_TEXT_CHARS),
+    /** Host pre-render of formulas in `md`, keyed by exact TeX and display mode. */
+    math: z.array(MathFragmentSchema).max(MAX_MATH_FRAGMENTS).optional(),
+  }),
+})
+
+export const FormulaBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('formula'),
+  content: z.object({
+    tex: z.string().min(1).max(MAX_MATH_TEX_CHARS),
+    display: z.boolean().optional(),
+    /** Host-rendered MathML; the client shows the TeX fallback when absent. */
+    mathml: z.string().min(1).max(MAX_MATHML_CHARS).optional(),
+    caption: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
   }),
 })
 
@@ -120,27 +170,151 @@ export const CheckBlockSchema = z.object({
   }),
 })
 
-/** Every block type this version understands. */
-export const BLOCK_SCHEMAS = [
+export const CodeBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('code'),
+  content: z.object({
+    language: z.string().min(1).max(MAX_CODE_LANGUAGE_CHARS).optional(),
+    source: z.string().min(1).max(MAX_CODE_CHARS),
+    caption: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
+  }),
+})
+
+const quizId = z.string().min(1).max(MAX_ID_CHARS)
+export const QuizQuestionSchema = z.object({
+  id: quizId,
+  kind: z.enum(['mcq', 'short']),
+  prompt: z.string().min(1).max(MAX_PROMPT_CHARS),
+  options: z.array(z.string().min(1).max(300)).min(2).max(MAX_QUIZ_OPTIONS).optional(),
+  /** Stored for the tutor; never rendered to the learner before a judgement. */
+  answer: z.string().min(1).max(MAX_QUIZ_ANSWER_CHARS).optional(),
+  rubric: z.string().min(1).max(MAX_QUIZ_ANSWER_CHARS).optional(),
+  explanation: z.string().min(1).max(MAX_QUIZ_ANSWER_CHARS).optional(),
+}).superRefine((question, ctx) => {
+  if (question.kind === 'mcq' && (question.options === undefined || question.options.length < 2)) {
+    ctx.addIssue({ code: 'custom', message: 'A multiple-choice question needs at least two options' })
+  }
+  if (question.options !== undefined && new Set(question.options).size !== question.options.length) {
+    ctx.addIssue({ code: 'custom', message: 'Quiz options must be unique' })
+  }
+})
+export const QuizBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('quiz'),
+  content: z.object({
+    title: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
+    questions: z.array(QuizQuestionSchema).min(1).max(MAX_QUIZ_QUESTIONS),
+  }).superRefine((quiz, ctx) => {
+    const ids = new Set(quiz.questions.map((question) => question.id))
+    if (ids.size !== quiz.questions.length) ctx.addIssue({ code: 'custom', message: 'Quiz question IDs must be unique' })
+  }),
+})
+
+export const FlashcardBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('flashcard'),
+  content: z.object({
+    front: z.string().min(1).max(MAX_FLASHCARD_SIDE_CHARS),
+    back: z.string().min(1).max(MAX_FLASHCARD_SIDE_CHARS),
+    tags: z.array(z.string().min(1).max(40)).max(MAX_FLASHCARD_TAGS).optional(),
+  }),
+})
+
+export const ResourceBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('resource'),
+  content: z.object({
+    title: z.string().min(1).max(MAX_TITLE_CHARS),
+    sourceId: z.string().min(1).max(MAX_ID_CHARS).optional(),
+    locator: z.string().min(1).max(300).optional(),
+    /** Displayed as text only; the plugin never opens this URL itself. */
+    url: z.string().min(1).max(500).optional(),
+    note: z.string().min(1).max(500).optional(),
+  }),
+})
+
+export const ComparisonBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('comparison'),
+  content: z.object({
+    columns: z.array(z.string().min(1).max(120)).min(1).max(MAX_COMPARISON_COLUMNS),
+    rows: z.array(z.array(z.string().max(MAX_COMPARISON_CELL_CHARS)).min(1).max(MAX_COMPARISON_COLUMNS)).min(1).max(MAX_COMPARISON_ROWS),
+    caption: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
+  }).superRefine((comparison, ctx) => {
+    if (comparison.rows.some((row) => row.length !== comparison.columns.length)) {
+      ctx.addIssue({ code: 'custom', message: 'Every comparison row must have one cell per column' })
+    }
+  }),
+})
+
+const KNOWN_BLOCK_SCHEMAS = [
   TextBlockSchema,
   ExampleBlockSchema,
   DiagramBlockSchema,
   CheckBlockSchema,
+  FormulaBlockSchema,
+  CodeBlockSchema,
+  QuizBlockSchema,
+  FlashcardBlockSchema,
+  ResourceBlockSchema,
+  ComparisonBlockSchema,
 ] as const
 
-export const BlockSchema = z.discriminatedUnion('type', [
+/** Every block type this version understands. */
+export const BLOCK_SCHEMAS = KNOWN_BLOCK_SCHEMAS
+
+export const KnownBlockSchema = z.discriminatedUnion('type', [
   TextBlockSchema,
   ExampleBlockSchema,
   DiagramBlockSchema,
   CheckBlockSchema,
+  FormulaBlockSchema,
+  CodeBlockSchema,
+  QuizBlockSchema,
+  FlashcardBlockSchema,
+  ResourceBlockSchema,
+  ComparisonBlockSchema,
 ])
+
+const KNOWN_BLOCK_TYPES = new Set<string>(KNOWN_BLOCK_TYPE_NAMES)
+
+/**
+ * A block authored by a newer host.
+ *
+ * The durable boundary accepts it so an old client does not refuse to open a
+ * document. Writes from the current model still go through `KnownBlockSchema`;
+ * only records already on disk can carry an unknown type.
+ */
+export const UnknownBlockSchema = z.object({
+  id: z.string().min(1).max(MAX_ID_CHARS),
+  type: z.string().min(1).max(120),
+  content: z.unknown(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  sourceRefs: z.array(SourceRefSchema).max(6).optional(),
+}).superRefine((block, ctx) => {
+  if (KNOWN_BLOCK_TYPES.has(block.type)) ctx.addIssue({ code: 'custom', message: 'Use the schema for this known block type' })
+})
+
+export const BlockSchema = z.union([KnownBlockSchema, UnknownBlockSchema])
 
 export type TextBlock = z.infer<typeof TextBlockSchema>
 export type ExampleBlock = z.infer<typeof ExampleBlockSchema>
 export type DiagramBlock = z.infer<typeof DiagramBlockSchema>
 export type CheckBlock = z.infer<typeof CheckBlockSchema>
-export type Block = z.infer<typeof BlockSchema>
-export type BlockType = Block['type']
+export type FormulaBlock = z.infer<typeof FormulaBlockSchema>
+export type CodeBlock = z.infer<typeof CodeBlockSchema>
+export type QuizBlock = z.infer<typeof QuizBlockSchema>
+export type FlashcardBlock = z.infer<typeof FlashcardBlockSchema>
+export type ResourceBlock = z.infer<typeof ResourceBlockSchema>
+export type ComparisonBlock = z.infer<typeof ComparisonBlockSchema>
+export type KnownBlock = z.infer<typeof KnownBlockSchema>
+export type UnknownBlock = z.infer<typeof UnknownBlockSchema>
+/** A block this build can render. Kept as the default `Block` name for callers. */
+export type Block = KnownBlock
+/** A block read from storage; it may have been authored by a newer host. */
+export type StoredBlock = z.infer<typeof BlockSchema>
+export type BlockType = KnownBlock['type']
+
 
 /** The block types this build can render, for diagnostics and tests. */
 export const SUPPORTED_BLOCK_TYPES: readonly BlockType[] = BLOCK_SCHEMAS.map(

@@ -2,6 +2,7 @@
 import type { GoalBrief, PathView } from '../path.js'
 
 const BASE = '/diagnostic-tutor/api/path'
+const API = '/diagnostic-tutor/api'
 
 export interface PathWriteParams {
   sessionId: string
@@ -14,6 +15,11 @@ export interface PathRequestParams extends PathWriteParams {
   operationId: string
 }
 export interface AcceptPathParams extends PathWriteParams { version: number }
+export interface AnswerBlockParams extends PathWriteParams {
+  attemptId: string
+  blockId: string
+  answers: { questionId: string; value: string }[]
+}
 export interface StartPathParams extends AcceptPathParams {
   itemId: string
   operationId: string
@@ -21,6 +27,17 @@ export interface StartPathParams extends AcceptPathParams {
   resume?: boolean
   checkin?: boolean
   teachBack?: boolean
+}
+export interface SourceView {
+  id: string
+  kind: 'text' | 'file' | 'markdown'
+  title: string
+  locator: string
+  sha256: string
+  bytes: number
+  createdAt: string
+  status: 'ready' | 'error'
+  content?: string
 }
 export interface PromptedPathView extends PathView {
   prompted: boolean
@@ -35,6 +52,10 @@ export interface PathClient {
   start(params: StartPathParams): Promise<PromptedPathView>
   /** Pause the active attempt without ending it. */
   pause?(params: PathWriteParams): Promise<PathView>
+  /** Record one quiz/flashcard submission; never grades or changes state. */
+  answer?(params: AnswerBlockParams): Promise<PathView>
+  /** Read one stored source for a footnote preview. */
+  source?(sourceId: string): Promise<{ ok: true; source: SourceView }>
 }
 
 /** Retain HTTP status so a stale write can refresh without losing form edits. */
@@ -72,6 +93,19 @@ async function request<T extends PathView>(suffix: string, body?: unknown): Prom
   } finally { clearTimeout(timeout) }
 }
 
+async function requestSource(sourceId: string): Promise<{ ok: true; source: SourceView }> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12_000)
+  try {
+    const response = await fetch(`${API}/source?id=${encodeURIComponent(sourceId)}`, { headers: { accept: 'application/json' }, signal: controller.signal })
+    const value = await response.json() as { ok?: unknown; source?: unknown; error?: { message?: string; code?: string } }
+    if (!response.ok || value?.ok !== true || value.source === undefined) {
+      throw new PathClientError(value?.error?.message ?? `Source request failed (HTTP ${response.status}).`, value?.error?.code ?? 'source_failed', response.status)
+    }
+    return value as { ok: true; source: SourceView }
+  } finally { clearTimeout(timeout) }
+}
+
 export const defaultPathClient: PathClient = {
   get(courseId, sessionId) {
     const query = new URLSearchParams({ courseId })
@@ -84,4 +118,6 @@ export const defaultPathClient: PathClient = {
   accept: (params) => request('/accept', params),
   start: (params) => request<PromptedPathView>('/start', params),
   pause: (params) => request('/pause', params),
+  answer: (params) => request('/answer', params),
+  source: requestSource,
 }

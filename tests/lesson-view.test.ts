@@ -162,6 +162,97 @@ describe('examples and diagrams announce themselves', () => {
   })
 })
 
+describe('formula blocks and inline math use host MathML', () => {
+  it('renders a formula block without showing the TeX delimiters', () => {
+    const html = render({
+      id: 'f',
+      type: 'formula',
+      content: { tex: 'x^2', display: true, mathml: '<math><semantics><msup><mi>x</mi><mn>2</mn></msup></semantics></math>' },
+    } as unknown as Block)
+    expect(html).toContain('<math')
+    expect(html).toContain('<msup')
+    expect(html).not.toContain('x^2')
+  })
+
+  it('uses the stored MathML fragment for inline and display text math', () => {
+    const mathml = '<math><mi>x</mi></math>'
+    const inlineBlock = {
+      id: 't', type: 'text',
+      content: { md: 'Use \\(x\\) here.', math: [{ tex: 'x', display: false, mathml }] },
+    } as unknown as Block
+    const html = render(inlineBlock)
+    expect(html).toContain('<math')
+    expect(html).not.toContain('\\(')
+    expect(html).toContain('dt-math')
+  })
+
+  it('strips scripts, events and links from a hostile MathML string', () => {
+    const html = render({
+      id: 'f', type: 'formula',
+      content: { tex: 'x', mathml: '<math><script>alert(1)</script><mi onmouseover="alert(2)">x</mi><a href="https://evil">link</a></math>' },
+    } as unknown as Block)
+    expect(html).not.toContain('<script')
+    expect(html).not.toContain('onmouseover')
+    expect(html).not.toContain('href')
+    expect(html).toContain('x')
+  })
+})
+
+describe('the added content blocks announce their kind and content', () => {
+  it('renders code as source, not as an application', () => {
+    const html = render({ id: 'c', type: 'code', content: { language: 'python', source: 'print(1)' } } as unknown as Block)
+    expect(html).toContain('Code')
+    expect(html).toContain('python')
+    expect(html).toContain('print(1)')
+    expect(html).not.toContain('<script')
+  })
+
+  it('renders a quiz prompt and options without leaking the answer key', () => {
+    const html = render({
+      id: 'q', type: 'quiz',
+      content: { questions: [{ id: 'q1', kind: 'mcq', prompt: 'Which shape?', options: ['(5,2)', '(2,5)'], answer: '(5,2)', rubric: 'shape reasoning' }] },
+    } as unknown as Block)
+    expect(html).toContain('Which shape?')
+    expect(html).toContain('(5,2)')
+    expect(html).not.toContain('shape reasoning')
+    expect(html).toContain('Answer in the chat')
+  })
+
+  it('renders a flashcard front and back', () => {
+    const html = render({ id: 'f', type: 'flashcard', content: { front: 'front text', back: 'back text', tags: ['math'] } } as unknown as Block)
+    expect(html).toContain('Flashcard')
+    expect(html).toContain('front text')
+    expect(html).toContain('back text')
+    expect(html).toContain('math')
+  })
+
+  it('renders a resource and a comparison table', () => {
+    const resource = render({ id: 'r', type: 'resource', content: { title: 'Reading', locator: 'chapter 1', note: 'Start here' } } as unknown as Block)
+    expect(resource).toContain('Reading')
+    expect(resource).toContain('chapter 1')
+    expect(resource).toContain('Start here')
+    const comparison = render({ id: 'c', type: 'comparison', content: { columns: ['A', 'B'], rows: [['1', '2']] } } as unknown as Block)
+    expect(comparison).toContain('<table')
+    expect(comparison).toContain('<th')
+    expect(comparison).toContain('1')
+  })
+})
+
+describe('source citations are footnotes, not lost metadata', () => {
+  it('renders each source locator under the block', () => {
+    const html = render({
+      id: 't', type: 'text', content: { md: 'A quoted paragraph.' },
+      sourceRefs: [
+        { sourceId: 'source-one', locator: 'paragraph 1' },
+        { sourceId: 'source-two', locator: 'section 3' },
+      ],
+    } as unknown as Block)
+    expect(html).toContain('Sources')
+    expect(html).toContain('paragraph 1')
+    expect(html).toContain('section 3')
+  })
+})
+
 describe('the lesson keeps its shape', () => {
   it('renders every block in order, tagged by type', () => {
     const html = renderToStaticMarkup(
@@ -178,8 +269,8 @@ describe('the lesson keeps its shape', () => {
   })
 
   it('still degrades for a block type it does not know', () => {
-    const html = render({ id: 'x', type: 'formula', content: {} } as unknown as Block)
-    expect(html).toContain('formula')
+    const html = render({ id: 'x', type: 'video', content: {} } as unknown as Block)
+    expect(html).toContain('video')
     expect(html).toContain('no')
   })
 

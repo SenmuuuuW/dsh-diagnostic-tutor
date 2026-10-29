@@ -55,6 +55,8 @@ import {
 import type { NodeRelation, NodeState, Readiness } from './vocabulary.js'
 import { LessonSchema } from './lesson.js'
 import type { LessonKey, LessonRecord } from './lesson.js'
+import { SOURCES_TABLE, SourceRecordSchema } from './source-schema.js'
+import type { SourceRecord } from './source-schema.js'
 import { HandoffSchema } from './handoff.js'
 import type { HandoffKey, HandoffRecord } from './handoff.js'
 import { focusKey, handoffKey, isLegacyExecutionKey, nextStepKey } from './execution-key.js'
@@ -288,10 +290,13 @@ export interface UdExport {
   /** Planning and actual course attempts are learner-owned history too. */
   readonly learningPaths: readonly LearningPath[]
   readonly courseRuns: readonly CourseRun[]
+  /** Learner-supplied source material, with citations pointing into it. */
+  readonly sources: readonly SourceRecord[]
 }
 
 export type CourseKey = string
 export type NodeKey = string
+export type SourceKey = string
 
 /* -------------------------------------------------------------------------- */
 /* Domain declaration                                                         */
@@ -397,6 +402,7 @@ export const udtDomain = defineDomain({
     // Additive v1 tables: older v1 documents open with empty planning maps.
     learning_paths: domainTable<string, LearningPath>(LearningPathSchema),
     course_runs: domainTable<string, CourseRun>(CourseRunSchema),
+    [SOURCES_TABLE]: domainTable<SourceKey, SourceRecord>(SourceRecordSchema),
   },
 })
 
@@ -621,6 +627,12 @@ export interface UdState {
   /** Number of lessons across every course. */
   lessonCount(): number
 
+  /* sources --------------------------------------------------------------- */
+  /** Learner-supplied material, newest first is not guaranteed; callers sort if needed. */
+  listSources(): SourceRecord[]
+  readSource(id: SourceKey): SourceRecord | undefined
+  writeSource(record: SourceRecord): Promise<SourceRecord>
+
   /** Immutable planning snapshots; writes are validated and revision checked inside one queue. */
   readPath(courseId: string): LearningPath | undefined
   mutatePath(courseId: string, expectedRevision: number, change: (current: LearningPath) => LearningPath): Promise<LearningPath>
@@ -686,6 +698,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
   const projects: KvTable<ProjectKey, ProjectRecord> = domain.table(PROJECTS_TABLE)
   const paths: KvTable<string, LearningPath> = domain.table('learning_paths')
   const runs: KvTable<string, CourseRun> = domain.table('course_runs')
+  const sources: KvTable<SourceKey, SourceRecord> = domain.table(SOURCES_TABLE)
   let planningGeneration = 0
   const runKey = (courseId: string, sessionId: string) => JSON.stringify([sessionId, courseId])
   const learner: DomainGlobal<LearnerProfile> = domain.global
@@ -976,6 +989,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
         projects: [...projects.entries()].map(([, record]) => record),
         learningPaths: [...paths.entries()].map(([, record]) => structuredClone(record)),
         courseRuns: [...runs.entries()].map(([, record]) => structuredClone(record)),
+        sources: [...sources.entries()].map(([, record]) => structuredClone(record)),
       }
     },
 
@@ -984,7 +998,7 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
       // and project selections so late writes cannot resurrect deleted plans.
       ++planningGeneration
       await withProjectWrite(async () => {
-        for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs, projects, paths, runs]) {
+        for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs, projects, paths, runs, sources]) {
           for (const key of [...table.keys()]) await table.delete(key)
         }
         await learner.set({ initializedAt: UNINITIALIZED, updatedAt: now })
@@ -1048,6 +1062,18 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
     },
 
     lessonCount: () => lessons.size,
+
+    listSources: () => [...sources.entries()].map(([, record]) => structuredClone(record)),
+
+    readSource: (id) => {
+      const record = sources.get(id)
+      return record === undefined ? undefined : structuredClone(record)
+    },
+
+    async writeSource(record) {
+      await sources.put(record.id, record)
+      return record
+    },
 
     readPath: (courseId) => {
       const record = paths.get(courseId)

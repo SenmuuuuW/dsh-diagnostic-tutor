@@ -1,6 +1,6 @@
 # UDT 当前框架总览（以代码为准）
 
-状态：现行架构说明，对应 `main` 的 `d7540b9` 之后、未发布的界面收敛改动。
+状态：现行架构说明，对应 `feat/phase1-content-sources`（2026-10-27）的 Phase 1 内容/输入改动。
 这份文档只描述代码里真实存在的东西；每节都标注了对应文件，便于核对。
 产品设计背景见 [`LEARNING-PATH-ARCHITECTURE.md`](./LEARNING-PATH-ARCHITECTURE.md)。
 
@@ -14,11 +14,11 @@
 ```
 DSH Runtime
 ├── Host 插件  src/index.ts
-│   ├── storage domain "udt"     src/state.ts（9 张表 + 学习者单例）
-│   ├── 模型工具（9 个）          src/tools.ts（6）+ src/path-tools.ts（3）
+│   ├── storage domain "udt"     src/state.ts（10 张表 + 学习者单例）
+│   ├── 模型工具（13 个）         src/tools.ts（7）+ src/path-tools.ts（3）+ src/source-tools.ts（3）
 │   ├── 唤醒模型                 src/prompt.ts（旧循环焦点）
 │   │                            src/path-runtime.ts（初诊 / 路线 / 开课提示词）
-│   └── HTTP API                 src/api.ts + src/path-api.ts（19 条路由）
+│   └── HTTP API                 src/api.ts + src/path-api.ts（21 条路由）
 │
 ├── 模型 / UDT skill（仓库外）
 │   └── 只能通过工具读写状态；运行时不复制、不内置教学逻辑
@@ -71,12 +71,13 @@ DSH Runtime
 | `handoffs` | sessionId+nodeId | 旧循环等待/重试计时 | API 与教学工具 |
 | `session_projects` | sessionId | 本会话选中的项目（会话隔离根） | `POST /project` / 工具 |
 | `learning_paths` | courseId | 项目级规划聚合（revision CAS） | `udt_path_update`、`POST /path/*` |
-| `course_runs` | sessionId+courseId | 会话级课次尝试 + 教学快照 | `/path/start`、`udt_course_run_update`、`udt_lesson_update(attemptId)` |
+| `course_runs` | sessionId+courseId | 会话级课次尝试 + 教学快照 + 作答记录 | `/path/start`、`udt_course_run_update`、`udt_lesson_update(attemptId)`、`udt_quiz_update` |
+| `sources` | sourceId | 学习者提供的本地/粘贴文本、哈希与引用原文 | `udt_source_add`（additive v1 表） |
 | global `learner` | 单例 | 初始化标记、`preferredLanguage`、activeCourseId | `/preferences/*`、初始化 |
 
 注意：当前存在两套教学落盘方式——旧循环写 `lessons`；路线循环写 `course_runs.attempts[].units`。导出同时包含两者。
 
-## 6. 模型工具（9 个）
+## 6. 模型工具（13 个）
 
 | 组 | 工具 | 作用 |
 | --- | --- | --- |
@@ -84,11 +85,13 @@ DSH Runtime
 | | `udt_goal_create` | 建项目 + 根节点 |
 | | `udt_map_get` | 读完整诊断图 |
 | | `udt_map_update` | 加节点/证据/改状态（有 schema 与证据约束） |
-| | `udt_lesson_update` | 写教学；有 attemptId 时写尝试快照，否则写旧 lesson 表 |
+| | `udt_lesson_update` | 写教学；预渲染 MathML；有 attemptId 时写尝试快照，否则写旧 lesson 表 |
+| | `udt_quiz_update` | 记录 quiz/闪卡作答；不改节点状态、不判定掌握 |
 | | `udt_decide_next` | 记录下一步（模型决定目标，运行时只校验形状） |
 | 课程路线 | `udt_path_get` | 读 brief、初诊、全部路线、当前 attempt |
 | | `udt_path_update` | 写 brief / 初诊 / 路线草案 |
 | | `udt_course_run_update` | 绑定诊断节点、带证据完成课次 |
+| 输入 / 引用 | `udt_source_add` / `udt_source_list` / `udt_source_get` | 本地单文件或粘贴文本入库、列元数据、按 sourceId 读原文；插件零外联 |
 
 工具注册数量由 `registerTools()` 返回并写入启动日志，不再是手写常量。
 
@@ -113,6 +116,9 @@ DSH Runtime
 | `/path/accept` | POST | 显式接受某个路线版本（CAS） |
 | `/path/request` | POST | 请求初诊或路线；写 request 记录并唤醒模型 |
 | `/path/start` | POST | 创建/继续课次尝试并唤醒模型 |
+| `/path/pause` | POST | 暂停当前 attempt，保留同一 attempt |
+| `/path/answer` | POST | 记录 quiz/闪卡作答（不判定、不改状态） |
+| `/source` | GET | 读取一个 sources 原文（trust fence） |
 
 ## 8. 一次完整流程
 
@@ -196,7 +202,8 @@ DSH Runtime
   无导航服务时回退为在当前会话打开。
 - 路线页按阶段渐进展示（目标与时间 → 初诊 → 路线 → 学习），初诊未完成时只显示当前阶段并给出
   「去对话回答」提示；已完成的初诊摘要与路线版本折叠在次要位置。
-- 验证记录：582 个 Vitest 测试、21 组浏览器场景（1440/900/400 × 深浅色）、类型检查、生产构建、地图/面板视觉审计。
+- Phase 1（2026-10-27）：host KaTeX→MathML 预渲染 + 客户端白名单 MathML；10 种 block（新增 formula/code/quiz/flashcard/resource/comparison，未知类型降级）；quiz/闪卡作答写入 attempt.responses 与中性 practice evidence，可刷新/resume，不改 node state；`sources` 表与 `udt_source_add/list/get`、`sourceRefs` 跨表校验、`/source` 回看、Markdown 降级；插件仍零外联。
+- 验证记录：620 个 Vitest 测试、21 组浏览器场景（1440/900/400 × 深浅色）、类型检查、生产构建、地图/面板视觉审计。
 - 监控（2026-10-25）：host 写本地无内容事件日志（`<dsh-home>/logs/diagnostic-tutor-events.jsonl`，
   1 MB 上限、单次轮转，测试环境禁用），`GET /diagnostics` 返回阶段/请求/事件报告，
   `pnpm doctor` 提供只读体检；不联网、不记录聊天/目标/证据内容。
@@ -222,7 +229,7 @@ DSH Runtime
 
 ```sh
 pnpm typecheck
-pnpm test                 # 582 tests
+pnpm test                 # 620 tests
 pnpm build
 pnpm preview              # 构建产物预览
 node scripts/path-check.mjs http://127.0.0.1:8391/ /tmp/udt-path

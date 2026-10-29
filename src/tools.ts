@@ -24,13 +24,17 @@ import type { Violation } from './diagnosis.js'
 import { withLesson } from './handoff.js'
 import {
   BLOCK_SCHEMAS,
-  BlockSchema,
+  KnownBlockSchema,
   LESSON_ORIGINS,
   MAX_BLOCKS_PER_LESSON,
   MAX_BLOCKS_PER_UPDATE,
+  MAX_LESSON_BYTES,
   LessonSchema,
 } from './lesson.js'
-import type { Block, LessonRecord } from './lesson.js'
+import { renderMathFragments, renderTexToMathML } from './math.js'
+import { blocksMarkdown } from './lesson-markdown.js'
+import { AnswerSubmissionSchema, recordBlockResponse } from './interactions.js'
+import type { KnownBlock, LessonRecord } from './lesson.js'
 import { newNode, PROJECT_BINDINGS, PROJECT_SELECTIONS } from './state.js'
 import type { Evidence, NodeRecord, ProjectSelection, SessionProjectResolution, UdState } from './state.js'
 import {
@@ -42,6 +46,7 @@ import {
 } from './vocabulary.js'
 import type { EvidenceKind, NodeRelation, NodeState, Readiness } from './vocabulary.js'
 import { planningTools } from './path-tools.js'
+import { sourceTools } from './source-tools.js'
 import { activeAttempt } from './path.js'
 import { requireAttempt, writeCourseTeaching } from './path-runtime.js'
 
@@ -856,6 +861,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['text'] },
         content: {
           type: 'object',
@@ -869,6 +885,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['example'] },
         content: {
           type: 'object',
@@ -886,6 +913,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['diagram'] },
         content: {
           type: 'object',
@@ -903,6 +941,17 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
         type: { type: 'string', required: true, enum: ['check'] },
         content: {
           type: 'object',
@@ -911,6 +960,200 @@ const BLOCK_PARAM_SPEC = {
             prompt: { type: 'string', required: true },
             expect: { type: 'string', enum: ['reasoning', 'answer'] },
             hint: { type: 'string' },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
+        type: { type: 'string', required: true, enum: ['formula'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            tex: { type: 'string', required: true, description: 'TeX source without delimiters.' },
+            display: { type: 'boolean' },
+            caption: { type: 'string' },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
+        type: { type: 'string', required: true, enum: ['code'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            language: { type: 'string' },
+            source: { type: 'string', required: true },
+            caption: { type: 'string' },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
+        type: { type: 'string', required: true, enum: ['quiz'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            title: { type: 'string' },
+            questions: {
+              type: 'array', required: true,
+              items: {
+                type: 'object', additionalProperties: false,
+                properties: {
+                  id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
+                  kind: { type: 'string', required: true, enum: ['mcq', 'short'] },
+                  prompt: { type: 'string', required: true },
+                  options: { type: 'array', items: { type: 'string' } },
+                  answer: { type: 'string' },
+                  rubric: { type: 'string' },
+                  explanation: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
+        type: { type: 'string', required: true, enum: ['flashcard'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            front: { type: 'string', required: true },
+            back: { type: 'string', required: true },
+            tags: { type: 'array', items: { type: 'string' } },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
+        type: { type: 'string', required: true, enum: ['resource'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            title: { type: 'string', required: true },
+            sourceId: { type: 'string' },
+            locator: { type: 'string' },
+            url: { type: 'string' },
+            note: { type: 'string' },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
+        type: { type: 'string', required: true, enum: ['comparison'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            columns: { type: 'array', required: true, items: { type: 'string' } },
+            rows: { type: 'array', required: true, items: { type: 'array', items: { type: 'string' } } },
+            caption: { type: 'string' },
           },
         },
       },
@@ -930,6 +1173,53 @@ const BLOCK_PARAM_SPEC = {
  * and the next unit follows. `replace` exists for revising a unit that was
  * wrong, not for regenerating a course.
  */
+/**
+ * Attach host-rendered MathML to the two block types that carry formulas.
+ *
+ * This runs before `BlockSchema.parse`, so an invalid formula block is refused
+ * with the block index, while a bad inline expression in a text block is left
+ * as source for the client's styled fallback.
+ */
+function prepareMath(candidate: unknown, index: number): unknown {
+  if (candidate === null || typeof candidate !== 'object') return candidate
+  const block = candidate as { type?: unknown; content?: unknown }
+  if (block.type === 'text' && block.content !== null && typeof block.content === 'object') {
+    const content = block.content as Record<string, unknown>
+    if (typeof content.md !== 'string') return candidate
+    const math = renderMathFragments(content.md)
+    const { math: _old, ...rest } = content
+    return { ...block, content: math.length === 0 ? rest : { ...rest, math } }
+  }
+  if (block.type === 'formula' && block.content !== null && typeof block.content === 'object') {
+    const content = block.content as Record<string, unknown>
+    if (typeof content.tex !== 'string') return candidate
+    const mathml = renderTexToMathML(content.tex, content.display === true)
+    return { ...block, content: { ...content, mathml } }
+  }
+  return candidate
+}
+
+/**
+ * Source references are cross-table facts: the block schema can only check
+ * their shape, so the write boundary checks that every cited source exists.
+ * A dangling citation is refused rather than rendered as a broken footnote.
+ */
+function assertSources(state: UdState, block: KnownBlock, index: number): void {
+  const references = block.sourceRefs ?? []
+  for (const reference of references) {
+    const source = state.readSource(reference.sourceId)
+    if (source === undefined || source.status !== 'ready') {
+      throw new Error(`block[${index}] references unknown source "${reference.sourceId}" — add it with udt_source_add first`)
+    }
+  }
+  if (block.type === 'resource' && block.content.sourceId !== undefined) {
+    const source = state.readSource(block.content.sourceId)
+    if (source === undefined || source.status !== 'ready') {
+      throw new Error(`block[${index}] references unknown source "${block.content.sourceId}" — add it with udt_source_add first`)
+    }
+  }
+}
+
 function udtLessonUpdateTool(state: UdState): ToolDefinition {
   return defineTool({
     name: 'udt_lesson_update',
@@ -938,7 +1228,10 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       'The blocks appear in the panel beside the diagnosis map, so the learner reads them while ' +
       'answering in the chat — write for that surface, not as a chat message.\n' +
       'Block types: **text** {md}, **example** {title, steps[], takeaway?}, ' +
-      '**diagram** {format: ascii|mermaid, spec, caption?}, **check** {prompt, expect?, hint?}.\n' +
+      '**diagram** {format: ascii|mermaid, spec, caption?}, **check** {prompt, expect?, hint?}, ' +
+      '**formula** {tex, display?, caption?}, **code** {language?, source, caption?}, ' +
+      '**quiz** {title?, questions[]}, **flashcard** {front, back, tags?}, ' +
+      '**resource** {title, sourceId?, locator?, url?, note?}, **comparison** {columns[], rows[][], caption?}.\n' +
       `At most ${MAX_BLOCKS_PER_UPDATE} blocks per call and ${MAX_BLOCKS_PER_LESSON} per lesson; a teaching unit is a few ` +
       'blocks, not a chapter.\n' +
       '**Write your first unit as soon as you know it** rather than composing the whole thing first: ' +
@@ -979,6 +1272,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
           mode: { type: 'string', required: true },
           blockCount: { type: 'integer', required: true, description: 'Blocks in the lesson after this call.' },
           addedCount: { type: 'integer', required: true },
+          markdown: { type: 'string', required: true, description: 'Plain Markdown projection for harnesses without the panel.' },
           origin: { type: 'string', required: true },
           ...PROJECT_BINDING_PROPERTIES,
         },
@@ -1027,9 +1321,11 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       }
 
       // Strict, and it names the offending block: a model that sent one bad
-      // block should not have to guess which.
-      const parsed: Block[] = input.blocks.map((candidate, index) => {
-        const result = BlockSchema.safeParse(candidate)
+      // block should not have to guess which. Host-owned MathML is generated
+      // here so the model never supplies markup the client would trust.
+      const prepared = input.blocks.map((candidate, index) => prepareMath(candidate, index))
+      const parsed: KnownBlock[] = prepared.map((candidate, index) => {
+        const result = KnownBlockSchema.safeParse(candidate)
         if (!result.success) {
           const issue = result.error.issues[0]
           const where = issue === undefined ? '' : `${issue.path.join('.') || '(root)'}: ${issue.message}`
@@ -1037,6 +1333,11 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
         }
         return result.data
       })
+
+      parsed.forEach((block, index) => assertSources(state, block, index))
+      if (Buffer.byteLength(JSON.stringify(parsed), 'utf8') > MAX_LESSON_BYTES) {
+        throw new Error(`blocks are too large; the whole unit must stay under ${MAX_LESSON_BYTES} bytes`)
+      }
 
       const buildLesson = (existing: LessonRecord | undefined): LessonRecord => {
         const blocks = mode === 'replace' ? parsed : [...(existing?.blocks ?? []), ...parsed]
@@ -1083,6 +1384,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
         mode,
         blockCount: lesson.blocks.length,
         addedCount: parsed.length,
+        markdown: blocksMarkdown(lesson.blocks),
         origin: lesson.origin,
         ...await state.adoptProject(sessionId, courseId, now, project),
       }
@@ -1096,6 +1398,59 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
   })
 }
 
+
+/* -------------------------------------------------------------------------- */
+/* udt_quiz_update                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Record a learner's quiz/flashcard submission. This is storage, not judgement:
+ * it never changes a node state, never marks mastery and never advances a lesson.
+ * The tutor can read the submission through udt_path_get and decide what to say.
+ */
+function udtQuizUpdateTool(state: UdState): ToolDefinition {
+  return defineTool({
+    name: 'udt_quiz_update',
+    description:
+      'Record the learner\'s answers for a quiz or flashcard block on the active course attempt. ' +
+      'This only records what was submitted; it does NOT grade, does not change a node state, and does not advance the lesson. ' +
+      'Use the active attemptId from udt_path_get; stale or inactive attempts are refused. ' +
+      'For a quiz, answer each question id with one of the offered options (or free text for a short question). ' +
+      'For a flashcard, answer with the card block id and value again | got-it.',
+    parameters: {
+      attemptId: { type: 'string', required: true },
+      blockId: { type: 'string', required: true },
+      answers: {
+        type: 'array', required: true,
+        items: {
+          type: 'object', additionalProperties: false,
+          properties: {
+            questionId: { type: 'string', required: true },
+            value: { type: 'string', required: true },
+          },
+        },
+      },
+    },
+    output: { schema: { type: 'object', additionalProperties: true } as const, render: (_args, value) => [{ type: 'text' as const, text: JSON.stringify(value) }] },
+    execute: async (args, exec) => {
+      const input = args as { attemptId?: string; blockId?: string; answers?: unknown }
+      const sessionId = sessionOf(exec)
+      if (sessionId === undefined) throw new Error('quiz-write-requires-a-conversation')
+      const project = state.resolveProject(sessionId)
+      if (project.course === undefined) throw new Error('no-selected-project: open a project first')
+      const path = state.readPath(project.course.id)
+      if (path === undefined) throw new Error('no-learning-path: ask for a route first')
+      const submission = AnswerSubmissionSchema.parse(input)
+      const view = await recordBlockResponse(state, {
+        courseId: project.course.id,
+        sessionId,
+        expectedRevision: path.revision,
+        ...submission,
+      })
+      return JSON.parse(JSON.stringify(view))
+    },
+  })
+}
 
 /* -------------------------------------------------------------------------- */
 /* udt_decide_next                                                            */
@@ -1259,9 +1614,11 @@ export function registerTools(host: ToolsHost, state: UdState): number {
     udtMapGetTool(state),
     udtMapUpdateTool(state),
     udtLessonUpdateTool(state),
+    udtQuizUpdateTool(state),
     udtDecideNextTool(state),
   ]
   const planning = planningTools(state)
-  for (const tool of [...core, ...planning]) host.tools.register(tool)
-  return core.length + planning.length
+  const sources = sourceTools(state)
+  for (const tool of [...core, ...planning, ...sources]) host.tools.register(tool)
+  return core.length + planning.length + sources.length
 }

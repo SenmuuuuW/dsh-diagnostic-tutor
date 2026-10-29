@@ -16,7 +16,10 @@
 
 import { useState, type ReactNode } from 'react'
 
-import type { Block, HandoffView, NextStepView } from '../contract.js'
+import { MathMLView } from './mathml.jsx'
+
+import type { Block, HandoffView, KnownBlock, NextStepView, StoredBlock } from '../contract.js'
+import { isKnownBlock } from '../block-types.js'
 import { useLang } from './i18n.js'
 import { useLearningText } from './learning-text.js'
 import { useLessonText } from './lesson-text.js'
@@ -24,11 +27,24 @@ import { readinessLabel } from './map-text.js'
 import { continuationLabel, formatDuration } from './model.js'
 
 /** Props every renderer receives. */
-export interface BlockRenderProps<B extends Block = Block> {
-  block: B
+export interface BlockInteraction {
+  attemptId: string
+  loadSource?(sourceId: string): Promise<{ id: string; title: string; locator: string; content?: string }>
+  responses: readonly {
+    blockId: string
+    kind: string
+    answers: readonly { questionId: string; value: string }[]
+    submittedAt: string
+  }[]
+  submit(blockId: string, answers: { questionId: string; value: string }[]): Promise<void>
 }
 
-type Renderer = (props: BlockRenderProps) => ReactNode
+export interface BlockRenderProps<B extends KnownBlock = KnownBlock> {
+  block: B
+  interaction?: BlockInteraction | undefined
+}
+
+type Renderer = (props: BlockRenderProps<KnownBlock>) => ReactNode
 
 /**
  * Inline formatting: `**bold**`, `*italic*`, `` `code` ``, and inline math.
@@ -55,7 +71,7 @@ type Renderer = (props: BlockRenderProps) => ReactNode
  */
 const INLINE_PATTERN = /(\*\*[^*]+\*\*|\*[^*\n]+\*|`[^`]+`|\\\([\s\S]*?\\\))/g
 
-function inline(text: string): ReactNode[] {
+function inline(text: string, math?: readonly { tex: string; display: boolean; mathml: string }[]): ReactNode[] {
   return text
     .split(INLINE_PATTERN)
     .filter(Boolean)
@@ -68,9 +84,14 @@ function inline(text: string): ReactNode[] {
       }
       if (part.startsWith('`') && part.endsWith('`')) return <code key={index}>{part.slice(1, -1)}</code>
       if (part.startsWith('\\(') && part.endsWith('\\)')) {
+        const tex = part.slice(2, -2).trim()
+        const fragment = math?.find((entry) => !entry.display && entry.tex === tex)
         return (
           <span className="dt-math" key={index}>
-            {part.slice(2, -2)}
+            <MathMLView
+              mathml={fragment?.mathml}
+              fallback={<span className="dt-math-source">{part.slice(2, -2)}</span>}
+            />
           </span>
         )
       }
@@ -252,7 +273,7 @@ function toRuns(md: string): Line[][] {
  * Blank-line separated runs become paragraphs, `###` becomes a real heading,
  * `-` and `1.` become real lists, and `\[...\]` becomes a display-math panel.
  */
-function Paragraphs({ md }: { md: string }): ReactNode {
+function Paragraphs({ md, math }: { md: string; math?: readonly { tex: string; display: boolean; mathml: string }[] | undefined }): ReactNode {
   return (
     <>
       {toRuns(md).map((run, index) => {
@@ -261,14 +282,15 @@ function Paragraphs({ md }: { md: string }): ReactNode {
           const Tag = first.level === 2 ? 'h3' : 'h4'
           return (
             <Tag className={`dt-md-h${first.level}`} key={index}>
-              {inline(first.text)}
+              {inline(first.text, math)}
             </Tag>
           )
         }
         if (first.kind === 'math') {
+          const fragment = math?.find((entry) => entry.display && entry.tex === first.text)
           return (
             <div className="dt-math-block" key={index}>
-              {first.text}
+              <MathMLView mathml={fragment?.mathml} fallback={<span className="dt-math-source">{first.text}</span>} />
             </div>
           )
         }
@@ -284,9 +306,9 @@ function Paragraphs({ md }: { md: string }): ReactNode {
           return (
             <div className="dt-md-table-wrap" key={index}>
               <table className="dt-md-table">
-                <thead><tr>{(head ?? []).map((cell, column) => <th key={column}>{inline(cell)}</th>)}</tr></thead>
+                <thead><tr>{(head ?? []).map((cell, column) => <th key={column}>{inline(cell, math)}</th>)}</tr></thead>
                 <tbody>
-                  {body.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, column) => <td key={column}>{inline(cell)}</td>)}</tr>)}
+                  {body.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, column) => <td key={column}>{inline(cell, math)}</td>)}</tr>)}
                 </tbody>
               </table>
             </div>
@@ -296,7 +318,7 @@ function Paragraphs({ md }: { md: string }): ReactNode {
           return (
             <ul className="dt-md-ul" key={index}>
               {run.map((line, inner) => (
-                <li key={inner}>{inline('text' in line ? line.text : '')}</li>
+                <li key={inner}>{inline('text' in line ? line.text : '', math)}</li>
               ))}
             </ul>
           )
@@ -305,14 +327,14 @@ function Paragraphs({ md }: { md: string }): ReactNode {
           return (
             <ol className="dt-md-ol" key={index}>
               {run.map((line, inner) => (
-                <li key={inner}>{inline('text' in line ? line.text : '')}</li>
+                <li key={inner}>{inline('text' in line ? line.text : '', math)}</li>
               ))}
             </ol>
           )
         }
         return (
           <p className="dt-block-md" key={index}>
-            {inline(run.map((line) => ('text' in line ? line.text : '')).join(' '))}
+            {inline(run.map((line) => ('text' in line ? line.text : '')).join(' '), math)}
           </p>
         )
       })}
@@ -324,7 +346,7 @@ function TextBlockView({ block }: BlockRenderProps): ReactNode {
   if (block.type !== 'text') return null
   return (
     <div className="dt-block dt-block-text">
-      <Paragraphs md={block.content.md} />
+      <Paragraphs md={block.content.md} math={block.content.math ?? undefined} />
     </div>
   )
 }
@@ -428,6 +450,173 @@ function CheckBlockView({ block }: BlockRenderProps): ReactNode {
   )
 }
 
+function FormulaBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'formula') return null
+  return (
+    <div className="dt-block dt-block-formula">
+      <BlockLabel icon={<span aria-hidden="true">∑</span>}>{text.formula}</BlockLabel>
+      <div className="dt-formula-body">
+        <MathMLView
+          mathml={block.content.mathml}
+          fallback={<div className="dt-math-block"><span className="dt-math-source">{block.content.tex}</span></div>}
+        />
+      </div>
+      {block.content.caption !== undefined && <p className="dt-caption">{block.content.caption}</p>}
+    </div>
+  )
+}
+
+function CodeBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'code') return null
+  return (
+    <div className="dt-block dt-block-code">
+      <BlockLabel icon={<span aria-hidden="true">⌘</span>}>
+        {text.code}{block.content.language === undefined ? '' : ` · ${block.content.language}`}
+      </BlockLabel>
+      <pre className="dt-pre"><code>{block.content.source}</code></pre>
+      {block.content.caption !== undefined && <p className="dt-caption">{block.content.caption}</p>}
+    </div>
+  )
+}
+
+function QuizBlockView({ block, interaction }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  const [values, setValues] = useState<Record<string, string>>({})
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [sent, setSent] = useState(false)
+  if (block.type !== 'quiz') return null
+  const recorded = interaction?.responses.find((response) => response.blockId === block.id)
+  const submitted = sent || recorded !== undefined
+  const select = (questionId: string, value: string) => setValues((current) => ({ ...current, [questionId]: value }))
+  const complete = block.content.questions.every((question) => {
+    const value = recorded?.answers.find((answer) => answer.questionId === question.id)?.value ?? values[question.id]
+    return typeof value === 'string' && value.length > 0
+  })
+  const submit = async () => {
+    if (interaction === undefined || busy || !complete) return
+    setBusy(true); setError('')
+    try {
+      await interaction.submit(block.id, block.content.questions.map((question) => ({
+        questionId: question.id,
+        value: recorded?.answers.find((answer) => answer.questionId === question.id)?.value ?? values[question.id] ?? '',
+      })))
+      setSent(true)
+    } catch {
+      setError(text.answerFailed)
+    } finally { setBusy(false) }
+  }
+  return (
+    <div className="dt-block dt-block-quiz">
+      <BlockLabel icon={<span aria-hidden="true">?</span>}>{text.quiz}{block.content.title === undefined ? '' : ` · ${block.content.title}`}</BlockLabel>
+      {block.content.questions.map((question, index) => {
+        const chosen = recorded?.answers.find((answer) => answer.questionId === question.id)?.value ?? values[question.id] ?? ''
+        return (
+          <div className="dt-quiz-question" key={question.id}>
+            <p className="dt-quiz-prompt"><b>{index + 1}.</b> {inline(question.prompt)}</p>
+            {question.options !== undefined
+              ? <div className="dt-quiz-options" role="radiogroup" aria-label={question.prompt}>
+                  {question.options.map((option) => (
+                    <label className="dt-quiz-option" key={option}>
+                      <input type="radio" name={`${block.id}-${question.id}`} value={option} checked={chosen === option} disabled={submitted || interaction === undefined} onChange={() => select(question.id, option)} />
+                      <span>{inline(option)}</span>
+                    </label>
+                  ))}
+                </div>
+              : <input className="dt-quiz-input" aria-label={question.prompt} value={chosen} disabled={submitted || interaction === undefined} onChange={(event) => select(question.id, event.target.value)} />}
+          </div>
+        )
+      })}
+      {interaction === undefined
+        ? <p className="dt-caption">{text.quizAnswerInChat}</p>
+        : submitted
+          ? <p className="dt-quiz-recorded" role="status">{text.answerRecorded}</p>
+          : <button type="button" className="dt-secondary" disabled={busy || !complete} onClick={() => void submit()}>{text.submitAnswer}</button>}
+      {error !== '' && <p className="dt-caption" role="alert">{error}</p>}
+    </div>
+  )
+}
+
+function FlashcardBlockView({ block, interaction }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  const [revealed, setRevealed] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  if (block.type !== 'flashcard') return null
+  const recorded = interaction?.responses.find((response) => response.blockId === block.id)
+  const submit = async (value: 'again' | 'got-it') => {
+    if (interaction === undefined || busy) return
+    setBusy(true); setError('')
+    try {
+      await interaction.submit(block.id, [{ questionId: block.id, value }])
+      setRevealed(true)
+    } catch {
+      setError(text.answerFailed)
+    } finally { setBusy(false) }
+  }
+  return (
+    <div className="dt-block dt-block-flashcard">
+      <BlockLabel icon={<span aria-hidden="true">▣</span>}>{text.flashcard}</BlockLabel>
+      <div className="dt-flashcard">
+        <p className="dt-flashcard-front">{inline(block.content.front)}</p>
+        {interaction === undefined
+          ? <details><summary>{text.showAnswer}</summary><p className="dt-flashcard-back">{inline(block.content.back)}</p></details>
+          : (revealed || recorded !== undefined)
+            ? <p className="dt-flashcard-back">{inline(block.content.back)}</p>
+            : <button type="button" className="dt-secondary" onClick={() => setRevealed(true)}>{text.showAnswer}</button>}
+        {interaction !== undefined && (revealed || recorded !== undefined) && recorded === undefined && (
+          <div className="dt-flashcard-actions">
+            <button type="button" className="dt-secondary" disabled={busy} onClick={() => void submit('again')}>{text.flashcardAgain}</button>
+            <button type="button" className="dt-secondary" disabled={busy} onClick={() => void submit('got-it')}>{text.flashcardGotIt}</button>
+          </div>
+        )}
+        {recorded !== undefined && <p className="dt-quiz-recorded" role="status">{text.answerRecorded}</p>}
+      </div>
+      {block.content.tags !== undefined && <p className="dt-caption">{block.content.tags.join(' · ')}</p>}
+      {error !== '' && <p className="dt-caption" role="alert">{error}</p>}
+    </div>
+  )
+}
+
+function ResourceBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'resource') return null
+  return (
+    <div className="dt-block dt-block-resource">
+      <BlockLabel icon={<span aria-hidden="true">↗</span>}>{text.resource}</BlockLabel>
+      <p className="dt-resource-title">{inline(block.content.title)}</p>
+      {(block.content.locator !== undefined || block.content.sourceId !== undefined) && (
+        <p className="dt-caption">{text.sourceRef}{block.content.locator === undefined ? '' : ` · ${block.content.locator}`}</p>
+      )}
+      {block.content.url !== undefined && <p className="dt-caption">{block.content.url}</p>}
+      {block.content.note !== undefined && <p className="dt-caption">{inline(block.content.note)}</p>}
+    </div>
+  )
+}
+
+function ComparisonBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'comparison') return null
+  return (
+    <div className="dt-block dt-block-comparison">
+      <BlockLabel icon={<span aria-hidden="true">⇄</span>}>{text.comparison}</BlockLabel>
+      <div className="dt-md-table-wrap">
+        <table className="dt-md-table">
+          <thead><tr>{block.content.columns.map((column) => <th key={column}>{inline(column)}</th>)}</tr></thead>
+          <tbody>
+            {block.content.rows.map((row, rowIndex) => (
+              <tr key={rowIndex}>{row.map((cell, column) => <td key={column}>{inline(cell)}</td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {block.content.caption !== undefined && <p className="dt-caption">{block.content.caption}</p>}
+    </div>
+  )
+}
+
 /**
  * The registry. Adding a block type means adding one entry here.
  *
@@ -439,10 +628,16 @@ export const BLOCK_RENDERERS: Record<string, Renderer> = {
   example: ExampleBlockView,
   diagram: DiagramBlockView,
   check: CheckBlockView,
+  formula: FormulaBlockView,
+  code: CodeBlockView,
+  quiz: QuizBlockView,
+  flashcard: FlashcardBlockView,
+  resource: ResourceBlockView,
+  comparison: ComparisonBlockView,
 }
 
 /** Shown for a block type this build does not know. Never throws. */
-function UnknownBlockView({ block }: BlockRenderProps): ReactNode {
+function UnknownBlockView({ block }: { block: StoredBlock }): ReactNode {
   const text = useLessonText()
   const type = (block as { type?: unknown }).type
   return (
@@ -459,9 +654,51 @@ function UnknownBlockView({ block }: BlockRenderProps): ReactNode {
  * @param props.block - the block to render.
  * @returns the rendered block.
  */
-export function BlockView({ block }: { block: Block }): ReactNode {
-  const renderer = BLOCK_RENDERERS[block.type] ?? UnknownBlockView
-  return <div data-block-type={block.type}>{renderer({ block })}</div>
+function SourceRefs({ block, interaction }: { block: StoredBlock; interaction?: BlockInteraction | undefined }): ReactNode {
+  const text = useLessonText()
+  const [open, setOpen] = useState<string | null>(null)
+  const [preview, setPreview] = useState<{ title: string; locator: string; content: string } | null>(null)
+  const [error, setError] = useState('')
+  const refs = block.sourceRefs ?? []
+  if (refs.length === 0) return null
+  const load = async (sourceId: string) => {
+    if (open === sourceId) { setOpen(null); setPreview(null); return }
+    setOpen(sourceId); setPreview(null); setError('')
+    if (interaction?.loadSource === undefined) return
+    try {
+      const source = await interaction.loadSource(sourceId)
+      setPreview({ title: source.title, locator: source.locator, content: source.content ?? '' })
+    } catch { setError(text.answerFailed) }
+  }
+  return (
+    <div className="dt-source-refs">
+      <p className="dt-block-label">{text.sourceRef}</p>
+      {refs.map((ref) => (
+        <button type="button" className="dt-source-ref" key={`${ref.sourceId}:${ref.locator}`} onClick={() => void load(ref.sourceId)}>
+          {ref.locator}
+        </button>
+      ))}
+      {open !== null && preview !== null && (
+        <div className="dt-source-preview">
+          <p className="dt-source-preview-title">{preview.title}</p>
+          <p className="dt-caption">{preview.locator}</p>
+          <pre>{preview.content.slice(0, 4000)}</pre>
+        </div>
+      )}
+      {error !== '' && <p className="dt-caption" role="alert">{error}</p>}
+    </div>
+  )
+}
+
+export function BlockView({ block, interaction }: { block: StoredBlock; interaction?: BlockInteraction | undefined }): ReactNode {
+  if (!isKnownBlock(block)) {
+    return <div data-block-type={block.type}><UnknownBlockView block={block} /><SourceRefs block={block} interaction={interaction} /></div>
+  }
+  const renderer = BLOCK_RENDERERS[block.type]
+  if (renderer === undefined) {
+    return <div data-block-type={block.type}><UnknownBlockView block={block} /><SourceRefs block={block} interaction={interaction} /></div>
+  }
+  return <div data-block-type={block.type}>{renderer({ block, interaction })}<SourceRefs block={block} interaction={interaction} /></div>
 }
 
 /**
@@ -470,11 +707,11 @@ export function BlockView({ block }: { block: Block }): ReactNode {
  * @param props.blocks - the blocks to render.
  * @returns the rendered list.
  */
-export function LessonBody({ blocks }: { blocks: Block[] }): ReactNode {
+export function LessonBody({ blocks, interaction }: { blocks: readonly StoredBlock[]; interaction?: BlockInteraction | undefined }): ReactNode {
   return (
     <>
       {blocks.map((block) => (
-        <BlockView key={block.id} block={block} />
+        <BlockView key={block.id} block={block} interaction={interaction} />
       ))}
     </>
   )

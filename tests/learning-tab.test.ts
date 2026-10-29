@@ -122,6 +122,45 @@ describe('empty states', () => {
   })
 })
 
+describe('interactive lesson blocks', () => {
+  const interactive = {
+    ...lesson,
+    blocks: [
+      { id: 'quiz', type: 'quiz' as const, content: { questions: [{ id: 'q1', kind: 'mcq' as const, prompt: 'Which shape?', options: ['A', 'B'] }] } },
+      { id: 'card', type: 'flashcard' as const, content: { front: 'front', back: 'back' } },
+    ],
+  }
+  async function mountInteractive() {
+    const view = pathView({ activeAttemptId: 'a1', attempts: [attempt({ units: [{ id: 'u1', writtenAt: NOW, lesson: interactive }] })] })
+    const base = makeClient(view)
+    const answer = vi.fn(async (..._args: any[]) => view)
+    const client = { ...base, pathClient: { ...base.pathClient!, answer } }
+    await act(async () => {
+      root.render(createElement(LearningTab, { client, sessionId: 's1', onOpenMapPage: () => {} }))
+      await Promise.resolve(); await Promise.resolve()
+    })
+    return { answer, view }
+  }
+
+  it('records a quiz choice without showing a score', async () => {
+    const { answer } = await mountInteractive()
+    const radio = container.querySelector<HTMLInputElement>('input[value="A"]')!
+    await act(async () => { radio.click(); await Promise.resolve() })
+    await act(async () => { button('Record my answer').click(); await Promise.resolve() })
+    expect(answer).toHaveBeenCalledTimes(1)
+    expect(answer.mock.calls[0]![0]).toMatchObject({ attemptId: 'a1', blockId: 'quiz', answers: [{ questionId: 'q1', value: 'A' }] })
+    expect(container.textContent).toContain('Answer recorded')
+    expect(container.textContent).not.toMatch(/\d+\s*%/)
+  })
+
+  it('reveals a flashcard and records the self-report', async () => {
+    const { answer } = await mountInteractive()
+    await act(async () => { button('Show the answer').click(); await Promise.resolve() })
+    await act(async () => { button('Again').click(); await Promise.resolve() })
+    expect(answer).toHaveBeenCalledWith(expect.objectContaining({ blockId: 'card', answers: [{ questionId: 'card', value: 'again' }] }))
+  })
+})
+
 describe('active lesson', () => {
   it('renders the lesson title, route meta, progress and the tutor-written blocks', async () => {
     await mount(pathView())

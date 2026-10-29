@@ -21,6 +21,7 @@ import { MAX_BLOCKS_PER_LESSON, MAX_BLOCKS_PER_UPDATE } from '../src/lesson.js'
 import * as plugin from '../src/index.js'
 import { newNode, openUdState } from '../src/state.js'
 import type { UdState } from '../src/state.js'
+import type { Block } from '../src/lesson.js'
 import { registerTools } from '../src/tools.js'
 import type { ToolsHost } from '../src/tools.js'
 import { guarded } from '../src/trust-fence.js'
@@ -304,6 +305,81 @@ describe('udt_lesson_update', () => {
     }
   })
 
+  it('accepts citations only to sources that exist', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const { mathId } = await seed(state)
+      const wired = await wire(harness, state)
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
+      const source = await wired.tool('udt_source_add', { kind: 'text', text: 'A cited paragraph.', title: 'Reading' })
+      await wired.tool('udt_lesson_update', {
+        blocks: [{ id: 't', type: 'text', content: { md: 'Quoted.' }, sourceRefs: [{ sourceId: source.id, locator: 'paragraph 1' }] }],
+      })
+      const lesson = wired.state.lessonForNode(mathId)!
+      expect(lesson.blocks[0]?.sourceRefs?.[0]?.sourceId).toBe(source.id)
+      await expect(wired.tool('udt_lesson_update', {
+        blocks: [{ id: 'bad', type: 'text', content: { md: 'Quoted.' }, sourceRefs: [{ sourceId: 'missing', locator: 'nowhere' }] }],
+      })).rejects.toThrow(/unknown source/)
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('stores every newly supported content block', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const { mathId } = await seed(state)
+      const wired = await wire(harness, state)
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
+      await wired.tool('udt_lesson_update', {
+        blocks: [
+          { id: 'code', type: 'code', content: { language: 'python', source: 'print(1)' } },
+          { id: 'quiz', type: 'quiz', content: { questions: [{ id: 'q1', kind: 'mcq', prompt: 'Which?', options: ['A', 'B'] }] } },
+          { id: 'card', type: 'flashcard', content: { front: 'front', back: 'back', tags: ['math'] } },
+          { id: 'res', type: 'resource', content: { title: 'Reading', locator: 'chapter 1' } },
+          { id: 'cmp', type: 'comparison', content: { columns: ['a', 'b'], rows: [['1', '2']] } },
+        ],
+      })
+      const lesson = wired.state.lessonForNode(mathId)!
+      expect(lesson.blocks.map((block) => block.type)).toEqual(['code', 'quiz', 'flashcard', 'resource', 'comparison'])
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('pre-renders formulas to host-owned MathML before storing them', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const { mathId } = await seed(state)
+      const wired = await wire(harness, state)
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
+      await wired.tool('udt_lesson_update', {
+        blocks: [
+          textBlock('t', 'Use \\(X w\\) here.'),
+          { id: 'f', type: 'formula', content: { tex: '\\frac{a}{b}', display: true } },
+        ],
+      })
+      const written = await wired.tool('udt_lesson_update', {
+        blocks: [
+          textBlock('t', 'Use \\(X w\\) here.'),
+          { id: 'f', type: 'formula', content: { tex: '\\frac{a}{b}', display: true } },
+        ],
+      })
+      expect(String(written.markdown)).toContain('\\frac{a}{b}')
+      const lesson = wired.state.lessonForNode(mathId)!
+      const text = lesson.blocks[0] as Block
+      const formula = lesson.blocks[1] as Block
+      expect(text?.type === 'text' && text.content.math?.[0]?.mathml).toMatch(/^<math/)
+      expect(formula?.type === 'formula' && formula.content.mathml).toMatch(/^<math/)
+      expect(formula?.type === 'formula' && formula.content.mathml).not.toContain('<span')
+    } finally {
+      await harness.close()
+    }
+  })
+
   it('rejects malformed blocks, naming the offending one', async () => {
     // The declared `oneOf` parameter schema rejects a bad block before
     // `execute` runs, and the registry names its path. The zod pass in the
@@ -335,7 +411,7 @@ describe('udt_lesson_update', () => {
       // Unknown block type.
       await expect(
         wired.tool('udt_lesson_update', {
-          blocks: [{ id: 'bad', type: 'formula', content: { latex: 'x' } }],
+          blocks: [{ id: 'bad', type: 'video', content: { url: 'x' } }],
         }),
       ).rejects.toThrow(NAMES_INDEX)
 
