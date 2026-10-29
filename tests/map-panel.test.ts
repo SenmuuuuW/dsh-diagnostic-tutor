@@ -106,7 +106,7 @@ describe('project header', () => {
     await mount(makeClient(overview()), overview(), { onOpenChat })
     expect(container.textContent).toContain('Learning map')
     expect(container.textContent).toContain('Machine Learning')
-    expect(container.querySelectorAll('.dtx-tabbtn')).toHaveLength(3)
+    expect(container.querySelectorAll('.dtx-tabbtn')).toHaveLength(4)
     await clickButton('Back to chat')
     expect(onOpenChat).toHaveBeenCalled()
   })

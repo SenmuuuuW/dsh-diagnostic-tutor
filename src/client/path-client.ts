@@ -77,6 +77,8 @@ export interface PathClient {
   reviewNext?(): Promise<{ ok: true; cards: import('../contract.js').ReviewCardView[]; count: number }>
   /** Record one review grade and reschedule the card. */
   reviewGrade?(params: ReviewGradeParams): Promise<{ ok: true; card: import('../contract.js').ReviewCardView; remaining: number }>
+  /** Read-only course insights for the Insights tab. */
+  insights?(courseId: string): Promise<import('../contract.js').InsightsView>
   /** Undo the latest grade for one card when its log carries the prior schedule. */
   reviewUndo?(cardId: string): Promise<{ ok: true; card: import('../contract.js').ReviewCardView; remaining: number }>
 }
@@ -144,6 +146,19 @@ async function requestTaskMutation(params: TaskMutation): Promise<{ ok: true; ta
       throw new PathClientError(value?.error?.message ?? `Plan update failed (HTTP ${response.status}).`, value?.error?.code ?? 'plan_update_failed', response.status)
     }
     return value as { ok: true; tasks: import('../contract.js').TaskView[] }
+  } finally { clearTimeout(timeout) }
+}
+
+async function requestInsights(courseId: string): Promise<import('../contract.js').InsightsView> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12_000)
+  try {
+    const response = await fetch(`${API}/insights?courseId=${encodeURIComponent(courseId)}`, { headers: { accept: 'application/json' }, signal: controller.signal })
+    const value = await response.json() as { ok?: unknown; error?: { message?: string; code?: string } }
+    if (!response.ok || value?.ok !== true) {
+      throw new PathClientError(value?.error?.message ?? `Insights request failed (HTTP ${response.status}).`, value?.error?.code ?? 'insights_failed', response.status)
+    }
+    return value as import('../contract.js').InsightsView
   } finally { clearTimeout(timeout) }
 }
 
@@ -225,4 +240,5 @@ export const defaultPathClient: PathClient = {
   reviewNext: requestReviewNext,
   reviewGrade: requestReviewGrade,
   reviewUndo: requestReviewUndo,
+  insights: requestInsights,
 }

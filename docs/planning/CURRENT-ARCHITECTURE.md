@@ -18,7 +18,7 @@ DSH Runtime
 │   ├── 模型工具（18 个）         src/tools.ts（7）+ src/path-tools.ts（3）+ src/source-tools.ts（3）+ src/plan-tools.ts（2）+ src/review-tools.ts（3）
 │   ├── 唤醒模型                 src/prompt.ts（旧循环焦点）
 │   │                            src/path-runtime.ts（初诊 / 路线 / 开课提示词）
-│   └── HTTP API                 src/api.ts + src/path-api.ts（26 条路由）
+│   └── HTTP API                 src/api.ts + src/path-api.ts（27 条路由）
 │
 ├── 模型 / UDT skill（仓库外）
 │   └── 只能通过工具读写状态；运行时不复制、不内置教学逻辑
@@ -28,7 +28,8 @@ DSH Runtime
     ├── 侧栏 Learning map 入口   → 主栏唯一页面（map-panel.tsx）
     │                              ├─ 学习路线 PathPage（path-page.tsx）
     │                              ├─ 知识与证据（诊断图 + 证据）
-    │                              └─ 复习 ReviewPage（review-panel.tsx）
+    │                              ├─ 复习 ReviewPage（review-panel.tsx）
+    │                              └─ 洞察 InsightsPage（insights-panel.tsx）
     └── 共享：blocks.tsx / visuals.tsx / i18n.ts
              文案：path-text.ts / map-text.ts / lesson-text.ts /
                    learning-text.ts（共享）/ tab-text.ts / panel-text.ts
@@ -130,6 +131,7 @@ DSH Runtime
 | `/review` | GET | 到期复习卡（只读） |
 | `/review/grade` | POST | 记录复习评分并重排 due（不改 node 状态） |
 | `/review/undo` | POST | 用上一次 review_log 恢复评分前的调度 |
+| `/insights` | GET | 只读课程洞察：复习、证据、薄弱节点、课次、计划、来源计数 |
 
 ## 8. 一次完整流程
 
@@ -218,7 +220,8 @@ DSH Runtime
 - Phase 3（2026-10-27）：Today 任务完成/重新打开；复习卡与 `review_log` additive 表、`udt_review_add/next/grade`、无依赖的本地间隔调度；尚无独立复习 UI。
 - Phase 4（2026-10-28）：学习地图第三个 tab「复习」；复习卡正面/背面与四档评分；`/review`、`/review/grade`；仍只调度、不判掌握。
 - Phase 5（2026-10-28）：flashcard block 自动幂等投影为复习卡；`/review/undo` 用 review_log 恢复上一次评分前的调度。
-- 验证记录：635 个 Vitest 测试、23 组浏览器场景（含复习场景）、类型检查、生产构建、地图/面板视觉审计。
+- Phase 6（2026-10-28）：第四个 tab「洞察」；`/insights` 只读投影已存证据、复习、课次、计划与来源计数，不计算分数/百分比。
+- 验证记录：639 个 Vitest 测试、25 组浏览器场景（含复习/洞察场景）、类型检查、生产构建、地图/面板视觉审计。
 - 监控（2026-10-25）：host 写本地无内容事件日志（`<dsh-home>/logs/diagnostic-tutor-events.jsonl`，
   1 MB 上限、单次轮转，测试环境禁用），`GET /diagnostics` 返回阶段/请求/事件报告，
   `pnpm doctor` 提供只读体检；不联网、不记录聊天/目标/证据内容。
@@ -244,7 +247,7 @@ DSH Runtime
 
 ```sh
 pnpm typecheck
-pnpm test                 # 635 tests
+pnpm test                 # 639 tests
 pnpm build
 pnpm preview              # 构建产物预览
 node scripts/path-check.mjs http://127.0.0.1:8391/ /tmp/udt-path

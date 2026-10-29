@@ -20,6 +20,7 @@ import { evidenceKindLabel } from './map-text.js'
 import { formatWhen, relationLabel, stateExplanation } from './model.js'
 import { PathPage } from './path-page.js'
 import { ReviewPage } from './review-panel.jsx'
+import { InsightsPage } from './insights-panel.jsx'
 import type { PathClient } from './path-client.js'
 import { defaultPathClient } from './path-client.js'
 import type { NodeDetailResponse, NodeView, ProjectCardView } from '../contract.js'
@@ -41,7 +42,7 @@ export interface LearningMapPanelProps {
   pathClient?: PathClient | undefined
 }
 
-type MapView = 'curriculum' | 'knowledge' | 'review'
+type MapView = 'curriculum' | 'knowledge' | 'review' | 'insights'
 
 function whenText(iso: string, text: DesignText): string {
   const stamp = Date.parse(iso)
@@ -334,6 +335,7 @@ export function LearningMapPanel({
         <button type="button" className="dtx-tabbtn" aria-current={page === 'curriculum' ? 'page' : undefined} onClick={() => setPage('curriculum')}>{text.tabRoute}</button>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'knowledge' ? 'page' : undefined} onClick={() => setPage('knowledge')}>{text.tabKnowledge}</button>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'review' ? 'page' : undefined} onClick={() => setPage('review')}>{text.tabReview}</button>
+        <button type="button" className="dtx-tabbtn" aria-current={page === 'insights' ? 'page' : undefined} onClick={() => setPage('insights')}>{text.tabInsights}</button>
       </nav>
       <div className="dtx-scroll">
         {page === 'curriculum'
@@ -344,7 +346,9 @@ export function LearningMapPanel({
               {...(sessionActivity === undefined ? {} : { sessionActivity })} />
           : page === 'knowledge'
             ? <KnowledgePage nodes={nodes} selectedId={selectedId} detail={detail} loading={loading} error={error} onSelect={select} />
-            : <ReviewPage client={reviewClient} onOpenRoute={() => setPage('curriculum')} />}
+            : page === 'review'
+              ? <ReviewPage client={reviewClient} onOpenRoute={() => setPage('curriculum')} />
+              : <InsightsPage client={reviewClient} courseId={overview.course.id} onOpenRoute={() => setPage('curriculum')} onOpenReview={() => setPage('review')} />}
         {page === 'curriculum' && <div className="dtx-content" style={{ paddingTop: 0 }}><footer className="dtx-small dtx-muted"><DataFooter onExport={state.exportData} onReset={state.resetAll} /></footer></div>}
       </div>
     </div>

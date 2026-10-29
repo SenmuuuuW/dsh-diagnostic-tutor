@@ -167,6 +167,8 @@ matrix as load-bearing, not decoration.
 | `0.1.1` | `0.2.1-rc.3`, `0.2.1-rc.2`, `0.2.0-rc.2` (test suite also on `0.1.7-alpha.2`) | `^22.19.0 \|\| >=24.0.0` |
 | `0.1.0` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
 
+Phase 1–6 的本机 boot 矩阵（2026-10-29）覆盖 `0.2.1-rc.3`、`0.2.1-rc.2`、`0.2.0-rc.2`、`0.1.7-alpha.2` 的插件加载、本地路由、domain v1 与客户端启动；其中 rc3/alpha.2 还通过了 tarball 安装，并用真实模型完成 lesson → Review 评分/撤销 → Insights；rc2/rc20 的完整真实会话仍是补充项。详见 [`docs/planning/COMPATIBILITY.md`](docs/planning/COMPATIBILITY.md)。
+
 Rules this repository enforces mechanically:
 
 - **Named exports only.** A `export default` plugin makes Cordis' loader prefer
@@ -613,6 +615,7 @@ The browser's core calls, at `/diagnostic-tutor/api` (the full route list is in
 | `GET /review` | due review cards (read-only) |
 | `POST /review/grade` | record a review rating and reschedule |
 | `POST /review/undo` | restore the previous schedule after the latest grade |
+| `GET /insights?courseId=` | read-only course insight counts |
 | `POST /plan/task` | mark a Today plan item done (learner action; plan only) |
 
 Every request passes a **trust fence**: a bare `ctx.webServer.register()` route
@@ -881,4 +884,5 @@ MIT. The Universal Diagnostic Tutor skill is a separate MIT project by the same
 author and is not vendored here.
 
 Planning and architecture research for this project live in
-[`docs/planning/`](docs/planning/).
+[`docs/planning/`](docs/planning/). Phase 1–6 merge order, acceptance checks and the DSH compatibility checklist are in
+[`docs/planning/PHASE-1-6-MERGE.md`](docs/planning/PHASE-1-6-MERGE.md).

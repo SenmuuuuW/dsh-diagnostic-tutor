@@ -38,6 +38,7 @@ import type { Journal } from './journal.js'
 import { guarded } from './trust-fence.js'
 import { handlePathApi } from './path-api.js'
 import { buildIcs, sortTasks, taskView } from './plan.js'
+import { buildInsights } from './insights.js'
 import { REVIEW_RATINGS, dueCards, scheduleReview } from './review.js'
 import type { ReviewCard } from './review.js'
 import type { ReviewCardView } from './contract.js'
@@ -669,6 +670,13 @@ export function createApiHandler(deps: ApiDeps) {
       const status = input?.status === 'open' || input?.status === 'archived' ? input.status : 'done'
       await state.writeTask({ ...task, status, updatedAt: new Date().toISOString() })
       return sendJson(res, 200, { ok: true, tasks: sortTasks(state.listTasks()).map(taskView) })
+    }
+    if (method === 'GET' && route === '/insights') {
+      const courseId = url.searchParams.get('courseId') ?? course?.id
+      if (courseId === undefined || courseId.length === 0) return fail(res, 404, 'no-such-course')
+      const target = state.readCourse(courseId)
+      if (target === undefined) return fail(res, 404, 'no-such-course')
+      return sendJson(res, 200, buildInsights(state, target, new Date().toISOString()))
     }
     if (method === 'POST' && route === '/review/undo') {
       const input = await readJsonBody(req)

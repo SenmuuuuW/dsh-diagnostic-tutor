@@ -214,6 +214,15 @@ async function reviewCase() {
   await screenshot(`${currentCase}-review-back`)
 }
 
+async function insightsCase() {
+  await click('Insights')
+  await waitFor(`document.body.innerText.includes('Learning insights')`, 'insights page')
+  assert.equal(await cdp.evaluate(`[...document.querySelectorAll('.dtx-insight-card')].length`), 5)
+  const text = await cdp.evaluate(`document.body.innerText`)
+  assert.doesNotMatch(text, /\d+\s*%/)
+  await screenshot(`${currentCase}-insights`)
+}
+
 const plans = [
   { scenario: 'library', case: libraryCase, widths: [1440, 400], themes: ['light', 'dark'] },
   { scenario: 'path-setup', case: goalCase, widths: [1440, 900], themes: ['light'] },
@@ -224,6 +233,7 @@ const plans = [
   { scenario: 'curriculum', surface: 'tab', case: tabCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'curriculum', case: languageCase, widths: [1440], themes: ['light'] },
   { scenario: 'curriculum', case: reviewCase, widths: [1440, 400], themes: ['light'] },
+  { scenario: 'curriculum', case: insightsCase, widths: [1440, 400], themes: ['light'] },
 ]
 
 try {

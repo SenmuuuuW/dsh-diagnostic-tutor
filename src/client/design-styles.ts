@@ -336,6 +336,27 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-tab .dt-check-hint { margin:0; padding:9px 0 0; border-top:1px dashed #bbf7d0; background:transparent; color:#15803d; }
 .dtx-tab .dt-rail-progress { display:none; }
 
+/* insights tab */
+.dtx-insights { max-width:980px; margin:0 auto; padding:24px 26px 40px; }
+.dtx-insights-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }
+.dtx-insights-eyebrow { margin:0 0 4px; color:var(--dt-brand-ink,#3b56d9); font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+.dtx-insights-head h1 { margin:0; font-size:26px; }
+.dtx-insights-sub { margin:6px 0 0; max-width:620px; color:var(--dt-muted,#6b7280); font-size:12.5px; line-height:1.6; }
+.dtx-insights-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
+.dtx-insight-card { padding:16px 18px; border:1px solid var(--dt-border,#e8eaee); border-radius:12px; background:var(--dt-bg,#fff); }
+.dtx-insight-card h2 { display:flex; align-items:center; gap:6px; margin:0 0 8px; font-size:13px; }
+.dtx-insight-card h3 { margin:14px 0 4px; color:var(--dt-muted,#6b7280); font-size:11px; text-transform:uppercase; letter-spacing:.04em; }
+.dtx-insight-big { margin:0; font-size:30px; font-weight:700; line-height:1.1; }
+.dtx-insight-note { margin:4px 0 0; color:var(--dt-muted,#6b7280); font-size:12px; line-height:1.55; }
+.dtx-insight-card ul { margin:8px 0 0; padding:0; list-style:none; }
+.dtx-insight-card li { display:flex; align-items:baseline; justify-content:space-between; gap:10px; padding:5px 0; border-top:1px solid var(--dt-border,#e8eaee); font-size:12px; }
+.dtx-insight-card li span { overflow-wrap:anywhere; }
+.dtx-insight-card li b { color:var(--dt-muted,#6b7280); font-weight:500; white-space:nowrap; font-size:11px; }
+.dtx-insight-chips { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+.dtx-insight-chips span { padding:2px 6px; border:1px solid var(--dt-border,#e8eaee); border-radius:999px; color:var(--dt-muted,#6b7280); font-size:10.5px; }
+.dtx-insight-card .dtx-link { margin-top:10px; display:inline-flex; }
+@media (max-width:760px) { .dtx-insights { padding:18px 14px 32px; } .dtx-insights-grid { grid-template-columns:1fr; } .dtx-insights-head { flex-direction:column; } }
+
 /* review tab */
 .dtx-review { max-width:760px; margin:0 auto; padding:24px 26px 40px; }
 .dtx-review-head { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px; }

@@ -13,6 +13,7 @@
 
 export type { Block, BlockType, KnownBlock, LessonRecord, StoredBlock } from './lesson.js'
 export type { TaskView } from './plan.js'
+export type { InsightsView } from './insights.js'
 export interface ReviewCardView {
   id: string
   front: string
