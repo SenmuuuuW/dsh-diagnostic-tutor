@@ -882,4 +882,5 @@ MIT. The Universal Diagnostic Tutor skill is a separate MIT project by the same
 author and is not vendored here.
 
 Planning and architecture research for this project live in
-[`docs/planning/`](docs/planning/).
+[`docs/planning/`](docs/planning/). Phase 1–6 merge order, acceptance checks and the DSH compatibility checklist are in
+[`docs/planning/PHASE-1-6-MERGE.md`](docs/planning/PHASE-1-6-MERGE.md).
