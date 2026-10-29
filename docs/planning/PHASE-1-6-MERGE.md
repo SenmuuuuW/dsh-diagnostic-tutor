@@ -132,7 +132,7 @@ README 的兼容承诺：
 | --- | --- | --- |
 | `0.1.1` | `0.2.1-rc.3`、`0.2.1-rc.2`、`0.2.0-rc.2`，测试套件也覆盖 `0.1.7-alpha.2` | `^22.19.0 \|\| >=24.0.0` |
 
-**2026-10-29 已完成四版本 boot 矩阵**：`0.2.1-rc.3`、`0.2.1-rc.2`、`0.2.0-rc.2`、`0.1.7-alpha.2` 均通过插件加载、`/overview`、`/diagnostics`、`/plan/ics` 和客户端启动；详见 [`COMPATIBILITY.md`](COMPATIBILITY.md)。
+**2026-10-29 已完成四版本 boot 矩阵**：`0.2.1-rc.3`、`0.2.1-rc.2`、`0.2.0-rc.2`、`0.1.7-alpha.2` 均通过插件加载、`/overview`、`/diagnostics`、`/plan/ics` 和客户端启动；rc3/alpha.2 还通过了 tarball 安装。详见 [`COMPATIBILITY.md`](COMPATIBILITY.md)。
 
 剩余检查：真实登录会话下的完整流程，至少在 `0.2.1-rc.3` 与 `0.1.7-alpha.2` 上各跑一次：
 
@@ -206,6 +206,7 @@ Revert this branch/commit; export storage first.
 - [x] 在 Phase 6 分支上重跑完整验收（639 tests、25 browser、build）
 - [ ] 在真实 worktree 中按第 4 节用 `pnpm install --frozen-lockfile` 再跑一次
 - [x] 四版本 boot 矩阵（2026-10-29，见 `COMPATIBILITY.md`）
+- [x] rc3/alpha.2 的 tarball 安装与客户端加载
 - [ ] 在 DSH `0.2.1-rc.3` 与 `0.1.7-alpha.2` 上用真实会话跑 lesson/review/insights
 - [ ] 备份 `~/.dsh/storages/udt.json`
 - [ ] 按顺序开 6 个 PR（或先只开 Phase 1）
