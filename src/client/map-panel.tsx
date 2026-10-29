@@ -334,7 +334,7 @@ export function LearningMapPanel({
       <div className="dtx-scroll">
         {page === 'curriculum'
           ? <PathPage courseId={overview.course.id} title={overview.course.title} nodes={nodes}
-              sessionId={sessionId} client={pathClient} onOpenChat={onOpenChat}
+              sessionId={sessionId} client={pathClient} onOpenChat={onOpenChat} tasks={overview.tasks ?? []}
               onStarted={enterCurrentLesson} onOpenLesson={onOpenLesson === undefined ? undefined : enterCurrentLesson}
               onOpenEvidence={() => setPage('knowledge')}
               {...(sessionActivity === undefined ? {} : { sessionActivity })} />

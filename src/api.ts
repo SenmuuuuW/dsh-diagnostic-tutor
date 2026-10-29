@@ -37,6 +37,7 @@ import { buildDiagnostics } from './diagnostics.js'
 import type { Journal } from './journal.js'
 import { guarded } from './trust-fence.js'
 import { handlePathApi } from './path-api.js'
+import { buildIcs, sortTasks, taskView } from './plan.js'
 
 /** The slice of `webServer` this module uses, declared structurally. */
 export interface WebServerLike {
@@ -230,6 +231,7 @@ async function handleOverview(state: UdState, deps: ApiDeps, sessionId: string |
       handoff: null,
       teachingBrain,
       lessonCount: state.lessonCount(),
+      tasks: sortTasks(state.listTasks()).map(taskView),
       library,
     })
     return
@@ -248,6 +250,7 @@ async function handleOverview(state: UdState, deps: ApiDeps, sessionId: string |
     // rebuilds the progress line instead of showing a blank wait.
     handoff: mine === undefined ? null : handoffFor(state, sessionId ?? '', mine.nodeId, Date.now()),
     lessonCount: state.lessonCount(),
+    tasks: sortTasks(state.listTasks()).map(taskView),
     library,
   })
 }
@@ -645,6 +648,15 @@ export function createApiHandler(deps: ApiDeps) {
     if (method === 'POST' && route === '/project') return await handleSelectProject(state, req, res)
     if (method === 'GET' && route === '/export') return handleExport(state, res)
     if (method === 'POST' && route === '/reset') return await handleReset(state, res)
+    if (method === 'GET' && route === '/plan/ics') {
+      const calendar = buildIcs(state.listTasks(), new Date())
+      res.statusCode = 200
+      res.setHeader('content-type', 'text/calendar; charset=utf-8')
+      res.setHeader('content-disposition', 'attachment; filename="dsh-diagnostic-tutor-plan.ics"')
+      res.setHeader('cache-control', 'no-store')
+      res.end(calendar)
+      return
+    }
     if (method === 'GET' && route === '/source') {
       const sourceId = url.searchParams.get('id')
       if (sourceId === null || sourceId.length === 0) return fail(res, 400, 'missing-id')

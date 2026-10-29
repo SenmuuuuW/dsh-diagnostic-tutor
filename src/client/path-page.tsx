@@ -1,10 +1,11 @@
 /** Curriculum browsing and explicit learner actions; never selects a project. */
 import { Fragment, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import type { NodeView } from '../contract.js'
+import type { NodeView, TaskView } from '../contract.js'
 import type { Assessment, CourseAttempt, Curriculum, CurriculumItem, GoalBrief, PathView } from '../path.js'
 import { Icon } from './design-icons.jsx'
 import { useDesignText } from './design-text.js'
 import { announcePathState } from './path-events.js'
+import { TodayCard } from './today.jsx'
 import type { DesignText } from './design-text.js'
 import { useLang } from './i18n.js'
 import type { Lang } from './i18n.js'
@@ -28,6 +29,7 @@ export interface PathPageProps {
   onOpenEvidence?: (() => void) | undefined
   sessionActivity?: SessionActivity | undefined
   client?: PathClient | undefined
+  tasks?: readonly TaskView[] | undefined
 }
 
 type GoalDraft = {
@@ -514,7 +516,7 @@ export function PathPage(props: PathPageProps): ReactNode {
   return <PathPageBody {...props} designText={text} pathText={pathText} lang={lang} />
 }
 
-function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpenLesson, onOpenEvidence, sessionActivity, client = defaultPathClient, designText: text, pathText, lang }: PathPageProps & { designText: DesignText; pathText: PathText; lang: Lang }): ReactNode {
+function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpenLesson, onOpenEvidence, sessionActivity, client = defaultPathClient, tasks = [], designText: text, pathText, lang }: PathPageProps & { designText: DesignText; pathText: PathText; lang: Lang }): ReactNode {
   const [view, setView] = useState<PathView | null>(null)
   const [draft, setDraft] = useState<GoalDraft>(() => draftFromBrief(null))
   const [dirty, setDirty] = useState(false)
@@ -714,6 +716,25 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
     if (activeAttempt === undefined) return
     start(activeAttempt.version, activeAttempt.itemId, false, checkin ? 'checkin' : 'resume')
   }
+  const exportPlan = () => {
+    if (client.exportPlan === undefined) return
+    void (async () => {
+      try {
+        const file = await client.exportPlan!()
+        const blob = new Blob([file.text], { type: 'text/calendar;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const anchor = document.createElement('a')
+        anchor.href = url
+        anchor.download = file.filename
+        anchor.click()
+        setTimeout(() => URL.revokeObjectURL(url), 0)
+        setNotice(text.planExported)
+      } catch {
+        setNotice(text.planExportFailed)
+      }
+    })()
+  }
+
   const pauseActive = () => {
     if (activeAttempt === undefined || client.pause === undefined) return
     void mutate('pause', (params) => client.pause!(params), () => { announcePathState(true); setNotice(text.lessonPausedNotice) })
@@ -857,6 +878,7 @@ function PathPageBody({ courseId, title, sessionId, onOpenChat, onStarted, onOpe
         ? pollError === '' && <p className="dtx-status" role="status">{pathText.loadingPath}</p>
         : <div className="dtx-route">
           <div className="dtx-main">
+            <TodayCard tasks={tasks} onExport={client.exportPlan === undefined ? undefined : exportPlan} />
             <StageBar stage={stage} text={text} />
             {stage === 'goal' ? <GoalForm draft={draft} dirty={dirty} busy={busy === 'save'} readOnly={readOnly} onChange={changeDraft} onSave={saveBrief} text={text} lang={lang} /> : nextCard}
             {stage === 'diagnosis' && !diagnosisWaiting && diagnosisFailure === null && <DiagnosisInfo text={text} />}

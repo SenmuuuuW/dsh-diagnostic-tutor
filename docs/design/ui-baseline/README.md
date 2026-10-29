@@ -52,7 +52,7 @@
 | 层 | 位置 | 负责 | 不负责 |
 | --- | --- | --- | --- |
 | Browser half | 浏览器 bundle | 渲染主页面/右栏 tab、轮询数据、发起请求、展示错误/等待、i18n/主题 | 不直接读写本机文件、不调模型 |
-| Host half | Node 插件 | `apply` 注册、13 个模型工具、21 条本地 HTTP 路由、UDT state、journal、diagnostics | 不做教学决策、不自己调用模型（只通过用户动作唤醒） |
+| Host half | Node 插件 | `apply` 注册、15 个模型工具、22 条本地 HTTP 路由、UDT state、journal、diagnostics | 不做教学决策、不自己调用模型（只通过用户动作唤醒） |
 
 ### 2.2 数据与运行
 
@@ -320,7 +320,7 @@ node scripts/doctor.mjs
 
 # 代码层
 pnpm typecheck && pnpm build
-node_modules/vitest/vitest.mjs run --no-file-parallelism   # 620 tests
+node_modules/vitest/vitest.mjs run --no-file-parallelism   # 627 tests
 ```
 
 截图画面使用测试 fixture 项目（Machine Learning / 天文学），实际内容由你本机的项目决定。
@@ -341,3 +341,10 @@ node_modules/vitest/vitest.mjs run --no-file-parallelism   # 620 tests
 - `screens/phase1-math-quiz.png` — 当前课次 tab：公式、quiz、闪卡、来源脚注
 - `screens/phase1-math-quiz-dark.png` — 同上深色
 - `screens/phase1-sources.png` — 知识/来源引用（fixture）
+
+## 15. Phase 2 Today（2026-10-27）
+
+- 学习路线顶部显示开放计划项，可导出有到期日的任务为 ICS。
+- 计划只记录任务与时间，不参与教学判断；DSH schedule 仍是 session-local。
+
+![Phase 2 Today](screens/phase2-today.png)

@@ -198,6 +198,9 @@
         changed(state, at)
         return view(params.courseId, params.sessionId, { prompted: true })
       },
+      async exportPlan() {
+        return { filename: 'dsh-diagnostic-tutor-plan.ics', text: 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n' }
+      },
     }
   }
   window.PATH_FIXTURE_SCENARIOS = SCENARIOS.slice()
