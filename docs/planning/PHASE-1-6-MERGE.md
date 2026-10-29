@@ -1,6 +1,6 @@
 # Phase 1–6 合并执行记录
 
-> 状态（2026-10-29）：Phase 1–5 已合并到 `main`，Phase 6 PR 待合并；`version` 仍为 `0.1.1`。
+> 状态（2026-10-29）：Phase 1–6 已全部合并到 `main`；`version` 仍为 `0.1.1`。
 > 本文最初是推送前的合并计划；下面的分支 hash 与逐分支复验是 rebase 前的历史记录，rebase 后内容等价、commit hash 已变化。
 
 合并执行记录：
@@ -12,7 +12,7 @@
 | Phase 3 | [#36](https://github.com/SenmuuuuW/dsh-diagnostic-tutor/pull/36) | 已合并 `cf3ad78` |
 | Phase 4 | [#37](https://github.com/SenmuuuuW/dsh-diagnostic-tutor/pull/37) | 已合并 `a04655a` |
 | Phase 5 | [#38](https://github.com/SenmuuuuW/dsh-diagnostic-tutor/pull/38) | 已合并 `58e63ee` |
-| Phase 6 | [#39](https://github.com/SenmuuuuW/dsh-diagnostic-tutor/pull/39) | 待合并 |
+| Phase 6 | [#39](https://github.com/SenmuuuuW/dsh-diagnostic-tutor/pull/39) | 已合并 `3d88a6c` |
 
 ## 1. 分支拓扑（rebase 前历史）
 
@@ -56,11 +56,11 @@ main 3f0ef8a
 
 当前 Phase 6 分支自检结果：
 
-- Phase 1–5 已合并到 `main`；Phase 6 已 rebase 到 `main`
+- Phase 1–6 已全部合并到 `main`
 - `git diff --check main..HEAD`：通过
 - `git diff main..HEAD -- package.json`：`version` 仍为 `0.1.1`；新增 host-only `katex@^0.16.47`
 - 新增的 `@deepseek-ai/dsh-tools` 使用与 `main` 既有模式一致；没有引入新的 DSH 包
-- Phase 6 分支等待 PR #39 review
+- 合并后 `main` 为 `3d88a6c`，工作区 clean
 
 ## 2. 推荐合并策略
 
@@ -220,4 +220,4 @@ Revert this branch/commit; export storage first.
 - [x] rc3/alpha.2 的 tarball 安装与客户端加载
 - [x] rc3/alpha.2 真实模型会话：lesson → Review 评分/撤销 → Insights
 - [ ] 备份 `~/.dsh/storages/udt.json`
-- [x] 按顺序开 PR：Phase 1–5 已合并，Phase 6 PR #39 待合并
+- [x] 按顺序开 PR 并合并：Phase 1–6 全部完成
