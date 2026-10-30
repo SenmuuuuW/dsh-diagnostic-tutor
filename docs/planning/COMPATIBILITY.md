@@ -1,6 +1,6 @@
 # DSH 兼容矩阵验证
 
-> 验证对象：`dsh-diagnostic-tutor@0.1.1`，Phase 1–6 本地堆叠分支。
+> 验证对象：`dsh-diagnostic-tutor@0.2.0`（Phase 1–6 代码；完整会话验证在版本号 bump 前完成，代码等价）。
 > 功能代码：Phase 6（验证时 tip `4bf7574`；rebase 后等价提交 `52fb1d4`）。
 > 验证日期：2026-10-29。宿主：macOS 15.0，Node `v24.16.0`。
 > 插件通过本地路径 link 或本地 tarball 进临时 profile；没有 push、合并或改 version。
@@ -21,7 +21,7 @@ dsh --profile compat --no-open --port <port>
 然后检查：
 
 - `GET /diagnostic-tutor/api/overview` → 200，`ok:true`
-- `GET /diagnostic-tutor/api/diagnostics` → 200，插件 `0.1.1`，domain `udt` v1，`issues: []`
+- `GET /diagnostic-tutor/api/diagnostics` → 200，插件 `0.2.0`，domain `udt` v1，`issues: []`
 - `GET /diagnostic-tutor/api/plan/ics` → 200，`text/calendar`
 - 浏览器加载根页面（带隔离 profile 的 token）：无 `Runtime.exceptionThrown`、无 console error、无 network loading failure
 - rc3 额外确认 `dsh-diagnostic-tutor/client.js` 被列出并加载
@@ -38,15 +38,15 @@ dsh --profile compat --no-open --port <port>
 诊断结果一致：
 
 ```json
-{"plugin":{"name":"dsh-diagnostic-tutor","version":"0.1.1"},"domain":{"name":"udt","version":1},"counts":{"courses":0,...},"issues":[]}
+{"plugin":{"name":"dsh-diagnostic-tutor","version":"0.2.0"},"domain":{"name":"udt","version":1},"counts":{"courses":0,...},"issues":[]}
 ```
 
 ### 2.1 从打包 tarball 安装
 
-本地 `npm pack` 产物：`dsh-diagnostic-tutor-0.1.1.tgz`，474.5 kB，142 files，unpacked 2.1 MB，SHA-256：
+本地 `npm pack` 产物：`dsh-diagnostic-tutor-0.2.0.tgz`，474.7 kB，142 files，unpacked 2.1 MB，SHA-256：
 
 ```text
-6cb43df6aa25a35829804b99150bee84c79bb6b671990b7db56cb4561908ef84
+ab03f615d89d16309dd9577bb921b006f60dcfb30bd6638d1c3e3fb33aab6804
 ```
 
 在 `0.2.1-rc.3` 与 `0.1.7-alpha.2` 的全新隔离 profile 中改用 tarball（不再 `link:`）安装，重新启动验证：
@@ -79,7 +79,7 @@ tarball 内容确认包含 `lib/index.js`、`lib/client.js`、类型声明、`LI
 ## 3. 本次没有覆盖
 
 - **rc2/rc20 没有跑完整真实会话**：`0.2.1-rc.2` 与 `0.2.0-rc.2` 只完成了 boot/API；两者是 `link:` 安装（tarball 只覆盖 rc3/alpha.2），不是完整模型会话。rc3/alpha.2 已完成。
-- tarball 安装只验证了 `0.2.1-rc.3` 与 `0.1.7-alpha.2`；`0.2.1-rc.2`、`0.2.0-rc.2` 是 `link:` 验证。rc2/rc20 也没有完整真实会话。
+- tarball 安装验证了 `0.2.1-rc.3`、`0.1.7-alpha.2` 与 `0.2.0` 发布包；`0.2.1-rc.2`、`0.2.0-rc.2` 是 `link:` 验证。rc2/rc20 也没有完整真实会话。
 - **没有覆盖 0.1.5/0.1.6 线**：README 的正式矩阵只承诺 `0.1.7-alpha.2` 及以上与 `0.2.x`；其它版本不在本轮范围。
 - rc3/alpha.2 的完整会话是实际模型驱动，但仍是一次性 API key 与测试项目；不证明长期配额、真实登录状态或所有 provider。
 

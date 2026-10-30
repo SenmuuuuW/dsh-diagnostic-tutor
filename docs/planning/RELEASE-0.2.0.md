@@ -1,7 +1,7 @@
-# 0.2.0 发布清单与说明（拟）
+# 0.2.0 发布清单与说明
 
-> 状态：**准备完成，尚未发布**。当前 `package.json` 仍是 `0.1.1`；本文是待批准的 0.2.0 发布计划，不是已发布版本。
-> 代码基线：`main` / `e5f386a`（Phase 1–6 全部合并）。
+> 状态：**0.2.0 发布执行中**。`package.json` 已为 `0.2.0`；合并、tag、npm publish 在本文后续步骤完成。
+> 代码基线：`release/0.2.0`（基于 `main` / `efb56d4`，Phase 1–6 全部合并）。
 > 验证日期：2026-10-29。
 
 ## 1. 版本建议
@@ -42,9 +42,9 @@ path-check                      25 browser cases passed
 
 tarball：
 
-- `dsh-diagnostic-tutor-0.1.1.tgz`（当前 version）
-- SHA-256 `261dd4919f4b7bb5d3438000f3848dd01dc78d374339fc4095997bdc50f0ce68`
-- 142 files；确认包含 `lib/index.js`、`lib/client.js`、类型声明、`LICENSE`、`package.json`
+- `dsh-diagnostic-tutor-0.2.0.tgz`（当前 version）
+- SHA-256 `ab03f615d89d16309dd9577bb921b006f60dcfb30bd6638d1c3e3fb33aab6804`
+- 142 files，464K；确认包含 `lib/index.js`、`lib/client.js`、类型声明、`LICENSE`、`package.json`
 
 ### 真实数据副本验收
 
@@ -68,15 +68,15 @@ tarball：
 
 ## 4. 发布步骤（待批准后执行）
 
-- [ ] 确认发布版本为 `0.2.0`
+- [x] 确认发布版本为 `0.2.0`
 - [ ] 备份真实 `~/.dsh/storages/udt.json`
 - [ ] 从最新 `main` 建 release 分支
-- [ ] 把 `package.json` version 改为 `0.2.0`，更新锁文件
-- [ ] 把 `CHANGELOG.md` 的 `[Unreleased]` 段整理为 `[0.2.0] - 2026-10-29`
-- [ ] 更新任何仍写 0.1.1 的发布/兼容说明
-- [ ] 干净 clone：`pnpm install --frozen-lockfile && pnpm typecheck && pnpm test && pnpm build`
-- [ ] `pnpm pack` / `npm pack`，记录新 SHA-256
-- [ ] 在隔离 profile 用 tarball 安装，启动 web，检查 plugin version 与 `/diagnostics`
+- [x] 把 `package.json` version 改为 `0.2.0`，更新锁文件
+- [x] 把 `CHANGELOG.md` 的 `[Unreleased]` 段整理为 `[0.2.0] - 2026-10-29`
+- [x] 更新任何仍写 0.1.1 的发布/兼容说明
+- [x] 干净 checkout：`pnpm install --frozen-lockfile && pnpm typecheck && pnpm test && pnpm build`
+- [x] `npm pack`，记录新 SHA-256
+- [x] 在隔离 profile 用 tarball 安装，启动 web，确认 plugin `0.2.0` 与 `/diagnostics`
 - [ ] 合并 release PR
 - [ ] 打 annotated tag `v0.2.0`
 - [ ] `npm publish`（需单独确认 registry/权限）

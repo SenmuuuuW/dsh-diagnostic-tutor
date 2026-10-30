@@ -6,7 +6,7 @@
  * on unload.
  *
  * ---------------------------------------------------------------------------
- * Scope on this branch (unreleased on top of the published v0.1.1)
+ * Scope in v0.2.0 (content/input/review loop on top of the published learning runtime)
  * ---------------------------------------------------------------------------
  * The runtime owns learner state and the surfaces that show it; it owns no
  * teaching decisions. What it registers:
