@@ -1,6 +1,6 @@
 # DSH 兼容矩阵验证
 
-> 验证对象：`dsh-diagnostic-tutor@0.2.0`（Phase 1–6 代码；完整会话验证在版本号 bump 前完成，代码等价）。
+> 验证对象：`dsh-diagnostic-tutor@0.2.0`（2026-10-30 追加 DSH `0.2.1-rc.5` 桌面 runtime 验证）（Phase 1–6 代码；完整会话验证在版本号 bump 前完成，代码等价）。
 > 功能代码：Phase 6（验证时 tip `4bf7574`；rebase 后等价提交 `52fb1d4`）。
 > 验证日期：2026-10-29。宿主：macOS 15.0，Node `v24.16.0`。
 > 插件通过本地路径 link 或本地 tarball 进临时 profile；没有 push、合并或改 version。
@@ -34,6 +34,7 @@ dsh --profile compat --no-open --port <port>
 | `0.2.1-rc.2` | `@deepseek-ai/dsh@0.2.1-rc.2` | 200 | 200 | 200 | 无异常 | 通过 |
 | `0.2.0-rc.2` | `@deepseek-ai/dsh@0.2.0-rc.2` | 200 | 200 | 200 | 无异常 | 通过 |
 | `0.1.7-alpha.2` | `@deepseek-ai/dsh@0.1.7-alpha.2` | 200 | 200 | 200 | 无异常 | 通过 |
+| `0.2.1-rc.5` | `@deepseek-ai/dsh@0.2.1-rc.5`（当前桌面 runtime） | 200 | 200 | 200 | 无异常；插件 client.js 已加载 | 通过 |
 
 诊断结果一致：
 
@@ -75,6 +76,16 @@ tarball 内容确认包含 `lib/index.js`、`lib/client.js`、类型声明、`LI
 | `0.1.7-alpha.2` | 1 / 2 / 1 | 自动生成 1 张 | 通过 | 通过 | 无 |
 
 `/overview` 返回项目与节点，`/review` 返回自动生成的卡片，`/insights` 返回复习/证据计数；`/diagnostics` 的 `issues` 为空。
+
+### 2.3 DSH 0.2.1-rc.5（当前桌面 runtime）
+
+2026-10-30 对当前桌面版 `0.2.1-rc.5` 追加验证：
+
+- 隔离 `DSH_HOME` + web profile 安装已发布 tarball `0.2.0`，插件正常加载；
+- `/diagnostics` 报告插件 `0.2.0`、domain `udt` v1，`issues: []`；
+- 将 devDependencies 临时替换为 rc5 后，`tsc --noEmit` 通过，**639 tests passed**；
+- rc5 web + 真实 `udt.json` 副本：Learning map、知识与证据、复习、洞察四个 tab 正常，插件 `client.js` 已加载，无 Runtime exception / console error；
+- 没有发现需要改插件源码的 API 破坏；peer ranges 已覆盖 rc5，因此不改 release version。
 
 ## 3. 本次没有覆盖
 
