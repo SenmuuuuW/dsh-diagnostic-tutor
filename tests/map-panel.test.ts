@@ -106,8 +106,9 @@ describe('project header', () => {
     await mount(makeClient(overview()), overview(), { onOpenChat })
     expect(container.textContent).toContain('Learning map')
     expect(container.textContent).toContain('Machine Learning')
-    expect(container.querySelectorAll('.dtx-tabbtn')).toHaveLength(5)
+    expect(container.querySelectorAll('.dtx-tabbtn')).toHaveLength(2)
     expect(container.textContent).toContain('Today')
+    expect(container.textContent).toContain('Course')
     await clickButton('Back to chat')
     expect(onOpenChat).toHaveBeenCalled()
   })
@@ -116,6 +117,8 @@ describe('project header', () => {
 describe('knowledge & evidence', () => {
   async function openKnowledge() {
     await mount(makeClient(overview()), overview())
+    await clickButton('Course')
+    await act(async () => { await Promise.resolve(); await Promise.resolve() })
     await clickButton('Knowledge & evidence')
   }
   it('lists nodes on the left and the selected node evidence on the right', async () => {

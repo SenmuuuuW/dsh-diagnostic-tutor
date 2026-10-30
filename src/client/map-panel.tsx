@@ -21,6 +21,7 @@ import { formatWhen, relationLabel, stateExplanation } from './model.js'
 import { PathPage } from './path-page.js'
 import { HomePage } from './home.jsx'
 import { CoursePage } from './course-page.js'
+import { requestStudy } from './study-intent.js'
 import { useCoursePath } from './course-learning.jsx'
 import { ReviewPage } from './review-panel.jsx'
 import { InsightsPage } from './insights-panel.jsx'
@@ -275,10 +276,12 @@ export function LearningMapPanel({
 }: LearningMapPanelProps): ReactNode {
   const text = useDesignText()
   const [page, setPage] = useState<MapView>('home')
+  const [secondaryFrom, setSecondaryFrom] = useState<'home' | 'course'>('home')
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview, onOpenSession })
   const { overview, focus, detail, selectedId, note, error, loading, library } = state
   const reviewClient = pathClient ?? defaultClient.pathClient ?? defaultPathClient
   const coursePath = useCoursePath(reviewClient, overview?.course?.id, sessionId)
+  const openSecondary = (next: 'knowledge' | 'review' | 'insights', from: 'home' | 'course'): void => { setSecondaryFrom(from); setPage(next) }
 
   const arrival = selectedId
   const select = state.select
@@ -302,6 +305,11 @@ export function LearningMapPanel({
       return
     }
     onOpenLesson?.()
+  }
+
+  const enterStudy = (): void => {
+    requestStudy()
+    enterCurrentLesson()
   }
 
   if (overview?.course == null) {
@@ -331,33 +339,31 @@ export function LearningMapPanel({
           <span className="dtx-topbar-project">{overview.course.title}</span>
         </div>
         <div className="dtx-topbar-actions">
+          {(page === 'knowledge' || page === 'review' || page === 'insights') && <button type="button" className="dtx-back" onClick={() => setPage(secondaryFrom)}><Icon name="arrow-left" size={16} /><span>{secondaryFrom === 'home' ? text.tabToday : text.tabCourse}</span></button>}
           {onOpenChat !== undefined && <button type="button" className="dtx-back" onClick={onOpenChat}><Icon name="arrow-left" size={16} /><span>{text.backToChat}</span></button>}
           <LanguageToggle />
         </div>
       </header>
-      <nav className="dtx-tabs" aria-label={text.pageTitle}>
+      {(page === 'home' || page === 'course') && <nav className="dtx-tabs" aria-label={text.pageTitle}>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'home' ? 'page' : undefined} onClick={() => setPage('home')}>{text.tabToday}</button>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'course' ? 'page' : undefined} onClick={() => setPage('course')}>{text.tabCourse}</button>
-        <button type="button" className="dtx-tabbtn" aria-current={page === 'knowledge' ? 'page' : undefined} onClick={() => setPage('knowledge')}>{text.tabKnowledge}</button>
-        <button type="button" className="dtx-tabbtn" aria-current={page === 'review' ? 'page' : undefined} onClick={() => setPage('review')}>{text.tabReview}</button>
-        <button type="button" className="dtx-tabbtn" aria-current={page === 'insights' ? 'page' : undefined} onClick={() => setPage('insights')}>{text.tabInsights}</button>
-      </nav>
+      </nav>}
       <div className="dtx-scroll">
         {page === 'home'
           ? <HomePage overview={overview} path={coursePath} reviewClient={reviewClient}
-              onOpenLesson={enterCurrentLesson} onOpenRoute={() => setPage('course')}
-              onOpenReview={() => setPage('review')} onOpenProject={(id) => void state.enterProject(id)} />
+              onOpenLesson={enterStudy} onOpenRoute={() => setPage('course')}
+              onOpenReview={() => openSecondary('review', 'home')} onOpenProject={(id) => void state.enterProject(id)} />
           : page === 'course'
           ? <CoursePage courseId={overview.course.id} title={overview.course.title} nodes={nodes} path={coursePath}
               sessionId={sessionId} client={pathClient} onOpenChat={onOpenChat} tasks={overview.tasks ?? []}
-              onStarted={enterCurrentLesson} onOpenLesson={onOpenLesson === undefined ? undefined : enterCurrentLesson}
-              onOpenEvidence={() => setPage('knowledge')}
+              onStarted={enterStudy} onOpenLesson={onOpenLesson === undefined ? undefined : enterStudy}
+              onOpenEvidence={() => openSecondary('knowledge', 'course')} onOpenKnowledge={() => openSecondary('knowledge', 'course')} onOpenInsights={() => openSecondary('insights', 'course')}
               {...(sessionActivity === undefined ? {} : { sessionActivity })} />
           : page === 'knowledge'
             ? <KnowledgePage nodes={nodes} selectedId={selectedId} detail={detail} loading={loading} error={error} onSelect={select} />
             : page === 'review'
-              ? <ReviewPage client={reviewClient} onOpenRoute={() => setPage('course')} />
-              : <InsightsPage client={reviewClient} courseId={overview.course.id} onOpenRoute={() => setPage('course')} onOpenReview={() => setPage('review')} />}
+              ? <ReviewPage client={reviewClient} onOpenRoute={() => setPage(secondaryFrom)} />
+              : <InsightsPage client={reviewClient} courseId={overview.course.id} onOpenRoute={() => setPage(secondaryFrom)} onOpenReview={() => openSecondary('review', 'course')} />}
         {page === 'course' && <div className="dtx-content" style={{ paddingTop: 0 }}><footer className="dtx-small dtx-muted"><DataFooter onExport={state.exportData} onReset={state.resetAll} /></footer></div>}
       </div>
     </div>

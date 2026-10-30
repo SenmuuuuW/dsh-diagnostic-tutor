@@ -9,6 +9,7 @@ import type { OverviewResponse } from '../src/contract.js'
 import type { CourseAttempt, Curriculum, GoalBrief, PathView } from '../src/path.js'
 import { resetLanguageForTests, setLang } from '../src/client/i18n.js'
 import { LearningTab, LearningTabTitle } from '../src/client/tab.jsx'
+import { requestStudy, resetStudyIntentForTests } from '../src/client/study-intent.js'
 import type { PanelClient } from '../src/client/use-learning.js'
 
 const NOW = '2026-01-01T00:00:00.000Z'
@@ -85,6 +86,7 @@ afterEach(() => {
   act(() => root.unmount())
   container.remove()
   resetLanguageForTests()
+  resetStudyIntentForTests()
 })
 async function mount(view: PathView, props: Partial<Parameters<typeof LearningTab>[0]> = {}) {
   await act(async () => {
@@ -210,6 +212,14 @@ describe('active lesson', () => {
     // No waiting for the 2s poll: the paused state and the resume action are immediate.
     await act(async () => { button('Continue this lesson').click(); await Promise.resolve() })
     expect(start.mock.calls.at(-1)![0]).toMatchObject({ resume: true })
+  })
+
+  it('honours a Home/Course request to open focused study directly', async () => {
+    requestStudy()
+    await mount(pathView())
+    expect(container.querySelector('.dtx-study')).not.toBeNull()
+    expect(container.textContent).toContain('Focused study')
+    expect(container.textContent).toContain('Step 1 of 2')
   })
 
   it('folds a long diagram until the learner opens it', async () => {
