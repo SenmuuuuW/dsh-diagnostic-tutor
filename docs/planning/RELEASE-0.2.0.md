@@ -1,8 +1,8 @@
 # 0.2.0 发布清单与说明
 
-> 状态：**0.2.0 发布执行中**。`package.json` 已为 `0.2.0`；合并、tag、npm publish 在本文后续步骤完成。
-> 代码基线：`release/0.2.0`（基于 `main` / `efb56d4`，Phase 1–6 全部合并）。
-> 验证日期：2026-10-29。
+> 状态：**已发布**（2026-10-29）。`package.json` 为 `0.2.0`；tag `v0.2.0`；npm `latest` 已指向 `0.2.0`。
+> 发布提交：`71d1332`；tag 指向该提交。
+> 代码基线：`main`（Phase 1–6 全部合并）。
 
 ## 1. 版本建议
 
@@ -42,9 +42,11 @@ path-check                      25 browser cases passed
 
 tarball：
 
-- `dsh-diagnostic-tutor-0.2.0.tgz`（当前 version）
-- SHA-256 `ab03f615d89d16309dd9577bb921b006f60dcfb30bd6638d1c3e3fb33aab6804`
-- 142 files，464K；确认包含 `lib/index.js`、`lib/client.js`、类型声明、`LICENSE`、`package.json`
+- 本地 pack：`dsh-diagnostic-tutor-0.2.0.tgz`，SHA-256 `ab03f615d89d16309dd9577bb921b006f60dcfb30bd6638d1c3e3fb33aab6804`，142 files，464K
+- npm 发布包：`https://registry.npmjs.org/dsh-diagnostic-tutor/-/dsh-diagnostic-tutor-0.2.0.tgz`
+- npm dist integrity：`sha512-NcNFbsIpJN1BpnKVD5Xdt7o6iq4eRddlIpQzOIaCu8XFCWVO/KPeS+bs8Z1TO8Mfyan2xEZbC8jkH3odLTqy6g==`
+
+发布后从 npm 冷安装到全新隔离 profile：`dsh plugin --profile compat add dsh-diagnostic-tutor@0.2.0`，启动后 `/diagnostics` 报告插件 `0.2.0`，`/overview` 200。
 
 ### 真实数据副本验收
 
@@ -77,11 +79,11 @@ tarball：
 - [x] 干净 checkout：`pnpm install --frozen-lockfile && pnpm typecheck && pnpm test && pnpm build`
 - [x] `npm pack`，记录新 SHA-256
 - [x] 在隔离 profile 用 tarball 安装，启动 web，确认 plugin `0.2.0` 与 `/diagnostics`
-- [ ] 合并 release PR
-- [ ] 打 annotated tag `v0.2.0`
-- [ ] `npm publish`（需单独确认 registry/权限）
-- [ ] 发布后安装 `dsh plugin --profile ... add dsh-diagnostic-tutor@0.2.0` 做一次冷启动
-- [ ] 删除临时 release 分支、清理已合并 feature 分支
+- [x] 合并 release PR（#42，`71d1332`）
+- [x] 打 annotated tag `v0.2.0` 并推送
+- [x] `npm publish --access public`，`latest = 0.2.0`
+- [x] 发布后安装 `dsh plugin --profile ... add dsh-diagnostic-tutor@0.2.0` 做一次冷启动
+- [x] 删除临时 release 分支、清理已合并 feature 分支
 
 ## 5. 发布前已知限制
 
