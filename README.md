@@ -196,7 +196,8 @@ Rules this repository enforces mechanically:
 The current surfaces, state model and screenshots (generated from fixtures) live in
 [`docs/design/ui-baseline/index.html`](docs/design/ui-baseline/index.html) with a
 detailed handoff in
-[`docs/design/ui-baseline/README.md`](docs/design/ui-baseline/README.md). It covers
+[`docs/design/ui-baseline/README.md`](docs/design/ui-baseline/README.md). A Study-first prototype for the next information architecture lives in
+[`preview/next/README.md`](preview/next/README.md): Today → Course → immersive Study, with a single primary action per screen. It covers
 the system structure, Learning map / Current lesson surfaces, every route-page state
 and the design constraints a new UI must keep.
 
