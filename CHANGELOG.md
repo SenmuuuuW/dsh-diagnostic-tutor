@@ -3,7 +3,9 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] — 2026-10-29
+
+Everything below was unreleased on top of `v0.1.1`; this release includes the Phase 1–6 content/input/review loop and the learning-path flow.
 
 ### Added — Phase 6: read-only Insights
 
