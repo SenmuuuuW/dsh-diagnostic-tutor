@@ -20,6 +20,7 @@ import { evidenceKindLabel } from './map-text.js'
 import { formatWhen, relationLabel, stateExplanation } from './model.js'
 import { PathPage } from './path-page.js'
 import { HomePage } from './home.jsx'
+import { CoursePage } from './course-page.js'
 import { useCoursePath } from './course-learning.jsx'
 import { ReviewPage } from './review-panel.jsx'
 import { InsightsPage } from './insights-panel.jsx'
@@ -44,7 +45,7 @@ export interface LearningMapPanelProps {
   pathClient?: PathClient | undefined
 }
 
-type MapView = 'home' | 'curriculum' | 'knowledge' | 'review' | 'insights'
+type MapView = 'home' | 'course' | 'knowledge' | 'review' | 'insights'
 
 function whenText(iso: string, text: DesignText): string {
   const stamp = Date.parse(iso)
@@ -336,7 +337,7 @@ export function LearningMapPanel({
       </header>
       <nav className="dtx-tabs" aria-label={text.pageTitle}>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'home' ? 'page' : undefined} onClick={() => setPage('home')}>{text.tabToday}</button>
-        <button type="button" className="dtx-tabbtn" aria-current={page === 'curriculum' ? 'page' : undefined} onClick={() => setPage('curriculum')}>{text.tabRoute}</button>
+        <button type="button" className="dtx-tabbtn" aria-current={page === 'course' ? 'page' : undefined} onClick={() => setPage('course')}>{text.tabCourse}</button>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'knowledge' ? 'page' : undefined} onClick={() => setPage('knowledge')}>{text.tabKnowledge}</button>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'review' ? 'page' : undefined} onClick={() => setPage('review')}>{text.tabReview}</button>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'insights' ? 'page' : undefined} onClick={() => setPage('insights')}>{text.tabInsights}</button>
@@ -344,10 +345,10 @@ export function LearningMapPanel({
       <div className="dtx-scroll">
         {page === 'home'
           ? <HomePage overview={overview} path={coursePath} reviewClient={reviewClient}
-              onOpenLesson={enterCurrentLesson} onOpenRoute={() => setPage('curriculum')}
+              onOpenLesson={enterCurrentLesson} onOpenRoute={() => setPage('course')}
               onOpenReview={() => setPage('review')} onOpenProject={(id) => void state.enterProject(id)} />
-          : page === 'curriculum'
-          ? <PathPage courseId={overview.course.id} title={overview.course.title} nodes={nodes}
+          : page === 'course'
+          ? <CoursePage courseId={overview.course.id} title={overview.course.title} nodes={nodes} path={coursePath}
               sessionId={sessionId} client={pathClient} onOpenChat={onOpenChat} tasks={overview.tasks ?? []}
               onStarted={enterCurrentLesson} onOpenLesson={onOpenLesson === undefined ? undefined : enterCurrentLesson}
               onOpenEvidence={() => setPage('knowledge')}
@@ -355,9 +356,9 @@ export function LearningMapPanel({
           : page === 'knowledge'
             ? <KnowledgePage nodes={nodes} selectedId={selectedId} detail={detail} loading={loading} error={error} onSelect={select} />
             : page === 'review'
-              ? <ReviewPage client={reviewClient} onOpenRoute={() => setPage('curriculum')} />
-              : <InsightsPage client={reviewClient} courseId={overview.course.id} onOpenRoute={() => setPage('curriculum')} onOpenReview={() => setPage('review')} />}
-        {page === 'curriculum' && <div className="dtx-content" style={{ paddingTop: 0 }}><footer className="dtx-small dtx-muted"><DataFooter onExport={state.exportData} onReset={state.resetAll} /></footer></div>}
+              ? <ReviewPage client={reviewClient} onOpenRoute={() => setPage('course')} />
+              : <InsightsPage client={reviewClient} courseId={overview.course.id} onOpenRoute={() => setPage('course')} onOpenReview={() => setPage('review')} />}
+        {page === 'course' && <div className="dtx-content" style={{ paddingTop: 0 }}><footer className="dtx-small dtx-muted"><DataFooter onExport={state.exportData} onReset={state.resetAll} /></footer></div>}
       </div>
     </div>
   )

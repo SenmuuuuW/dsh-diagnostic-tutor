@@ -656,4 +656,31 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
   .dtx-home-date { display:none; }
   .dtx-home-actions .dtx-primary { flex:1; }
 }
+
+/* ---------- course ---------- */
+.dtx-course { max-width:1060px; margin:0 auto; padding:26px 30px 44px; }
+.dtx-course-head { padding-bottom:19px; border-bottom:1px solid var(--dt-border,#e8eaee); }
+.dtx-course-head h1 { margin:5px 0 0; font-size:29px; line-height:1.18; letter-spacing:-.035em; font-weight:650; }
+.dtx-course-head > p:not(.dtx-eyebrow):not(.dtx-tab-notice) { max-width:680px; margin:9px 0 0; color:var(--dt-muted,#6b7280); font-size:12.5px; line-height:1.6; }
+.dtx-course-facts { display:flex; flex-wrap:wrap; gap:7px; margin-top:14px; }
+.dtx-course-facts span { padding:4px 8px; border:1px solid var(--dt-border,#e8eaee); border-radius:999px; color:var(--dt-muted,#6b7280); background:var(--dt-bg,#fff); font-size:10.5px; }
+.dtx-course-actions { display:flex; align-items:center; gap:12px; margin-top:17px; flex-wrap:wrap; }
+.dtx-course-layout { display:grid; grid-template-columns:minmax(0,1fr) 276px; gap:14px; align-items:start; margin-top:18px; }
+.dtx-course .dtx-route-card { margin:0; }
+.dtx-course-side { display:grid; gap:11px; }
+.dtx-course-card { padding:16px 17px; }
+.dtx-course-card h2 { margin:0 0 7px; font-size:12px; letter-spacing:-.01em; }
+.dtx-course-card p { margin:0; color:var(--dt-muted,#6b7280); font-size:11.5px; line-height:1.6; }
+.dtx-course-card .dtx-course-next-title { margin-bottom:4px; color:var(--dt-text,#1c1f23); font-size:13px; font-weight:650; line-height:1.4; }
+.dtx-course-card .dtx-secondary { margin-top:12px; }
+@media (max-width:760px) {
+  .dtx-course { padding:20px 16px 34px; }
+  .dtx-course-head h1 { font-size:25px; }
+  .dtx-course-layout { grid-template-columns:1fr; }
+  .dtx-course-side { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:520px) {
+  .dtx-course-side { grid-template-columns:1fr; }
+  .dtx-course-actions .dtx-primary { flex:1; }
+}
 `

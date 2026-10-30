@@ -132,7 +132,7 @@ async function libraryCase() {
   return { projects: await cdp.evaluate(`document.querySelectorAll('.dtx-project-row').length`) }
 }
 async function goalCase() {
-  await click('Learning route')
+  await click('Course')
   await waitFor(`!!document.querySelector('#dtx-purpose')`, 'goal form did not render')
   await fill('#dtx-purpose', 'Understand regression models')
   await fill('#dtx-outcomes', 'Explain a baseline\nCompare two models')
@@ -144,7 +144,7 @@ async function goalCase() {
   return { saved: true }
 }
 async function diagnosisCase() {
-  await click('Learning route')
+  await click('Course')
   await waitFor(`!!document.querySelector('.dtx-next')`, 'next-step card did not render')
   await click('Request diagnosis')
   await waitFor(`!!document.querySelector('.dtx-next[data-kind=waiting]')`, 'waiting card did not appear after requesting diagnosis')
@@ -154,7 +154,7 @@ async function diagnosisCase() {
   return { waiting: true }
 }
 async function proposalCase() {
-  await click('Learning route')
+  await click('Course')
   await waitFor(`!!document.querySelector('.dtx-proposal')`, 'proposal card did not render')
   await waitFor(`document.querySelectorAll('.dtx-lesson').length > 0`, 'route modules did not render')
   const lessons = await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`)
@@ -164,18 +164,18 @@ async function proposalCase() {
   return { lessons, accepted: true }
 }
 async function learningCase() {
-  await click('Learning route')
-  await waitFor(`!!document.querySelector('.dtx-next')`, 'learning next-step did not render')
-  await waitFor(`document.querySelectorAll('.dtx-lesson').length > 0`, 'route modules did not render')
-  const collapsed = await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`)
+  await click('Course')
+  await waitFor(`!!document.querySelector('.dtx-course')`, 'course surface did not render')
+  await waitFor(`!!document.querySelector('.dtx-course .dtx-route-card')`, 'course modules did not render')
+  const collapsed = await cdp.evaluate(`document.querySelectorAll('.dtx-course .dtx-lesson').length`)
   const expanded = await cdp.evaluate(`(() => { const button = [...document.querySelectorAll('button')].find((entry) => (entry.textContent || '').trim() === 'Expand all' || (entry.textContent || '').trim() === '展开全部'); if (!button) return false; button.click(); return true })()`)
-  assert.equal(expanded, true, `${currentCase}: route modules have no expand-all control`)
-  await waitFor(`document.querySelectorAll('.dtx-lesson').length > ${collapsed}`, 'expanding modules did not reveal lessons')
-  const first = await cdp.evaluate(`(() => { const el = document.querySelector('.dtx-lesson'); return el ? el.textContent.trim().slice(0, 40) : '' })()`)
-  const rail = await cdp.evaluate(`document.querySelector('.dtx-rail')?.textContent?.slice(0, 200) ?? ''`)
-  assert.ok(rail.length > 20, `${currentCase}: lesson rail is empty`)
+  assert.equal(expanded, true, `${currentCase}: course modules have no expand-all control`)
+  await waitFor(`document.querySelectorAll('.dtx-course .dtx-lesson').length > ${collapsed}`, 'expanding modules did not reveal lessons')
+  const first = await cdp.evaluate(`(() => { const el = document.querySelector('.dtx-course .dtx-lesson'); return el ? el.textContent.trim().slice(0, 40) : '' })()`)
+  const side = await cdp.evaluate(`document.querySelector('.dtx-course-side')?.textContent?.slice(0, 200) ?? ''`)
+  assert.ok(side.length > 10, `${currentCase}: course side is empty`)
   await screenshot(`${currentCase}-learning`)
-  return { lessons: await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`), collapsed, first, rail: rail.slice(0, 40) }
+  return { lessons: await cdp.evaluate(`document.querySelectorAll('.dtx-course .dtx-lesson').length`), collapsed, first, side: side.slice(0, 40) }
 }
 async function knowledgeCase() {
   await click('Knowledge & evidence')

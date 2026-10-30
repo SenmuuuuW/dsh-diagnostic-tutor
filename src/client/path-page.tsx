@@ -338,7 +338,7 @@ function EmptyRail({ title, body, action, text }: { title: string; body: string;
   )
 }
 
-function RouteModules({ plan, attempts, activeAttemptId, selectedItemId, onSelect, version, showProgress, text, lang }: {
+export function RouteModules({ plan, attempts, activeAttemptId, selectedItemId, onSelect, version, showProgress, text, lang }: {
   plan: Curriculum
   attempts: readonly CourseAttempt[]
   activeAttemptId: string | null

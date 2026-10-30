@@ -176,8 +176,19 @@ const en = {
   tabTutorUnreachable: 'The tutor could not be reached. Open the chat and try again.',
   today: 'Today',
   tabToday: 'Today',
+  tabCourse: 'Course',
   tabReview: 'Review',
   tabInsights: 'Insights',
+  // Course
+  courseGoalEmpty: 'The tutor has not written a goal for this course yet.',
+  courseRoute: (version: number): string => `Route v${version}`,
+  courseLessons: (lessons: number): string => `${lessons} lessons`,
+  courseCompleted: (done: number, total: number): string => `${done}/${total} lessons completed`,
+  courseNextTitle: 'Next lesson',
+  courseCurrentTitle: 'Current lesson',
+  courseCompleteBody: 'Every lesson in this route has a completed attempt. The tutor can revise the route when you are ready.',
+  courseGenerateTitle: 'Revise this course',
+  courseGenerateBody: 'Ask the tutor to revise the route from the conversation. The runtime will keep the current version.',
   // Home
   homeEyebrow: 'Today',
   homeTitle: 'One step today',
@@ -501,6 +512,18 @@ const zh: typeof en = {
   tabTutorUnreachable: '暂时联系不上导师。打开对话后重试。',
   today: '今天',
   tabToday: '今天',
+  tabCourse: '课程',
+
+  // Course
+  courseGoalEmpty: '导师还没有为这门课写下目标。',
+  courseRoute: (version: number): string => `路线 v${version}`,
+  courseLessons: (lessons: number): string => `${lessons} 课`,
+  courseCompleted: (done: number, total: number): string => `已完成 ${done}/${total} 课`,
+  courseNextTitle: '下一课',
+  courseCurrentTitle: '当前课',
+  courseCompleteBody: '这条路线中的每一课都已有完成的课次。准备好后可以让导师修订路线。',
+  courseGenerateTitle: '修订课程',
+  courseGenerateBody: '在对话里请导师修订路线。运行时保留当前版本。',
   tabReview: '复习',
   tabInsights: '洞察',
   // Home
