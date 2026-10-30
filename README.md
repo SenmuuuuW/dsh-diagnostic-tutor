@@ -885,4 +885,5 @@ author and is not vendored here.
 
 Planning and architecture research for this project live in
 [`docs/planning/`](docs/planning/). Phase 1–6 merge order, acceptance checks and the DSH compatibility checklist are in
-[`docs/planning/PHASE-1-6-MERGE.md`](docs/planning/PHASE-1-6-MERGE.md).
+[`docs/planning/PHASE-1-6-MERGE.md`](docs/planning/PHASE-1-6-MERGE.md). 拟定的 0.2.0 发布清单与验证记录见
+[`docs/planning/RELEASE-0.2.0.md`](docs/planning/RELEASE-0.2.0.md).
