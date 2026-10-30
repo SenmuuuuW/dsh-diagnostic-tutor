@@ -230,7 +230,8 @@ async function languageCase() {
 }
 
 async function reviewCase() {
-  await click('Review')
+  await waitFor(`!!document.querySelector('.dtx-home-review')`, 'home review card did not render')
+  await cdp.evaluate(`document.querySelector('.dtx-home-review').click()`)
   await waitFor(`document.body.innerText.includes('Due now')`, 'review page')
   assert.equal(await cdp.evaluate(`[...document.querySelectorAll('.dtx-review-front')].length`), 1)
   await screenshot(`${currentCase}-review`)
@@ -241,6 +242,7 @@ async function reviewCase() {
 }
 
 async function insightsCase() {
+  await click('Course')
   await click('Insights')
   await waitFor(`document.body.innerText.includes('Learning insights')`, 'insights page')
   assert.equal(await cdp.evaluate(`[...document.querySelectorAll('.dtx-insight-card')].length`), 5)

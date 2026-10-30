@@ -189,6 +189,7 @@ const en = {
   courseCompleteBody: 'Every lesson in this route has a completed attempt. The tutor can revise the route when you are ready.',
   courseGenerateTitle: 'Revise this course',
   courseGenerateBody: 'Ask the tutor to revise the route from the conversation. The runtime will keep the current version.',
+  courseExploreTitle: 'Go deeper',
   // Home
   homeEyebrow: 'Today',
   homeTitle: 'One step today',
@@ -524,6 +525,7 @@ const zh: typeof en = {
   courseCompleteBody: '这条路线中的每一课都已有完成的课次。准备好后可以让导师修订路线。',
   courseGenerateTitle: '修订课程',
   courseGenerateBody: '在对话里请导师修订路线。运行时保留当前版本。',
+  courseExploreTitle: '继续查看',
   tabReview: '复习',
   tabInsights: '洞察',
   // Home

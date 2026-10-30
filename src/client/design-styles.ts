@@ -659,6 +659,7 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 
 /* ---------- course ---------- */
 .dtx-course { max-width:1060px; margin:0 auto; padding:26px 30px 44px; }
+.dtx-course-secondary { display:flex; gap:15px; align-items:center; padding:0 0 13px; }
 .dtx-course-head { padding-bottom:19px; border-bottom:1px solid var(--dt-border,#e8eaee); }
 .dtx-course-head h1 { margin:5px 0 0; font-size:29px; line-height:1.18; letter-spacing:-.035em; font-weight:650; }
 .dtx-course-head > p:not(.dtx-eyebrow):not(.dtx-tab-notice) { max-width:680px; margin:9px 0 0; color:var(--dt-muted,#6b7280); font-size:12.5px; line-height:1.6; }

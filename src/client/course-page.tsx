@@ -13,13 +13,15 @@ import { RouteModules } from './path-page.js'
 
 export interface CoursePageProps extends PathPageProps {
   path: PathView | null
+  onOpenKnowledge?: (() => void) | undefined
+  onOpenInsights?: (() => void) | undefined
 }
 
 function operationId(): string {
   return typeof globalThis.crypto?.randomUUID === 'function' ? globalThis.crypto.randomUUID() : `course-${Date.now().toString(36)}`
 }
 
-export function CoursePage({ path, courseId, title, sessionId, client, onOpenChat, onStarted, onOpenLesson, onOpenEvidence, nodes, tasks, sessionActivity }: CoursePageProps): ReactNode {
+export function CoursePage({ path, courseId, title, sessionId, client, onOpenChat, onStarted, onOpenLesson, onOpenEvidence, onOpenKnowledge, onOpenInsights, nodes, tasks, sessionActivity }: CoursePageProps): ReactNode {
   const text = useDesignText()
   const lang = useLang()
   const [busy, setBusy] = useState(false)
@@ -28,19 +30,26 @@ export function CoursePage({ path, courseId, title, sessionId, client, onOpenCha
   const acceptedVersion = path?.path.acceptedVersion ?? null
   const accepted = path?.path.curricula.find((entry) => entry.version === acceptedVersion) ?? null
 
+  const secondaryLinks = (onOpenKnowledge !== undefined || onOpenInsights !== undefined) ? <div className="dtx-course-secondary">
+    {onOpenKnowledge !== undefined && <button type="button" className="dtx-link" onClick={onOpenKnowledge}>{text.tabKnowledge}<Icon name="chevron-right" size={13} /></button>}
+    {onOpenInsights !== undefined && <button type="button" className="dtx-link" onClick={onOpenInsights}>{text.tabInsights}<Icon name="chevron-right" size={13} /></button>}
+  </div> : null
   if (path === null) {
-    return <div className="dtx-course"><div className="dtx-status">{text.loading}</div></div>
+    return <div className="dtx-course">{secondaryLinks}<div className="dtx-status">{text.loading}</div></div>
   }
   // No accepted route yet: the existing route page owns the goal → diagnosis →
   // proposal flow. Keeping that flow in one place avoids a second generator.
   if (accepted === null) {
-    return <PathPage courseId={courseId} title={title} nodes={nodes} sessionId={sessionId} client={client}
-      {...(onOpenChat === undefined ? {} : { onOpenChat })}
-      {...(onStarted === undefined ? {} : { onStarted })}
-      {...(onOpenLesson === undefined ? {} : { onOpenLesson })}
-      {...(onOpenEvidence === undefined ? {} : { onOpenEvidence })}
-      {...(tasks === undefined ? {} : { tasks })}
-      {...(sessionActivity === undefined ? {} : { sessionActivity })} />
+    return <div className="dtx-course">
+      {secondaryLinks}
+      <PathPage courseId={courseId} title={title} nodes={nodes} sessionId={sessionId} client={client}
+        {...(onOpenChat === undefined ? {} : { onOpenChat })}
+        {...(onStarted === undefined ? {} : { onStarted })}
+        {...(onOpenLesson === undefined ? {} : { onOpenLesson })}
+        {...(onOpenEvidence === undefined ? {} : { onOpenEvidence })}
+        {...(tasks === undefined ? {} : { tasks })}
+        {...(sessionActivity === undefined ? {} : { sessionActivity })} />
+    </div>
   }
   const attempt = path.run?.attempts.find((entry) => entry.id === path.run?.activeAttemptId)
   const activeItem = accepted.items.find((entry) => entry.id === attempt?.itemId)
@@ -89,6 +98,7 @@ export function CoursePage({ path, courseId, title, sessionId, client, onOpenCha
           {next === null ? <p>{text.courseCompleteBody}</p> : <><p className="dtx-course-next-title">{next.title}</p><p>{next.overview}</p></>}
         </section>
         {onOpenChat !== undefined && <section className="dtx-card dtx-course-card"><h2>{text.courseGenerateTitle}</h2><p>{text.courseGenerateBody}</p><button type="button" className="dtx-secondary" onClick={onOpenChat}>{text.backToChat}</button></section>}
+        {(onOpenKnowledge !== undefined || onOpenInsights !== undefined) && <section className="dtx-card dtx-course-card"><h2>{text.courseExploreTitle}</h2>{onOpenKnowledge !== undefined && <button type="button" className="dtx-link" onClick={onOpenKnowledge}>{text.tabKnowledge}<Icon name="chevron-right" size={13} /></button>}{onOpenInsights !== undefined && <button type="button" className="dtx-link" onClick={onOpenInsights}>{text.tabInsights}<Icon name="chevron-right" size={13} /></button>}</section>}
       </aside>
     </main>
   </div>

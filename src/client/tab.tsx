@@ -17,6 +17,7 @@ import { Icon } from './design-icons.jsx'
 import { useDesignText } from './design-text.js'
 import { LanguageToggle } from './language-toggle.js'
 import { StudySession } from './study.jsx'
+import { consumeStudyIntent, STUDY_INTENT_EVENT } from './study-intent.js'
 import { useLang } from './i18n.js'
 import { useCoursePath } from './course-learning.js'
 import type { PanelClient } from './use-learning.js'
@@ -153,6 +154,15 @@ export function LearningTab({
       window.removeEventListener(PATH_PAUSED_EVENT, paused)
       window.removeEventListener(PATH_RESUMED_EVENT, resumed)
     }
+  }, [])
+
+  useEffect(() => {
+    // A request can arrive just before this tab mounts (Home opens the tab and
+    // asks for Study in the same click) or while it is already mounted.
+    if (consumeStudyIntent()) setStudyMode(true)
+    const openStudy = () => { if (consumeStudyIntent()) setStudyMode(true) }
+    window.addEventListener(STUDY_INTENT_EVENT, openStudy)
+    return () => window.removeEventListener(STUDY_INTENT_EVENT, openStudy)
   }, [])
 
   const blockInteraction: BlockInteraction | undefined = attempt === undefined || view === null || pathClient?.answer === undefined || courseId === undefined || activeSession === undefined
