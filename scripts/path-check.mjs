@@ -132,6 +132,7 @@ async function libraryCase() {
   return { projects: await cdp.evaluate(`document.querySelectorAll('.dtx-project-row').length`) }
 }
 async function goalCase() {
+  await click('Learning route')
   await waitFor(`!!document.querySelector('#dtx-purpose')`, 'goal form did not render')
   await fill('#dtx-purpose', 'Understand regression models')
   await fill('#dtx-outcomes', 'Explain a baseline\nCompare two models')
@@ -143,6 +144,7 @@ async function goalCase() {
   return { saved: true }
 }
 async function diagnosisCase() {
+  await click('Learning route')
   await waitFor(`!!document.querySelector('.dtx-next')`, 'next-step card did not render')
   await click('Request diagnosis')
   await waitFor(`!!document.querySelector('.dtx-next[data-kind=waiting]')`, 'waiting card did not appear after requesting diagnosis')
@@ -152,6 +154,7 @@ async function diagnosisCase() {
   return { waiting: true }
 }
 async function proposalCase() {
+  await click('Learning route')
   await waitFor(`!!document.querySelector('.dtx-proposal')`, 'proposal card did not render')
   await waitFor(`document.querySelectorAll('.dtx-lesson').length > 0`, 'route modules did not render')
   const lessons = await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`)
@@ -161,6 +164,7 @@ async function proposalCase() {
   return { lessons, accepted: true }
 }
 async function learningCase() {
+  await click('Learning route')
   await waitFor(`!!document.querySelector('.dtx-next')`, 'learning next-step did not render')
   await waitFor(`document.querySelectorAll('.dtx-lesson').length > 0`, 'route modules did not render')
   const collapsed = await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`)
@@ -192,6 +196,17 @@ async function tabCase() {
   await screenshot(`${currentCase}-tab`)
   return { title: await cdp.evaluate(`document.querySelector('.dtx-tab h2')?.textContent ?? ''`), scroll }
 }
+async function homeCase() {
+  await waitFor(`!!document.querySelector('.dtx-home')`, 'home did not render')
+  await waitFor(`!!document.querySelector('.dtx-home-copy .dtx-primary')`, 'home primary action did not render')
+  const text = await cdp.evaluate(`document.querySelector('.dtx-home').textContent`)
+  assert.match(text, /One step today|今天走一步/)
+  assert.equal(await cdp.evaluate(`document.querySelectorAll('.dtx-home-copy .dtx-primary').length`), 1)
+  assert.doesNotMatch(text, /\d+\s*%/)
+  await screenshot(`${currentCase}-home`)
+  return { primary: await cdp.evaluate(`document.querySelector('.dtx-home-copy .dtx-primary').textContent.trim()`) }
+}
+
 async function studyCase() {
   await waitFor(`!!document.querySelector('.dtx-study-entry')`, 'focused-study entry did not render')
   await click('Start focused study')
@@ -239,6 +254,7 @@ const plans = [
   { scenario: 'path-setup', case: goalCase, widths: [1440, 900], themes: ['light'] },
   { scenario: 'path-assessment', case: diagnosisCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'path-draft', case: proposalCase, widths: [1440, 900], themes: ['light'] },
+  { scenario: 'curriculum', case: homeCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'curriculum', case: learningCase, widths: [1440, 900, 400], themes: ['light', 'dark'] },
   { scenario: 'curriculum', case: knowledgeCase, widths: [1440, 400], themes: ['light'], after: 'learningCase' },
   { scenario: 'curriculum', surface: 'tab', case: tabCase, widths: [1440, 400], themes: ['light'] },

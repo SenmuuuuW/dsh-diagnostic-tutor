@@ -19,6 +19,8 @@ import { LanguageToggle } from './language-toggle.js'
 import { evidenceKindLabel } from './map-text.js'
 import { formatWhen, relationLabel, stateExplanation } from './model.js'
 import { PathPage } from './path-page.js'
+import { HomePage } from './home.jsx'
+import { useCoursePath } from './course-learning.jsx'
 import { ReviewPage } from './review-panel.jsx'
 import { InsightsPage } from './insights-panel.jsx'
 import type { PathClient } from './path-client.js'
@@ -42,7 +44,7 @@ export interface LearningMapPanelProps {
   pathClient?: PathClient | undefined
 }
 
-type MapView = 'curriculum' | 'knowledge' | 'review' | 'insights'
+type MapView = 'home' | 'curriculum' | 'knowledge' | 'review' | 'insights'
 
 function whenText(iso: string, text: DesignText): string {
   const stamp = Date.parse(iso)
@@ -271,10 +273,11 @@ export function LearningMapPanel({
   pathClient,
 }: LearningMapPanelProps): ReactNode {
   const text = useDesignText()
-  const [page, setPage] = useState<MapView>('curriculum')
+  const [page, setPage] = useState<MapView>('home')
   const state = useLearning({ client: client ?? defaultClient, sessionId, initialOverview, onOpenSession })
   const { overview, focus, detail, selectedId, note, error, loading, library } = state
   const reviewClient = pathClient ?? defaultClient.pathClient ?? defaultPathClient
+  const coursePath = useCoursePath(reviewClient, overview?.course?.id, sessionId)
 
   const arrival = selectedId
   const select = state.select
@@ -332,13 +335,18 @@ export function LearningMapPanel({
         </div>
       </header>
       <nav className="dtx-tabs" aria-label={text.pageTitle}>
+        <button type="button" className="dtx-tabbtn" aria-current={page === 'home' ? 'page' : undefined} onClick={() => setPage('home')}>{text.tabToday}</button>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'curriculum' ? 'page' : undefined} onClick={() => setPage('curriculum')}>{text.tabRoute}</button>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'knowledge' ? 'page' : undefined} onClick={() => setPage('knowledge')}>{text.tabKnowledge}</button>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'review' ? 'page' : undefined} onClick={() => setPage('review')}>{text.tabReview}</button>
         <button type="button" className="dtx-tabbtn" aria-current={page === 'insights' ? 'page' : undefined} onClick={() => setPage('insights')}>{text.tabInsights}</button>
       </nav>
       <div className="dtx-scroll">
-        {page === 'curriculum'
+        {page === 'home'
+          ? <HomePage overview={overview} path={coursePath} reviewClient={reviewClient}
+              onOpenLesson={enterCurrentLesson} onOpenRoute={() => setPage('curriculum')}
+              onOpenReview={() => setPage('review')} onOpenProject={(id) => void state.enterProject(id)} />
+          : page === 'curriculum'
           ? <PathPage courseId={overview.course.id} title={overview.course.title} nodes={nodes}
               sessionId={sessionId} client={pathClient} onOpenChat={onOpenChat} tasks={overview.tasks ?? []}
               onStarted={enterCurrentLesson} onOpenLesson={onOpenLesson === undefined ? undefined : enterCurrentLesson}
