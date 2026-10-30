@@ -16,6 +16,7 @@ import { isKnownBlock } from '../block-types.js'
 import { Icon } from './design-icons.jsx'
 import { useDesignText } from './design-text.js'
 import { LanguageToggle } from './language-toggle.js'
+import { StudySession } from './study.jsx'
 import { useLang } from './i18n.js'
 import { useCoursePath } from './course-learning.js'
 import type { PanelClient } from './use-learning.js'
@@ -102,9 +103,12 @@ export function LearningTab({
     for (const unit of attempt?.units ?? []) latest.set(unit.lesson.nodeId, unit)
     return [...latest.values()]
   }, [attempt])
+  const activeUnit = units.at(-1)
+  const hasStudy = activeUnit !== undefined && activeUnit.lesson.blocks.length > 0
   const done = view === null ? 0 : new Set((view.run?.attempts ?? []).filter((entry) => entry.status === 'completed' && entry.version === (attempt?.version ?? view.path.acceptedVersion)).map((entry) => entry.itemId)).size
   const pathClient = (client ?? defaultClient).pathClient
   const [busy, setBusy] = useState(false)
+  const [studyMode, setStudyMode] = useState(false)
   const [notice, setNotice] = useState('')
   const [pausedLocal, setPausedLocal] = useState(false)
   const operationId = () => typeof globalThis.crypto?.randomUUID === 'function' ? globalThis.crypto.randomUUID() : `tab-${Date.now().toString(36)}`
@@ -181,6 +185,18 @@ export function LearningTab({
   if (attempt === undefined || route === null || item === null) {
     return <EmptyTab title={text.emptyLessonTitle} body={text.emptyLessonBody} action={onOpenMapPage === undefined ? undefined : { label: text.openLearningMap, run: onOpenMapPage }} />
   }
+  if (studyMode && activeUnit !== undefined) {
+    return <StudySession
+      title={item.title}
+      courseTitle={learning.overview?.course?.title}
+      moduleTitle={module?.title}
+      code={codeFor(route, item)}
+      blocks={activeUnit.lesson.blocks}
+      interaction={blockInteraction}
+      onExit={() => setStudyMode(false)}
+      onOpenChat={onOpenChat}
+    />
+  }
 
   const paused = pausedLocal || attempt.status === 'interrupted'
   const status = attempt.status === 'completed' ? text.lessonComplete : paused ? text.lessonInterrupted : text.lessonStatusCurrent
@@ -197,6 +213,7 @@ export function LearningTab({
       </div>
       <p className="dtx-tab-teachhint">{text.teacherLeads} {text.teacherLeadsHint}</p>
       <div className="dtx-tab-progress"><span>{text.sessionProgress(done, route.items.length)}</span><span>{text.routeLabel(route.version)}</span></div>
+      {activeUnit !== undefined && activeUnit.lesson.blocks.length > 0 && <div className="dtx-study-entry"><div><p className="dtx-study-entry-title">{text.studyFocus}</p><p className="dtx-study-entry-body">{text.studyEntryBody}</p></div><button type="button" className="dtx-primary" onClick={() => setStudyMode(true)}>{text.studyStart}<Icon name="arrow-right" size={15} /></button></div>}
       <div className="dtx-tab-actions">
         {paused
           ? <>
@@ -204,7 +221,7 @@ export function LearningTab({
               {onOpenChat !== undefined && <button type="button" className="dtx-link" onClick={onOpenChat}>{text.backToChat}</button>}
             </>
           : <>
-              <button type="button" className="dtx-primary" disabled={busy || attempt.status === 'completed'} onClick={() => void nudge('continue')}>{text.resumeTeaching}</button>
+              <button type="button" className={hasStudy ? 'dtx-secondary' : 'dtx-primary'} disabled={busy || attempt.status === 'completed'} onClick={() => void nudge('continue')}>{text.resumeTeaching}</button>
               <button type="button" className="dtx-secondary" disabled={busy || attempt.status === 'completed' || attempt.units.length === 0} onClick={() => void nudge('teachback')}>{text.explainBack}</button>
               <button type="button" className="dtx-secondary" disabled={busy || attempt.status === 'completed'} onClick={() => void nudge('checkin')}>{text.checkIn}</button>
               {attempt.status !== 'completed' && pathClient?.pause !== undefined && <button type="button" className="dtx-link" disabled={busy} onClick={() => void pause()}>{text.pauseLesson}</button>}

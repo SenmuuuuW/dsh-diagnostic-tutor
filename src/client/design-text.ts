@@ -5,6 +5,26 @@ const en = {
   pageTitle: 'Learning map',
   backToChat: 'Back to chat',
 
+  // Focused study
+  studyFocus: 'Focused study',
+  studyStart: 'Start focused study',
+  studyEntryBody: 'One step at a time. Answers still go through the normal runtime.',
+  studyExit: 'Exit study',
+  studyEmpty: 'No lesson content yet',
+  studyEmptyBody: 'The tutor has not written this lesson yet. Return to the chat and ask it to continue.',
+  studyStep: (step: number, total: number): string => `Step ${step} of ${total}`,
+  studyContinue: 'Continue',
+  studyPrevious: 'Back',
+  studyFinish: 'Finish',
+  studyAnswerFirst: 'Submit this step before continuing.',
+  studyOpenChat: 'Answer in the chat',
+  studyFinishedEyebrow: 'Lesson complete',
+  studyFinishedTitle: 'You left a record that can be checked.',
+  studyFinishedBody: 'The runtime kept your practice and sources. Nothing here claims mastery or advances the route on its own.',
+  studyBlocks: 'content blocks',
+  studyAnswered: 'practice answers recorded',
+  studyEvidenceKept: 'evidence kept',
+
   // Shell / tabs
   tabRoute: 'Learning route',
   tabKnowledge: 'Knowledge & evidence',
@@ -283,6 +303,26 @@ const en = {
 const zh: typeof en = {
   pageTitle: '学习地图',
   backToChat: '返回对话',
+
+  // Focused study
+  studyFocus: '专注学习',
+  studyStart: '开始专注学习',
+  studyEntryBody: '一次只走一步。答案仍然通过现有运行时记录。',
+  studyExit: '退出专注',
+  studyEmpty: '这一课还没有内容',
+  studyEmptyBody: '导师还没有写这一课。回到对话，请它继续。',
+  studyStep: (step: number, total: number): string => `第 ${step} / ${total} 步`,
+  studyContinue: '继续',
+  studyPrevious: '上一步',
+  studyFinish: '完成',
+  studyAnswerFirst: '先提交这一步，再继续。',
+  studyOpenChat: '去对话回答',
+  studyFinishedEyebrow: '本节完成',
+  studyFinishedTitle: '你留下了一条可以被检查的记录。',
+  studyFinishedBody: '运行时保留了你的练习和来源。这里不声称掌握，也不会自动推进路线。',
+  studyBlocks: '个内容块',
+  studyAnswered: '次练习已记录',
+  studyEvidenceKept: '证据已保留',
 
   tabRoute: '学习路线',
   tabKnowledge: '知识与证据',

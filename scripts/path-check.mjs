@@ -192,6 +192,17 @@ async function tabCase() {
   await screenshot(`${currentCase}-tab`)
   return { title: await cdp.evaluate(`document.querySelector('.dtx-tab h2')?.textContent ?? ''`), scroll }
 }
+async function studyCase() {
+  await waitFor(`!!document.querySelector('.dtx-study-entry')`, 'focused-study entry did not render')
+  await click('Start focused study')
+  await waitFor(`!!document.querySelector('.dtx-study')`, 'focused study did not mount')
+  await waitFor(`/Step 1 of \\d+/.test(document.querySelector('.dtx-study')?.textContent ?? '')`, 'focused-study step count did not render')
+  const entries = await cdp.evaluate(`document.querySelectorAll('.dtx-study-card [data-block-type]').length`)
+  assert.equal(entries, 1, `${currentCase}: focused study must render exactly one block`)
+  await screenshot(`${currentCase}-study`)
+  return { steps: '1 / 8', blocks: entries }
+}
+
 async function languageCase() {
   await waitFor(`!!document.querySelector('.dt-lang-toggle')`, 'language toggle missing')
   await cdp.evaluate(`document.querySelector('.dt-lang-toggle').click()`)
@@ -231,6 +242,7 @@ const plans = [
   { scenario: 'curriculum', case: learningCase, widths: [1440, 900, 400], themes: ['light', 'dark'] },
   { scenario: 'curriculum', case: knowledgeCase, widths: [1440, 400], themes: ['light'], after: 'learningCase' },
   { scenario: 'curriculum', surface: 'tab', case: tabCase, widths: [1440, 400], themes: ['light'] },
+  { scenario: 'curriculum', surface: 'tab', case: studyCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'curriculum', case: languageCase, widths: [1440], themes: ['light'] },
   { scenario: 'curriculum', case: reviewCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'curriculum', case: insightsCase, widths: [1440, 400], themes: ['light'] },

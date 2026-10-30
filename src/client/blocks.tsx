@@ -14,7 +14,7 @@
  * State is always a word from the skill's vocabulary plus a coloured mark.
  */
 
-import { useState, type ReactNode } from 'react'
+import { createElement, useState, type ReactNode } from 'react'
 
 import { MathMLView } from './mathml.jsx'
 
@@ -37,6 +37,8 @@ export interface BlockInteraction {
     submittedAt: string
   }[]
   submit(blockId: string, answers: { questionId: string; value: string }[]): Promise<void>
+  /** Optional observation hook used by focused study; it stores nothing itself. */
+  onRecorded?(blockId: string): void
 }
 
 export interface BlockRenderProps<B extends KnownBlock = KnownBlock> {
@@ -503,6 +505,7 @@ function QuizBlockView({ block, interaction }: BlockRenderProps): ReactNode {
         questionId: question.id,
         value: recorded?.answers.find((answer) => answer.questionId === question.id)?.value ?? values[question.id] ?? '',
       })))
+      interaction.onRecorded?.(block.id)
       setSent(true)
     } catch {
       setError(text.answerFailed)
@@ -551,6 +554,7 @@ function FlashcardBlockView({ block, interaction }: BlockRenderProps): ReactNode
     setBusy(true); setError('')
     try {
       await interaction.submit(block.id, [{ questionId: block.id, value }])
+      interaction.onRecorded?.(block.id)
       setRevealed(true)
     } catch {
       setError(text.answerFailed)
@@ -698,7 +702,10 @@ export function BlockView({ block, interaction }: { block: StoredBlock; interact
   if (renderer === undefined) {
     return <div data-block-type={block.type}><UnknownBlockView block={block} /><SourceRefs block={block} interaction={interaction} /></div>
   }
-  return <div data-block-type={block.type}>{renderer({ block, interaction })}<SourceRefs block={block} interaction={interaction} /></div>
+  // Render the registered renderer as a component, not by calling it. Study
+  // swaps one block at a time inside the same position, so a direct call makes
+  // the renderer's hooks change order when the block type changes.
+  return <div data-block-type={block.type}>{createElement(renderer, { block, interaction })}<SourceRefs block={block} interaction={interaction} /></div>
 }
 
 /**

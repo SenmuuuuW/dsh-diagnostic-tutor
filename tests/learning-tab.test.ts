@@ -162,6 +162,18 @@ describe('interactive lesson blocks', () => {
 })
 
 describe('active lesson', () => {
+  it('opens the focused study surface over the current unit and exits back', async () => {
+    await mount(pathView())
+    await act(async () => { button('Start focused study').click(); await Promise.resolve() })
+    expect(container.querySelector('.dtx-study')).not.toBeNull()
+    expect(container.textContent).toContain('Focused study')
+    expect(container.textContent).toContain('Step 1 of 2')
+    expect(container.textContent).toContain('Vectors describe features')
+    await act(async () => { button('Exit study').click(); await Promise.resolve() })
+    expect(container.querySelector('.dtx-study')).toBeNull()
+    expect(container.querySelector('h2')?.textContent).toBe('Vectors and matrices')
+  })
+
   it('renders the lesson title, route meta, progress and the tutor-written blocks', async () => {
     await mount(pathView())
     expect(container.querySelector('h2')?.textContent).toBe('Vectors and matrices')
