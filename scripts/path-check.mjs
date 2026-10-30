@@ -132,6 +132,7 @@ async function libraryCase() {
   return { projects: await cdp.evaluate(`document.querySelectorAll('.dtx-project-row').length`) }
 }
 async function goalCase() {
+  await click('Course')
   await waitFor(`!!document.querySelector('#dtx-purpose')`, 'goal form did not render')
   await fill('#dtx-purpose', 'Understand regression models')
   await fill('#dtx-outcomes', 'Explain a baseline\nCompare two models')
@@ -143,6 +144,7 @@ async function goalCase() {
   return { saved: true }
 }
 async function diagnosisCase() {
+  await click('Course')
   await waitFor(`!!document.querySelector('.dtx-next')`, 'next-step card did not render')
   await click('Request diagnosis')
   await waitFor(`!!document.querySelector('.dtx-next[data-kind=waiting]')`, 'waiting card did not appear after requesting diagnosis')
@@ -152,6 +154,7 @@ async function diagnosisCase() {
   return { waiting: true }
 }
 async function proposalCase() {
+  await click('Course')
   await waitFor(`!!document.querySelector('.dtx-proposal')`, 'proposal card did not render')
   await waitFor(`document.querySelectorAll('.dtx-lesson').length > 0`, 'route modules did not render')
   const lessons = await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`)
@@ -161,17 +164,18 @@ async function proposalCase() {
   return { lessons, accepted: true }
 }
 async function learningCase() {
-  await waitFor(`!!document.querySelector('.dtx-next')`, 'learning next-step did not render')
-  await waitFor(`document.querySelectorAll('.dtx-lesson').length > 0`, 'route modules did not render')
-  const collapsed = await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`)
+  await click('Course')
+  await waitFor(`!!document.querySelector('.dtx-course')`, 'course surface did not render')
+  await waitFor(`!!document.querySelector('.dtx-course .dtx-route-card')`, 'course modules did not render')
+  const collapsed = await cdp.evaluate(`document.querySelectorAll('.dtx-course .dtx-lesson').length`)
   const expanded = await cdp.evaluate(`(() => { const button = [...document.querySelectorAll('button')].find((entry) => (entry.textContent || '').trim() === 'Expand all' || (entry.textContent || '').trim() === '展开全部'); if (!button) return false; button.click(); return true })()`)
-  assert.equal(expanded, true, `${currentCase}: route modules have no expand-all control`)
-  await waitFor(`document.querySelectorAll('.dtx-lesson').length > ${collapsed}`, 'expanding modules did not reveal lessons')
-  const first = await cdp.evaluate(`(() => { const el = document.querySelector('.dtx-lesson'); return el ? el.textContent.trim().slice(0, 40) : '' })()`)
-  const rail = await cdp.evaluate(`document.querySelector('.dtx-rail')?.textContent?.slice(0, 200) ?? ''`)
-  assert.ok(rail.length > 20, `${currentCase}: lesson rail is empty`)
+  assert.equal(expanded, true, `${currentCase}: course modules have no expand-all control`)
+  await waitFor(`document.querySelectorAll('.dtx-course .dtx-lesson').length > ${collapsed}`, 'expanding modules did not reveal lessons')
+  const first = await cdp.evaluate(`(() => { const el = document.querySelector('.dtx-course .dtx-lesson'); return el ? el.textContent.trim().slice(0, 40) : '' })()`)
+  const side = await cdp.evaluate(`document.querySelector('.dtx-course-side')?.textContent?.slice(0, 200) ?? ''`)
+  assert.ok(side.length > 10, `${currentCase}: course side is empty`)
   await screenshot(`${currentCase}-learning`)
-  return { lessons: await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`), collapsed, first, rail: rail.slice(0, 40) }
+  return { lessons: await cdp.evaluate(`document.querySelectorAll('.dtx-course .dtx-lesson').length`), collapsed, first, side: side.slice(0, 40) }
 }
 async function knowledgeCase() {
   await click('Knowledge & evidence')
@@ -192,6 +196,28 @@ async function tabCase() {
   await screenshot(`${currentCase}-tab`)
   return { title: await cdp.evaluate(`document.querySelector('.dtx-tab h2')?.textContent ?? ''`), scroll }
 }
+async function homeCase() {
+  await waitFor(`!!document.querySelector('.dtx-home')`, 'home did not render')
+  await waitFor(`!!document.querySelector('.dtx-home-copy .dtx-primary')`, 'home primary action did not render')
+  const text = await cdp.evaluate(`document.querySelector('.dtx-home').textContent`)
+  assert.match(text, /One step today|今天走一步/)
+  assert.equal(await cdp.evaluate(`document.querySelectorAll('.dtx-home-copy .dtx-primary').length`), 1)
+  assert.doesNotMatch(text, /\d+\s*%/)
+  await screenshot(`${currentCase}-home`)
+  return { primary: await cdp.evaluate(`document.querySelector('.dtx-home-copy .dtx-primary').textContent.trim()`) }
+}
+
+async function studyCase() {
+  await waitFor(`!!document.querySelector('.dtx-study-entry')`, 'focused-study entry did not render')
+  await click('Start focused study')
+  await waitFor(`!!document.querySelector('.dtx-study')`, 'focused study did not mount')
+  await waitFor(`/Step 1 of \\d+/.test(document.querySelector('.dtx-study')?.textContent ?? '')`, 'focused-study step count did not render')
+  const entries = await cdp.evaluate(`document.querySelectorAll('.dtx-study-card [data-block-type]').length`)
+  assert.equal(entries, 1, `${currentCase}: focused study must render exactly one block`)
+  await screenshot(`${currentCase}-study`)
+  return { steps: '1 / 8', blocks: entries }
+}
+
 async function languageCase() {
   await waitFor(`!!document.querySelector('.dt-lang-toggle')`, 'language toggle missing')
   await cdp.evaluate(`document.querySelector('.dt-lang-toggle').click()`)
@@ -228,9 +254,11 @@ const plans = [
   { scenario: 'path-setup', case: goalCase, widths: [1440, 900], themes: ['light'] },
   { scenario: 'path-assessment', case: diagnosisCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'path-draft', case: proposalCase, widths: [1440, 900], themes: ['light'] },
+  { scenario: 'curriculum', case: homeCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'curriculum', case: learningCase, widths: [1440, 900, 400], themes: ['light', 'dark'] },
   { scenario: 'curriculum', case: knowledgeCase, widths: [1440, 400], themes: ['light'], after: 'learningCase' },
   { scenario: 'curriculum', surface: 'tab', case: tabCase, widths: [1440, 400], themes: ['light'] },
+  { scenario: 'curriculum', surface: 'tab', case: studyCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'curriculum', case: languageCase, widths: [1440], themes: ['light'] },
   { scenario: 'curriculum', case: reviewCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'curriculum', case: insightsCase, widths: [1440, 400], themes: ['light'] },
