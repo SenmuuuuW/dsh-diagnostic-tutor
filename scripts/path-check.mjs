@@ -139,27 +139,26 @@ async function goalCase() {
   await fill('#dtx-weekly', '480')
   await fill('#dtx-session', '45')
   await click('Save goal')
-  await waitFor(`[...document.querySelectorAll('.dtx-stage')].findIndex((entry) => entry.getAttribute('data-state') === 'current') === 1`, 'stage bar did not move to diagnosis after saving')
+  await waitFor(`!!document.querySelector('.dtx-course-setup-card[data-stage=diagnosis]')`, 'course setup did not move to diagnosis after saving')
   await screenshot(`${currentCase}-goal`)
   return { saved: true }
 }
 async function diagnosisCase() {
   await click('Course')
-  await waitFor(`!!document.querySelector('.dtx-next')`, 'next-step card did not render')
-  await click('Request diagnosis')
-  await waitFor(`!!document.querySelector('.dtx-next[data-kind=waiting]')`, 'waiting card did not appear after requesting diagnosis')
-  assert.match(await cdp.evaluate(`document.querySelector('.dtx-next')?.textContent ?? ''`), /Waiting|等待/)
-  assert.ok(await cdp.evaluate(`!!document.querySelector('.dtx-spinner')`), 'waiting spinner missing')
+  await waitFor(`!!document.querySelector('.dtx-course-setup-card[data-stage=diagnosis]')`, 'diagnosis card did not render')
+  await click('Start diagnosis')
+  await waitFor(`!!document.querySelector('.dtx-course-setup-card[data-stage=diagnosis] .dtx-course-setup-waiting')`, 'waiting card did not appear after requesting diagnosis')
+  assert.match(await cdp.evaluate(`document.querySelector('.dtx-course-setup-card[data-stage=diagnosis]')?.textContent ?? ''`), /Waiting|等待/)
+  assert.ok(await cdp.evaluate(`!!document.querySelector('.dtx-course-setup-waiting .dtx-spinner')`), 'waiting spinner missing')
   await screenshot(`${currentCase}-waiting`)
   return { waiting: true }
 }
 async function proposalCase() {
   await click('Course')
-  await waitFor(`!!document.querySelector('.dtx-proposal')`, 'proposal card did not render')
-  await waitFor(`document.querySelectorAll('.dtx-lesson').length > 0`, 'route modules did not render')
-  const lessons = await cdp.evaluate(`document.querySelectorAll('.dtx-lesson').length`)
-  await click('Accept route')
-  await waitFor(`!!document.querySelector('.dtx-next')`, 'learning next-step did not appear after acceptance')
+  await waitFor(`!!document.querySelector('.dtx-course-setup-card[data-stage=preview]')`, 'course preview did not render')
+  const lessons = await cdp.evaluate(`document.querySelectorAll('.dtx-course-preview-list li').length`)
+  await click('Accept course')
+  await waitFor(`!!document.querySelector('.dtx-course-layout')`, 'accepted course did not appear after acceptance')
   await screenshot(`${currentCase}-accepted`)
   return { lessons, accepted: true }
 }
