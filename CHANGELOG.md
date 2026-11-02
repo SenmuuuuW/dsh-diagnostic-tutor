@@ -3,6 +3,63 @@
 All notable changes to this project are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-11-02
+
+The learning surface is now three screens: **Today → Course → Study**, with
+Review, Knowledge & evidence and Insights as secondary views.
+
+### Added — Today
+
+- Default main-panel surface with one primary action, due review count,
+  deadline/countdown, today plan items and learner courses.
+- No fake progress: completed counts are facts, not a percentage.
+
+### Added — Course and three-step generation
+
+- New Course surface with accepted route, module/lesson list, current lesson
+  context and one primary action.
+- When no route is accepted, Course exposes only **Goal → Diagnosis → Course
+  preview**, reusing the existing `saveBrief` / `request` / `skipAssessment` /
+  `accept` path runtime.
+- No assessment revision, route version or proposal bookkeeping is shown to the
+  learner.
+
+### Added — Focused Study
+
+- The lesson tab can enter an immersive Study surface built from the current
+  attempt's stored blocks.
+- One block per step; quiz/flashcard answers still go through the existing
+  `pathClient.answer`, with no grading or automatic advancement.
+- Home/Course "continue" opens Study directly instead of stopping at the lesson
+  tab.
+
+### Changed
+
+- Primary navigation is now **Today / Course**; Review, Knowledge & evidence and
+  Insights are secondary views with a back action.
+- Course replaces the old Learning-route tab.
+
+### Fixed
+
+- `BlockView` now renders block renderers as components, fixing React hook-order
+  errors when Study switches from one block type to another.
+- Fixed duplicated selectors in the design stylesheet that caused all later CSS
+  to be parsed as nested rules.
+
+### Verification
+
+- `pnpm typecheck` pass
+- `pnpm test`: **656 tests passed (58 files)**
+- `pnpm build` pass
+- `scripts/path-check.mjs`: **29 browser cases passed**
+
+### Known limits
+
+- No PDF/file material upload yet.
+- No RAG, analytics, FSRS or cross-harness support.
+- The three-step generation still depends on the external teaching skill for
+  diagnosis and proposal content.
+
 ## [0.2.0] — 2026-10-29
 
 Everything below was unreleased on top of `v0.1.1`; this release includes the Phase 1–6 content/input/review loop and the learning-path flow.
