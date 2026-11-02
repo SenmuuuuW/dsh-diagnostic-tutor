@@ -684,4 +684,43 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
   .dtx-course-side { grid-template-columns:1fr; }
   .dtx-course-actions .dtx-primary { flex:1; }
 }
+
+/* ---------- course setup: goal -> diagnosis -> course ---------- */
+.dtx-course-setup { max-width:760px; margin:0 auto; padding:8px 0 24px; }
+.dtx-course-setup-head { padding:14px 0 17px; }
+.dtx-course-setup-head h1 { margin:5px 0 0; font-size:27px; line-height:1.2; letter-spacing:-.03em; font-weight:650; }
+.dtx-course-setup-head > p:not(.dtx-eyebrow) { margin:8px 0 0; color:var(--dt-muted,#6b7280); font-size:12.5px; line-height:1.6; }
+.dtx-course-steps { display:flex; align-items:center; gap:7px; margin:17px 0 0; padding:0; list-style:none; }
+.dtx-course-steps li { display:inline-flex; align-items:center; gap:6px; color:var(--dt-muted,#6b7280); font-size:10.5px; }
+.dtx-course-steps li + li::before { content:'/'; margin-right:1px; color:#c3c9d4; }
+.dtx-course-steps li > span { width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--dt-border,#e3e6ec); border-radius:50%; font-size:9px; }
+.dtx-course-steps li[data-current] { color:var(--dt-text,#1c1f23); font-weight:650; }
+.dtx-course-steps li[data-current] > span { border-color:var(--dt-brand,#4d6bfe); color:var(--dt-brand-ink,#3155f5); background:#f8faff; }
+.dtx-course-steps li[data-done] > span { border-color:#b7dfc9; color:#1f7a4d; background:#f0faf4; }
+.dtx-course-setup-card { padding:25px 27px; border:1px solid var(--dt-border,#e8eaee); border-radius:16px; background:var(--dt-bg,#fff); box-shadow:0 1px 2px rgba(0,0,0,.025); }
+.dtx-course-setup-icon { width:38px; height:38px; display:inline-flex; align-items:center; justify-content:center; border-radius:11px; background:#f1f4ff; color:var(--dt-brand-ink,#3155f5); }
+.dtx-course-setup-card h2 { margin:15px 0 0; font-size:20px; line-height:1.25; letter-spacing:-.02em; }
+.dtx-course-setup-card > p { margin:7px 0 0; color:var(--dt-muted,#6b7280); font-size:12px; line-height:1.65; }
+.dtx-course-field { display:block; margin-top:18px; }
+.dtx-course-field > span, .dtx-course-budget label > span { display:block; margin-bottom:6px; color:var(--dt-text,#1c1f23); font-size:11.5px; font-weight:650; }
+.dtx-course-field textarea, .dtx-course-budget input { width:100%; border:1px solid var(--dt-border,#dfe3ea); border-radius:9px; background:var(--dt-bg,#fff); color:var(--dt-text,#1c1f23); font:inherit; font-size:12.5px; line-height:1.6; }
+.dtx-course-field textarea { min-height:78px; resize:vertical; padding:10px 12px; }
+.dtx-course-field textarea:focus, .dtx-course-budget input:focus { outline:2px solid #dbe2ff; outline-offset:0; border-color:#aebcff; }
+.dtx-course-budget { display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-top:14px; }
+.dtx-course-budget input { height:38px; padding:0 10px; }
+.dtx-course-setup-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:20px; }
+.dtx-course-setup-waiting { display:flex; align-items:center; gap:9px; margin-top:18px; padding:11px 13px; border-radius:9px; background:#f7f8fc; color:var(--dt-muted,#6b7280); font-size:11.5px; }
+.dtx-course-setup-waiting .dtx-spinner { width:13px; height:13px; border-width:1.5px; }
+.dtx-course-setup-preview .dtx-course-preview { margin-top:17px; padding:15px; border-radius:10px; background:#fafbff; border:1px solid #e4e9ff; }
+.dtx-course-preview-list { margin:14px 0 0; padding:0; list-style:none; border-top:1px solid var(--dt-border,#eef0f4); }
+.dtx-course-preview-list li { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--dt-border,#eef0f4); font-size:11.5px; }
+.dtx-course-preview-list li b { font-weight:600; }
+.dtx-course-preview-list li span { color:var(--dt-muted,#6b7280); font-size:10.5px; white-space:nowrap; }
+.dtx-course-setup-notice { margin:14px 0 0; }
+@media (max-width:520px) {
+  .dtx-course-setup-card { padding:20px 17px; }
+  .dtx-course-budget { grid-template-columns:1fr; }
+  .dtx-course-steps { gap:4px; }
+  .dtx-course-steps li { font-size:9.5px; }
+}
 `

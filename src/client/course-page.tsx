@@ -7,8 +7,8 @@ import { defaultPathClient } from './path-client.js'
 import { Icon } from './design-icons.jsx'
 import { useDesignText } from './design-text.js'
 import { useLang } from './i18n.js'
-import { PathPage } from './path-page.js'
 import type { PathPageProps } from './path-page.js'
+import { CourseSetup } from './course-setup.jsx'
 import { RouteModules } from './path-page.js'
 
 export interface CoursePageProps extends PathPageProps {
@@ -37,18 +37,13 @@ export function CoursePage({ path, courseId, title, sessionId, client, onOpenCha
   if (path === null) {
     return <div className="dtx-course">{secondaryLinks}<div className="dtx-status">{text.loading}</div></div>
   }
-  // No accepted route yet: the existing route page owns the goal → diagnosis →
-  // proposal flow. Keeping that flow in one place avoids a second generator.
+  // No accepted route yet: three learner-facing steps over the existing
+  // goal → diagnosis → proposal runtime.
   if (accepted === null) {
     return <div className="dtx-course">
       {secondaryLinks}
-      <PathPage courseId={courseId} title={title} nodes={nodes} sessionId={sessionId} client={client}
-        {...(onOpenChat === undefined ? {} : { onOpenChat })}
-        {...(onStarted === undefined ? {} : { onStarted })}
-        {...(onOpenLesson === undefined ? {} : { onOpenLesson })}
-        {...(onOpenEvidence === undefined ? {} : { onOpenEvidence })}
-        {...(tasks === undefined ? {} : { tasks })}
-        {...(sessionActivity === undefined ? {} : { sessionActivity })} />
+      <CourseSetup courseId={courseId} title={title} path={path} sessionId={sessionId} client={pathClient}
+        {...(onOpenChat === undefined ? {} : { onOpenChat })} />
     </div>
   }
   const attempt = path.run?.attempts.find((entry) => entry.id === path.run?.activeAttemptId)
