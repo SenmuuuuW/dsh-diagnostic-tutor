@@ -39,7 +39,8 @@ DSH host smoke（0.2.1-rc.5）使用 0.2.0 tarball 验证过 host/API 与真实�
 - [x] annotated tag `v0.3.0`
 - [x] `npm publish --access public`，`latest = 0.3.0`
 - [x] 发布后 npm 冷安装验证
-- [ ] GitHub Release
+- [x] GitHub Release
+- [x] 冷安装 `dsh-diagnostic-tutor@0.3.0` 成功（包内版本 0.3.0，client bundle 含新 Home/Course/Study 代码）
 
 ## 4. 已知限制
 
@@ -50,6 +51,7 @@ DSH host smoke（0.2.1-rc.5）使用 0.2.0 tarball 验证过 host/API 与真实�
 
 ## 5. 发布结果
 
+- GitHub Release：https://github.com/SenmuuuuW/dsh-diagnostic-tutor/releases/tag/v0.3.0
 - npm：`dsh-diagnostic-tutor@0.3.0`
 - npm tarball：https://registry.npmjs.org/dsh-diagnostic-tutor/-/dsh-diagnostic-tutor-0.3.0.tgz
 - npm shasum：`18535220ad5d749467810050b9d803bc15f808fd`
