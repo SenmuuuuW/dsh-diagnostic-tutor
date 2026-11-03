@@ -69,6 +69,18 @@ describe('course setup', () => {
     }))
   })
 
+  it('adds pasted material through the existing source store', async () => {
+    const addSource = vi.fn(async () => ({ ok: true, deduped: false, source: { id: 's1', kind: 'text', title: 'Pasted material', locator: 'Pasted material', sha256: 'a'.repeat(64), bytes: 12, createdAt: NOW, status: 'ready' } }))
+    const listSources = vi.fn(async () => ({ ok: true, count: 0, bytes: 0, sources: [] }))
+    await mount(view(), { saveBrief: vi.fn(), addSource, listSources } as unknown as PathClient)
+    const material = container.querySelector<HTMLTextAreaElement>('#dtx-material')!
+    Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(material, 'A source paragraph.')
+    material.dispatchEvent(new Event('input', { bubbles: true }))
+    await act(async () => { button('Add material').click(); await Promise.resolve() })
+    expect(addSource).toHaveBeenCalledWith(expect.objectContaining({ text: 'A source paragraph.', kind: 'text' }))
+    expect(container.textContent).toContain('Pasted material')
+  })
+
   it('asks for diagnosis and exposes the conversation, not internal assessment fields', async () => {
     const request = vi.fn(async () => ({ ok: true, prompted: true }))
     await mount(view({ brief }), { request } as unknown as PathClient)

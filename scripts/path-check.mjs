@@ -206,6 +206,19 @@ async function homeCase() {
   return { primary: await cdp.evaluate(`document.querySelector('.dtx-home-copy .dtx-primary').textContent.trim()`) }
 }
 
+async function materialCase() {
+  await click('Course')
+  await waitFor(`!!document.querySelector('#dtx-material')`, 'material input did not render')
+  await fill('#dtx-material', 'A pasted source for the course preview.')
+  await fill('#dtx-material-title', 'Preview reading')
+  await click('Add material')
+  await waitFor(`!!document.querySelector('.dtx-course-material-list li')`, 'added material did not appear')
+  const count = await cdp.evaluate(`document.querySelectorAll('.dtx-course-material-list li').length`)
+  assert.equal(count, 1, `${currentCase}: material list count`)
+  await screenshot(`${currentCase}-material`)
+  return { materials: count }
+}
+
 async function studyCase() {
   await waitFor(`!!document.querySelector('.dtx-study-entry')`, 'focused-study entry did not render')
   await click('Start focused study')
@@ -252,6 +265,7 @@ async function insightsCase() {
 
 const plans = [
   { scenario: 'library', case: libraryCase, widths: [1440, 400], themes: ['light', 'dark'] },
+  { scenario: 'path-setup', case: materialCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'path-setup', case: goalCase, widths: [1440, 900], themes: ['light'] },
   { scenario: 'path-assessment', case: diagnosisCase, widths: [1440, 400], themes: ['light'] },
   { scenario: 'path-draft', case: proposalCase, widths: [1440, 900], themes: ['light'] },

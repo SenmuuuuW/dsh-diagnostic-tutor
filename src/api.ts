@@ -40,6 +40,8 @@ import { handlePathApi } from './path-api.js'
 import { buildIcs, sortTasks, taskView } from './plan.js'
 import { buildInsights } from './insights.js'
 import { REVIEW_RATINGS, dueCards, scheduleReview } from './review.js'
+import { addSource, sourceDraftFromText } from './sources.js'
+import { MAX_SOURCE_BYTES } from './source-schema.js'
 import type { ReviewCard } from './review.js'
 import type { ReviewCardView } from './contract.js'
 
@@ -54,6 +56,8 @@ export interface WebServerLike {
 
 /** Largest request body accepted, in bytes. */
 export const MAX_BODY_BYTES = 64 * 1024
+/** A source post carries JSON-escaped text; keep it bounded but above the source cap. */
+export const MAX_SOURCE_BODY_BYTES = MAX_SOURCE_BYTES * 8
 
 /** Route prefix owned by this plugin. */
 export const API_PREFIX = '/diagnostic-tutor/api'
@@ -113,13 +117,13 @@ function fail(res: ServerResponse, status: number, code: string, message?: strin
 }
 
 /** Read and parse a JSON body, bounded and never trusted. */
-async function readJsonBody(req: IncomingMessage): Promise<Record<string, unknown> | undefined> {
+async function readJsonBody(req: IncomingMessage, limit = MAX_BODY_BYTES): Promise<Record<string, unknown> | undefined> {
   const chunks: Buffer[] = []
   let size = 0
   for await (const chunk of req) {
     const buffer = chunk as Buffer
     size += buffer.length
-    if (size > MAX_BODY_BYTES) return undefined
+    if (size > limit) return undefined
     chunks.push(buffer)
   }
   if (size === 0) return {}
@@ -130,6 +134,11 @@ async function readJsonBody(req: IncomingMessage): Promise<Record<string, unknow
   } catch {
     return undefined
   }
+}
+
+/** Browser-safe source metadata; content is only available through GET /source. */
+function sourceMetadata(source: ReturnType<UdState['listSources']>[number]) {
+  return { id: source.id, kind: source.kind, title: source.title, locator: source.locator, sha256: source.sha256, bytes: source.bytes, createdAt: source.createdAt, status: source.status }
 }
 
 /** A required non-empty string field, or `undefined` when absent/malformed. */
@@ -719,6 +728,26 @@ export function createApiHandler(deps: ApiDeps) {
       res.setHeader('cache-control', 'no-store')
       res.end(calendar)
       return
+    }
+    if (method === 'GET' && route === '/sources') {
+      const sources = state.listSources().map(sourceMetadata)
+      return sendJson(res, 200, { ok: true, count: sources.length, bytes: sources.reduce((sum, source) => sum + source.bytes, 0), sources })
+    }
+    if (method === 'POST' && route === '/source') {
+      const input = await readJsonBody(req, MAX_SOURCE_BODY_BYTES)
+      if (input === undefined) return fail(res, 413, 'source-body-invalid')
+      const text = stringField(input, 'text')
+      if (text === undefined) return fail(res, 400, 'source-text-required')
+      const title = typeof input.title === 'string' ? input.title : undefined
+      const locator = typeof input.locator === 'string' ? input.locator : undefined
+      const kind = input.kind === 'markdown' ? 'markdown' : 'text'
+      try {
+        const draft = sourceDraftFromText({ text, kind, ...(title === undefined ? {} : { title }), ...(locator === undefined ? {} : { locator }) })
+        const { source, deduped } = await addSource(state, draft)
+        return sendJson(res, 200, { ok: true, source: sourceMetadata(source), deduped })
+      } catch (cause) {
+        return fail(res, 400, 'source-rejected', cause instanceof Error ? cause.message : undefined)
+      }
     }
     if (method === 'GET' && route === '/source') {
       const sourceId = url.searchParams.get('id')
