@@ -117,7 +117,7 @@ async function open({ surface = 'map', scenario, width = 1440, theme = 'light' }
   url.searchParams.set('theme', theme)
   await cdp.send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false })
   await cdp.send('Page.navigate', { url: url.href })
-  await waitFor(`document.documentElement.hasAttribute('data-diagnostic-tutor-preview')`, 'preview never mounted')
+  await waitFor(`document.documentElement?.hasAttribute('data-diagnostic-tutor-preview') === true`, 'preview never mounted')
   await waitFor(`!!document.querySelector('.dtx-map, .dtx-tab')`, 'plugin root never mounted; build the client bundle first')
   await waitFor(`!!document.querySelector('.dtx-topbar, .dtx-tab')`, 'topbar never mounted')
   await layoutCheck(surface === 'tab' ? '.dtx-tab' : '.dtx-map')
