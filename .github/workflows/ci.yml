@@ -37,9 +37,13 @@ jobs:
         with:
           node-version: 24.x
           cache: pnpm
+      - uses: browser-actions/setup-chrome@v1
+        id: setup-chrome
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - name: Browser regression
+        env:
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
         run: |
           node preview/serve.mjs > /tmp/preview.log 2>&1 &
           echo $! > /tmp/preview.pid
@@ -47,6 +51,5 @@ jobs:
             curl -sf http://127.0.0.1:8391/ >/dev/null && break
             sleep 1
           done
-          CHROME_PATH="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium)" \
-            node scripts/path-check.mjs http://127.0.0.1:8391/ /tmp/udt-browser
+          node scripts/path-check.mjs http://127.0.0.1:8391/ /tmp/udt-browser
           kill "$(cat /tmp/preview.pid)" || true
