@@ -39,6 +39,19 @@ export interface SourceView {
   status: 'ready' | 'error'
   content?: string
 }
+export interface AddSourceParams {
+  text: string
+  title?: string
+  locator?: string
+  kind?: 'text' | 'markdown'
+}
+export interface SourceList {
+  ok: true
+  count: number
+  bytes: number
+  sources: SourceView[]
+}
+
 export interface ReviewGradeParams {
   cardId: string
   rating: 'again' | 'hard' | 'good' | 'easy'
@@ -69,6 +82,10 @@ export interface PathClient {
   answer?(params: AnswerBlockParams): Promise<PathView>
   /** Read one stored source for a footnote preview. */
   source?(sourceId: string): Promise<{ ok: true; source: SourceView }>
+  /** Add pasted text/markdown material; content is stored locally and deduped. */
+  addSource?(params: AddSourceParams): Promise<{ ok: true; source: SourceView; deduped: boolean }>
+  /** List source metadata only; never returns the contents. */
+  listSources?(): Promise<SourceList>
   /** Download the open, dated Today plan as an ICS calendar. */
   exportPlan?(): Promise<PlanIcs>
   /** Mark one plan item done (or reopen it). Plan state only; never teaching state. */
@@ -128,6 +145,37 @@ async function requestSource(sourceId: string): Promise<{ ok: true; source: Sour
       throw new PathClientError(value?.error?.message ?? `Source request failed (HTTP ${response.status}).`, value?.error?.code ?? 'source_failed', response.status)
     }
     return value as { ok: true; source: SourceView }
+  } finally { clearTimeout(timeout) }
+}
+
+async function requestAddSource(params: AddSourceParams): Promise<{ ok: true; source: SourceView; deduped: boolean }> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12_000)
+  try {
+    const response = await fetch(`${API}/source`, {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify(params),
+      signal: controller.signal,
+    })
+    const value = await response.json() as { ok?: unknown; source?: unknown; deduped?: unknown; error?: { message?: string; code?: string } }
+    if (!response.ok || value?.ok !== true || value.source === undefined) {
+      throw new PathClientError(value?.error?.message ?? `Source upload failed (HTTP ${response.status}).`, value?.error?.code ?? 'source_failed', response.status)
+    }
+    return { ok: true, source: value.source as SourceView, deduped: value.deduped === true }
+  } finally { clearTimeout(timeout) }
+}
+
+async function requestSourceList(): Promise<SourceList> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 12_000)
+  try {
+    const response = await fetch(`${API}/sources`, { headers: { accept: 'application/json' }, signal: controller.signal })
+    const value = await response.json() as { ok?: unknown; sources?: unknown; count?: unknown; bytes?: unknown; error?: { message?: string; code?: string } }
+    if (!response.ok || value?.ok !== true || !Array.isArray(value.sources)) {
+      throw new PathClientError(value?.error?.message ?? `Source list failed (HTTP ${response.status}).`, value?.error?.code ?? 'source_list_failed', response.status)
+    }
+    return { ok: true, sources: value.sources as SourceView[], count: typeof value.count === 'number' ? value.count : value.sources.length, bytes: typeof value.bytes === 'number' ? value.bytes : 0 }
   } finally { clearTimeout(timeout) }
 }
 
@@ -235,6 +283,8 @@ export const defaultPathClient: PathClient = {
   pause: (params) => request('/pause', params),
   answer: (params) => request('/answer', params),
   source: requestSource,
+  addSource: requestAddSource,
+  listSources: requestSourceList,
   exportPlan: requestPlanIcs,
   updateTask: requestTaskMutation,
   reviewNext: requestReviewNext,

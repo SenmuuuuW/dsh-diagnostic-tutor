@@ -1,8 +1,8 @@
 /** Goal → diagnosis → course preview, the only three steps the learner sees. */
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react'
 
 import type { GoalBrief, PathView } from '../path.js'
-import type { PathClient } from './path-client.js'
+import type { PathClient, SourceView } from './path-client.js'
 import { Icon } from './design-icons.jsx'
 import { useDesignText } from './design-text.js'
 import { announcePathState } from './path-events.js'
@@ -39,6 +39,11 @@ export function CourseSetup({ courseId, title, path, sessionId, client, onOpenCh
   const [weekly, setWeekly] = useState(path.path.brief?.weeklyMinutes?.toString() ?? '')
   const [session, setSession] = useState(path.path.brief?.sessionMinutes?.toString() ?? '')
   const [busy, setBusy] = useState(false)
+  const [material, setMaterial] = useState('')
+  const [materialTitle, setMaterialTitle] = useState('')
+  const [materials, setMaterials] = useState<SourceView[]>([])
+  const [materialBusy, setMaterialBusy] = useState(false)
+  const [materialError, setMaterialError] = useState('')
   const [notice, setNotice] = useState('')
   const [dirty, setDirty] = useState(false)
   useEffect(() => {
@@ -48,6 +53,13 @@ export function CourseSetup({ courseId, title, path, sessionId, client, onOpenCh
     setWeekly(path.path.brief?.weeklyMinutes?.toString() ?? '')
     setSession(path.path.brief?.sessionMinutes?.toString() ?? '')
   }, [path.path.brief, dirty])
+
+  useEffect(() => {
+    if (client.listSources === undefined) return
+    let live = true
+    void client.listSources().then((result) => { if (live) setMaterials(result.sources) }).catch(() => { /* sources are optional */ })
+    return () => { live = false }
+  }, [client])
 
   const proposal = [...path.path.curricula].reverse().find((entry) => entry.briefRevision === path.path.briefRevision && entry.assessmentRevision === path.path.assessmentRevision) ?? null
   const diagnosis = path.path.requests.findLast((entry) => entry.kind === 'diagnosis' && entry.briefRevision === path.path.briefRevision)
@@ -97,6 +109,29 @@ export function CourseSetup({ courseId, title, path, sessionId, client, onOpenCh
     void client.skipAssessment({ sessionId, courseId, expectedRevision: path.path.revision }).then(() => announcePathState(false))
       .catch((error: unknown) => setNotice(error instanceof Error ? error.message : text.courseSetupFailed)).finally(() => setBusy(false))
   }
+  const addMaterial = async (content: string, title: string, locator: string, kind: 'text' | 'markdown') => {
+    if (client.addSource === undefined || materialBusy) return
+    setMaterialBusy(true); setMaterialError('')
+    try {
+      const result = await client.addSource({ text: content, title, locator, kind })
+      setMaterials((current) => current.some((entry) => entry.id === result.source.id) ? current : [...current, result.source])
+      setMaterial(''); setMaterialTitle('')
+    } catch (error) {
+      setMaterialError(error instanceof Error ? error.message : text.courseMaterialFailed)
+    } finally { setMaterialBusy(false) }
+  }
+  const addPasted = () => {
+    if (material.trim() === '') { setMaterialError(text.courseMaterialRequired); return }
+    void addMaterial(material, materialTitle.trim() || text.courseMaterialPasted, materialTitle.trim() || text.courseMaterialPasted, 'text')
+  }
+  const chooseFile = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (file === undefined) return
+    if (!/\.(md|markdown|txt)$/i.test(file.name)) { setMaterialError(text.courseMaterialUnsupported); return }
+    if (file.size > 131_072) { setMaterialError(text.courseMaterialTooLarge); return }
+    void file.text().then((content) => addMaterial(content, file.name, file.name, file.name.toLowerCase().endsWith('.txt') ? 'text' : 'markdown')).catch(() => setMaterialError(text.courseMaterialFailed))
+  }
   const accept = (version: number) => {
     if (sessionId === undefined) { setNotice(text.courseSetupNoSession); return }
     setBusy(true); setNotice('')
@@ -120,6 +155,14 @@ export function CourseSetup({ courseId, title, path, sessionId, client, onOpenCh
       <label className="dtx-course-field" htmlFor="dtx-purpose"><span>{text.courseSetupPurpose}</span><textarea id="dtx-purpose" value={purpose} maxLength={2000} placeholder={text.courseSetupPurposePlaceholder} onChange={(event) => { setDirty(true); setPurpose(event.target.value) }} /></label>
       <label className="dtx-course-field" htmlFor="dtx-outcomes"><span>{text.courseSetupOutcomes}</span><textarea id="dtx-outcomes" value={outcomes} maxLength={4000} placeholder={text.courseSetupOutcomesPlaceholder} onChange={(event) => { setDirty(true); setOutcomes(event.target.value) }} /></label>
       <div className="dtx-course-budget"><label htmlFor="dtx-weekly"><span>{text.courseSetupWeekly}</span><input id="dtx-weekly" inputMode="numeric" value={weekly} placeholder={text.courseSetupOptional} onChange={(event) => { setDirty(true); setWeekly(event.target.value) }} /></label><label htmlFor="dtx-session"><span>{text.courseSetupSession}</span><input id="dtx-session" inputMode="numeric" value={session} placeholder={text.courseSetupOptional} onChange={(event) => { setDirty(true); setSession(event.target.value) }} /></label></div>
+      {client.addSource !== undefined && <section className="dtx-course-materials" aria-labelledby="dtx-course-materials-title">
+        <div className="dtx-course-materials-head"><h3 id="dtx-course-materials-title">{text.courseMaterialsTitle}<span>{text.courseMaterialsOptional}</span></h3><span>{text.courseMaterialsCount(materials.length)}</span></div>
+        <p>{text.courseMaterialsBody}</p>
+        <textarea id="dtx-material" value={material} maxLength={131_072} placeholder={text.courseMaterialPlaceholder} onChange={(event) => setMaterial(event.target.value)} />
+        <div className="dtx-course-material-row"><input id="dtx-material-title" value={materialTitle} maxLength={200} placeholder={text.courseMaterialTitlePlaceholder} onChange={(event) => setMaterialTitle(event.target.value)} /><button type="button" className="dtx-secondary" disabled={materialBusy} onClick={addPasted}>{text.courseMaterialAdd}</button><label className="dtx-course-file">{text.courseMaterialFile}<input type="file" accept=".md,.markdown,.txt,text/plain,text/markdown" onChange={chooseFile} /></label></div>
+        {materials.length > 0 && <ul className="dtx-course-material-list">{materials.map((entry) => <li key={entry.id}><span><Icon name="file" size={13} />{entry.title}</span><small>{entry.kind} · {Math.ceil(entry.bytes / 1024)} KB</small></li>)}</ul>}
+        {materialError !== '' && <p className="dtx-caption dtx-course-material-error" role="alert">{materialError}</p>}
+      </section>}
       <div className="dtx-course-setup-actions"><button type="button" className="dtx-primary" disabled={busy} onClick={saveGoal}>{text.courseSetupSaveGoal}<Icon name="arrow-right" size={15} /></button></div>
     </section>}
     {stage === 'diagnosis' && <section className="dtx-course-setup-card" data-stage="diagnosis">

@@ -103,6 +103,45 @@ describe('source tools and API', () => {
     } finally { await harness.close() }
   })
 
+  it('accepts pasted material over POST /source and lists metadata without content', async () => {
+    const { harness, state } = await open()
+    try {
+      const handler = guarded(createApiHandler({ state, prompt: () => ({ prompted: false }) }))
+      const post = async (payload: unknown) => {
+        const body = JSON.stringify(payload)
+        const req = {
+          method: 'POST', url: `${API_PREFIX}/source`, headers: { host: '127.0.0.1:3080' },
+          async *[Symbol.asyncIterator]() { yield Buffer.from(body) },
+        } as unknown as IncomingMessage
+        const response = { statusCode: 0, body: '', setHeader() {}, end(chunk: string) { this.body += chunk } }
+        await handler(req, response as unknown as ServerResponse)
+        return { status: response.statusCode, json: JSON.parse(response.body) as Record<string, unknown> }
+      }
+      const created = await post({ text: 'A browser source.', title: 'Reading', kind: 'markdown' })
+      expect(created.status).toBe(200)
+      expect(created.json.ok).toBe(true)
+      expect((created.json.source as { title?: string; content?: unknown }).title).toBe('Reading')
+      expect((created.json.source as { content?: unknown }).content).toBeUndefined()
+      expect(created.json.deduped).toBe(false)
+
+      const deduped = await post({ text: 'A browser source.', title: 'Reading', kind: 'markdown' })
+      expect(deduped.status).toBe(200)
+      expect(deduped.json.deduped).toBe(true)
+
+      const listReq = { method: 'GET', url: `${API_PREFIX}/sources`, headers: { host: '127.0.0.1:3080' }, async *[Symbol.asyncIterator]() { /* no body */ } } as unknown as IncomingMessage
+      const listResponse = { statusCode: 0, body: '', setHeader() {}, end(chunk: string) { this.body += chunk } }
+      await handler(listReq, listResponse as unknown as ServerResponse)
+      expect(listResponse.statusCode).toBe(200)
+      const listed = JSON.parse(listResponse.body) as { count: number; sources: { content?: unknown }[] }
+      expect(listed.count).toBe(1)
+      expect(listed.sources[0]?.content).toBeUndefined()
+
+      const empty = await post({ text: '' })
+      expect(empty.status).toBe(400)
+      expect(empty.json.ok).toBe(false)
+    } finally { await harness.close() }
+  })
+
   it('includes sources in export and clears them on reset', async () => {
     const { harness, state } = await open()
     try {

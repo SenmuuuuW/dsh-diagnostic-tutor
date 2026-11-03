@@ -723,4 +723,23 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
   .dtx-course-steps { gap:4px; }
   .dtx-course-steps li { font-size:9.5px; }
 }
+
+.dtx-course-materials { margin-top:22px; padding-top:18px; border-top:1px solid var(--dt-border,#e8eaee); }
+.dtx-course-materials-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.dtx-course-materials-head h3 { margin:0; font-size:12px; font-weight:700; }
+.dtx-course-materials-head h3 span { margin-left:6px; color:var(--dt-muted,#6b7280); font-size:9.5px; font-weight:500; letter-spacing:.04em; text-transform:uppercase; }
+.dtx-course-materials-head > span { color:var(--dt-muted,#6b7280); font-size:10px; }
+.dtx-course-materials > p { margin:5px 0 0; color:var(--dt-muted,#6b7280); font-size:10.5px; line-height:1.55; }
+.dtx-course-materials textarea { width:100%; min-height:62px; margin-top:10px; resize:vertical; padding:9px 11px; border:1px solid var(--dt-border,#dfe3ea); border-radius:8px; background:var(--dt-bg,#fff); color:var(--dt-text,#1c1f23); font:inherit; font-size:11.5px; line-height:1.55; }
+.dtx-course-materials textarea:focus { outline:2px solid #dbe2ff; border-color:#aebcff; }
+.dtx-course-material-row { display:flex; align-items:center; gap:7px; margin-top:7px; flex-wrap:wrap; }
+.dtx-course-material-row > input { flex:1; min-width:150px; height:32px; padding:0 9px; border:1px solid var(--dt-border,#dfe3ea); border-radius:8px; background:var(--dt-bg,#fff); color:var(--dt-text,#1c1f23); font:inherit; font-size:11px; }
+.dtx-course-material-row .dtx-secondary { min-height:32px; padding:0 10px; font-size:10.5px !important; }
+.dtx-course-file { position:relative; overflow:hidden; display:inline-flex; align-items:center; min-height:32px; padding:0 10px; border:1px solid var(--dt-border,#dfe3ea); border-radius:8px; background:var(--dt-bg,#fff); color:var(--dt-text,#1c1f23); font-size:10.5px; white-space:nowrap; cursor:pointer; }
+.dtx-course-file input { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.dtx-course-material-list { margin:10px 0 0; padding:0; list-style:none; border-top:1px solid var(--dt-border,#eef0f4); }
+.dtx-course-material-list li { display:flex; align-items:center; justify-content:space-between; gap:9px; padding:6px 0; border-bottom:1px solid var(--dt-border,#eef0f4); font-size:10.5px; }
+.dtx-course-material-list li span { display:inline-flex; align-items:center; gap:5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dtx-course-material-list li small { color:var(--dt-muted,#6b7280); font-size:9.5px; white-space:nowrap; }
+.dtx-course-material-error { margin:8px 0 0; color:#b91c1c; }
 `

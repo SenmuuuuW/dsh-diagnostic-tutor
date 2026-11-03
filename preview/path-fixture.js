@@ -57,6 +57,7 @@
     const createdAt = new Date().toISOString()
     const targetDate = new Date(Date.parse(createdAt) + 56 * 86400000).toISOString().slice(0, 10)
     const courses = new Map()
+    const sources = []
     let sequence = 0
     let clock = Date.parse(createdAt)
     const tick = () => new Date(clock = Math.max(Date.now(), clock + 1)).toISOString()
@@ -197,6 +198,20 @@
         run.updatedAt = at
         changed(state, at)
         return view(params.courseId, params.sessionId, { prompted: true })
+      },
+      async listSources() {
+        return { ok: true, count: sources.length, bytes: sources.reduce((sum, source) => sum + source.bytes, 0), sources: sources.map(({ content: _content, ...source }) => source) }
+      },
+      async addSource(params) {
+        if (!params || typeof params.text !== 'string' || params.text.trim() === '') throw error('Paste some text first.', 'source-empty')
+        const bytes = new TextEncoder().encode(params.text).length
+        if (bytes > 131072) throw error('Keep one material under 128 KB.', 'source-too-large')
+        const existing = sources.find((source) => source.content === params.text)
+        if (existing) { const { content: _content, ...source } = existing; return { ok: true, source, deduped: true } }
+        const source = { id: `preview-source-${sources.length + 1}`, kind: params.kind === 'markdown' ? 'markdown' : 'text', title: params.title || 'Pasted material', locator: params.locator || params.title || 'Pasted material', sha256: '0'.repeat(64), bytes, createdAt: tick(), status: 'ready', content: params.text }
+        sources.push(source)
+        const { content: _content, ...meta } = source
+        return { ok: true, source: meta, deduped: false }
       },
       async exportPlan() {
         return { filename: 'dsh-diagnostic-tutor-plan.ics', text: 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n' }
