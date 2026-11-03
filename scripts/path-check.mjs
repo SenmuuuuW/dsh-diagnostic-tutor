@@ -117,7 +117,7 @@ async function open({ surface = 'map', scenario, width = 1440, theme = 'light' }
   url.searchParams.set('theme', theme)
   await cdp.send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false })
   await cdp.send('Page.navigate', { url: url.href })
-  await waitFor(`document.documentElement.hasAttribute('data-diagnostic-tutor-preview')`, 'preview never mounted')
+  await waitFor(`document.documentElement?.hasAttribute('data-diagnostic-tutor-preview') === true`, 'preview never mounted')
   await waitFor(`!!document.querySelector('.dtx-map, .dtx-tab')`, 'plugin root never mounted; build the client bundle first')
   await waitFor(`!!document.querySelector('.dtx-topbar, .dtx-tab')`, 'topbar never mounted')
   await layoutCheck(surface === 'tab' ? '.dtx-tab' : '.dtx-map')
@@ -280,7 +280,7 @@ const plans = [
 ]
 
 try {
-  chrome = spawn(chromePath, ['--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check', '--disable-gpu', '--hide-scrollbars', '--window-size=1440,900', 'about:blank'], { stdio: 'ignore' })
+  chrome = spawn(chromePath, ['--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check', '--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage', '--hide-scrollbars', '--window-size=1440,900', 'about:blank'], { stdio: 'ignore' })
   let target
   for (let index = 0; index < 100; index += 1) {
     try {
