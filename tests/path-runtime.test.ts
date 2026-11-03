@@ -19,6 +19,7 @@ import type { BeginItemInput } from '../src/path-runtime.js'
 import { newNode, openUdState, UDT_DOMAIN_VERSION } from '../src/state.js'
 import type { Evidence, UdState } from '../src/state.js'
 import { createHarness } from './harness.js'
+import { addSource, sourceDraftFromText } from '../src/sources.js'
 
 const NOW = '2026-10-18T12:00:00.000Z'
 const COURSE = 'linear-algebra'
@@ -328,6 +329,18 @@ describe('planning runtime with temporary DSH storage', () => {
       await saveAssessment(state, COURSE, SESSION, revision(state), assessment(state))
       await stampPathRequestFailure(state, SESSION, 'Another unrelated failure')
       expect(state.readPath(COURSE)?.requests[0]?.failure).toBe('OpenAI API error (403): insufficient balance')
+    })
+
+    it('names learner-owned material in the route prompt without copying its body', async () => {
+      await saveBrief(state, COURSE, SESSION, 0, brief())
+      const { source } = await addSource(state, sourceDraftFromText({ text: 'A private body that must not enter the prompt.', title: 'Reading notes' }))
+      const reserved = await reservePathRequest(state, {
+        courseId: COURSE, sessionId: SESSION, expectedRevision: revision(state), kind: 'diagnosis', operationId: 'material-aware',
+      })
+      expect(reserved.prompt).toContain(source.id)
+      expect(reserved.prompt).toContain('Reading notes')
+      expect(reserved.prompt).toContain('udt_source_get')
+      expect(reserved.prompt).not.toContain('A private body that must not enter the prompt.')
     })
 
     it('deduplicates simultaneous requests for the same operation and checks replay identity', async () => {
