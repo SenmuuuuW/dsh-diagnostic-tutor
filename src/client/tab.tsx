@@ -7,7 +7,7 @@
  * narrow and only renders the lesson itself.
  */
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { CourseAttempt, Curriculum, CurriculumItem } from '../path.js'
 import { LessonBody } from './blocks.jsx'
@@ -40,6 +40,8 @@ export interface LearningTabProps {
   onOpenSession?: ((sessionId: string) => boolean) | undefined
   /** Return to the conversation, where the tutor actually teaches. */
   onOpenChat?: (() => void) | undefined
+  /** Keep the right panel half-screen or make Study cover the frame. */
+  onStudyLayout?: ((mode: 'half' | 'full') => void) | undefined
 }
 
 function duration(value: number, lang: 'en' | 'zh'): string {
@@ -80,6 +82,7 @@ export function LearningTab({
   onOpenMapPage,
   onOpenSession,
   onOpenChat,
+  onStudyLayout,
 }: LearningTabProps): ReactNode {
   const text = useDesignText()
   const lang = useLang()
@@ -110,6 +113,10 @@ export function LearningTab({
   const pathClient = (client ?? defaultClient).pathClient
   const [busy, setBusy] = useState(false)
   const [studyMode, setStudyMode] = useState(false)
+  const [studyFullscreen, setStudyFullscreen] = useState(false)
+  const studyLayoutRef = useRef(onStudyLayout)
+  studyLayoutRef.current = onStudyLayout
+  const hadStudy = useRef(false)
   const [notice, setNotice] = useState('')
   const [pausedLocal, setPausedLocal] = useState(false)
   const operationId = () => typeof globalThis.crypto?.randomUUID === 'function' ? globalThis.crypto.randomUUID() : `tab-${Date.now().toString(36)}`
@@ -159,10 +166,25 @@ export function LearningTab({
   useEffect(() => {
     // A request can arrive just before this tab mounts (Home opens the tab and
     // asks for Study in the same click) or while it is already mounted.
-    if (consumeStudyIntent()) setStudyMode(true)
-    const openStudy = () => { if (consumeStudyIntent()) setStudyMode(true) }
+    const enter = (intent: ReturnType<typeof consumeStudyIntent>) => {
+      if (intent === null) return
+      setStudyMode(true)
+      setStudyFullscreen(intent.fullscreen)
+    }
+    enter(consumeStudyIntent())
+    const openStudy = () => enter(consumeStudyIntent())
     window.addEventListener(STUDY_INTENT_EVENT, openStudy)
     return () => window.removeEventListener(STUDY_INTENT_EVENT, openStudy)
+  }, [])
+
+  useEffect(() => {
+    if (studyMode) studyLayoutRef.current?.(studyFullscreen ? 'full' : 'half')
+    else if (hadStudy.current) studyLayoutRef.current?.('half')
+    hadStudy.current = studyMode
+  }, [studyMode, studyFullscreen])
+
+  useEffect(() => () => {
+    if (hadStudy.current) studyLayoutRef.current?.('half')
   }, [])
 
   const blockInteraction: BlockInteraction | undefined = attempt === undefined || view === null || pathClient?.answer === undefined || courseId === undefined || activeSession === undefined
@@ -203,8 +225,10 @@ export function LearningTab({
       code={codeFor(route, item)}
       blocks={activeUnit.lesson.blocks}
       interaction={blockInteraction}
-      onExit={() => setStudyMode(false)}
+      onExit={() => { setStudyMode(false); setStudyFullscreen(false) }}
       onOpenChat={onOpenChat}
+      fullscreen={studyFullscreen}
+      onToggleFullscreen={() => setStudyFullscreen((value) => !value)}
     />
   }
 

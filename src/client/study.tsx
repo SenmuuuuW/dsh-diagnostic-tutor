@@ -25,6 +25,8 @@ export interface StudySessionProps {
   interaction?: BlockInteraction | undefined
   onExit: () => void
   onOpenChat?: (() => void) | undefined
+  fullscreen?: boolean | undefined
+  onToggleFullscreen?: (() => void) | undefined
 }
 
 const TYPE_LABELS = {
@@ -50,7 +52,7 @@ function typeLabel(block: StoredBlock, lang: 'en' | 'zh'): string {
   return TYPE_LABELS[block.type]?.[lang] ?? block.type
 }
 
-export function StudySession({ title, courseTitle, moduleTitle, code, blocks, interaction, onExit, onOpenChat }: StudySessionProps): ReactNode {
+export function StudySession({ title, courseTitle, moduleTitle, code, blocks, interaction, onExit, onOpenChat, fullscreen = false, onToggleFullscreen }: StudySessionProps): ReactNode {
   const text = useDesignText()
   const lang = useLang()
   const [step, setStep] = useState(0)
@@ -109,7 +111,8 @@ export function StudySession({ title, courseTitle, moduleTitle, code, blocks, in
   return <div className="dtx-study">
     <header className="dtx-study-top">
       <button type="button" className="dtx-iconbtn" onClick={onExit} aria-label={text.studyExit}><Icon name="arrow-left" size={18} /></button>
-      <div className="dtx-study-heading"><span className="dtx-eyebrow">{text.studyFocus}</span><h2>{title}</h2><p>{[courseTitle, moduleTitle, code].filter(Boolean).join(' · ')}</p></div>
+      <div className="dtx-study-heading"><span className="dtx-eyebrow">{fullscreen ? text.studyFocus : `${text.studyFocus} · ${text.studyHalfScreen}`}</span><h2>{title}</h2><p>{[courseTitle, moduleTitle, code].filter(Boolean).join(' · ')}</p></div>
+      {onToggleFullscreen !== undefined && <button type="button" className="dtx-study-layout" onClick={onToggleFullscreen} aria-label={fullscreen ? text.studyExitFullscreen : text.studyFullscreen} title={fullscreen ? text.studyExitFullscreen : text.studyFullscreen}><Icon name={fullscreen ? 'contract' : 'expand'} size={14} /><span>{fullscreen ? text.studyExitFullscreen : text.studyFullscreen}</span></button>}
       <span className="dtx-study-count">{step + 1} / {blocks.length}</span>
     </header>
     <div className="dtx-study-progress" aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>

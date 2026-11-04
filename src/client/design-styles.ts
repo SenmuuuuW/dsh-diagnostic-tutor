@@ -742,4 +742,12 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-course-material-list li span { display:inline-flex; align-items:center; gap:5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .dtx-course-material-list li small { color:var(--dt-muted,#6b7280); font-size:9.5px; white-space:nowrap; }
 .dtx-course-material-error { margin:8px 0 0; color:#b91c1c; }
+
+.dtx-study-layout { flex:none; display:inline-flex; align-items:center; gap:5px; height:28px; padding:0 8px; border:1px solid var(--dt-border,#e3e6ec); border-radius:8px; background:var(--dt-bg,#fff); color:var(--dt-muted,#6b7280); font-size:10px; cursor:pointer; }
+.dtx-study-layout:hover { color:var(--dt-text,#1c1f23); border-color:#c8d0df; }
+.dtx-study-layout svg { width:13px; height:13px; }
+@media (max-width:520px) {
+  .dtx-study-layout span { display:none; }
+  .dtx-study-layout { width:28px; padding:0; justify-content:center; }
+}
 `
