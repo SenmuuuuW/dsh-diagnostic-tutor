@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Study Lab · layout + interaction</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="lab-bar">
+    <div class="lab-brand"><span class="lab-mark">∑</span> Study Lab</div>
+    <div class="lab-modes" role="group" aria-label="布局模式">
+      <button type="button" data-mode="side">Side panel</button>
+      <button type="button" data-mode="main">Main area</button>
+      <button type="button" data-mode="full">Full screen</button>
+    </div>
+    <div class="lab-rule" id="lab-rule">Chat stays visible · one reference pane</div>
+  </div>
+  <div class="lab-stage" id="lab-stage" data-mode="side">
+    <aside class="chat-sim" aria-label="Conversation">
+      <div class="chat-head"><span>DeepSeek Harness</span><span class="chat-status"></span></div>
+      <div class="chat-body">
+        <div class="msg user">为什么梯度下降有时会越走越远？</div>
+        <div class="msg tutor">先别记定义。拖动右边的学习率，看看一步之后 loss 会变成多少。</div>
+        <div class="msg tutor next">我们再用四步走给你看。</div>
+      </div>
+      <div class="chat-compose"><span>问导师…</span><button type="button" aria-label="send">↑</button></div>
+    </aside>
+    <nav class="main-nav" aria-label="Main navigation">
+      <div class="nav-brand">学习</div>
+      <button class="nav-item active">今天</button>
+      <button class="nav-item">课程</button>
+      <div class="nav-gap"></div>
+      <div class="nav-course">梯度下降<br><small>第 3 课</small></div>
+    </nav>
+    <main class="course-sim" aria-label="Course">
+      <div class="course-eyebrow">Course · 机器学习数学基础</div>
+      <h1>梯度下降与学习率</h1>
+      <p>这一课只回答一个问题：学习率到底改变了什么？</p>
+      <div class="course-row"><span class="course-dot"></span><div><b>第 2 课</b><span>梯度的方向 · 已完成</span></div></div>
+      <div class="course-row current"><span class="course-dot"></span><div><b>第 3 课</b><span>梯度下降与学习率 · 正在进行</span></div></div>
+      <div class="course-row"><span class="course-dot"></span><div><b>第 4 课</b><span>训练循环 · 未开始</span></div></div>
+    </main>
+    <section class="study-shell" id="study" aria-label="Study">
+      <header class="study-head">
+        <button class="icon-btn" type="button" id="back" aria-label="返回课程">←</button>
+        <div class="study-title"><span class="eyebrow">专注学习 · 侧栏</span><b>梯度下降与学习率</b><small>第 3 课 · 6 分钟</small></div>
+        <div class="study-progress"><span id="step-count">1 / 4</span><button class="layout-btn" type="button" id="expand">全屏 ↗</button></div>
+      </header>
+      <div class="progress-line"><i id="progress"></i></div>
+      <div class="study-body" id="study-body"></div>
+      <footer class="study-foot"><button class="ghost" type="button" id="prev">上一步</button><span class="interaction-note">你的操作会记录为练习证据，不自动判掌握</span><button class="primary" type="button" id="next">继续 →</button></footer>
+    </section>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>

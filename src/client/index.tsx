@@ -348,6 +348,9 @@ export function apply(ctx: Context): void {
           uiSession={uiSession}
           onOpenMapPage={() => layout?.selectPanel(mapPanelRef)}
           onOpenChat={() => layout?.selectPanel(null)}
+          onStudyLayout={(mode) => {
+            try { layout?.openRightbar(mode === 'half', mode === 'full') } catch { /* preview/no layout */ }
+          }}
           onOpenSession={openLearningSession}
         />
       )

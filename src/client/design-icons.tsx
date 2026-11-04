@@ -23,6 +23,8 @@ export type IconName =
   | 'planet'
   | 'graph'
   | 'file'
+  | 'expand'
+  | 'contract'
 
 export function Icon({ name, size = 20, className }: { name: IconName; size?: number; className?: string }): ReactNode {
   const common = {
@@ -51,6 +53,8 @@ export function Icon({ name, size = 20, className }: { name: IconName; size?: nu
     case 'code': return <svg {...common}><path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16" /></svg>
     case 'planet': return <svg {...common}><circle cx="12" cy="11" r="6" /><path d="M5.2 14.8C2.6 16.2 1.4 18 2.2 19.1c1.2 1.6 5.9.4 10.6-2.7 4.6-3 8-6.6 7.4-8.3-.4-1.2-2.6-1.2-5.4-.2" /></svg>
     case 'graph': return <svg {...common}><circle cx="5.5" cy="17" r="2.2" /><circle cx="12" cy="6.5" r="2.2" /><circle cx="18.5" cy="17" r="2.2" /><path d="M7.4 15.5 10.4 8.6M13.4 8.4l3.7 6.8M7.7 17h8.6" /></svg>
+    case 'expand': return <svg {...common}><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M21 16v5h-5" /></svg>
+    case 'contract': return <svg {...common}><path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5" /></svg>
     case 'file': return <svg {...common}><path d="M6 3h7l5 5v13H6V3Z" /><path d="M13 3v5h5" /></svg>
   }
 }

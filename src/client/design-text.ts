@@ -7,6 +7,9 @@ const en = {
 
   // Focused study
   studyFocus: 'Focused study',
+  studyFullscreen: 'Full screen',
+  studyExitFullscreen: 'Leave full screen',
+  studyHalfScreen: 'Side panel',
   studyStart: 'Start focused study',
   studyEntryBody: 'One step at a time. Answers still go through the normal runtime.',
   studyExit: 'Exit study',
@@ -399,6 +402,9 @@ const zh: typeof en = {
 
   // Focused study
   studyFocus: '专注学习',
+  studyFullscreen: '全屏',
+  studyExitFullscreen: '退出全屏',
+  studyHalfScreen: '侧栏',
   studyStart: '开始专注学习',
   studyEntryBody: '一次只走一步。答案仍然通过现有运行时记录。',
   studyExit: '退出专注',

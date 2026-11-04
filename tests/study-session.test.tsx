@@ -94,6 +94,17 @@ describe('focused study', () => {
     expect(button('Finish').disabled).toBe(false)
   })
 
+  it('exposes an explicit full-screen toggle', async () => {
+    const toggle = vi.fn()
+    await act(async () => {
+      root.render(createElement(StudySession, { title: 'Shapes', blocks, fullscreen: false, onExit: vi.fn(), onToggleFullscreen: toggle }))
+      await Promise.resolve()
+    })
+    expect(container.textContent).toContain('Full screen')
+    await act(async () => { button('Full screen').click(); await Promise.resolve() })
+    expect(toggle).toHaveBeenCalledTimes(1)
+  })
+
   it('translates the focused surface', async () => {
     setLang('zh')
     await mount()

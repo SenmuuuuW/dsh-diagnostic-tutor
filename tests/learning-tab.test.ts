@@ -214,6 +214,14 @@ describe('active lesson', () => {
     expect(start.mock.calls.at(-1)![0]).toMatchObject({ resume: true })
   })
 
+  it('asks the shell for a full-screen presentation when Home/Course requests it', async () => {
+    const onStudyLayout = vi.fn()
+    requestStudy(true)
+    await mount(pathView(), { onStudyLayout })
+    expect(onStudyLayout).toHaveBeenCalledWith('full')
+    expect(container.querySelector('.dtx-study')).not.toBeNull()
+  })
+
   it('honours a Home/Course request to open focused study directly', async () => {
     requestStudy()
     await mount(pathView())

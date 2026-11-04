@@ -308,7 +308,7 @@ export function LearningMapPanel({
   }
 
   const enterStudy = (): void => {
-    requestStudy()
+    requestStudy(true)
     enterCurrentLesson()
   }
 
