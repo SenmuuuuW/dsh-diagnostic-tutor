@@ -165,10 +165,12 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
-| `0.3.0` | `0.2.1-rc.5`, `0.2.1-rc.3`, `0.2.1-rc.2`, `0.2.0-rc.2` (test suite also on `0.1.7-alpha.2`) | `^22.19.0 \|\| >=24.0.0` |
+| `0.3.0` | `0.2.2-rc.1`, `0.2.1-rc.5`, `0.2.1-rc.3`, `0.2.1-rc.2`, `0.2.0-rc.2` (test suite also on `0.1.7-alpha.2`) | `^22.19.0 \|\| >=24.0.0` |
 | `0.2.0` | `0.2.1-rc.5`, `0.2.1-rc.3`, `0.2.1-rc.2`, `0.2.0-rc.2` (test suite also on `0.1.7-alpha.2`) | `^22.19.0 \|\| >=24.0.0` |
 | `0.1.1` | `0.2.1-rc.3`, `0.2.1-rc.2`, `0.2.0-rc.2` (test suite also on `0.1.7-alpha.2`) | `^22.19.0 \|\| >=24.0.0` |
 | `0.1.0` | `0.1.7-alpha.2` (also composed under `0.1.5-rc.1`) | `^22.19.0 \|\| >=24.0.0` |
+
+**2026-11-04 追加 `0.2.2-rc.1`（当前桌面 runtime）验证**：devDependencies 升到 DSH `0.2.2-rc.1`、cordis `4.1.0`、schemastery `3.19.0`；隔离 `DSH_HOME` 中安装本仓库插件后，`/overview`、`/diagnostics`、`/plan/ics`、`/review` 均 200，domain `udt` v1、`issues: []`；真实浏览器加载 Learning map 与 Learn 侧栏无 Runtime exception；`tsc`、677 tests、build、31 browser cases 通过。`0.2.2` 的 `AgentRegistry` 新增 `sessionProjections` inject，测试 harness 补了最小服务；生产源码的 API 使用无需改动。
 
 **2026-10-30 追加 `0.2.1-rc.5`（当前桌面 runtime）验证**：隔离 profile 加载 `0.2.0` 插件无异常，tsc 与 639 tests 在 rc5 类型/依赖下通过，真实数据副本的 Learning map / 知识与证据 / 复习 / 洞察 UI 无客户端异常；没有发现需要改插件代码的 API 破坏。
 
@@ -228,7 +230,7 @@ rotated once.
 
 | | |
 | --- | --- |
-| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | verified against `0.2.1-rc.3` |
+| [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) | verified against `0.2.2-rc.1` |
 | the [Universal Diagnostic Tutor](https://github.com/SenmuuuuW/universal-diagnostic-tutor-skill) skill | the teaching brain. Without it the runtime loads, records and displays state, but **no lesson is ever written** |
 | Node | `^22.19.0 \|\| >=24.0.0` |
 
