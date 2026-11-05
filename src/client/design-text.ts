@@ -144,7 +144,7 @@ const en = {
   plannedNote: 'Plan only, not evidence of mastery.',
   totalDuration: 'Estimated total',
   weeklySuggestion: 'Suggested weekly',
-  routeListTitle: 'Learning route',
+  routeListTitle: 'Modules & lessons',
   expandAll: 'Expand all',
   collapseAll: 'Collapse all',
   startFirstBody: 'Start the first lesson; the tutor teaches it in the conversation.',
@@ -184,6 +184,8 @@ const en = {
   tabInsights: 'Insights',
   // Course
   courseGoalEmpty: 'The tutor has not written a goal for this course yet.',
+  courseModules: 'Modules & lessons',
+  courseInfoTitle: 'Course information',
   courseRoute: (version: number): string => `Route v${version}`,
   courseLessons: (lessons: number): string => `${lessons} lessons`,
   courseCompleted: (done: number, total: number): string => `${done}/${total} lessons completed`,
@@ -244,7 +246,8 @@ const en = {
   courseMaterialTooLarge: 'Keep one material under 128 KB.',
   // Home
   homeEyebrow: 'Today',
-  homeTitle: 'One step today',
+  homeTitle: 'Today',
+  homeSubtitle: 'One next step, built from your learning goals.',
   homeContinue: 'Continue learning',
   homeStart: 'Start learning',
   homeOpenRoute: 'Open course',
@@ -533,7 +536,7 @@ const zh: typeof en = {
   plannedNote: '只是计划，不代表已掌握。',
   totalDuration: '预计总时长',
   weeklySuggestion: '每周建议',
-  routeListTitle: '学习路线',
+  routeListTitle: '模块与课次',
   expandAll: '展开全部',
   collapseAll: '收起全部',
   startFirstBody: '从第一课开始，导师会在对话里带你学。',
@@ -572,6 +575,8 @@ const zh: typeof en = {
 
   // Course
   courseGoalEmpty: '导师还没有为这门课写下目标。',
+  courseModules: '模块与课次',
+  courseInfoTitle: '课程信息',
   courseRoute: (version: number): string => `路线 v${version}`,
   courseLessons: (lessons: number): string => `${lessons} 课`,
   courseCompleted: (done: number, total: number): string => `已完成 ${done}/${total} 课`,
@@ -634,7 +639,8 @@ const zh: typeof en = {
   courseMaterialTooLarge: '单份资料请控制在 128 KB 以内。',
   // Home
   homeEyebrow: '今天',
-  homeTitle: '今天走一步',
+  homeTitle: '今天',
+  homeSubtitle: '基于你的学习目标，给出今天的一个下一步。',
   homeContinue: '继续学习',
   homeStart: '开始学习',
   homeOpenRoute: '打开课程',

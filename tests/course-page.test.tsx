@@ -48,6 +48,22 @@ describe('course', () => {
     expect(container.textContent).not.toMatch(/\d+\s*%|mastery/i)
   })
 
+  it('exposes course-scoped tabs for modules, knowledge and insights', async () => {
+    const onOpenKnowledge = vi.fn()
+    const onOpenInsights = vi.fn()
+    await act(async () => {
+      root.render(createElement(CoursePage, { path, courseId: 'ml', title: 'Machine Learning', nodes: [], sessionId: 's1', client: { start: vi.fn() } as unknown as PathClient, onOpenKnowledge, onOpenInsights }))
+      await Promise.resolve()
+    })
+    expect(container.textContent).toContain('Modules & lessons')
+    const knowledge = [...container.querySelectorAll<HTMLButtonElement>('.dtx-course-tab')].find((entry) => entry.textContent?.trim() === 'Knowledge & evidence')
+    const insights = [...container.querySelectorAll<HTMLButtonElement>('.dtx-course-tab')].find((entry) => entry.textContent?.trim() === 'Insights')
+    expect(knowledge).toBeDefined(); expect(insights).toBeDefined()
+    await act(async () => { knowledge!.click(); insights!.click(); await Promise.resolve() })
+    expect(onOpenKnowledge).toHaveBeenCalledTimes(1)
+    expect(onOpenInsights).toHaveBeenCalledTimes(1)
+  })
+
   it('has one primary action and reports the current lesson when an attempt exists', async () => {
     const active = { ...path, run: { courseId: 'ml', sessionId: 's1', revision: 1, activeAttemptId: 'a1', updatedAt: NOW, attempts: [{ id: 'a1', operationId: 'op', operations: ['op'], dispatchId: null, version: 1, itemId: 'i1', status: 'working', nodeId: 'ml:vectors', startedAt: NOW, updatedAt: NOW, prompted: true, promptReason: null, outcome: null, evidence: [], units: [] }] } } as unknown as PathView
     const onOpenLesson = vi.fn()

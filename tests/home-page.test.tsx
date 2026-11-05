@@ -63,7 +63,7 @@ async function mount() {
 describe('home', () => {
   it('answers what to do today with one primary action', async () => {
     const handlers = await mount()
-    expect(container.textContent).toContain('One step today')
+    expect(container.textContent).toContain('Today')
     expect(container.textContent).toContain('Vectors and matrices')
     expect(container.textContent).toContain('Foundations')
     expect(container.querySelectorAll('.dtx-home-copy .dtx-primary')).toHaveLength(1)
@@ -86,7 +86,7 @@ describe('home', () => {
   it('speaks Chinese and states when there is no deadline', async () => {
     setLang('zh')
     await mount()
-    expect(container.textContent).toContain('今天走一步')
+    expect(container.textContent).toContain('今天')
     expect(container.textContent).toContain('继续学习')
     expect(container.textContent).toContain('张卡到期')
   })

@@ -82,6 +82,11 @@ export function CoursePage({ path, courseId, title, sessionId, client, onOpenCha
         {onOpenChat !== undefined && <button type="button" className="dtx-link" onClick={onOpenChat}>{text.backToChat}</button>}
       </div>
       {notice !== '' && <p className="dtx-tab-notice" role="alert">{notice}</p>}
+      <nav className="dtx-course-tabs" aria-label={text.tabCourse}>
+        <button type="button" className="dtx-course-tab" aria-current="page">{text.courseModules}</button>
+        {onOpenKnowledge !== undefined && <button type="button" className="dtx-course-tab" onClick={onOpenKnowledge}>{text.tabKnowledge}</button>}
+        {onOpenInsights !== undefined && <button type="button" className="dtx-course-tab" onClick={onOpenInsights}>{text.tabInsights}</button>}
+      </nav>
     </header>
     <main className="dtx-course-layout">
       <RouteModules plan={accepted} attempts={path.run?.attempts ?? []} activeAttemptId={path.run?.activeAttemptId ?? null}
@@ -89,11 +94,15 @@ export function CoursePage({ path, courseId, title, sessionId, client, onOpenCha
         showProgress text={text} lang={lang} />
       <aside className="dtx-course-side">
         <section className="dtx-card dtx-course-card">
+          <h2>{text.courseInfoTitle}</h2>
+          <ul className="dtx-course-info-list"><li><span>{text.courseRoute(accepted.version)}</span></li><li><span>{text.courseLessons(accepted.items.length)}</span></li><li><span>{text.courseCompleted(completed, accepted.items.length)}</span></li></ul>
+        </section>
+        <section className="dtx-card dtx-course-card">
           <h2>{attempt === undefined ? text.courseNextTitle : text.courseCurrentTitle}</h2>
           {next === null ? <p>{text.courseCompleteBody}</p> : <><p className="dtx-course-next-title">{next.title}</p><p>{next.overview}</p></>}
         </section>
         {onOpenChat !== undefined && <section className="dtx-card dtx-course-card"><h2>{text.courseGenerateTitle}</h2><p>{text.courseGenerateBody}</p><button type="button" className="dtx-secondary" onClick={onOpenChat}>{text.backToChat}</button></section>}
-        {(onOpenKnowledge !== undefined || onOpenInsights !== undefined) && <section className="dtx-card dtx-course-card"><h2>{text.courseExploreTitle}</h2>{onOpenKnowledge !== undefined && <button type="button" className="dtx-link" onClick={onOpenKnowledge}>{text.tabKnowledge}<Icon name="chevron-right" size={13} /></button>}{onOpenInsights !== undefined && <button type="button" className="dtx-link" onClick={onOpenInsights}>{text.tabInsights}<Icon name="chevron-right" size={13} /></button>}</section>}
+
       </aside>
     </main>
   </div>
