@@ -244,7 +244,7 @@ async function languageCase() {
 async function reviewCase() {
   await waitFor(`!!document.querySelector('.dtx-home-review')`, 'home review card did not render')
   await cdp.evaluate(`document.querySelector('.dtx-home-review').click()`)
-  await waitFor(`document.body.innerText.includes('Due now')`, 'review page')
+  await waitFor(`document.body.innerText.includes('Review')`, 'review page')
   assert.equal(await cdp.evaluate(`[...document.querySelectorAll('.dtx-review-front')].length`), 1)
   await screenshot(`${currentCase}-review`)
   await click('Show the back')

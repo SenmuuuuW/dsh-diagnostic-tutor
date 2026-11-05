@@ -299,7 +299,7 @@ const en = {
   insightsSources: (count: number): string => `${count} sources`,
 
   reviewEyebrow: 'Spaced review',
-  reviewTitle: 'Due now',
+  reviewTitle: 'Review',
   reviewSub: 'Reveal the back, then grade your recall. The runtime only schedules; it does not mark mastery.',
   reviewLoading: 'Loading the review queue…',
   reviewEmpty: 'Nothing due right now',
@@ -358,6 +358,8 @@ const en = {
   viewLatestRoute: 'View the latest route',
 
   // Knowledge
+  knowledgeEyebrow: 'Evidence map',
+  knowledgeSub: 'Every node below shows only evidence the runtime has actually recorded.',
   knowledgeTitle: (count: number): string => `Knowledge (${count})`,
   searchKnowledge: 'Search knowledge',
   relatedPosition: 'Where it sits',
@@ -693,7 +695,7 @@ const zh: typeof en = {
   insightsSources: (count: number): string => `${count} 个来源`,
 
   reviewEyebrow: '间隔复习',
-  reviewTitle: '现在到期',
+  reviewTitle: '复习',
   reviewSub: '先看正面，再翻到背面并给这次回忆打分。运行时只调度，不判定掌握。',
   reviewLoading: '正在加载复习队列…',
   reviewEmpty: '现在没有到期复习',
@@ -750,6 +752,8 @@ const zh: typeof en = {
   continueConversation: '继续当前会话',
   viewLatestRoute: '查看项目中的最新路线',
 
+  knowledgeEyebrow: '证据地图',
+  knowledgeSub: '下面的每个节点只显示运行时真正记录过的证据。',
   knowledgeTitle: (count: number): string => `知识节点 (${count})`,
   searchKnowledge: '搜索知识点',
   relatedPosition: '相关位置',
