@@ -1,3 +1,59 @@
+## [0.4.0] — 2026-11-04
+
+The reference visual pass, explicit Study layouts, learner materials and the
+first production interactive blocks.
+
+### Added — Materials and citations
+
+- Course Goal step accepts pasted text or a local `.md` / `.markdown` / `.txt`
+  file (UTF-8, 128 KiB cap, SHA-256 dedupe).
+- `POST /source`, `GET /sources`, `GET /source` and the `udt_source_*` tools.
+- Saved source metadata and citation instructions reach diagnosis/route prompts;
+  source bodies are never copied into the prompt.
+
+### Added — Study layouts and interaction
+
+- Explicit **half / main / full-screen** layout rules; Home/Course continue opens
+  full-screen Study, sidebar Learning opens half-screen, with an explicit toggle.
+- Full-screen Study step rail over the real stored blocks.
+- Production `slider` block: safe single-variable expression evaluator (no eval),
+  live SVG curve and value.
+- Production `step-through` block: learner-paced frames, no auto-advance.
+- Production `figure` block: sanitized inline SVG with optional fade/pulse/draw
+  animation; scripts, event handlers, external URLs and raster/image references
+  are stripped.
+- Existing `quiz` remains the inline check.
+
+### Changed — Reference UI
+
+- Compact Today, Course, Course Generation, Study, Review, Knowledge & evidence
+  and Insights surfaces following the supplied dashboard reference.
+- Course-scoped tabs: Modules & lessons / Knowledge & evidence / Insights.
+- Unified tokens, typography, card density and secondary-page headers.
+
+### Changed — DSH compatibility
+
+- Dev dependencies moved to DSH `0.2.2-rc.1`, Cordis `4.1.0`, Schemastery `3.19.0`.
+- Test harness supplies the `AgentRegistry` `sessionProjections` inject; production
+  plugin API usage is unchanged.
+- `minimumReleaseAgeExclude` is scoped to official `@deepseek-ai/*` packages.
+
+### Verification
+
+- `pnpm typecheck` pass
+- `pnpm test`: **677 tests passed (60 files)**
+- `pnpm build` pass
+- `scripts/path-check.mjs`: **31 browser cases passed**
+- Isolated DSH `0.2.2-rc.1`: overview/diagnostics/plan/ics/review 200, domain `udt` v1,
+  `issues: []`; real browser Learning map + Learn panel without runtime exception.
+
+### Known limits
+
+- No PDF or raster-image upload; figures are inline SVG only.
+- No complex timeline animation; figure animation is limited to CSS fade/pulse/draw.
+- No RAG, analytics, FSRS or cross-harness support.
+- Teaching decisions remain in the external Universal Diagnostic Tutor skill.
+
 # Changelog
 
 All notable changes to this project are documented here.
