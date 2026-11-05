@@ -31,10 +31,14 @@ Derived from the supplied calculus dashboard reference.
 
 The dark global sidebar in the reference belongs to DeepSeek Harness, not this plugin. The plugin styles the main panel and right study panel to sit inside that shell; it must not recreate shell navigation.
 
+## Library / welcome
+
+- Compact welcome header, chat prompt row, project count and dense project rows.
+- Empty-library state reuses the same header and prompt row.
+- `0.4.0` published before this page was included; it is unreleased on main until the next patch.
+
 ## Not yet ported
 
-- Study interactive block schemas and visuals beyond the current block renderer
-
-- Study full/split visual shell beyond current layout rules
-- Interactive block schemas (slider, step-through)
-- Image/animation block types
+- External raster image uploads or remote image URLs
+- PDF extraction
+- Complex timeline animation beyond CSS fade/pulse/draw

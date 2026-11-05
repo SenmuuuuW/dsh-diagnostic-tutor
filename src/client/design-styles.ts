@@ -985,4 +985,38 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
   .dtx-insights-grid { grid-template-columns:1fr; }
   .dtx-review-grades { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
+
+/* ---------- reference visual pass: library / welcome ---------- */
+.dtx-library { max-width:1060px; margin:0 auto; }
+.dtx-library-head { margin:2px 0 15px; }
+.dtx-library-head h1 { margin:4px 0 0; font-family:var(--sans); font-size:27px; line-height:1.18; letter-spacing:-.035em; font-weight:650; }
+.dtx-library-sub { margin:5px 0 0; color:var(--dt-muted,#6b7280); font-size:12px; line-height:1.6; }
+.dtx-library-prompt { display:flex; align-items:center; gap:12px; padding:14px 15px; border-radius:11px; }
+.dtx-library-prompt-icon { width:34px; height:34px; flex:none; display:inline-flex; align-items:center; justify-content:center; border:1px solid #dfe3ea; border-radius:50%; color:#4b5563; background:#fff; }
+.dtx-library-prompt-copy { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.dtx-library-prompt-copy b { color:var(--dt-text,#111827); font-size:12px; font-weight:600; }
+.dtx-library-prompt-copy span { color:var(--dt-muted,#6b7280); font-size:10.5px; }
+.dtx-library-prompt .dtx-primary { min-height:32px; padding:0 11px; font-size:10.5px !important; gap:4px; flex:none; }
+.dtx-library-prompt .dtx-primary svg { width:13px; height:13px; }
+.dtx-library-section-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:20px 0 9px; }
+.dtx-library-section-head h2 { margin:0; font-family:var(--sans); font-size:14px; font-weight:650; letter-spacing:-.01em; }
+.dtx-library-section-head > span { color:var(--dt-muted,#6b7280); font-size:10px; }
+.dtx-project-list { gap:8px; }
+.dtx-project-row { gap:11px; padding:10px 12px; min-height:62px; border-radius:9px; box-shadow:none; }
+.dtx-project-row:hover { border-color:#cfd6e2; background:#fbfcfe; box-shadow:0 1px 3px rgba(15,23,42,.03); }
+.dtx-project-icon { width:38px; height:38px; border-radius:9px; }
+.dtx-project-title { font-size:12.5px; font-weight:650; letter-spacing:-.005em; }
+.dtx-project-meta { font-size:10px; }
+.dtx-project-status .dtx-pill { padding:2px 7px; font-size:9.5px; }
+.dtx-project-status .dtx-pill svg { width:12px; height:12px; }
+.dtx-project-action { height:30px; padding:0 10px; border-radius:7px; font-size:10.5px !important; gap:4px; }
+.dtx-project-action svg { width:13px; height:13px; }
+@media (max-width:620px) {
+  .dtx-library-head h1 { font-size:24px; }
+  .dtx-library-prompt { align-items:flex-start; flex-wrap:wrap; }
+  .dtx-library-prompt-copy { flex-basis:calc(100% - 50px); }
+  .dtx-library-prompt .dtx-primary { margin-left:46px; }
+  .dtx-project-row { min-height:58px; }
+  .dtx-project-action { width:auto; margin-left:0; }
+}
 `
