@@ -346,3 +346,18 @@ describe('interactive blocks', () => {
     expect(html).not.toContain('Second frame')
   })
 })
+
+describe('safe figures', () => {
+  it('renders a sanitized inline SVG figure with an animation class', () => {
+    const html = render({
+      id: 'f',
+      type: 'figure',
+      content: { alt: 'A blue circle', svg: '<svg viewBox="0 0 10 10"><script>alert(1)</script><circle cx="5" cy="5" r="4" fill="#2563eb"/></svg>', animation: 'draw' },
+    } as unknown as Block)
+    expect(html).toContain('dt-block-figure')
+    expect(html).toContain('dt-figure-draw')
+    expect(html).toContain('<svg')
+    expect(html).toContain('A blue circle')
+    expect(html).not.toContain('script')
+  })
+})

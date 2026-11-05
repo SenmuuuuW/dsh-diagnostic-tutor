@@ -82,6 +82,7 @@ export const MAX_COMPARISON_CELL_CHARS = 500
 export const MAX_LESSON_BYTES = 262_144
 export const MAX_WALK_FRAMES = 12
 export const MAX_WALK_FRAME_CHARS = 2000
+export const MAX_FIGURE_SVG_CHARS = 20000
 
 /* -------------------------------------------------------------------------- */
 /* Blocks                                                                     */
@@ -288,6 +289,20 @@ export const StepThroughBlockSchema = z.object({
   }),
 })
 
+/** A safe inline SVG illustration; the client sanitizer enforces the vocabulary. */
+export const FigureBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('figure'),
+  content: z.object({
+    title: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
+    alt: z.string().min(1).max(300),
+    /** Inline SVG markup; scripts, external URLs and handlers are removed by the client. */
+    svg: z.string().min(1).max(MAX_FIGURE_SVG_CHARS),
+    caption: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
+    animation: z.enum(['none', 'fade', 'pulse', 'draw']).optional(),
+  }),
+})
+
 const KNOWN_BLOCK_SCHEMAS = [
   TextBlockSchema,
   ExampleBlockSchema,
@@ -301,6 +316,7 @@ const KNOWN_BLOCK_SCHEMAS = [
   ComparisonBlockSchema,
   SliderBlockSchema,
   StepThroughBlockSchema,
+  FigureBlockSchema,
 ] as const
 
 /** Every block type this version understands. */
@@ -319,6 +335,7 @@ export const KnownBlockSchema = z.discriminatedUnion('type', [
   ComparisonBlockSchema,
   SliderBlockSchema,
   StepThroughBlockSchema,
+  FigureBlockSchema,
 ])
 
 const KNOWN_BLOCK_TYPES = new Set<string>(KNOWN_BLOCK_TYPE_NAMES)
@@ -354,6 +371,7 @@ export type ResourceBlock = z.infer<typeof ResourceBlockSchema>
 export type ComparisonBlock = z.infer<typeof ComparisonBlockSchema>
 export type SliderBlock = z.infer<typeof SliderBlockSchema>
 export type StepThroughBlock = z.infer<typeof StepThroughBlockSchema>
+export type FigureBlock = z.infer<typeof FigureBlockSchema>
 export type KnownBlock = z.infer<typeof KnownBlockSchema>
 export type UnknownBlock = z.infer<typeof UnknownBlockSchema>
 /** A block this build can render. Kept as the default `Block` name for callers. */

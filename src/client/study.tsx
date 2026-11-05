@@ -42,6 +42,7 @@ const TYPE_LABELS = {
   comparison: { zh: '对比', en: 'Comparison' },
   slider: { zh: '拖动探索', en: 'Explore' },
   'step-through': { zh: '分步演示', en: 'Step through' },
+  figure: { zh: '图示', en: 'Figure' },
 } as const
 
 /** Interactive blocks cannot be skipped until their answer is recorded. */

@@ -62,9 +62,9 @@ function map(): NodeRecord[] {
 }
 
 describe('block schema', () => {
-  it('supports the twelve known block types', () => {
-    expect([...SUPPORTED_BLOCK_TYPES].sort()).toEqual(['check', 'code', 'comparison', 'diagram', 'example', 'flashcard', 'formula', 'quiz', 'resource', 'slider', 'step-through', 'text'])
-    expect(BLOCK_SCHEMAS).toHaveLength(12)
+  it('supports the thirteen known block types', () => {
+    expect([...SUPPORTED_BLOCK_TYPES].sort()).toEqual(['check', 'code', 'comparison', 'diagram', 'example', 'figure', 'flashcard', 'formula', 'quiz', 'resource', 'slider', 'step-through', 'text'])
+    expect(BLOCK_SCHEMAS).toHaveLength(13)
   })
 
   it('accepts a well-formed block of each type', () => {
@@ -81,6 +81,7 @@ describe('block schema', () => {
       { id: 'j', type: 'comparison', content: { columns: ['a', 'b'], rows: [['1', '2']] } },
       { id: 'k', type: 'slider', content: { expression: '(x - 3)^2', min: 0, max: 6, step: 0.1, initial: 3 } },
       { id: 'l', type: 'step-through', content: { frames: [{ body: 'first' }, { body: 'second' }] } },
+      { id: 'm', type: 'figure', content: { alt: 'A shape', svg: '<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4"/></svg>' } },
     ]
     for (const sample of samples) {
       expect(BlockSchema.safeParse(sample).success).toBe(true)

@@ -18,6 +18,7 @@ import { createElement, useMemo, useState, type ReactNode } from 'react'
 
 import { MathMLView } from './mathml.jsx'
 import { compileExpression } from '../expression.js'
+import { sanitizeSvg } from './sanitize-svg.js'
 
 import type { Block, HandoffView, KnownBlock, NextStepView, StoredBlock } from '../contract.js'
 import { isKnownBlock } from '../block-types.js'
@@ -573,6 +574,22 @@ function StepThroughBlockView({ block }: BlockRenderProps): ReactNode {
   )
 }
 
+function FigureBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'figure') return null
+  const safe = useMemo(() => sanitizeSvg(block.content.svg), [block.content.svg])
+  const animation = block.content.animation ?? 'none'
+  return (
+    <div className="dt-block dt-block-figure">
+      <BlockLabel icon={<span aria-hidden="true">◫</span>}>{text.figure}{block.content.title === undefined ? '' : ` · ${block.content.title}`}</BlockLabel>
+      {safe === null
+        ? <p className="dt-caption">{text.figureUnavailable}</p>
+        : <div className={`dt-figure-canvas dt-figure-${animation}`} role="img" aria-label={block.content.alt} dangerouslySetInnerHTML={{ __html: safe }} />}
+      {block.content.caption !== undefined && <p className="dt-caption">{inline(block.content.caption)}</p>}
+    </div>
+  )
+}
+
 function QuizBlockView({ block, interaction }: BlockRenderProps): ReactNode {
   const text = useLessonText()
   const [values, setValues] = useState<Record<string, string>>({})
@@ -730,6 +747,7 @@ export const BLOCK_RENDERERS: Record<string, Renderer> = {
   comparison: ComparisonBlockView,
   slider: SliderBlockView,
   'step-through': StepThroughBlockView,
+  figure: FigureBlockView,
 }
 
 /** Shown for a block type this build does not know. Never throws. */

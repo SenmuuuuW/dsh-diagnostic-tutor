@@ -74,6 +74,9 @@ export function blocksMarkdown(blocks: readonly StoredBlock[]): string {
           `Drag x from ${block.content.min} to ${block.content.max} (step ${block.content.step}).`,
         ].filter(Boolean).join('\n\n'))
         break
+      case 'figure':
+        parts.push(`**Figure:** ${block.content.alt}${block.content.caption === undefined ? '' : ` — ${block.content.caption}`}`)
+        break
       case 'step-through':
         parts.push([
           `### ${block.content.title ?? 'Step through'}`,
