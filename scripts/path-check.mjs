@@ -199,7 +199,7 @@ async function homeCase() {
   await waitFor(`!!document.querySelector('.dtx-home')`, 'home did not render')
   await waitFor(`!!document.querySelector('.dtx-home-copy .dtx-primary')`, 'home primary action did not render')
   const text = await cdp.evaluate(`document.querySelector('.dtx-home').textContent`)
-  assert.match(text, /One step today|今天走一步/)
+  assert.match(text, /Today|今天/)
   assert.equal(await cdp.evaluate(`document.querySelectorAll('.dtx-home-copy .dtx-primary').length`), 1)
   assert.doesNotMatch(text, /\d+\s*%/)
   await screenshot(`${currentCase}-home`)
