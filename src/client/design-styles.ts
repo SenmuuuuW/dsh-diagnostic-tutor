@@ -929,4 +929,60 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 @media (prefers-reduced-motion:reduce) {
   .dt-figure-fade svg, .dt-figure-pulse svg, .dt-figure-draw svg path, .dt-figure-draw svg polyline, .dt-figure-draw svg polygon { animation:none; }
 }
+
+/* ---------- reference visual pass: review / knowledge / insights ---------- */
+.dtx-secondary-head { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:15px; }
+.dtx-secondary-head h1 { margin:4px 0 0; font-family:var(--sans); font-size:27px; line-height:1.18; letter-spacing:-.035em; font-weight:650; }
+.dtx-secondary-sub { margin:5px 0 0; max-width:640px; color:var(--dt-muted,#6b7280); font-size:12px; line-height:1.6; }
+.dtx-knowledge { display:grid; grid-template-columns:minmax(300px,370px) minmax(0,1fr); align-items:start; gap:12px; }
+.dtx-knowledge-list { min-width:0; padding:0; border-radius:11px; overflow:hidden; }
+.dtx-knowledge-head { padding:12px 13px; }
+.dtx-knowledge-head h2 { margin:0; font-size:12px; font-weight:650; }
+.dtx-knowledge .dtx-search { min-width:0; }
+.dtx-knowledge .dtx-search input { font-size:10.5px; }
+.dtx-node-row { min-height:45px; padding:8px 12px; }
+.dtx-node-title { font-size:11px; }
+.dtx-node-sub { font-size:9.5px; }
+.dtx-knowledge-detail { min-width:0; padding:16px 18px; border-radius:11px; }
+.dtx-knowledge-detail h2 { font-size:15px; }
+.dtx-knowledge-detail h3 { font-size:11px; }
+.dtx-knowledge-detail p, .dtx-knowledge-detail li { font-size:11px; line-height:1.62; }
+.dtx-review { max-width:860px; padding:22px 28px 38px; }
+.dtx-insights { max-width:1080px; padding:22px 28px 38px; }
+.dtx-review-head, .dtx-insights-head { margin-bottom:14px; }
+.dtx-review-head h1, .dtx-insights-head h1 { font-family:var(--sans); font-size:27px; line-height:1.18; letter-spacing:-.035em; font-weight:650; }
+.dtx-review-eyebrow, .dtx-insights-eyebrow { margin-bottom:3px; font-size:10px; letter-spacing:.08em; }
+.dtx-review-sub, .dtx-insights-sub { margin-top:5px; font-size:11.5px; line-height:1.6; }
+.dtx-review-card { padding:20px; border-radius:12px; }
+.dtx-review-count { margin-bottom:11px; font-size:10.5px; }
+.dtx-review-front { margin-bottom:14px; font-family:var(--sans); font-size:20px; font-weight:650; line-height:1.35; }
+.dtx-review-back { margin-top:14px; padding-top:13px; font-size:13px; line-height:1.65; }
+.dtx-review-grades { gap:7px; margin-top:15px; }
+.dtx-grade { min-height:48px; font-size:11px; }
+.dtx-grade span { font-size:9px; }
+.dtx-review-empty { padding:38px 20px; border-radius:12px; }
+.dtx-review-empty h2 { font-size:18px; }
+.dtx-insights-grid { gap:10px; }
+.dtx-insight-card { padding:14px 15px; border-radius:10px; }
+.dtx-insight-card h2 { margin-bottom:7px; font-size:11px; }
+.dtx-insight-card h2 svg { width:14px; height:14px; }
+.dtx-insight-big { font-size:25px; }
+.dtx-insight-note { font-size:10.5px; line-height:1.55; }
+.dtx-insight-card h3 { margin:11px 0 3px; font-size:9.5px; }
+.dtx-insight-card li { padding:4px 0; font-size:10.5px; }
+.dtx-insight-card li b { font-size:9.5px; }
+.dtx-insight-chips span { padding:2px 5px; font-size:9.5px; }
+@media (max-width:900px) {
+  .dtx-knowledge { grid-template-columns:1fr; }
+  .dtx-knowledge-list { max-height:360px; }
+  .dtx-review, .dtx-insights { padding:18px 18px 32px; }
+  .dtx-insights-grid { grid-template-columns:1fr 1fr; }
+}
+@media (max-width:620px) {
+  .dtx-secondary-head h1, .dtx-review-head h1, .dtx-insights-head h1 { font-size:24px; }
+  .dtx-review, .dtx-insights { padding:16px 14px 30px; }
+  .dtx-review-head, .dtx-insights-head { flex-direction:column; }
+  .dtx-insights-grid { grid-template-columns:1fr; }
+  .dtx-review-grades { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
 `

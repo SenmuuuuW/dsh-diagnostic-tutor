@@ -229,6 +229,9 @@ function KnowledgePage({ nodes, selectedId, detail, loading, error, onSelect }: 
   }, [nodes, query])
   return (
     <div className="dtx-content">
+      <header className="dtx-secondary-head">
+        <div><p className="dtx-eyebrow">{text.knowledgeEyebrow}</p><h1>{text.tabKnowledge}</h1><p className="dtx-secondary-sub">{text.knowledgeSub}</p></div>
+      </header>
       <div className="dtx-knowledge">
         <section className="dtx-card dtx-knowledge-list">
           <header className="dtx-knowledge-head">
