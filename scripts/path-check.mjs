@@ -125,8 +125,8 @@ async function open({ surface = 'map', scenario, width = 1440, theme = 'light' }
 }
 
 async function libraryCase() {
-  await waitFor(`!!document.querySelector('.dtx-hero')`, 'library welcome did not render')
-  assert.match(await cdp.evaluate(`document.querySelector('.dtx-hero').textContent`), /Welcome back|欢迎回来/)
+  await waitFor(`!!document.querySelector('.dtx-library')`, 'library welcome did not render')
+  assert.match(await cdp.evaluate(`document.querySelector('.dtx-library').textContent`), /Welcome back|欢迎回来/)
   assert.ok((await cdp.evaluate(`document.querySelectorAll('.dtx-project-row').length`)) >= 1)
   await screenshot(`${currentCase}-library`)
   return { projects: await cdp.evaluate(`document.querySelectorAll('.dtx-project-row').length`) }

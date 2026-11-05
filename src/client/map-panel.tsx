@@ -88,48 +88,41 @@ function LibraryPage({ library, onOpenChat, onOpen, error }: {
   const text = useDesignText()
   if (error !== null) return <div className="dtx-empty-page"><p className="dtx-alert">{error}</p></div>
   if (library.length === 0) {
-    return <div className="dtx-empty-page">
-      <div className="dtx-empty-icon"><Icon name="book" size={38} /></div>
-      <h1 className="dtx-empty-title">{text.libraryEmptyTitle}</h1>
-      <p className="dtx-empty-body">{text.libraryEmptyBody}</p>
-      {onOpenChat !== undefined && <button type="button" className="dtx-primary" onClick={onOpenChat}>{text.backToChat}</button>}
+    return <div className="dtx-library">
+      <header className="dtx-library-head"><p className="dtx-eyebrow">{text.libraryEyebrow}</p><h1>{text.libraryEmptyTitle}</h1><p className="dtx-library-sub">{text.libraryEmptyBody}</p></header>
+      <section className="dtx-library-prompt dtx-card">
+        <span className="dtx-library-prompt-icon"><Icon name="chat" size={18} /></span>
+        <span className="dtx-library-prompt-copy"><b>{text.libraryPromptTitle}</b><span>{text.libraryPromptExample}</span></span>
+        {onOpenChat !== undefined && <button type="button" className="dtx-primary" onClick={onOpenChat}>{text.backToChat}<Icon name="arrow-right" size={15} /></button>}
+      </section>
     </div>
   }
   return (
-    <>
-      <section className="dtx-card dtx-hero">
-        <p className="dtx-eyebrow">{text.libraryEyebrow}</p>
-        <h1>{text.libraryTitle}</h1>
-        <p>{text.libraryBody}</p>
-        <div className="dtx-hero-row">
-          <div className="dtx-hero-prompt">
-            <span className="dtx-hero-prompt-icon"><Icon name="chat" size={18} /></span>
-            <span>
-              <span className="dtx-hero-prompt-title">{text.libraryPromptTitle}</span>
-              <span className="dtx-hero-prompt-sub">{text.libraryPromptExample}</span>
-            </span>
-          </div>
-          {onOpenChat !== undefined && <button type="button" className="dtx-primary" onClick={onOpenChat}>{text.backToChat}</button>}
-        </div>
+    <div className="dtx-library">
+      <header className="dtx-library-head"><p className="dtx-eyebrow">{text.libraryEyebrow}</p><h1>{text.libraryTitle}</h1><p className="dtx-library-sub">{text.libraryBody}</p></header>
+      <section className="dtx-library-prompt dtx-card">
+        <span className="dtx-library-prompt-icon"><Icon name="chat" size={18} /></span>
+        <span className="dtx-library-prompt-copy"><b>{text.libraryPromptTitle}</b><span>{text.libraryPromptExample}</span></span>
+        {onOpenChat !== undefined && <button type="button" className="dtx-primary" onClick={onOpenChat}>{text.backToChat}<Icon name="arrow-right" size={15} /></button>}
       </section>
-      <div className="dtx-section-head"><h2>{text.librarySection}</h2></div>
+      <div className="dtx-library-section-head"><h2>{text.librarySection}</h2><span>{library.length}</span></div>
       <div className="dtx-project-list">
         {library.map((project) => {
           const status = statusOf(project)
           return (
             <button key={project.id} type="button" className="dtx-project-row" onClick={() => onOpen(project.id)}>
-              <span className="dtx-project-icon" data-kind={projectIcon(project.title)}><Icon name={projectIcon(project.title)} size={28} /></span>
+              <span className="dtx-project-icon" data-kind={projectIcon(project.title)}><Icon name={projectIcon(project.title)} size={22} /></span>
               <span className="dtx-project-main">
                 <span className="dtx-project-title">{project.title}</span>
                 <span className="dtx-project-meta">{text.lastStudied(whenText(project.updatedAt, text))}</span>
               </span>
               <span className="dtx-project-status"><StatusPill status={status} text={text} /></span>
-              <span className="dtx-project-action">{text.continueLearning}<Icon name="chevron-right" size={16} /></span>
+              <span className="dtx-project-action">{text.continueLearning}<Icon name="chevron-right" size={15} /></span>
             </button>
           )
         })}
       </div>
-    </>
+    </div>
   )
 }
 
