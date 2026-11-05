@@ -1,6 +1,6 @@
 # 0.4.1 发布清单与说明
 
-> 状态：**发布中**（2026-11-04）。`package.json` 为 `0.4.1`。
+> 状态：**已发布**（2026-11-04）。`package.json` 为 `0.4.1`。
 > 代码基线：`main`（0.4.0 + Library/welcome 参考 UI 补丁）。
 
 ## 1. 版本
@@ -36,12 +36,12 @@ DSH `0.2.2-rc.1` host/API 路径与 0.4.0 相同；本次只改客户端 Library
 - [x] 完整测试 / build / browser
 - [x] `npm pack`
 - [x] 隔离 DSH `0.2.2-rc.1` tarball 验证
-- [ ] 合并 release PR
-- [ ] annotated tag `v0.4.1`
-- [ ] `npm publish --access public`，确认 `latest = 0.4.1`
-- [ ] 冷安装验证
-- [ ] GitHub Release
-- [ ] 记录结果
+- [x] 合并 release PR（#61，`9398b90`）
+- [x] annotated tag `v0.4.1` → `9398b90`
+- [x] `npm publish --access public`，`latest = 0.4.1`
+- [x] 冷安装验证
+- [x] GitHub Release
+- [x] 记录结果
 
 ## 4. 已知限制
 
@@ -70,11 +70,14 @@ DSH `0.2.2-rc.1` host/API 路径与 0.4.0 相同；本次只改客户端 Library
 - `/review` → 200
 - 包内 `package.json` 版本 `0.4.1`
 
-### 待发布后填写
+### 发布结果
 
-- release PR / merge commit
-- git tag
-- npm publish
-- GitHub Release
-- 冷安装
-
+- release PR：#61，merge commit `9398b90`
+- annotated tag：`v0.4.1` → `9398b90`
+- npm `latest = 0.4.1`
+- npm tarball：https://registry.npmjs.org/dsh-diagnostic-tutor/-/dsh-diagnostic-tutor-0.4.1.tgz
+- npm shasum：`b93a8ff821d157c87a7d72f8107adbf6b41d76d3`
+- sha256：`2d8a1b0abe3518791aba9571aa4952cc20534cfd86c63af313d258fd5b8ecda7`
+- GitHub Release：https://github.com/SenmuuuuW/dsh-diagnostic-tutor/releases/tag/v0.4.1
+- 冷安装：`npm install dsh-diagnostic-tutor@0.4.1` 成功；包内版本 `0.4.1`；`lib/client.js` 包含 `dtx-library`
+- README：GitHub main 已显示 `v0.4.1` 和 `dsh-diagnostic-tutor@0.4.1`
