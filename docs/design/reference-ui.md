@@ -25,6 +25,7 @@ Derived from the supplied calculus dashboard reference.
 - `slider`: a safe single-variable expression in `x`, evaluated by a client-side parser (no eval); range, step and initial value are validated by zod. The renderer draws the curve and a live point, and never records an answer.
 - `step-through`: 2–12 frames with previous/next controls; learner-paced, never auto-advanced, and not graded.
 - Inline checks remain the existing `quiz` block: options, record-answer through `/path/answer`, no score or automatic advancement.
+- `figure`: sanitized inline SVG only (shapes, paths, text, gradients), optional fade/pulse/draw animation. Scripts, event handlers, external URLs, images, foreignObject and style attributes are stripped by the client sanitizer; there is no remote image loading.
 
 ## DSH constraints
 

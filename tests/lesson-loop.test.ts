@@ -271,10 +271,11 @@ describe('udt_lesson_update', () => {
         blocks: [
           { id: 's', type: 'slider', content: { title: 'Loss', expression: '(x - 3)^2', min: 0, max: 6, step: 0.1, initial: 1.5 } },
           { id: 'w', type: 'step-through', content: { title: 'Walk', frames: [{ body: 'one' }, { body: 'two' }] } },
+          { id: 'f', type: 'figure', content: { alt: 'A line', svg: '<svg viewBox="0 0 10 10"><line x1="0" y1="0" x2="10" y2="10"/></svg>', animation: 'draw' } },
         ],
       })
-      expect(written.blockCount).toBe(2)
-      expect(wired.state.lessonForNode(mathId)?.blocks.map((block) => block.type)).toEqual(['slider', 'step-through'])
+      expect(written.blockCount).toBe(3)
+      expect(wired.state.lessonForNode(mathId)?.blocks.map((block) => block.type)).toEqual(['slider', 'step-through', 'figure'])
     } finally {
       await harness.close()
     }

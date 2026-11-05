@@ -1233,6 +1233,36 @@ const BLOCK_PARAM_SPEC = {
         },
       },
     },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
+        type: { type: 'string', required: true, enum: ['figure'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            title: { type: 'string' },
+            alt: { type: 'string', required: true, description: 'What the figure shows, for accessibility.' },
+            svg: { type: 'string', required: true, description: 'Inline SVG using only shapes, paths, text, groups, gradients and defs. No scripts, event handlers, external URLs, images, foreignObject or style attributes.' },
+            caption: { type: 'string' },
+            animation: { type: 'string', enum: ['none', 'fade', 'pulse', 'draw'] },
+          },
+        },
+      },
+    },
   ],
 } as const
 
@@ -1313,7 +1343,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       'the blocks appear in the learner\'s surface the moment you send them, so a short first unit ' +
       'turns a silent wait into visible progress. Send more later with append.\n' +
       'Default mode "append" adds to the current lesson; use "replace" only to correct what is there.\n' +
-      'A check block has no input box: the surface displays the question and the learner answers in the chat. Use **quiz** for an inline check that records a choice, and **slider** / **step-through** when the learner should manipulate or pace a visual themselves. ' +
+      'A check block has no input box: the surface displays the question and the learner answers in the chat. Use **quiz** for an inline check that records a choice, **slider** / **step-through** when the learner should manipulate or pace a visual themselves, and **figure** for a safe inline SVG illustration (optionally animated). ' +
       'An explicit nodeId write may select its project only when this conversation has no selection. ' +
       'It never replaces new/project selection; check projectBinding in the result. ' +
       'For planned teaching, read udt_path_get, explicitly bind its node with udt_course_run_update and supply active attemptId. Content is saved per conversation/attempt with history; stale attempts are rejected.',

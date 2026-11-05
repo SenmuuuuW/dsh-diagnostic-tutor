@@ -915,4 +915,18 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
   .dt-slider-head { align-items:flex-start; flex-direction:column; gap:4px; }
   .dt-slider-head output { white-space:normal; }
 }
+
+/* Safe inline SVG figure block */
+.dt-block-figure { padding:14px; border:1px solid var(--dt-border,#e5e7eb); border-radius:10px; background:#fbfcff; }
+.dt-figure-canvas { margin-top:10px; padding:10px; border-radius:8px; background:#fff; border:1px solid #eef0f4; overflow:hidden; }
+.dt-figure-canvas svg { display:block; width:100%; height:auto; max-height:360px; }
+.dt-figure-fade svg { animation:dt-figure-fade .7s ease both; }
+.dt-figure-pulse svg { animation:dt-figure-pulse 1.8s ease-in-out infinite; }
+.dt-figure-draw svg path, .dt-figure-draw svg polyline, .dt-figure-draw svg polygon { stroke-dasharray:1200; stroke-dashoffset:1200; animation:dt-figure-draw 1.4s ease both; }
+@keyframes dt-figure-fade { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:translateY(0); } }
+@keyframes dt-figure-pulse { 0%,100% { opacity:1; } 50% { opacity:.72; } }
+@keyframes dt-figure-draw { to { stroke-dashoffset:0; } }
+@media (prefers-reduced-motion:reduce) {
+  .dt-figure-fade svg, .dt-figure-pulse svg, .dt-figure-draw svg path, .dt-figure-draw svg polyline, .dt-figure-draw svg polygon { animation:none; }
+}
 `
