@@ -1,3 +1,21 @@
+## [0.4.1] — 2026-11-04
+
+A UI patch on top of 0.4.0.
+
+### Changed — Library / welcome
+
+- Completes the reference visual pass with the no-project Library state.
+- Compact welcome header, chat prompt row, project count and dense project rows
+  (icon, last studied, status pill, continue action).
+- Empty-library state uses the same visual language.
+
+### Verification
+
+- `pnpm typecheck` pass
+- `pnpm test`: **677 tests passed (60 files)**
+- `pnpm build` pass
+- `scripts/path-check.mjs`: **31 browser cases passed**
+
 ## [0.4.0] — 2026-11-04
 
 The reference visual pass, explicit Study layouts, learner materials and the
