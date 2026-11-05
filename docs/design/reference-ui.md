@@ -20,6 +20,12 @@ Derived from the supplied calculus dashboard reference.
 - **Study**: step rail + content + visual/interaction panel; full screen or split.
 - **Review / Knowledge / Insights**: same card and density language.
 
+## Interactive blocks
+
+- `slider`: a safe single-variable expression in `x`, evaluated by a client-side parser (no eval); range, step and initial value are validated by zod. The renderer draws the curve and a live point, and never records an answer.
+- `step-through`: 2–12 frames with previous/next controls; learner-paced, never auto-advanced, and not graded.
+- Inline checks remain the existing `quiz` block: options, record-answer through `/path/answer`, no score or automatic advancement.
+
 ## DSH constraints
 
 The dark global sidebar in the reference belongs to DeepSeek Harness, not this plugin. The plugin styles the main panel and right study panel to sit inside that shell; it must not recreate shell navigation.
@@ -31,4 +37,3 @@ The dark global sidebar in the reference belongs to DeepSeek Harness, not this p
 - Study full/split visual shell beyond current layout rules
 - Interactive block schemas (slider, step-through)
 - Image/animation block types
-- Final visual pass for Review / Knowledge / Insights

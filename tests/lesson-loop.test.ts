@@ -260,6 +260,26 @@ describe('udt_lesson_update', () => {
     }
   })
 
+  it('accepts a slider and a step-through block through the tool contract', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const { mathId } = await seed(state)
+      const wired = await wire(harness, state)
+      await wired.api('/focus', { method: 'POST', body: { nodeId: mathId, sessionId: SESSION } })
+      const written = await wired.tool('udt_lesson_update', {
+        blocks: [
+          { id: 's', type: 'slider', content: { title: 'Loss', expression: '(x - 3)^2', min: 0, max: 6, step: 0.1, initial: 1.5 } },
+          { id: 'w', type: 'step-through', content: { title: 'Walk', frames: [{ body: 'one' }, { body: 'two' }] } },
+        ],
+      })
+      expect(written.blockCount).toBe(2)
+      expect(wired.state.lessonForNode(mathId)?.blocks.map((block) => block.type)).toEqual(['slider', 'step-through'])
+    } finally {
+      await harness.close()
+    }
+  })
+
   it('appends the next unit rather than replacing the lesson', async () => {
     const harness = await createHarness()
     try {

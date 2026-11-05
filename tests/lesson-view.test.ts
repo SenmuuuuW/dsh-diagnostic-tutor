@@ -319,3 +319,30 @@ describe('math arrives as an expression, not as its delimiters', () => {
     expect(html).toContain('少了收尾')
   })
 })
+
+describe('interactive blocks', () => {
+  it('renders a slider with a range input, live value and SVG graph', () => {
+    const html = render({
+      id: 's',
+      type: 'slider',
+      content: { title: 'Explore loss', prompt: 'Drag x', expression: '(x - 3)^2', min: 0, max: 6, step: 0.1, initial: 3 },
+    } as unknown as Block)
+    expect(html).toContain('dt-block-slider')
+    expect(html).toContain('type="range"')
+    expect(html).toContain('(x - 3)^2')
+    expect(html).toContain('<svg')
+    expect(html).toContain('Explore loss')
+  })
+
+  it('renders the first step-through frame and its controls', () => {
+    const html = render({
+      id: 'w',
+      type: 'step-through',
+      content: { title: 'Walk', frames: [{ title: 'Start', body: 'First frame' }, { title: 'End', body: 'Second frame' }] },
+    } as unknown as Block)
+    expect(html).toContain('dt-block-steps')
+    expect(html).toContain('First frame')
+    expect(html).toContain('Next')
+    expect(html).not.toContain('Second frame')
+  })
+})

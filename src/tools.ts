@@ -1161,6 +1161,78 @@ const BLOCK_PARAM_SPEC = {
         },
       },
     },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
+        type: { type: 'string', required: true, enum: ['slider'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            title: { type: 'string' },
+            prompt: { type: 'string', description: 'What the learner should try while dragging.' },
+            expression: { type: 'string', required: true, description: 'A safe single-variable expression in x, e.g. (x - 3)^2.' },
+            min: { type: 'number', required: true },
+            max: { type: 'number', required: true },
+            step: { type: 'number', required: true },
+            initial: { type: 'number', required: true },
+            unit: { type: 'string' },
+            caption: { type: 'string' },
+          },
+        },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        sourceRefs: {
+          type: 'array',
+          items: {
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+              sourceId: { type: 'string', required: true },
+              locator: { type: 'string', required: true },
+            },
+          },
+        },
+        type: { type: 'string', required: true, enum: ['step-through'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            title: { type: 'string' },
+            prompt: { type: 'string' },
+            frames: {
+              type: 'array', required: true,
+              items: {
+                type: 'object', additionalProperties: false,
+                properties: {
+                  title: { type: 'string' },
+                  body: { type: 'string', required: true, description: 'Markdown for this frame.' },
+                },
+              },
+            },
+            caption: { type: 'string' },
+          },
+        },
+      },
+    },
   ],
 } as const
 
@@ -1230,7 +1302,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       'Write teaching content into the learner\'s Learning Surface as structured blocks.\n' +
       'The blocks appear in the panel beside the diagnosis map, so the learner reads them while ' +
       'answering in the chat — write for that surface, not as a chat message.\n' +
-      'Block types: **text** {md}, **example** {title, steps[], takeaway?}, ' +
+      'Block types: **text** {md}, **example** {title, steps[], takeaway?}, **slider** {title?, prompt?, expression, min, max, step, initial, unit?, caption?}, **step-through** {title?, prompt?, frames[{title?, body}], caption?}, ' +
       '**diagram** {format: ascii|mermaid, spec, caption?}, **check** {prompt, expect?, hint?}, ' +
       '**formula** {tex, display?, caption?}, **code** {language?, source, caption?}, ' +
       '**quiz** {title?, questions[]}, **flashcard** {front, back, tags?}, ' +
@@ -1241,7 +1313,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       'the blocks appear in the learner\'s surface the moment you send them, so a short first unit ' +
       'turns a silent wait into visible progress. Send more later with append.\n' +
       'Default mode "append" adds to the current lesson; use "replace" only to correct what is there.\n' +
-      'A check block has no input box: the surface displays the question and the learner answers in the chat. ' +
+      'A check block has no input box: the surface displays the question and the learner answers in the chat. Use **quiz** for an inline check that records a choice, and **slider** / **step-through** when the learner should manipulate or pace a visual themselves. ' +
       'An explicit nodeId write may select its project only when this conversation has no selection. ' +
       'It never replaces new/project selection; check projectBinding in the result. ' +
       'For planned teaching, read udt_path_get, explicitly bind its node with udt_course_run_update and supply active attemptId. Content is saved per conversation/attempt with history; stale attempts are rejected.',
