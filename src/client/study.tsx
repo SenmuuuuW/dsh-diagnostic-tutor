@@ -6,9 +6,10 @@
  * BlockInteraction. Answers are still recorded by the runtime; no grading,
  * mastery or automatic advancement is added here.
  */
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { StoredBlock } from '../contract.js'
+import type { StudyProgress, StudyProgressInput } from '../path.js'
 import { isKnownBlock } from '../block-types.js'
 import { LessonBody } from './blocks.jsx'
 import type { BlockInteraction } from './blocks.jsx'
@@ -27,6 +28,10 @@ export interface StudySessionProps {
   onOpenChat?: (() => void) | undefined
   fullscreen?: boolean | undefined
   onToggleFullscreen?: (() => void) | undefined
+  /** Last persisted Study position, if any. */
+  initialStudy?: StudyProgress | undefined
+  /** Report presentation position; the parent persists it. Never teaching state. */
+  onProgress?: ((progress: StudyProgressInput) => void) | undefined
 }
 
 const TYPE_LABELS = {
@@ -55,13 +60,75 @@ function typeLabel(block: StoredBlock, lang: 'en' | 'zh'): string {
   return TYPE_LABELS[block.type]?.[lang] ?? block.type
 }
 
-export function StudySession({ title, courseTitle, moduleTitle, code, blocks, interaction, onExit, onOpenChat, fullscreen = false, onToggleFullscreen }: StudySessionProps): ReactNode {
+export function StudySession({ title, courseTitle, moduleTitle, code, blocks, interaction, onExit, onOpenChat, fullscreen = false, onToggleFullscreen, initialStudy, onProgress }: StudySessionProps): ReactNode {
   const text = useDesignText()
   const lang = useLang()
-  const [step, setStep] = useState(0)
-  const [finished, setFinished] = useState(false)
+  const initialIndex = (() => {
+    if (initialStudy === undefined) return 0
+    const found = blocks.findIndex((block) => block.id === initialStudy.blockId)
+    if (found >= 0) return found
+    return Math.min(Math.max(initialStudy.stepIndex, 0), Math.max(blocks.length - 1, 0))
+  })()
+  const [step, setStep] = useState(initialIndex)
+  const [finished, setFinished] = useState(initialStudy?.finished === true)
   const [recorded, setRecorded] = useState<Set<string>>(() => new Set((interaction?.responses ?? []).map((response) => response.blockId)))
   const current = blocks[step]
+  const rootRef = useRef<HTMLDivElement>(null)
+  const onProgressRef = useRef(onProgress)
+  onProgressRef.current = onProgress
+  const live = useRef({ step, finished, fullscreen })
+  live.current = { step, finished, fullscreen }
+  const restored = useRef(false)
+  const scrollReady = useRef(false)
+  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const scrollRatio = (): number => {
+    // The first report can run before the restore frame. Keep the saved ratio
+    // instead of persisting the transient 0 from an unlaid-out surface.
+    if (!scrollReady.current && initialStudy !== undefined) return initialStudy.scrollRatio
+    const element = rootRef.current
+    if (element === null) return 0
+    const max = element.scrollHeight - element.clientHeight
+    return max <= 0 ? 0 : Math.min(1, Math.max(0, element.scrollTop / max))
+  }
+  const report = (): void => {
+    const state = live.current
+    const block = blocks[state.step]
+    if (block === undefined || onProgressRef.current === undefined) return
+    onProgressRef.current({
+      blockId: block.id,
+      stepIndex: state.step,
+      scrollRatio: scrollRatio(),
+      fullscreen: state.fullscreen,
+      finished: state.finished,
+    })
+  }
+  useEffect(() => {
+    // Mark the surface live synchronously so the first progress report is not
+    // lost in tests or in a hidden tab; restore the scroll position on the frame.
+    scrollReady.current = false
+    restored.current = true
+    const frame = requestAnimationFrame(() => {
+      const element = rootRef.current
+      if (element !== null && initialStudy !== undefined) {
+        const max = element.scrollHeight - element.clientHeight
+        if (max > 0) element.scrollTop = initialStudy.scrollRatio * max
+      }
+      scrollReady.current = true
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [initialStudy])
+  useEffect(() => {
+    if (!restored.current) return
+    report()
+  }, [step, finished, fullscreen])
+  useEffect(() => () => {
+    if (scrollTimer.current !== null) clearTimeout(scrollTimer.current)
+  }, [])
+  const onScroll = (): void => {
+    if (!restored.current) return
+    if (scrollTimer.current !== null) clearTimeout(scrollTimer.current)
+    scrollTimer.current = setTimeout(report, 200)
+  }
   // Without a BlockInteraction (for example a preview or an unavailable
   // answer endpoint) the quiz is read-only; do not trap the learner on it.
   const interactive = interaction !== undefined && current !== undefined && isInteractive(current)
@@ -94,7 +161,7 @@ export function StudySession({ title, courseTitle, moduleTitle, code, blocks, in
 
   if (finished) {
     const answered = recorded.size
-    return <div className="dtx-study dtx-study-done-wrap">
+    return <div className="dtx-study dtx-study-done-wrap" ref={rootRef} onScroll={onScroll}>
       <div className="dtx-study-done">
         <span className="dtx-study-done-mark"><Icon name="check" size={24} /></span>
         <p className="dtx-eyebrow">{text.studyFinishedEyebrow}</p>
@@ -119,7 +186,7 @@ export function StudySession({ title, courseTitle, moduleTitle, code, blocks, in
     {interactive && !currentRecorded && <p className="dtx-study-hint">{text.studyAnswerFirst}</p>}
     {current !== undefined && !interactive && isKnownBlock(current) && current.type === 'check' && onOpenChat !== undefined && <button type="button" className="dtx-secondary dtx-study-chat" onClick={onOpenChat}>{text.studyOpenChat}</button>}
   </main>
-  return <div className={fullscreen ? 'dtx-study dtx-study-focus' : 'dtx-study'} data-fullscreen={fullscreen ? 'true' : undefined}>
+  return <div className={fullscreen ? 'dtx-study dtx-study-focus' : 'dtx-study'} data-fullscreen={fullscreen ? 'true' : undefined} ref={rootRef} onScroll={onScroll}>
     <header className="dtx-study-top">
       <button type="button" className="dtx-iconbtn" onClick={onExit} aria-label={text.studyExit}><Icon name="arrow-left" size={18} /></button>
       <div className="dtx-study-heading"><span className="dtx-eyebrow">{fullscreen ? text.studyFocus : `${text.studyFocus} · ${text.studyHalfScreen}`}</span><h2>{title}</h2><p>{[courseTitle, moduleTitle, code].filter(Boolean).join(' · ')}</p></div>

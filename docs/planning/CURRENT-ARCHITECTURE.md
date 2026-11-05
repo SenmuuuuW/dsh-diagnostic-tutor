@@ -73,7 +73,7 @@ DSH Runtime
 | `handoffs` | sessionId+nodeId | 旧循环等待/重试计时 | API 与教学工具 |
 | `session_projects` | sessionId | 本会话选中的项目（会话隔离根） | `POST /project` / 工具 |
 | `learning_paths` | courseId | 项目级规划聚合（revision CAS） | `udt_path_update`、`POST /path/*` |
-| `course_runs` | sessionId+courseId | 会话级课次尝试 + 教学快照 + 作答记录 | `/path/start`、`udt_course_run_update`、`udt_lesson_update(attemptId)`、`udt_quiz_update` |
+| `course_runs` | sessionId+courseId | 会话级课次尝试 + 教学快照 + 作答记录 + 可选 Study 位置 | `/path/start`、`udt_course_run_update`、`udt_lesson_update(attemptId)`、`udt_quiz_update`、`/path/study` |
 | `sources` | sourceId | 学习者提供的本地/粘贴文本、哈希与引用原文 | `udt_source_add`（additive v1 表） |
 | `tasks` | taskId | 今天/计划项与到期时间；不参与教学判断 | `udt_plan_update`（additive v1 表） |
 | `review_cards` | cardId | 复习卡与本地间隔调度字段；flashcard 写入时按 node+block 幂等投影 | `udt_review_add/grade`、`udt_lesson_update`（additive v1 表） |
@@ -125,6 +125,7 @@ DSH Runtime
 | `/path/start` | POST | 创建/继续课次尝试并唤醒模型 |
 | `/path/pause` | POST | 暂停当前 attempt，保留同一 attempt |
 | `/path/answer` | POST | 记录 quiz/闪卡作答（不判定、不改状态） |
+| `/path/study` | POST | 保存 Study 展示位置（block/step/scroll/fullscreen/finished），只改 attempt.study |
 | `/source` | GET | 读取一个 sources 原文（trust fence） |
 | `/plan/ics` | GET | 导出有到期日的开放计划项为 ICS；DSH schedule 仍是 session-local |
 | `/plan/task` | POST | 学习者标记计划项完成/重新打开（只改计划状态） |

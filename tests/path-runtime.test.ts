@@ -12,8 +12,8 @@ import {
 import type { Assessment, CurriculumInput, GoalBrief } from '../src/path.js'
 import {
   acceptCurriculum, beginCourseItem, bindCourseNode, completeCourseItem, pathView,
-  proposeCurriculum, recordCourseTeaching, reservePathRequest, saveAssessment, saveBrief, stampCoursePrompt,
-  stampPathRequest, stampPathRequestFailure,
+  proposeCurriculum, recordCourseTeaching, reservePathRequest, saveAssessment, saveBrief, saveStudyProgress,
+  stampCoursePrompt, stampPathRequest, stampPathRequestFailure,
 } from '../src/path-runtime.js'
 import type { BeginItemInput } from '../src/path-runtime.js'
 import { newNode, openUdState, UDT_DOMAIN_VERSION } from '../src/state.js'
@@ -309,6 +309,53 @@ describe('planning runtime with temporary DSH storage', () => {
       const result = await saveAssessment(state, COURSE, SESSION, revision(state), skipped, true)
       expect(result.assessment).toEqual(skipped)
       await expect(proposeCurriculum(state, COURSE, SESSION, result.revision, curriculum())).resolves.toMatchObject({ acceptedVersion: null, curricula: [{ version: 1 }] })
+    })
+  })
+
+  describe('focused study progress', () => {
+    it('persists the step, scroll, fullscreen and finished position without teaching side effects', async () => {
+      await prepare(state)
+      const started = await beginCourseItem(state, beginInput(state))
+      await bindCourseNode(state, COURSE, SESSION, started.attempt.id, NODE)
+      const twoBlocks: LessonRecord = {
+        ...lesson(), blocks: [
+          { id: 'one', type: 'text', content: { md: 'First block.' } },
+          { id: 'two', type: 'text', content: { md: 'Second block.' } },
+        ],
+      }
+      await recordCourseTeaching(state, COURSE, SESSION, started.attempt.id, twoBlocks)
+      const before = pathView(state, COURSE, SESSION).run!.attempts[0]!
+      const pathRevision = revision(state)
+      const saved = await saveStudyProgress(state, {
+        courseId: COURSE, sessionId: SESSION, attemptId: started.attempt.id,
+        progress: { blockId: 'two', stepIndex: 1, scrollRatio: 0.42, fullscreen: true, finished: false },
+      })
+      expect(saved.run?.attempts[0]?.study).toMatchObject({ blockId: 'two', stepIndex: 1, scrollRatio: 0.42, fullscreen: true, finished: false })
+      expect(saved.run?.attempts[0]?.status).toBe(before.status)
+      expect(saved.run?.attempts[0]?.evidence).toEqual(before.evidence)
+      expect(state.readPath(COURSE)?.revision).toBe(pathRevision)
+      await fixture.reopen()
+      expect(pathView(fixture.state, COURSE, SESSION).run?.attempts[0]?.study).toMatchObject({ blockId: 'two', stepIndex: 1, fullscreen: true })
+    })
+
+    it('rejects a stale attempt, an unknown block, and a mismatched step block', async () => {
+      await prepare(state)
+      const started = await beginCourseItem(state, beginInput(state))
+      await bindCourseNode(state, COURSE, SESSION, started.attempt.id, NODE)
+      await recordCourseTeaching(state, COURSE, SESSION, started.attempt.id, lesson())
+      await expect(saveStudyProgress(state, {
+        courseId: COURSE, sessionId: SESSION, attemptId: 'stale-attempt',
+        progress: { blockId: 'unit', stepIndex: 0, scrollRatio: 0, fullscreen: false, finished: false },
+      })).rejects.toThrow(/stale-attempt/)
+      await expect(saveStudyProgress(state, {
+        courseId: COURSE, sessionId: SESSION, attemptId: started.attempt.id,
+        progress: { blockId: 'missing', stepIndex: 0, scrollRatio: 0, fullscreen: false, finished: false },
+      })).rejects.toThrow(/no-such-block/)
+      const saved = await saveStudyProgress(state, {
+        courseId: COURSE, sessionId: SESSION, attemptId: started.attempt.id,
+        progress: { blockId: 'unit', stepIndex: 99, scrollRatio: 2, fullscreen: false, finished: true },
+      })
+      expect(saved.run?.attempts[0]?.study).toMatchObject({ blockId: 'unit', stepIndex: 0, scrollRatio: 1, finished: true })
     })
   })
 

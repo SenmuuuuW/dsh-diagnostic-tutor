@@ -20,7 +20,9 @@ secondary views.
   route is accepted, a three-step **Goal → Diagnosis → Course preview** flow.
 - **Study**: one stored lesson block at a time, with a single primary action.
   Quiz and flashcard answers still go through the runtime; nothing is graded or
-  advanced automatically.
+  advanced automatically. A saved position restores the block, step, scroll,
+  full-screen preference and completion state; restoring never re-sends an
+  answer, calls the tutor or advances the route.
 
 The content/input/review loop remains: typeset math, formula/code/quiz/flashcard/
 resource/comparison blocks, plus interactive slider, step-through and safe inline SVG
@@ -34,6 +36,12 @@ desktop runtime **DSH 0.2.2-rc.1**.
 
 `0.4.1` completes the reference UI with the **Library / welcome** state: compact
 welcome header, chat prompt, project count and dense project rows.
+
+`v0.5.0` (in development, not published) adds Study resume persistence and the
+external `universal-diagnostic-tutor` Skill's structured lesson-block contract.
+The contract is Skill-side: it decides block selection and teaching wording while
+this plugin only validates, stores, renders and records. A real-model E2E report
+is in [`docs/planning/V0.5.0-E2E.md`](docs/planning/V0.5.0-E2E.md).
 
 Install it with
 `dsh plugin --profile web add dsh-diagnostic-tutor@0.4.1` — no clone, no
@@ -632,6 +640,7 @@ The browser's core calls, at `/diagnostic-tutor/api` (the full route list is in
 | `POST /lesson {nodeId}` | the prototype lesson, built once and reused after that |
 | `GET /source?id=` | one stored source and its text, for a citation preview |
 | `POST /path/answer` | record a quiz/flashcard submission on the active attempt |
+| `POST /path/study` | save presentation position (block/step/scroll/fullscreen/finished); never teaching state |
 | `GET /plan/ics` | download open, dated Today plan items as an ICS calendar |
 | `GET /review` | due review cards (read-only) |
 | `POST /review/grade` | record a review rating and reschedule |

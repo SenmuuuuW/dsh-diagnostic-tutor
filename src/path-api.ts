@@ -2,11 +2,11 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { z } from 'zod'
 import type { ApiDeps } from './api.js'
-import { activeAttempt } from './path.js'
+import { activeAttempt, StudyProgressSchema } from './path.js'
 import { AnswerSubmissionSchema, recordBlockResponse } from './interactions.js'
 import {
   acceptCurriculum, beginCourseItem, pathView, pauseCourseItem, reservePathRequest, saveAssessment,
-  saveBrief, selectedProject, stampCoursePrompt, stampPathRequest,
+  saveBrief, saveStudyProgress, selectedProject, stampCoursePrompt, stampPathRequest,
 } from './path-runtime.js'
 
 const identity = z.object({ courseId: z.string().min(1), sessionId: z.string().min(1), expectedRevision: z.number().int().min(0) })
@@ -39,6 +39,16 @@ export async function handlePathApi(route: string, req: IncomingMessage, res: Se
     }
     if (req.method !== 'POST') { send(res, 405, { ok: false, error: { code: 'method-not-allowed' } }); return true }
     const raw = await body(req)
+    if (route === '/path/study') {
+      const input = z.object({
+        courseId: z.string().min(1), sessionId: z.string().min(1), attemptId: z.string().min(1),
+        progress: StudyProgressSchema.omit({ updatedAt: true }),
+      }).parse(raw)
+      const view = await saveStudyProgress(deps.state, input)
+      deps.onEvent?.('path.study', { courseId: input.courseId, sessionId: input.sessionId, attemptId: input.attemptId, stepIndex: input.progress.stepIndex })
+      send(res, 200, view)
+      return true
+    }
     const base = identity.parse(raw)
     const state = deps.state
     selectedProject(state, base.courseId, base.sessionId)

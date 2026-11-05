@@ -7,7 +7,7 @@
  * narrow and only renders the lesson itself.
  */
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { CourseAttempt, Curriculum, CurriculumItem } from '../path.js'
 import { LessonBody } from './blocks.jsx'
@@ -25,6 +25,7 @@ import { defaultClient, useLearning } from './use-learning.js'
 import { useCurrentSessionId } from './use-session.js'
 import { announcePathState, PATH_PAUSED_EVENT, PATH_RESUMED_EVENT } from './path-events.js'
 import type { OverviewResponse } from '../contract.js'
+import type { StudyProgress, StudyProgressInput } from '../path.js'
 
 /** The tab chip's text. */
 export function LearningTabTitle(): ReactNode {
@@ -114,12 +115,59 @@ export function LearningTab({
   const [busy, setBusy] = useState(false)
   const [studyMode, setStudyMode] = useState(false)
   const [studyFullscreen, setStudyFullscreen] = useState(false)
+  const [studyStart, setStudyStart] = useState<StudyProgress | undefined>(undefined)
+  const pendingStudyEntry = useRef<{ fullscreen: boolean } | null>(null)
+  const latestStudy = useRef<StudyProgress | undefined>(attempt?.study)
+  const pendingStudy = useRef<StudyProgressInput | null>(null)
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const savingStudy = useRef(false)
   const studyLayoutRef = useRef(onStudyLayout)
   studyLayoutRef.current = onStudyLayout
   const hadStudy = useRef(false)
   const [notice, setNotice] = useState('')
   const [pausedLocal, setPausedLocal] = useState(false)
   const operationId = () => typeof globalThis.crypto?.randomUUID === 'function' ? globalThis.crypto.randomUUID() : `tab-${Date.now().toString(36)}`
+  useEffect(() => {
+    const incoming = attempt?.study
+    if (incoming === undefined) return
+    const current = latestStudy.current
+    if (current === undefined || Date.parse(incoming.updatedAt) >= Date.parse(current.updatedAt)) latestStudy.current = incoming
+  }, [attempt?.study])
+
+  const flushStudy = useCallback(async (): Promise<void> => {
+    if (pendingStudy.current === null || savingStudy.current) return
+    if (pathClient?.saveStudy === undefined || view === null || courseId === undefined || activeSession === undefined || attempt === undefined) return
+    const progress = pendingStudy.current
+    pendingStudy.current = null
+    savingStudy.current = true
+    try {
+      await pathClient.saveStudy({ sessionId: activeSession, courseId, attemptId: attempt.id, progress })
+    } catch {
+      // Study position is presentation state; a failed save must not interrupt reading.
+    } finally {
+      savingStudy.current = false
+      if (pendingStudy.current !== null) void flushStudy()
+    }
+  }, [pathClient, view, courseId, activeSession, attempt])
+
+  const queueStudy = useCallback((progress: StudyProgressInput): void => {
+    pendingStudy.current = progress
+    latestStudy.current = { ...progress, updatedAt: new Date().toISOString() }
+    if (saveTimer.current !== null) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => { void flushStudy() }, 350)
+  }, [flushStudy])
+
+  const beginStudy = useCallback((fullscreenOverride?: boolean): void => {
+    pendingStudyEntry.current = null
+    const initial = latestStudy.current ?? attempt?.study
+    setStudyStart(initial)
+    setStudyMode(true)
+    setStudyFullscreen(fullscreenOverride ?? initial?.fullscreen ?? false)
+  }, [attempt?.study])
+
+  useEffect(() => () => {
+    if (saveTimer.current !== null) clearTimeout(saveTimer.current)
+  }, [])
   const nudge = async (kind: 'continue' | 'checkin' | 'teachback') => {
     if (pathClient === undefined || view === null || attempt === undefined || courseId === undefined || activeSession === undefined) return
     setBusy(true); setNotice('')
@@ -168,6 +216,11 @@ export function LearningTab({
     // asks for Study in the same click) or while it is already mounted.
     const enter = (intent: ReturnType<typeof consumeStudyIntent>) => {
       if (intent === null) return
+      // The tab can mount before the path view has loaded. Defer the entry
+      // until an attempt exists, otherwise the first Study render starts at 0.
+      if (attempt === undefined) { pendingStudyEntry.current = { fullscreen: intent.fullscreen }; return }
+      const initial = latestStudy.current ?? attempt.study
+      setStudyStart(initial)
       setStudyMode(true)
       setStudyFullscreen(intent.fullscreen)
     }
@@ -176,6 +229,15 @@ export function LearningTab({
     window.addEventListener(STUDY_INTENT_EVENT, openStudy)
     return () => window.removeEventListener(STUDY_INTENT_EVENT, openStudy)
   }, [])
+
+  useEffect(() => {
+    const intent = pendingStudyEntry.current
+    if (intent === null || attempt === undefined) return
+    pendingStudyEntry.current = null
+    setStudyStart(latestStudy.current ?? attempt.study)
+    setStudyMode(true)
+    setStudyFullscreen(intent.fullscreen)
+  }, [attempt])
 
   useEffect(() => {
     if (studyMode) studyLayoutRef.current?.(studyFullscreen ? 'full' : 'half')
@@ -225,10 +287,12 @@ export function LearningTab({
       code={codeFor(route, item)}
       blocks={activeUnit.lesson.blocks}
       interaction={blockInteraction}
-      onExit={() => { setStudyMode(false); setStudyFullscreen(false) }}
+      onExit={() => { void flushStudy(); setStudyMode(false); setStudyFullscreen(false) }}
       onOpenChat={onOpenChat}
       fullscreen={studyFullscreen}
       onToggleFullscreen={() => setStudyFullscreen((value) => !value)}
+      initialStudy={studyStart}
+      onProgress={queueStudy}
     />
   }
 
@@ -247,7 +311,7 @@ export function LearningTab({
       </div>
       <p className="dtx-tab-teachhint">{text.teacherLeads} {text.teacherLeadsHint}</p>
       <div className="dtx-tab-progress"><span>{text.sessionProgress(done, route.items.length)}</span><span>{text.routeLabel(route.version)}</span></div>
-      {activeUnit !== undefined && activeUnit.lesson.blocks.length > 0 && <div className="dtx-study-entry"><div><p className="dtx-study-entry-title">{text.studyFocus}</p><p className="dtx-study-entry-body">{text.studyEntryBody}</p></div><button type="button" className="dtx-primary" onClick={() => setStudyMode(true)}>{text.studyStart}<Icon name="arrow-right" size={15} /></button></div>}
+      {activeUnit !== undefined && activeUnit.lesson.blocks.length > 0 && <div className="dtx-study-entry"><div><p className="dtx-study-entry-title">{text.studyFocus}</p><p className="dtx-study-entry-body">{text.studyEntryBody}</p></div><button type="button" className="dtx-primary" onClick={() => beginStudy()}>{text.studyStart}<Icon name="arrow-right" size={15} /></button></div>}
       <div className="dtx-tab-actions">
         {paused
           ? <>

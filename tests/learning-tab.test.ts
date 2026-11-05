@@ -222,12 +222,53 @@ describe('active lesson', () => {
     expect(container.querySelector('.dtx-study')).not.toBeNull()
   })
 
+  it('restores the saved Study position when the path view arrives after the request', async () => {
+    const saved = { blockId: 'b2', stepIndex: 1, scrollRatio: 0.5, fullscreen: true, finished: false, updatedAt: NOW }
+    const view = pathView({ activeAttemptId: 'a1', attempts: [attempt({ study: saved })] })
+    const base = makeClient(view)
+    let release!: () => void
+    const gate = new Promise<void>((resolve) => { release = resolve })
+    const client = { ...base, pathClient: { ...base.pathClient!, get: async () => { await gate; return view } } }
+    requestStudy(true)
+    await act(async () => {
+      root.render(createElement(LearningTab, { client, sessionId: 's1', onOpenMapPage: () => {} }))
+      await Promise.resolve()
+    })
+    expect(container.querySelector('.dtx-study')).toBeNull()
+    await act(async () => { release(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve() })
+    expect(container.querySelector('.dtx-study')).not.toBeNull()
+    expect(container.textContent).toContain('Step 2 of 2')
+  })
+
   it('honours a Home/Course request to open focused study directly', async () => {
     requestStudy()
     await mount(pathView())
     expect(container.querySelector('.dtx-study')).not.toBeNull()
     expect(container.textContent).toContain('Focused study')
     expect(container.textContent).toContain('Step 1 of 2')
+  })
+
+  it('restores Study from the saved attempt and persists the new step', async () => {
+    const saved = {
+      blockId: 'b2', stepIndex: 1, scrollRatio: 0.2, fullscreen: true, finished: false, updatedAt: NOW,
+    }
+    const view = pathView({ activeAttemptId: 'a1', attempts: [attempt({ study: saved })] })
+    const base = makeClient(view)
+    const saveStudy = vi.fn(async () => view)
+    const onStudyLayout = vi.fn()
+    await act(async () => {
+      root.render(createElement(LearningTab, {
+        client: { ...base, pathClient: { ...base.pathClient!, saveStudy } },
+        sessionId: 's1', onOpenMapPage: () => {}, onStudyLayout,
+      }))
+      await Promise.resolve(); await Promise.resolve()
+    })
+    await act(async () => { button('Start focused study').click(); await Promise.resolve() })
+    expect(container.textContent).toContain('What is the shape')
+    expect(onStudyLayout).toHaveBeenCalledWith('full')
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 450)) })
+    expect(saveStudy).toHaveBeenCalled()
+    expect(saveStudy).toHaveBeenLastCalledWith(expect.objectContaining({ attemptId: 'a1', progress: expect.objectContaining({ blockId: 'b2', stepIndex: 1, fullscreen: true }) }))
   })
 
   it('folds a long diagram until the learner opens it', async () => {

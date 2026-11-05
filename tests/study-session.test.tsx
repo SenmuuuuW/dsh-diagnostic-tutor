@@ -119,6 +119,24 @@ describe('focused study', () => {
     expect(container.querySelector('.dtx-study-rail')).toBeNull()
   })
 
+  it('restores a persisted block id and reports finished progress', async () => {
+    const onProgress = vi.fn()
+    await act(async () => {
+      root.render(createElement(StudySession, {
+        title: 'Shapes', blocks, fullscreen: true,
+        initialStudy: { blockId: 'b2', stepIndex: 1, scrollRatio: 0.4, fullscreen: true, finished: false, updatedAt: '2026-01-01T00:00:00.000Z' },
+        onExit: vi.fn(), onProgress,
+      }))
+      await Promise.resolve()
+    })
+    expect(container.textContent).toContain('Which shape?')
+    expect(container.textContent).toContain('Step 2 of 2')
+    expect(onProgress).toHaveBeenLastCalledWith(expect.objectContaining({ blockId: 'b2', stepIndex: 1, scrollRatio: 0.4 }))
+    await act(async () => { button('Finish').click(); await Promise.resolve() })
+    expect(container.textContent).toContain('Lesson complete')
+    expect(onProgress).toHaveBeenLastCalledWith(expect.objectContaining({ blockId: 'b2', stepIndex: 1, finished: true }))
+  })
+
   it('translates the focused surface', async () => {
     setLang('zh')
     await mount()

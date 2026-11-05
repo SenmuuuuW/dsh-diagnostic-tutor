@@ -1,5 +1,5 @@
 /** Browser-only path transport. Keep every server-model import erased. */
-import type { GoalBrief, PathView } from '../path.js'
+import type { GoalBrief, PathView, StudyProgressInput } from '../path.js'
 
 const BASE = '/diagnostic-tutor/api/path'
 const API = '/diagnostic-tutor/api'
@@ -19,6 +19,12 @@ export interface AnswerBlockParams extends PathWriteParams {
   attemptId: string
   blockId: string
   answers: { questionId: string; value: string }[]
+}
+export interface SaveStudyParams {
+  courseId: string
+  sessionId: string
+  attemptId: string
+  progress: StudyProgressInput
 }
 export interface StartPathParams extends AcceptPathParams {
   itemId: string
@@ -80,6 +86,8 @@ export interface PathClient {
   pause?(params: PathWriteParams): Promise<PathView>
   /** Record one quiz/flashcard submission; never grades or changes state. */
   answer?(params: AnswerBlockParams): Promise<PathView>
+  /** Save focused-Study presentation position; never teaches, advances or grades. */
+  saveStudy?(params: SaveStudyParams): Promise<PathView>
   /** Read one stored source for a footnote preview. */
   source?(sourceId: string): Promise<{ ok: true; source: SourceView }>
   /** Add pasted text/markdown material; content is stored locally and deduped. */
@@ -282,6 +290,7 @@ export const defaultPathClient: PathClient = {
   start: (params) => request<PromptedPathView>('/start', params),
   pause: (params) => request('/pause', params),
   answer: (params) => request('/answer', params),
+  saveStudy: (params) => request('/study', params),
   source: requestSource,
   addSource: requestAddSource,
   listSources: requestSourceList,

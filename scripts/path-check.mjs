@@ -227,7 +227,16 @@ async function studyCase() {
   const entries = await cdp.evaluate(`document.querySelectorAll('.dtx-study-card [data-block-type]').length`)
   assert.equal(entries, 1, `${currentCase}: focused study must render exactly one block`)
   await screenshot(`${currentCase}-study`)
-  return { steps: '1 / 8', blocks: entries }
+  await click('Continue')
+  await waitFor(`document.body.innerText.includes('Step 2 of')`, 'focused study did not advance')
+  await delay(500)
+  await click('Exit study')
+  await waitFor(`!!document.querySelector('.dtx-study-entry')`, 'focused study did not exit')
+  await click('Start focused study')
+  await waitFor(`!!document.querySelector('.dtx-study')`, 'focused study did not reopen')
+  assert.ok((await cdp.evaluate(`document.body.innerText`)).includes('Step 2 of'), 'focused study did not resume at step 2')
+  await screenshot(`${currentCase}-study-resumed`)
+  return { steps: '1 / 8', blocks: entries, resumed: true }
 }
 
 async function languageCase() {

@@ -9,7 +9,7 @@ import {
   activeAttempt, AssessmentSchema, briefReady, CurriculumInputSchema, emptyPath,
   EvidenceRefSchema, GoalBriefSchema,
 } from './path.js'
-import type { Assessment, CourseAttempt, CourseRun, Curriculum, CurriculumInput, EvidenceRef, GoalBrief, LearningPath, PathView } from './path.js'
+import type { Assessment, CourseAttempt, CourseRun, Curriculum, CurriculumInput, EvidenceRef, GoalBrief, LearningPath, PathView, StudyProgressInput } from './path.js'
 
 export function pathView(state: UdState, courseId: string, sessionId?: string): PathView {
   if (!state.readCourse(courseId)) throw new Error('no-such-course')
@@ -172,6 +172,50 @@ export async function stampPathRequest(state: UdState, courseId: string, session
       return
     } catch (error) { if (!(error as Error).message.startsWith('revision-conflict')) throw error }
   }
+}
+
+/**
+ * Save the learner's focused-Study position.
+ *
+ * Presentation state only: this never calls the tutor, submits an answer,
+ * marks mastery, advances the course or rewrites evidence. It is optional and
+ * additive, so old v1 runs and attempts keep opening unchanged.
+ */
+export interface SaveStudyProgressInput {
+  courseId: string
+  sessionId: string
+  attemptId: string
+  progress: StudyProgressInput
+}
+
+export async function saveStudyProgress(state: UdState, input: SaveStudyProgressInput): Promise<PathView> {
+  const now = new Date().toISOString()
+  await state.mutateCourseRun(input.courseId, input.sessionId, (run) => {
+    selectedProject(state, input.courseId, input.sessionId)
+    const attempt = activeAttempt(run)
+    if (attempt === undefined || attempt.id !== input.attemptId || !['requested', 'working', 'interrupted'].includes(attempt.status)) {
+      throw new Error('stale-attempt: read udt_path_get; this attempt is no longer active')
+    }
+    const blocks = attempt.units.at(-1)?.lesson.blocks ?? []
+    if (blocks.length === 0) throw new Error('no-lesson: this lesson has no written blocks yet')
+    const blockIndex = blocks.findIndex((block) => block.id === input.progress.blockId)
+    if (blockIndex < 0) throw new Error('no-such-block: refresh the lesson before saving progress')
+    const stepIndex = Math.min(Math.max(input.progress.stepIndex, 0), blocks.length - 1)
+    const study = {
+      blockId: blocks[stepIndex]?.id ?? blocks[blockIndex]!.id,
+      stepIndex,
+      scrollRatio: Math.min(1, Math.max(0, input.progress.scrollRatio)),
+      fullscreen: input.progress.fullscreen,
+      finished: input.progress.finished,
+      updatedAt: now,
+    }
+    return {
+      ...run,
+      attempts: run.attempts.map((entry) => entry.id === attempt.id ? { ...entry, study } : entry),
+      updatedAt: now,
+    }
+  })
+  return pathView(state, input.courseId, input.sessionId)
 }
 
 export interface BeginItemInput { courseId: string; sessionId: string; expectedRevision: number; version: number; itemId: string; operationId: string; review?: boolean | undefined; resume?: boolean | undefined; checkin?: boolean | undefined; teachBack?: boolean | undefined }

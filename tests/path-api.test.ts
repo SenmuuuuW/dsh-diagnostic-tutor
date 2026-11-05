@@ -207,6 +207,39 @@ describe('guarded path HTTP API', () => {
     expect(prompts.at(-1)?.text).toContain('Pause new teaching')
   })
 
+  it('saves Study presentation position over HTTP without touching the path revision', async () => {
+    await prepareAccepted()
+    const revisionBefore = state.readPath(COURSE)!.revision
+    const started = await call('/path/start', 'POST', { ...identity(revisionBefore), version: 1, itemId: 'vectors', operationId: 'study-start' })
+    expect(started.status).toBe(200)
+    const attemptId = started.json.run.activeAttemptId as string
+    const lesson = {
+      id: 'study-lesson', courseId: COURSE, nodeId: `${COURSE}:goal`, title: 'Study', origin: 'tutor' as const,
+      createdAt: NOW, updatedAt: NOW,
+      blocks: [
+        { id: 'one', type: 'text' as const, content: { md: 'First.' } },
+        { id: 'two', type: 'text' as const, content: { md: 'Second.' } },
+      ],
+    }
+    await state.mutateCourseRun(COURSE, SESSION, (run) => ({
+      ...run,
+      attempts: run.attempts.map((entry) => entry.id === attemptId ? { ...entry, status: 'working' as const, units: [{ id: 'unit', writtenAt: NOW, lesson }] } : entry),
+    }))
+    const saved = await call('/path/study', 'POST', {
+      courseId: COURSE, sessionId: SESSION, attemptId,
+      progress: { blockId: 'two', stepIndex: 1, scrollRatio: 0.3, fullscreen: true, finished: false },
+    })
+    expect(saved.status).toBe(200)
+    expect(saved.json.run.attempts[0].study).toMatchObject({ blockId: 'two', stepIndex: 1, scrollRatio: 0.3, fullscreen: true, finished: false })
+    expect(state.readPath(COURSE)!.revision).toBe(revisionBefore)
+    const bad = await call('/path/study', 'POST', {
+      courseId: COURSE, sessionId: SESSION, attemptId,
+      progress: { blockId: 'missing', stepIndex: 0, scrollRatio: 0, fullscreen: false, finished: false },
+    })
+    expect(bad.status).toBe(400)
+    expect(bad.json.error.code).toBe('no-such-block')
+  })
+
   it('rejects unsupported methods, routes, invalid bodies, unselected writes, and untrusted origins', async () => {
     expect((await call('/path', 'PUT')).json.error.code).toBe('method-not-allowed')
     expect((await call('/path/brief', 'GET')).status).toBe(405)

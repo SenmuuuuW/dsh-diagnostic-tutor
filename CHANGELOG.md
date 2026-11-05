@@ -1,3 +1,37 @@
+## [Unreleased] — v0.5.0 development
+
+### Added — Study persistence / resume
+
+- `CourseAttempt.study` is optional presentation state: block id, step index,
+  scroll ratio, full-screen preference, finished flag and update time.
+- `POST /path/study` plus `saveStudyProgress` validate the active attempt and
+  latest lesson block, and update only that attempt's `study` field. They never
+  touch the tutor, answers, evidence, route status or path revision.
+- Focused Study restores the saved position after a tab remount or browser
+  reload. Entry can arrive before the path view; it is deferred until the
+  attempt exists. Save is debounced; a restore never re-sends an answer.
+- Old `udt` v1 data remains readable; `study` is additive and optional.
+
+### Added — real Skill lesson-block contract
+
+- The external `universal-diagnostic-tutor` Skill gets
+  `references/lesson_block_contract.md`: block selection, all 13 content
+  schemas and limits, sourceRefs, safe slider/SVG rules, check-vs-quiz and
+  math/physics/CS examples.
+- SKILL.md and `learning_runtime_contract.md` route to it only when a structured
+  lesson surface exists.
+- A real-model E2E generated nine blocks including slider, step-through, figure,
+  quiz and flashcard; see `docs/planning/V0.5.0-E2E.md`.
+
+### Verification
+
+- `pnpm typecheck` pass
+- `pnpm test`: **683 tests passed (60 files)**
+- `pnpm build` pass
+- `scripts/path-check.mjs`: **31 browser cases passed**
+- Real DSH model E2E: full Goal → Diagnosis → Route → Accept → Lesson → Study →
+  quiz/flashcard → Review → Insights loop passed.
+
 ## [0.4.1] — 2026-11-04
 
 A UI patch on top of 0.4.0.

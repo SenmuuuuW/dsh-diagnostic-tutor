@@ -199,6 +199,18 @@
         changed(state, at)
         return view(params.courseId, params.sessionId, { prompted: true })
       },
+      async saveStudy(params) {
+        const state = stateFor(params.courseId)
+        const run = runFor(state, params.sessionId)
+        const attempt = run.attempts.find((entry) => entry.id === params.attemptId)
+        if (!attempt) throw error('This preview lesson is no longer active.', 'stale-attempt', 409)
+        const blocks = attempt.units.at(-1)?.lesson.blocks ?? []
+        if (!blocks.some((block) => block.id === params.progress.blockId)) throw error('This preview lesson changed.', 'no-such-block')
+        attempt.study = { ...params.progress, updatedAt: tick() }
+        run.revision += 1
+        run.updatedAt = attempt.study.updatedAt
+        return view(params.courseId, params.sessionId)
+      },
       async listSources() {
         return { ok: true, count: sources.length, bytes: sources.reduce((sum, source) => sum + source.bytes, 0), sources: sources.map(({ content: _content, ...source }) => source) }
       },

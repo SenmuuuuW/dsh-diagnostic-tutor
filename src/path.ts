@@ -134,6 +134,18 @@ export const BlockResponseSchema = z.object({
 }).strict()
 export type BlockResponse = z.infer<typeof BlockResponseSchema>
 
+/** Where the learner left the focused Study surface. Presentation state only. */
+export const StudyProgressSchema = z.object({
+  blockId: z.string().min(1).max(200),
+  stepIndex: z.number().int().min(0).max(1000),
+  scrollRatio: z.number().min(0).max(1),
+  fullscreen: z.boolean(),
+  finished: z.boolean(),
+  updatedAt: z.string(),
+}).strict()
+export type StudyProgress = z.infer<typeof StudyProgressSchema>
+export type StudyProgressInput = Omit<StudyProgress, 'updatedAt'>
+
 export const CourseAttemptSchema = z.object({
   id: short, operationId: short, operations: z.array(short).max(100), dispatchId: short.nullable(), version: z.number().int().min(1), itemId: short,
   status: z.enum(['requested', 'working', 'completed', 'interrupted']),
@@ -145,6 +157,8 @@ export const CourseAttemptSchema = z.object({
   units: z.array(z.object({ id: short, writtenAt: z.string(), lesson: LessonSchema })).max(160),
   /** Interactive block submissions. Optional so old v1 attempts keep opening. */
   responses: z.array(BlockResponseSchema).max(50).optional(),
+  /** Last focused-Study position. Optional and additive; old v1 attempts keep opening. */
+  study: StudyProgressSchema.optional(),
 })
 export type CourseAttempt = z.infer<typeof CourseAttemptSchema>
 export const CourseRunSchema = z.object({
