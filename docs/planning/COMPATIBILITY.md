@@ -1,6 +1,6 @@
 # DSH 兼容矩阵验证
 
-> 验证对象：`dsh-diagnostic-tutor@0.2.0`（2026-10-30 追加 DSH `0.2.1-rc.5` 桌面 runtime 验证）（Phase 1–6 代码；完整会话验证在版本号 bump 前完成，代码等价）。
+> 验证对象：`dsh-diagnostic-tutor@0.3.0`（2026-11-04 追加 DSH `0.2.2-rc.1` 桌面 runtime 验证）（Phase 1–6 代码；完整会话验证在版本号 bump 前完成，代码等价）。
 > 功能代码：Phase 6（验证时 tip `4bf7574`；rebase 后等价提交 `52fb1d4`）。
 > 验证日期：2026-10-29。宿主：macOS 15.0，Node `v24.16.0`。
 > 插件通过本地路径 link 或本地 tarball 进临时 profile；没有 push、合并或改 version。
@@ -34,7 +34,8 @@ dsh --profile compat --no-open --port <port>
 | `0.2.1-rc.2` | `@deepseek-ai/dsh@0.2.1-rc.2` | 200 | 200 | 200 | 无异常 | 通过 |
 | `0.2.0-rc.2` | `@deepseek-ai/dsh@0.2.0-rc.2` | 200 | 200 | 200 | 无异常 | 通过 |
 | `0.1.7-alpha.2` | `@deepseek-ai/dsh@0.1.7-alpha.2` | 200 | 200 | 200 | 无异常 | 通过 |
-| `0.2.1-rc.5` | `@deepseek-ai/dsh@0.2.1-rc.5`（当前桌面 runtime） | 200 | 200 | 200 | 无异常；插件 client.js 已加载 | 通过 |
+| `0.2.2-rc.1` | `@deepseek-ai/dsh@0.2.2-rc.1`（当前桌面 runtime） | 200 | 200 | 200 | 无异常；Learning map / Learn 已加载 | 通过 |
+| `0.2.1-rc.5` | `@deepseek-ai/dsh@0.2.1-rc.5` | 200 | 200 | 200 | 无异常；插件 client.js 已加载 | 通过 |
 
 诊断结果一致：
 
@@ -86,6 +87,18 @@ tarball 内容确认包含 `lib/index.js`、`lib/client.js`、类型声明、`LI
 - 将 devDependencies 临时替换为 rc5 后，`tsc --noEmit` 通过，**639 tests passed**；
 - rc5 web + 真实 `udt.json` 副本：Learning map、知识与证据、复习、洞察四个 tab 正常，插件 `client.js` 已加载，无 Runtime exception / console error；
 - 没有发现需要改插件源码的 API 破坏；peer ranges 已覆盖 rc5，因此不改 release version。
+
+## 2.4 DSH 0.2.2-rc.1（当前桌面 runtime）
+
+2026-11-04 对桌面版 `0.2.2-rc.1` 追加验证：
+
+- devDependencies 全部升到 `@deepseek-ai/* 0.2.2-rc.1`，cordis `4.1.0`，schemastery `3.19.0`；
+- 隔离 `DSH_HOME=/tmp/udt-compat-022`，通过 `npx @deepseek-ai/dsh@0.2.2-rc.1 plugin --profile compat add <repo>` 安装；
+- `/diagnostic-tutor/api/overview`、`/diagnostics`、`/plan/ics`、`/review` 返回 200；`/diagnostics` 报告插件 `0.3.0`、domain `udt` v1、`issues: []`；
+- 真实浏览器打开 Learning map、点击 Learn：显示插件空状态，无 `Runtime.exceptionThrown`、无 console error；
+- `tsc --noEmit`、677 tests、build、31 browser cases 全部通过；
+- 唯一测试适配：`AgentRegistry` 在 0.2.2 新增 `sessionProjections` inject，测试 harness 提供最小 projection handle；生产插件通过可选 `ctx.get('agents')` 使用，不需要改源码；
+- `pnpm-workspace.yaml` 的 `minimumReleaseAgeExclude` 改成只排除 `@deepseek-ai/*`，避免每次 RC 发布都要手写一长串包名。
 
 ## 3. 本次没有覆盖
 

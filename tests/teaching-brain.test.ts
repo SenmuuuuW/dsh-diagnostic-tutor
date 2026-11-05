@@ -19,6 +19,12 @@ describe('live Agent teaching-brain availability', () => {
 
   beforeEach(async () => {
     harness = await createHarness()
+    // DSH 0.2.2's AgentRegistry injects the host's session-projection service.
+    // The production shell provides it; this focused harness only needs enough
+    // of the handle for AgentRegistry to mount and enter a test Agent.
+    ;(harness.ctx as unknown as { provide: (name: string, value: unknown) => () => void }).provide('sessionProjections', {
+      register: async () => ({ stateOf: () => ({}) }),
+    })
     const agentFiber = await harness.ctx.plugin(AgentRegistry)
     agents = harness.ctx.get('agents')!
     cleanup.push(() => agentFiber.dispose())
