@@ -28,6 +28,7 @@
 import { z } from 'zod'
 
 import { KNOWN_BLOCK_TYPE_NAMES } from './block-types.js'
+import { isValidExpression, MAX_EXPRESSION_CHARS } from './expression.js'
 
 import type { CourseRecord, NodeRecord } from './state.js'
 
@@ -79,6 +80,8 @@ export const MAX_COMPARISON_COLUMNS = 8
 export const MAX_COMPARISON_ROWS = 20
 export const MAX_COMPARISON_CELL_CHARS = 500
 export const MAX_LESSON_BYTES = 262_144
+export const MAX_WALK_FRAMES = 12
+export const MAX_WALK_FRAME_CHARS = 2000
 
 /* -------------------------------------------------------------------------- */
 /* Blocks                                                                     */
@@ -247,6 +250,44 @@ export const ComparisonBlockSchema = z.object({
   }),
 })
 
+/** A safe, model-authored parameter exploration with a live graph. */
+export const SliderBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('slider'),
+  content: z.object({
+    title: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
+    prompt: z.string().min(1).max(MAX_PROMPT_CHARS).optional(),
+    /** A single-variable expression in x; evaluated by the safe client parser. */
+    expression: z.string().min(1).max(MAX_EXPRESSION_CHARS).refine(isValidExpression, 'Use only x, numbers, + - * / ^, parentheses and the supported functions'),
+    min: z.number().finite().gte(-1_000_000).lte(1_000_000),
+    max: z.number().finite().gte(-1_000_000).lte(1_000_000),
+    step: z.number().finite().positive().lte(1_000_000),
+    initial: z.number().finite().gte(-1_000_000).lte(1_000_000),
+    /** Optional suffix such as a unit or variable name. */
+    unit: z.string().min(1).max(40).optional(),
+    caption: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
+  }).superRefine((slider, ctx) => {
+    if (slider.max <= slider.min) ctx.addIssue({ code: 'custom', message: 'max must be greater than min' })
+    if (slider.initial < slider.min || slider.initial > slider.max) ctx.addIssue({ code: 'custom', message: 'initial must be within min and max' })
+  }),
+})
+
+/** A small, explicit sequence of frames; the learner controls the pace. */
+export const StepThroughBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('step-through'),
+  content: z.object({
+    title: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
+    prompt: z.string().min(1).max(MAX_PROMPT_CHARS).optional(),
+    frames: z.array(z.object({
+      title: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
+      body: z.string().min(1).max(MAX_WALK_FRAME_CHARS),
+      math: z.array(MathFragmentSchema).max(MAX_MATH_FRAGMENTS).optional(),
+    })).min(2).max(MAX_WALK_FRAMES),
+    caption: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
+  }),
+})
+
 const KNOWN_BLOCK_SCHEMAS = [
   TextBlockSchema,
   ExampleBlockSchema,
@@ -258,6 +299,8 @@ const KNOWN_BLOCK_SCHEMAS = [
   FlashcardBlockSchema,
   ResourceBlockSchema,
   ComparisonBlockSchema,
+  SliderBlockSchema,
+  StepThroughBlockSchema,
 ] as const
 
 /** Every block type this version understands. */
@@ -274,6 +317,8 @@ export const KnownBlockSchema = z.discriminatedUnion('type', [
   FlashcardBlockSchema,
   ResourceBlockSchema,
   ComparisonBlockSchema,
+  SliderBlockSchema,
+  StepThroughBlockSchema,
 ])
 
 const KNOWN_BLOCK_TYPES = new Set<string>(KNOWN_BLOCK_TYPE_NAMES)
@@ -307,6 +352,8 @@ export type QuizBlock = z.infer<typeof QuizBlockSchema>
 export type FlashcardBlock = z.infer<typeof FlashcardBlockSchema>
 export type ResourceBlock = z.infer<typeof ResourceBlockSchema>
 export type ComparisonBlock = z.infer<typeof ComparisonBlockSchema>
+export type SliderBlock = z.infer<typeof SliderBlockSchema>
+export type StepThroughBlock = z.infer<typeof StepThroughBlockSchema>
 export type KnownBlock = z.infer<typeof KnownBlockSchema>
 export type UnknownBlock = z.infer<typeof UnknownBlockSchema>
 /** A block this build can render. Kept as the default `Block` name for callers. */

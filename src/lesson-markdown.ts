@@ -66,6 +66,24 @@ export function blocksMarkdown(blocks: readonly StoredBlock[]): string {
       case 'comparison':
         parts.push(table(block.content.columns, block.content.rows))
         break
+      case 'slider':
+        parts.push([
+          `### ${block.content.title ?? 'Explore'}`,
+          block.content.prompt ?? '',
+          `f(x) = ${block.content.expression}`,
+          `Drag x from ${block.content.min} to ${block.content.max} (step ${block.content.step}).`,
+        ].filter(Boolean).join('\n\n'))
+        break
+      case 'step-through':
+        parts.push([
+          `### ${block.content.title ?? 'Step through'}`,
+          block.content.prompt ?? '',
+          ...block.content.frames.flatMap((frame, index) => [
+            `**${index + 1}. ${frame.title ?? 'Step'}**`,
+            frame.body,
+          ]),
+        ].filter(Boolean).join('\n\n'))
+        break
     }
     if (block.sourceRefs !== undefined) parts.push(`Sources: ${block.sourceRefs.map((ref) => ref.locator).join(', ')}`)
   }

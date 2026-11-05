@@ -23,7 +23,7 @@ secondary views.
   advanced automatically.
 
 The content/input/review loop remains: typeset math, formula/code/quiz/flashcard/
-resource/comparison blocks, sources with citations, Today/ICS, spaced review with
+resource/comparison blocks, plus interactive slider and step-through visuals, sources with citations, Today/ICS, spaced review with
 undo, and read-only Insights.
 
 Install it with
@@ -596,6 +596,8 @@ keyed by `type`:
 | `flashcard` | `front`, `back`, `tags?`; self-report is recorded, not scheduled as mastery |
 | `resource` | `title`, optional `sourceId`/`locator`/`url`/`note` |
 | `comparison` | `columns[]`, `rows[][]`, `caption?` |
+| `slider` | safe expression in `x`, `min`/`max`/`step`/`initial`, optional `title`, `prompt`, `unit`, `caption` |
+| `step-through` | `frames[{title?, body}]`; learner-paced sequence with previous/next |
 
 Blocks may also carry `sourceRefs: [{sourceId, locator}]`; every reference is
 checked against the `sources` table at write time. The stored schema accepts an

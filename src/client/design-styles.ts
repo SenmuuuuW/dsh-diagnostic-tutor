@@ -891,4 +891,28 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
   .dtx-study-focus .dtx-study-top { padding:12px 14px 0; }
   .dtx-study-focus .dtx-study-foot { padding:10px 14px; }
 }
+
+/* Interactive blocks: slider + step-through */
+.dt-block-slider, .dt-block-steps { padding:14px; border:1px solid var(--dt-border,#e5e7eb); border-radius:10px; background:#fbfcff; }
+.dt-slider-prompt { margin:8px 0 0; color:var(--dt-muted,#6b7280); font-size:11.5px; line-height:1.6; }
+.dt-slider-head { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; }
+.dt-slider-head code { color:var(--dt-muted,#6b7280); font-size:10.5px; }
+.dt-slider-head output { color:var(--dt-brand-ink,#1d4ed8); font-size:11px; font-weight:600; white-space:nowrap; }
+.dt-slider-range { width:100%; margin:12px 0 2px; accent-color:var(--dt-brand,#2563eb); }
+.dt-slider-chart { display:block; width:100%; height:auto; margin:5px 0 2px; }
+.dt-slider-chart text { font-family:var(--sans); font-size:8px; fill:#9aa2b0; }
+.dt-steps-frame { margin-top:11px; padding:13px 14px; border:1px solid #e8ebf2; border-radius:8px; background:#fff; min-height:120px; }
+.dt-steps-count { margin:0 0 6px; color:var(--dt-muted,#6b7280); font-size:9.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+.dt-steps-title { margin:0 0 7px; font-family:var(--sans); font-size:14px; font-weight:650; }
+.dt-steps-controls { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; }
+.dt-steps-controls button { min-height:28px; padding:0 9px; border:1px solid #d7dbe2; border-radius:7px; background:#fff; color:#374151; font-size:10px !important; }
+.dt-steps-controls button:hover:not(:disabled) { border-color:#b8c2d2; background:#f8fafc; }
+.dt-steps-controls button:disabled { opacity:.45; cursor:default; }
+.dt-steps-dots { display:flex; gap:4px; align-items:center; }
+.dt-steps-dots i { display:block; width:16px; height:3px; border-radius:3px; background:#dfe3ec; }
+.dt-steps-dots i[data-on] { background:var(--dt-brand,#2563eb); }
+@media (max-width:520px) {
+  .dt-slider-head { align-items:flex-start; flex-direction:column; gap:4px; }
+  .dt-slider-head output { white-space:normal; }
+}
 `

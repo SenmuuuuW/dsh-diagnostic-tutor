@@ -19,6 +19,8 @@ export const KNOWN_BLOCK_TYPE_NAMES = [
   'flashcard',
   'resource',
   'comparison',
+  'slider',
+  'step-through',
 ] as const
 
 const KNOWN = new Set<string>(KNOWN_BLOCK_TYPE_NAMES)

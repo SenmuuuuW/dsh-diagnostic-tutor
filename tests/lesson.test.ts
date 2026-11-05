@@ -62,9 +62,9 @@ function map(): NodeRecord[] {
 }
 
 describe('block schema', () => {
-  it('supports the ten known block types', () => {
-    expect([...SUPPORTED_BLOCK_TYPES].sort()).toEqual(['check', 'code', 'comparison', 'diagram', 'example', 'flashcard', 'formula', 'quiz', 'resource', 'text'])
-    expect(BLOCK_SCHEMAS).toHaveLength(10)
+  it('supports the twelve known block types', () => {
+    expect([...SUPPORTED_BLOCK_TYPES].sort()).toEqual(['check', 'code', 'comparison', 'diagram', 'example', 'flashcard', 'formula', 'quiz', 'resource', 'slider', 'step-through', 'text'])
+    expect(BLOCK_SCHEMAS).toHaveLength(12)
   })
 
   it('accepts a well-formed block of each type', () => {
@@ -79,6 +79,8 @@ describe('block schema', () => {
       { id: 'h', type: 'flashcard', content: { front: 'front', back: 'back' } },
       { id: 'i', type: 'resource', content: { title: 'Reading' } },
       { id: 'j', type: 'comparison', content: { columns: ['a', 'b'], rows: [['1', '2']] } },
+      { id: 'k', type: 'slider', content: { expression: '(x - 3)^2', min: 0, max: 6, step: 0.1, initial: 3 } },
+      { id: 'l', type: 'step-through', content: { frames: [{ body: 'first' }, { body: 'second' }] } },
     ]
     for (const sample of samples) {
       expect(BlockSchema.safeParse(sample).success).toBe(true)
@@ -99,6 +101,19 @@ describe('block schema', () => {
     expect(BlockSchema.safeParse({ id: 'x', type: 'formula', content: { latex: 'x' } }).success).toBe(false)
     expect(BlockSchema.safeParse({ id: 'q', type: 'quiz', content: { questions: [{ id: 'q1', kind: 'mcq', prompt: 'Which?' }] } }).success).toBe(false)
     expect(BlockSchema.safeParse({ id: 'c', type: 'comparison', content: { columns: ['a', 'b'], rows: [['1']] } }).success).toBe(false)
+  })
+
+  it('rejects invalid slider ranges and unsafe expressions', () => {
+    const base = { id: 's', type: 'slider' as const, content: { expression: 'x^2', min: 0, max: 10, step: 0.1, initial: 1 } }
+    expect(BlockSchema.safeParse(base).success).toBe(true)
+    expect(BlockSchema.safeParse({ ...base, content: { ...base.content, expression: 'alert(1)' } }).success).toBe(false)
+    expect(BlockSchema.safeParse({ ...base, content: { ...base.content, max: 0 } }).success).toBe(false)
+    expect(BlockSchema.safeParse({ ...base, content: { ...base.content, initial: 11 } }).success).toBe(false)
+  })
+
+  it('requires at least two step-through frames', () => {
+    expect(BlockSchema.safeParse({ id: 'w', type: 'step-through', content: { frames: [{ body: 'one' }] } }).success).toBe(false)
+    expect(BlockSchema.safeParse({ id: 'w', type: 'step-through', content: { frames: [{ body: 'one' }, { body: 'two' }] } }).success).toBe(true)
   })
 
   it('rejects a malformed payload for a known type', () => {

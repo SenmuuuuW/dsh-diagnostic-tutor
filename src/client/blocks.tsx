@@ -14,9 +14,10 @@
  * State is always a word from the skill's vocabulary plus a coloured mark.
  */
 
-import { createElement, useState, type ReactNode } from 'react'
+import { createElement, useMemo, useState, type ReactNode } from 'react'
 
 import { MathMLView } from './mathml.jsx'
+import { compileExpression } from '../expression.js'
 
 import type { Block, HandoffView, KnownBlock, NextStepView, StoredBlock } from '../contract.js'
 import { isKnownBlock } from '../block-types.js'
@@ -483,6 +484,95 @@ function CodeBlockView({ block }: BlockRenderProps): ReactNode {
   )
 }
 
+function chartNumber(value: number): string {
+  if (!Number.isFinite(value)) return '—'
+  return Number.isInteger(value) ? String(value) : value.toFixed(2)
+}
+
+function SliderBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  if (block.type !== 'slider') return null
+  const [value, setValue] = useState(block.content.initial)
+  const compiled = useMemo(() => compileExpression(block.content.expression), [block.content.expression])
+  const geometry = useMemo(() => {
+    const width = 300
+    const height = 138
+    const left = 34
+    const top = 10
+    const samples: { x: number; y: number | null }[] = []
+    let low = Infinity
+    let high = -Infinity
+    for (let index = 0; index <= 120; index += 1) {
+      const x = block.content.min + (block.content.max - block.content.min) * (index / 120)
+      const y = compiled?.(x) ?? null
+      if (y !== null && Number.isFinite(y)) { low = Math.min(low, y); high = Math.max(high, y) }
+      samples.push({ x, y })
+    }
+    if (!Number.isFinite(low) || !Number.isFinite(high)) return null
+    if (high === low) { high += 1; low -= 1 }
+    const padding = (high - low) * 0.12
+    const yMin = low - padding
+    const yMax = high + padding
+    const xOf = (x: number) => left + ((x - block.content.min) / (block.content.max - block.content.min)) * width
+    const yOf = (y: number) => top + ((yMax - y) / (yMax - yMin)) * height
+    let path = ''
+    let pen = false
+    for (const sample of samples) {
+      if (sample.y === null || !Number.isFinite(sample.y)) { pen = false; continue }
+      path += `${pen ? 'L' : 'M'}${xOf(sample.x).toFixed(1)},${yOf(sample.y).toFixed(1)} `
+      pen = true
+    }
+    return { width, height, left, top, path, xOf, yOf, yMin, yMax, low, high }
+  }, [block.content.min, block.content.max, compiled])
+  const current = compiled?.(value) ?? null
+  const point = geometry !== null && current !== null && Number.isFinite(current) ? { x: geometry.xOf(value), y: geometry.yOf(current) } : null
+  const displayValue = block.content.unit === undefined ? chartNumber(value) : `${chartNumber(value)} ${block.content.unit}`
+  return (
+    <div className="dt-block dt-block-slider">
+      <BlockLabel icon={<span aria-hidden="true">↔</span>}>{text.slider}{block.content.title === undefined ? '' : ` · ${block.content.title}`}</BlockLabel>
+      {block.content.prompt !== undefined && <p className="dt-slider-prompt">{inline(block.content.prompt)}</p>}
+      <div className="dt-slider-head"><code>f(x) = {block.content.expression}</code><output htmlFor={`slider-${block.id}`}>x = {displayValue} · f(x) = {chartNumber(current ?? NaN)}</output></div>
+      <input id={`slider-${block.id}`} className="dt-slider-range" type="range" min={block.content.min} max={block.content.max} step={block.content.step} value={value} aria-label={block.content.prompt ?? text.sliderPrompt} aria-valuetext={`x = ${displayValue}`} onChange={(event) => setValue(Number(event.target.value))} />
+      {geometry === null || current === null ? <p className="dt-caption">{text.sliderPrompt}</p> : (
+        <svg className="dt-slider-chart" viewBox="0 0 360 170" role="img" aria-label={`Graph of ${block.content.expression}`}>
+          <path d={geometry.path} fill="none" stroke="#2563eb" strokeWidth="2" />
+          <line x1={geometry.left} y1={geometry.top + geometry.height} x2={geometry.left + geometry.width} y2={geometry.top + geometry.height} stroke="#d7dbe2" />
+          {geometry.yMin <= 0 && geometry.yMax >= 0 && <line x1={geometry.left} y1={geometry.yOf(0)} x2={geometry.left + geometry.width} y2={geometry.yOf(0)} stroke="#e5e7eb" strokeDasharray="3 3" />}
+          {point !== null && <><line x1={point.x} y1={point.y} x2={point.x} y2={geometry.top + geometry.height} stroke="#c7d2fe" strokeDasharray="3 3" /><circle cx={point.x} cy={point.y} r="4.5" fill="#fff" stroke="#2563eb" strokeWidth="2" /></>}
+          <text x={geometry.left} y="164">{chartNumber(block.content.min)}</text>
+          <text x={geometry.left + geometry.width} y="164" textAnchor="end">{chartNumber(block.content.max)}</text>
+        </svg>
+      )}
+      <p className="dt-caption">{block.content.caption ?? text.sliderPrompt}</p>
+    </div>
+  )
+}
+
+function StepThroughBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  const [index, setIndex] = useState(0)
+  if (block.type !== 'step-through') return null
+  const frames = block.content.frames
+  const frame = frames[index] ?? frames[0]!
+  return (
+    <div className="dt-block dt-block-steps">
+      <BlockLabel icon={<span aria-hidden="true">→</span>}>{text.stepThrough}{block.content.title === undefined ? '' : ` · ${block.content.title}`}</BlockLabel>
+      {block.content.prompt !== undefined && <p className="dt-slider-prompt">{inline(block.content.prompt)}</p>}
+      <div className="dt-steps-frame" aria-live="polite">
+        <p className="dt-steps-count">{index + 1} / {frames.length}</p>
+        {frame.title !== undefined && <h3 className="dt-steps-title">{inline(frame.title)}</h3>}
+        <Paragraphs md={frame.body} math={frame.math} />
+      </div>
+      <div className="dt-steps-controls">
+        <button type="button" className="dt-secondary" disabled={index === 0} onClick={() => setIndex((value) => Math.max(0, value - 1))}>{text.previousFrame}</button>
+        <span className="dt-steps-dots" aria-hidden="true">{frames.map((entry, entryIndex) => <i key={entryIndex} data-on={entryIndex <= index ? 'true' : undefined} />)}</span>
+        <button type="button" className="dt-secondary" disabled={index === frames.length - 1} onClick={() => setIndex((value) => Math.min(frames.length - 1, value + 1))}>{text.nextFrame}</button>
+      </div>
+      {block.content.caption !== undefined && <p className="dt-caption">{block.content.caption}</p>}
+    </div>
+  )
+}
+
 function QuizBlockView({ block, interaction }: BlockRenderProps): ReactNode {
   const text = useLessonText()
   const [values, setValues] = useState<Record<string, string>>({})
@@ -638,6 +728,8 @@ export const BLOCK_RENDERERS: Record<string, Renderer> = {
   flashcard: FlashcardBlockView,
   resource: ResourceBlockView,
   comparison: ComparisonBlockView,
+  slider: SliderBlockView,
+  'step-through': StepThroughBlockView,
 }
 
 /** Shown for a block type this build does not know. Never throws. */
