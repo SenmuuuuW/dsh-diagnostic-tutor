@@ -1,6 +1,6 @@
 # 0.4.0 发布清单与说明
 
-> 状态：**发布中**（2026-11-04）。`package.json` 为 `0.4.0`。
+> 状态：**已发布**（2026-11-04）。`package.json` 为 `0.4.0`。
 > 代码基线：`main`（资料输入、参考 UI、Study 布局、交互 block、DSH 0.2.2-rc.1 适配）。
 
 ## 1. 版本
@@ -48,12 +48,12 @@ scripts/path-check.mjs          31 browser cases passed
 - [x] 完整测试 / build / browser
 - [x] `npm pack`，记录 SHA-256
 - [x] 用 tarball 在隔离 DSH `0.2.2-rc.1` profile 验证 host 与 client
-- [ ] 合并 release PR
-- [ ] annotated tag `v0.4.0`
-- [ ] `npm publish --access public`，确认 `latest = 0.4.0`
-- [ ] 发布后 npm 冷安装验证
-- [ ] GitHub Release 与 README 更新上线
-- [ ] 记录 tarball / shasum / tag / release 结果
+- [x] 合并 release PR（#59，`bd16b2d`）
+- [x] annotated tag `v0.4.0` → `bd16b2d`
+- [x] `npm publish --access public`，`latest = 0.4.0`
+- [x] 发布后 npm 冷安装验证
+- [x] GitHub Release 与 README 更新上线
+- [x] 记录 tarball / shasum / tag / release 结果
 
 ## 4. 已知限制
 
@@ -85,11 +85,16 @@ scripts/path-check.mjs          31 browser cases passed
 - 真实浏览器 Learning map 加载，无 Runtime exception
 - 包内 `package.json` 版本 `0.4.0`
 
-### 待发布后填写
+### 发布结果
 
-- release PR 合并 commit
-- git tag
-- npm publish 结果
-- GitHub Release URL
-- 冷安装结果
-
+- release PR：#59，merge commit `bd16b2d`
+- annotated tag：`v0.4.0` → `bd16b2d`
+- npm `latest = 0.4.0`
+- npm tarball：https://registry.npmjs.org/dsh-diagnostic-tutor/-/dsh-diagnostic-tutor-0.4.0.tgz
+- npm shasum：`b8e305188d1ecf725705ec4c860e81e4bef1f897`
+- npm sha256：`10021598e9b3ed31eacfbea4052777aece66d993e26a496cc2990ec30645168d`
+- npm integrity：`sha512-hSpC772q9T9h2+xcWlA3rrAimjf/DxuvskcKD/UDIYRP00DvuKqx+nBwUGMOEBWn1PIM330Stalc7v0kmLA8qg==`
+- files：146；packed size：541,713 bytes；unpacked size：2,523,052 bytes
+- GitHub Release：https://github.com/SenmuuuuW/dsh-diagnostic-tutor/releases/tag/v0.4.0
+- 冷安装：`npm install dsh-diagnostic-tutor@0.4.0` 成功；包内版本 `0.4.0`；client bundle 包含 slider/step-through/figure/Study layout 代码
+- README：GitHub main 已显示 `v0.4.0` 和 `dsh-diagnostic-tutor@0.4.0`
