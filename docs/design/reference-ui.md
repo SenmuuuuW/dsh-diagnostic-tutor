@@ -26,6 +26,8 @@ The dark global sidebar in the reference belongs to DeepSeek Harness, not this p
 
 ## Not yet ported
 
+- Study interactive block schemas and visuals beyond the current block renderer
+
 - Study full/split visual shell beyond current layout rules
 - Interactive block schemas (slider, step-through)
 - Image/animation block types

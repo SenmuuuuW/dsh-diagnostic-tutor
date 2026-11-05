@@ -7,6 +7,7 @@ const en = {
 
   // Focused study
   studyFocus: 'Focused study',
+  studySteps: 'Lesson steps',
   studyFullscreen: 'Full screen',
   studyExitFullscreen: 'Leave full screen',
   studyHalfScreen: 'Side panel',
@@ -405,6 +406,7 @@ const zh: typeof en = {
 
   // Focused study
   studyFocus: '专注学习',
+  studySteps: '本课步骤',
   studyFullscreen: '全屏',
   studyExitFullscreen: '退出全屏',
   studyHalfScreen: '侧栏',

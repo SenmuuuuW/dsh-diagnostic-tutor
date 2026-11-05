@@ -108,7 +108,15 @@ export function StudySession({ title, courseTitle, moduleTitle, code, blocks, in
   }
 
   const progress = (step + 1) / blocks.length * 100
-  return <div className="dtx-study">
+  const main = <main className="dtx-study-main">
+    <div className="dtx-study-stepbar"><span>{text.studyStep(step + 1, blocks.length)}</span><span>{current === undefined ? '' : typeLabel(current, lang)}</span></div>
+    <article className="dtx-study-card" aria-live="polite">
+      {current === undefined ? null : <LessonBody key={current.id} blocks={[current]} interaction={hooked} />}
+    </article>
+    {interactive && !currentRecorded && <p className="dtx-study-hint">{text.studyAnswerFirst}</p>}
+    {current !== undefined && !interactive && isKnownBlock(current) && current.type === 'check' && onOpenChat !== undefined && <button type="button" className="dtx-secondary dtx-study-chat" onClick={onOpenChat}>{text.studyOpenChat}</button>}
+  </main>
+  return <div className={fullscreen ? 'dtx-study dtx-study-focus' : 'dtx-study'} data-fullscreen={fullscreen ? 'true' : undefined}>
     <header className="dtx-study-top">
       <button type="button" className="dtx-iconbtn" onClick={onExit} aria-label={text.studyExit}><Icon name="arrow-left" size={18} /></button>
       <div className="dtx-study-heading"><span className="dtx-eyebrow">{fullscreen ? text.studyFocus : `${text.studyFocus} · ${text.studyHalfScreen}`}</span><h2>{title}</h2><p>{[courseTitle, moduleTitle, code].filter(Boolean).join(' · ')}</p></div>
@@ -116,14 +124,10 @@ export function StudySession({ title, courseTitle, moduleTitle, code, blocks, in
       <span className="dtx-study-count">{step + 1} / {blocks.length}</span>
     </header>
     <div className="dtx-study-progress" aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
-    <main className="dtx-study-main">
-      <div className="dtx-study-stepbar"><span>{text.studyStep(step + 1, blocks.length)}</span><span>{current === undefined ? '' : typeLabel(current, lang)}</span></div>
-      <article className="dtx-study-card" aria-live="polite">
-        {current === undefined ? null : <LessonBody key={current.id} blocks={[current]} interaction={hooked} />}
-      </article>
-      {interactive && !currentRecorded && <p className="dtx-study-hint">{text.studyAnswerFirst}</p>}
-      {current !== undefined && !interactive && isKnownBlock(current) && current.type === 'check' && onOpenChat !== undefined && <button type="button" className="dtx-secondary dtx-study-chat" onClick={onOpenChat}>{text.studyOpenChat}</button>}
-    </main>
+    {fullscreen ? <div className="dtx-study-focus-layout">
+      <aside className="dtx-study-rail" aria-label={text.studySteps}><p className="dtx-study-rail-label">{text.studySteps}</p><ol>{blocks.map((block, index) => <li key={block.id} data-current={index === step ? 'true' : undefined} data-done={index < step ? 'true' : undefined}><span className="dtx-study-rail-dot">{index < step ? <Icon name="check" size={10} /> : index + 1}</span><span>{typeLabel(block, lang)}</span></li>)}</ol></aside>
+      {main}
+    </div> : main}
     <footer className="dtx-study-foot">
       <button type="button" className="dtx-link dtx-study-exit" onClick={onExit}>{text.studyExit}</button>
       <div className="dtx-study-foot-actions">

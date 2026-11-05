@@ -862,4 +862,33 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-course-info-list { margin:0; padding:0; list-style:none; }
 .dtx-course-info-list li { display:flex; justify-content:space-between; padding:5px 0; border-top:1px solid #f0f2f5; color:var(--dt-muted,#6b7280); font-size:10.5px; }
 .dtx-course-info-list li:first-child { border-top:0; }
+
+/* ---------- reference visual pass: study full / split ---------- */
+.dtx-study-focus { padding:0; background:#f4f6f8; }
+.dtx-study-focus .dtx-study-top { padding:14px 26px 0; }
+.dtx-study-focus .dtx-study-heading h2 { font-family:var(--sans); font-size:16px; font-weight:650; letter-spacing:-.02em; }
+.dtx-study-focus .dtx-study-progress { margin:12px 0 0; }
+.dtx-study-focus .dtx-study-focus-layout { display:grid; grid-template-columns:164px minmax(0,760px); justify-content:center; align-items:start; gap:32px; width:min(1080px, calc(100% - 48px)); margin:0 auto; padding:24px 0 18px; flex:1; }
+.dtx-study-focus .dtx-study-main { width:100%; max-width:none; margin:0; padding:0; }
+.dtx-study-focus .dtx-study-card { border-radius:12px; padding:24px; box-shadow:0 1px 2px rgba(17,24,39,.025); }
+.dtx-study-focus .dtx-study-card h2, .dtx-study-focus .dtx-study-card h3 { font-family:var(--sans); }
+.dtx-study-focus .dtx-study-stepbar { margin:0 1px 9px; }
+.dtx-study-focus .dtx-study-foot { margin:0; padding:12px 26px; }
+.dtx-study-rail { padding-top:6px; }
+.dtx-study-rail-label { margin:0 0 11px; color:var(--dt-muted,#6b7280); font-size:9.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; }
+.dtx-study-rail ol { margin:0; padding:0; list-style:none; display:grid; gap:2px; }
+.dtx-study-rail li { display:flex; align-items:center; gap:8px; min-height:29px; color:var(--dt-muted,#6b7280); font-size:10.5px; }
+.dtx-study-rail-dot { width:17px; height:17px; flex:none; display:inline-flex; align-items:center; justify-content:center; border:1px solid #d6dbe5; border-radius:50%; background:#fff; font-size:8.5px; }
+.dtx-study-rail li[data-current] { color:var(--dt-text,#111827); font-weight:650; }
+.dtx-study-rail li[data-current] .dtx-study-rail-dot { border-color:var(--dt-brand,#2563eb); color:var(--dt-brand-ink,#1d4ed8); box-shadow:0 0 0 3px #eaf0ff; }
+.dtx-study-rail li[data-done] .dtx-study-rail-dot { border-color:#b7dfc9; background:#f1faf5; color:#1f7a4d; }
+.dtx-study-focus .dtx-study-count { background:#fff; border-color:var(--dt-border,#e5e7eb); }
+.dtx-study-focus .dtx-study-focus-layout + .dtx-study-foot { background:rgba(255,255,255,.95); }
+@media (max-width:760px) {
+  .dtx-study-focus .dtx-study-focus-layout { grid-template-columns:1fr; width:calc(100% - 28px); padding-top:16px; }
+  .dtx-study-rail { display:none; }
+  .dtx-study-focus .dtx-study-card { padding:18px; }
+  .dtx-study-focus .dtx-study-top { padding:12px 14px 0; }
+  .dtx-study-focus .dtx-study-foot { padding:10px 14px; }
+}
 `

@@ -105,6 +105,20 @@ describe('focused study', () => {
     expect(toggle).toHaveBeenCalledTimes(1)
   })
 
+  it('shows the lesson step rail only in full screen', async () => {
+    await act(async () => {
+      root.render(createElement(StudySession, { title: 'Shapes', blocks, fullscreen: true, onExit: vi.fn() }))
+      await Promise.resolve()
+    })
+    expect(container.querySelector('.dtx-study-focus-layout .dtx-study-rail')).not.toBeNull()
+    expect(container.textContent).toContain('Lesson steps')
+    await act(async () => {
+      root.render(createElement(StudySession, { title: 'Shapes', blocks, fullscreen: false, onExit: vi.fn() }))
+      await Promise.resolve()
+    })
+    expect(container.querySelector('.dtx-study-rail')).toBeNull()
+  })
+
   it('translates the focused surface', async () => {
     setLang('zh')
     await mount()
