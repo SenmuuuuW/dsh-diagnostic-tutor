@@ -32,10 +32,10 @@ Evidence rules: `EVIDENCE-SEMANTICS.md`.
 
 - `dsh-diagnostic-tutor-0.6.0.tgz` (built from this branch; not published)
 - files: 162
-- packed size: 575,668 bytes
-- unpacked size: 2,722,151 bytes
-- npm shasum: `cc55bc447f13de5e73cffd9cbab3de81a5af01f1`
-- SHA-256: `59cb9ba97f3cfec2dc9ef34c2ee07fbbce40b00c11b4130c94526e63e8c783e0`
+- packed size: 575,815 bytes
+- unpacked size: 2,722,768 bytes
+- npm shasum: `5bf36d1bc721892d40641de1c70b9f526371c6a2`
+- SHA-256: `b77b5abea21513d158efb6195c9b2549ae4f411394634d151ce55bad60327f79`
 - isolated DSH `0.2.2-rc.1` load: 200, 21 tools, domain `udt` v1, no issues.
 
 The final tarball must be re-created after the final commit; the values above are
