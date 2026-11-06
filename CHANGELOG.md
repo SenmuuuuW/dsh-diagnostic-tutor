@@ -1,4 +1,4 @@
-## [Unreleased] — v0.5.0 development
+## [0.5.0] — 2026-11-05
 
 ### Added — Study persistence / resume
 

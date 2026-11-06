@@ -11,7 +11,9 @@ learn interactively, and move to the next best step.
 
 ## Status
 
-`v0.4.1` is the published release. The learning surface is now three screens:
+`v0.4.1` is the current npm release. `v0.5.0` is prepared locally in this
+repository and is **not published yet**; publication is a separate, explicitly
+confirmed step. The learning surface is three screens:
 **Today → Course → Study**, with Review, Knowledge & evidence and Insights as
 secondary views.
 
@@ -37,11 +39,12 @@ desktop runtime **DSH 0.2.2-rc.1**.
 `0.4.1` completes the reference UI with the **Library / welcome** state: compact
 welcome header, chat prompt, project count and dense project rows.
 
-`v0.5.0` (in development, not published) adds Study resume persistence and the
-external `universal-diagnostic-tutor` Skill's structured lesson-block contract.
-The contract is Skill-side: it decides block selection and teaching wording while
+`v0.5.0` prepares Study resume persistence and the external
+`universal-diagnostic-tutor` Skill's structured lesson-block contract. The
+contract is Skill-side: it decides block selection and teaching wording while
 this plugin only validates, stores, renders and records. A real-model E2E report
-is in [`docs/planning/V0.5.0-E2E.md`](docs/planning/V0.5.0-E2E.md).
+is in [`docs/planning/V0.5.0-E2E.md`](docs/planning/V0.5.0-E2E.md); the pending
+release checklist is in [`docs/planning/RELEASE-0.5.0.md`](docs/planning/RELEASE-0.5.0.md).
 
 Install it with
 `dsh plugin --profile web add dsh-diagnostic-tutor@0.4.1` — no clone, no
@@ -182,6 +185,7 @@ matrix as load-bearing, not decoration.
 
 | This plugin | Verified against DSH | Node |
 | --- | --- | --- |
+| `0.5.0` (prepared) | `0.2.2-rc.1` | `^22.19.0 \|\| >=24.0.0` |
 | `0.4.1` | `0.2.2-rc.1` | `^22.19.0 \|\| >=24.0.0` |
 | `0.4.0` | `0.2.2-rc.1` | `^22.19.0 \|\| >=24.0.0` |
 | `0.3.0` | `0.2.1-rc.5`, `0.2.1-rc.3`, `0.2.1-rc.2`, `0.2.0-rc.2` (test suite also on `0.1.7-alpha.2`) | `^22.19.0 \|\| >=24.0.0` |
@@ -301,7 +305,7 @@ learn?*.
 
 ```sh
 npm pack
-dsh plugin --profile web add "$PWD/dsh-diagnostic-tutor-0.4.1.tgz"
+dsh plugin --profile web add "$PWD/dsh-diagnostic-tutor-0.5.0.tgz"
 ```
 
 **What gets installed is prebuilt.** The package ships `lib/` — the host half
@@ -801,6 +805,7 @@ shows a loader row exists.
 | `v0.1.0-rc.1` | packaged install, no clone or build required |
 | `v0.1.0` | first stable release, installable from npm |
 | `v0.1.1` | packaged release with the docked learning surface |
+| `v0.5.0` | **prepared locally** — Study resume persistence and Skill lesson-block contract; publication pending |
 | `v0.4.1` | **published** — Library/welcome reference UI completion |
 | `v0.4.0` | Materials, reference UI, Study layout modes, interactive slider/step-through/figure blocks, DSH 0.2.2-rc.1 |
 | `v0.3.0` | Today/Course/Study, three-step course generation, secondary Review/Knowledge/Insights |
@@ -918,7 +923,8 @@ author and is not vendored here.
 
 Planning and architecture research for this project live in
 [`docs/planning/`](docs/planning/). Phase 1–6 merge order, acceptance checks and the DSH compatibility checklist are in
-[`docs/planning/PHASE-1-6-MERGE.md`](docs/planning/PHASE-1-6-MERGE.md). 0.4.1 发布清单与验证记录见
+[`docs/planning/PHASE-1-6-MERGE.md`](docs/planning/PHASE-1-6-MERGE.md). 0.5.0 发布准备见
+[`docs/planning/RELEASE-0.5.0.md`](docs/planning/RELEASE-0.5.0.md)；0.4.1 记录见
 [`docs/planning/RELEASE-0.4.1.md`](docs/planning/RELEASE-0.4.1.md)；历史记录见
 [`docs/planning/RELEASE-0.4.0.md`](docs/planning/RELEASE-0.4.0.md) 和
 [`docs/planning/RELEASE-0.3.0.md`](docs/planning/RELEASE-0.3.0.md).
