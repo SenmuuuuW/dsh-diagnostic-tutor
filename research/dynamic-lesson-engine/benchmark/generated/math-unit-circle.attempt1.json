@@ -1,0 +1,755 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 900,
+    "height": 460,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Unit circle to sine wave: the height is the sine",
+    "subject": "Mathematics / trigonometry",
+    "objective": "Connect a point on the unit circle to the height of the sine curve.",
+    "learner": "Knows right-triangle ratios; has not yet connected circular motion to sine.",
+    "misconceptions": [
+      "Sine is only a triangle ratio.",
+      "The sine of an angle is the x-coordinate of the point on the circle."
+    ],
+    "expectedUnderstanding": [
+      "The y-coordinate of a point on the unit circle is sin θ.",
+      "Because the hypotenuse is 1, opposite ÷ hypotenuse and the height give the same number.",
+      "The sine curve records that signed height as θ grows, crossing zero at 0 and π."
+    ]
+  },
+  "properties": [
+    {
+      "id": "angle",
+      "label": "angle θ (steps of 10°)",
+      "min": 0,
+      "max": 6.283185307,
+      "step": 0.174532925,
+      "default": 0.872664626,
+      "unit": "rad"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 44,
+      "text": "One point, two views: the circle and the sine curve",
+      "fontSize": 18,
+      "fill": "#0f172a",
+      "fontWeight": 600
+    },
+    {
+      "id": "legend-sine-swatch",
+      "type": "line",
+      "x1": 40,
+      "y1": 70,
+      "x2": 66,
+      "y2": 70,
+      "stroke": "#dc2626",
+      "strokeWidth": 4
+    },
+    {
+      "id": "legend-sine-text",
+      "type": "text",
+      "x": 74,
+      "y": 75,
+      "text": "red bar = height = sin θ",
+      "fontSize": 13,
+      "fill": "#7f1d1d"
+    },
+    {
+      "id": "legend-cos-swatch",
+      "type": "line",
+      "x1": 40,
+      "y1": 94,
+      "x2": 66,
+      "y2": 94,
+      "stroke": "#2563eb",
+      "strokeWidth": 2.5,
+      "dash": "5 4"
+    },
+    {
+      "id": "legend-cos-text",
+      "type": "text",
+      "x": 74,
+      "y": 99,
+      "text": "blue dashed = x-offset = cos θ",
+      "fontSize": 13,
+      "fill": "#1e40af"
+    },
+    {
+      "id": "circle-caption",
+      "type": "text",
+      "x": 200,
+      "y": 428,
+      "text": "unit circle: radius 1",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "middle"
+    },
+    {
+      "id": "curve-caption",
+      "type": "text",
+      "x": 655,
+      "y": 428,
+      "text": "sine curve: the same height, angle by angle",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "middle"
+    },
+    {
+      "id": "guide-max",
+      "type": "line",
+      "x1": 460,
+      "y1": 130,
+      "x2": 849.5574890451344,
+      "y2": 130,
+      "stroke": "#e2e8f0",
+      "strokeWidth": 1.2,
+      "dash": "3 5"
+    },
+    {
+      "id": "guide-min",
+      "type": "line",
+      "x1": 460,
+      "y1": 370,
+      "x2": 849.5574890451344,
+      "y2": 370,
+      "stroke": "#e2e8f0",
+      "strokeWidth": 1.2,
+      "dash": "3 5"
+    },
+    {
+      "id": "guide-q1",
+      "type": "line",
+      "x1": 557.39,
+      "y1": 130,
+      "x2": 557.39,
+      "y2": 370,
+      "stroke": "#e2e8f0",
+      "strokeWidth": 1.2,
+      "dash": "3 5"
+    },
+    {
+      "id": "guide-q3",
+      "type": "line",
+      "x1": 752.17,
+      "y1": 130,
+      "x2": 752.17,
+      "y2": 370,
+      "stroke": "#e2e8f0",
+      "strokeWidth": 1.2,
+      "dash": "3 5"
+    },
+    {
+      "id": "graph-axis-x",
+      "type": "arrow",
+      "x1": 450,
+      "y1": 250,
+      "x2": 866,
+      "y2": 250,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.6
+    },
+    {
+      "id": "graph-axis-y",
+      "type": "arrow",
+      "x1": 460,
+      "y1": 396,
+      "x2": 460,
+      "y2": 106,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.6
+    },
+    {
+      "id": "xtick-0",
+      "type": "line",
+      "x1": 460,
+      "y1": 250,
+      "x2": 460,
+      "y2": 258,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "xlabel-0",
+      "type": "text",
+      "x": 460,
+      "y": 274,
+      "text": "0",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "middle"
+    },
+    {
+      "id": "xtick-1",
+      "type": "line",
+      "x1": 557.4,
+      "y1": 250,
+      "x2": 557.4,
+      "y2": 258,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "xlabel-1",
+      "type": "text",
+      "x": 557.4,
+      "y": 274,
+      "text": "π/2",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "middle"
+    },
+    {
+      "id": "xtick-2",
+      "type": "line",
+      "x1": 654.8,
+      "y1": 250,
+      "x2": 654.8,
+      "y2": 258,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "xlabel-2",
+      "type": "text",
+      "x": 654.8,
+      "y": 274,
+      "text": "π",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "middle"
+    },
+    {
+      "id": "xtick-3",
+      "type": "line",
+      "x1": 752.2,
+      "y1": 250,
+      "x2": 752.2,
+      "y2": 258,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "xlabel-3",
+      "type": "text",
+      "x": 752.2,
+      "y": 274,
+      "text": "3π/2",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "middle"
+    },
+    {
+      "id": "xtick-4",
+      "type": "line",
+      "x1": 849.6,
+      "y1": 250,
+      "x2": 849.6,
+      "y2": 258,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "xlabel-4",
+      "type": "text",
+      "x": 849.6,
+      "y": 274,
+      "text": "2π",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "middle"
+    },
+    {
+      "id": "ytick-0",
+      "type": "line",
+      "x1": 452,
+      "y1": 130,
+      "x2": 466,
+      "y2": 130,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "ylabel-0",
+      "type": "text",
+      "x": 446,
+      "y": 134,
+      "text": "1",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "end"
+    },
+    {
+      "id": "ytick-1",
+      "type": "line",
+      "x1": 452,
+      "y1": 190,
+      "x2": 466,
+      "y2": 190,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "ylabel-1",
+      "type": "text",
+      "x": 446,
+      "y": 194,
+      "text": "0.5",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "end"
+    },
+    {
+      "id": "ytick-2",
+      "type": "line",
+      "x1": 452,
+      "y1": 310,
+      "x2": 466,
+      "y2": 310,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "ylabel-2",
+      "type": "text",
+      "x": 446,
+      "y": 314,
+      "text": "−0.5",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "end"
+    },
+    {
+      "id": "ytick-3",
+      "type": "line",
+      "x1": 452,
+      "y1": 370,
+      "x2": 466,
+      "y2": 370,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "ylabel-3",
+      "type": "text",
+      "x": 446,
+      "y": 374,
+      "text": "−1",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "end"
+    },
+    {
+      "id": "ylabel-zero",
+      "type": "text",
+      "x": 446,
+      "y": 254,
+      "text": "0",
+      "fontSize": 12,
+      "fill": "#475569",
+      "anchor": "end"
+    },
+    {
+      "id": "sine-curve",
+      "type": "path",
+      "d": "M 460.0 250.0 L 465.0 240.4 L 469.9 230.9 L 474.9 221.5 L 479.8 212.3 L 484.8 203.3 L 489.8 194.6 L 494.7 186.3 L 499.7 178.3 L 504.6 170.9 L 509.6 163.9 L 514.6 157.5 L 519.5 151.7 L 524.5 146.5 L 529.4 142.0 L 534.4 138.2 L 539.4 135.0 L 544.3 132.7 L 549.3 131.0 L 554.2 130.2 L 559.2 130.1 L 564.2 130.7 L 569.1 132.1 L 574.1 134.3 L 579.0 137.2 L 584.0 140.9 L 589.0 145.2 L 593.9 150.2 L 598.9 155.9 L 603.8 162.1 L 608.8 168.9 L 613.8 176.3 L 618.7 184.1 L 623.7 192.3 L 628.6 200.9 L 633.6 209.8 L 638.6 219.0 L 643.5 228.3 L 648.5 237.8 L 653.4 247.4 L 658.4 257.0 L 663.4 266.6 L 668.3 276.0 L 673.3 285.3 L 678.2 294.3 L 683.2 303.1 L 688.2 311.5 L 693.1 319.6 L 698.1 327.2 L 703.0 334.3 L 708.0 340.8 L 713.0 346.8 L 717.9 352.2 L 722.9 356.9 L 727.8 360.9 L 732.8 364.2 L 737.8 366.8 L 742.7 368.6 L 747.7 369.7 L 752.6 370.0 L 757.6 369.5 L 762.6 368.3 L 767.5 366.3 L 772.5 363.6 L 777.4 360.2 L 782.4 356.0 L 787.4 351.2 L 792.3 345.7 L 797.3 339.6 L 802.2 332.9 L 807.2 325.8 L 812.2 318.1 L 817.1 310.0 L 822.1 301.5 L 827.0 292.6 L 832.0 283.5 L 837.0 274.2 L 841.9 264.7 L 846.9 255.2 L 849.6 250.0",
+      "fill": "none",
+      "stroke": "#b91c1c",
+      "strokeWidth": 2.5
+    },
+    {
+      "id": "height-thread",
+      "type": "line",
+      "x1": {
+        "expr": "200 + 120*cos(angle)"
+      },
+      "y1": {
+        "expr": "250 - 120*sin(angle)"
+      },
+      "x2": {
+        "expr": "460 + 62*angle"
+      },
+      "y2": {
+        "expr": "250 - 120*sin(angle)"
+      },
+      "stroke": "#6b7280",
+      "strokeWidth": 1.5,
+      "dash": "6 5"
+    },
+    {
+      "id": "curve-halo",
+      "type": "circle",
+      "cx": {
+        "expr": "460 + 62*angle"
+      },
+      "cy": {
+        "expr": "250 - 120*sin(angle)"
+      },
+      "r": 13,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 1.2,
+      "opacity": 0.12
+    },
+    {
+      "id": "curve-dot",
+      "type": "circle",
+      "cx": {
+        "expr": "460 + 62*angle"
+      },
+      "cy": {
+        "expr": "250 - 120*sin(angle)"
+      },
+      "r": 6.5,
+      "fill": "#dc2626",
+      "stroke": "#ffffff",
+      "strokeWidth": 2
+    },
+    {
+      "id": "circle-outline",
+      "type": "circle",
+      "cx": 200,
+      "cy": 250,
+      "r": 120,
+      "fill": "none",
+      "stroke": "#94a3b8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "circle-axis-x",
+      "type": "arrow",
+      "x1": 52,
+      "y1": 250,
+      "x2": 358,
+      "y2": 250,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.6
+    },
+    {
+      "id": "circle-axis-y",
+      "type": "arrow",
+      "x1": 200,
+      "y1": 392,
+      "x2": 200,
+      "y2": 106,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.6
+    },
+    {
+      "id": "cx-one",
+      "type": "text",
+      "x": 318,
+      "y": 270,
+      "text": "1",
+      "fontSize": 11,
+      "fill": "#64748b",
+      "anchor": "middle"
+    },
+    {
+      "id": "cx-negone",
+      "type": "text",
+      "x": 82,
+      "y": 270,
+      "text": "−1",
+      "fontSize": 11,
+      "fill": "#64748b",
+      "anchor": "middle"
+    },
+    {
+      "id": "cy-one",
+      "type": "text",
+      "x": 208,
+      "y": 134,
+      "text": "1",
+      "fontSize": 11,
+      "fill": "#64748b"
+    },
+    {
+      "id": "cy-negone",
+      "type": "text",
+      "x": 208,
+      "y": 374,
+      "text": "−1",
+      "fontSize": 11,
+      "fill": "#64748b"
+    },
+    {
+      "id": "radius",
+      "type": "line",
+      "x1": 200,
+      "y1": 250,
+      "x2": {
+        "expr": "200 + 120*cos(angle)"
+      },
+      "y2": {
+        "expr": "250 - 120*sin(angle)"
+      },
+      "stroke": "#0f172a",
+      "strokeWidth": 2.5
+    },
+    {
+      "id": "cos-leg",
+      "type": "line",
+      "x1": 200,
+      "y1": 250,
+      "x2": {
+        "expr": "200 + 120*cos(angle)"
+      },
+      "y2": 250,
+      "stroke": "#2563eb",
+      "strokeWidth": 2.5,
+      "dash": "5 4"
+    },
+    {
+      "id": "sin-leg",
+      "type": "line",
+      "x1": {
+        "expr": "200 + 120*cos(angle)"
+      },
+      "y1": 250,
+      "x2": {
+        "expr": "200 + 120*cos(angle)"
+      },
+      "y2": {
+        "expr": "250 - 120*sin(angle)"
+      },
+      "stroke": "#dc2626",
+      "strokeWidth": 5
+    },
+    {
+      "id": "cos-corner",
+      "type": "circle",
+      "cx": {
+        "expr": "200 + 120*cos(angle)"
+      },
+      "cy": 250,
+      "r": 3.5,
+      "fill": "#2563eb"
+    },
+    {
+      "id": "origin-dot",
+      "type": "circle",
+      "cx": 200,
+      "cy": 250,
+      "r": 3,
+      "fill": "#0f172a"
+    },
+    {
+      "id": "circle-point",
+      "type": "circle",
+      "cx": {
+        "expr": "200 + 120*cos(angle)"
+      },
+      "cy": {
+        "expr": "250 - 120*sin(angle)"
+      },
+      "r": 7,
+      "fill": "#dc2626",
+      "stroke": "#ffffff",
+      "strokeWidth": 2
+    },
+    {
+      "id": "sin-tag",
+      "type": "text",
+      "x": {
+        "expr": "209 + 120*cos(angle)"
+      },
+      "y": {
+        "expr": "254 - 60*sin(angle)"
+      },
+      "text": "sin θ",
+      "fontSize": 12,
+      "fill": "#b91c1c",
+      "opacity": {
+        "expr": "min(1, abs(sin(angle))*8)"
+      }
+    },
+    {
+      "id": "cos-tag",
+      "type": "text",
+      "x": {
+        "expr": "200 + 60*cos(angle)"
+      },
+      "y": 266,
+      "text": "cos θ",
+      "fontSize": 12,
+      "fill": "#1d4ed8",
+      "opacity": {
+        "expr": "min(1, abs(cos(angle))*8)"
+      }
+    }
+  ],
+  "timeline": {
+    "duration": 20,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "curve-halo",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0.12
+          },
+          {
+            "at": 2,
+            "value": 0.5,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4,
+            "value": 0.12,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 6,
+            "value": 0.5,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 8,
+            "value": 0.12,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 10,
+            "value": 0.5,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 12,
+            "value": 0.12,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 14,
+            "value": 0.5,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 16,
+            "value": 0.12,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 18,
+            "value": 0.5,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 20,
+            "value": 0.12,
+            "easing": "ease-in-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "angle-control",
+      "kind": "slider",
+      "propertyId": "angle",
+      "label": "turn the point: 0 to 2π (arrow keys step 10°)"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-frame",
+      "at": 0,
+      "title": "One point, two views",
+      "pause": false,
+      "learnerAction": "continue",
+      "body": "Left: a point on the circle of radius 1. Right: the height of that same point, plotted against the angle. Move the slider and keep an eye on both panels."
+    },
+    {
+      "id": "cp-zero",
+      "at": 3,
+      "title": "Predict at θ = 0",
+      "pause": true,
+      "learnerAction": "answer",
+      "body": "The point starts on the far right of the circle. Before you look, what is sin 0? Set the slider to 0 and check where the red bar, the dashed line and the dot on the curve all end up."
+    },
+    {
+      "id": "cp-quarter",
+      "at": 7.5,
+      "title": "Predict at θ = π/2",
+      "pause": true,
+      "learnerAction": "answer",
+      "body": "Set the slider to π/2 (nine 10° steps). How tall is the red bar now, and where does the point sit? The dot on the curve should reach the top guideline at 1, the largest height the circle allows."
+    },
+    {
+      "id": "cp-which-coordinate",
+      "at": 11.5,
+      "title": "Which coordinate is the sine?",
+      "pause": true,
+      "learnerAction": "answer",
+      "body": "At θ = 0 the point is at (1, 0): its x-coordinate is at its maximum while its sine is 0. Move to 0 and back towards π/2 — the blue x-offset shrinks while the red height grows. The sine is the height, never the x-coordinate."
+    },
+    {
+      "id": "cp-negative",
+      "at": 15.5,
+      "title": "Where does the sine go negative?",
+      "pause": true,
+      "learnerAction": "answer",
+      "body": "Turn past π. The point crosses below the centre, the red bar hangs downwards and the curve dips under the axis. Predict the height at 3π/2 before you drag there."
+    },
+    {
+      "id": "cp-loop",
+      "at": 19,
+      "title": "Close the loop at 2π",
+      "pause": false,
+      "learnerAction": "continue",
+      "body": "Set the slider to 2π: the point is back at (1, 0) and the curve is ready to repeat. One full turn of the circle is one full period of the wave."
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The radius has length 1. Turn the point and its height changes; that height is sin θ."
+    },
+    {
+      "at": 2.2,
+      "text": "The red bar is the vertical side of the right triangle. With hypotenuse 1, opposite ÷ hypotenuse is just the height itself."
+    },
+    {
+      "at": 4.6,
+      "text": "The dashed line carries that height across to the curve. It is one number shown in two places."
+    },
+    {
+      "at": 6.4,
+      "text": "Use the arrow keys on the slider to step through the circle in 10° increments, or drag it smoothly."
+    },
+    {
+      "at": 9.6,
+      "text": "At θ = 0 and θ = π the height is zero, so the dot on the curve sits on the axis."
+    },
+    {
+      "at": 12.2,
+      "text": "At θ = π/2 the height is at its maximum, 1: the dot reaches the top guideline."
+    },
+    {
+      "at": 14.6,
+      "text": "Past π the point is below the centre, so the height is negative and the curve dips below the axis."
+    },
+    {
+      "at": 17.2,
+      "text": "At 2π the point returns to (1, 0) and the curve is ready to repeat: one turn, one period."
+    }
+  ],
+  "fallback": {
+    "text": "A unit circle of radius 1 on the left, with a point at angle θ. The red vertical bar from the point to the horizontal axis is the height of the point, which is sin θ; the blue dashed horizontal bar is cos θ. A dashed line carries that height to the right-hand graph of the sine curve, where a red dot sits at the same height: 0 at θ = 0 and θ = π, a maximum of 1 at θ = π/2, and a minimum of −1 at θ = 3π/2."
+  },
+  "accessibility": {
+    "alt": "Unit circle with a point at angle θ set by a slider: a red vertical bar shows the height sin θ, a blue dashed bar shows cos θ. A dashed line carries the same height to a sine curve, where a red dot marks it; the curve is on the axis at 0 and π and peaks at π/2.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

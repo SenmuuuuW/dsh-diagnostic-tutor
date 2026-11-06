@@ -1,0 +1,15 @@
+{
+  "before": {
+    "memory": 1712044,
+    "nodes": 122,
+    "metrics": "time 0.00 / 10.00s · nodes 121 · render 1.10ms · paused"
+  },
+  "after": {
+    "frames": 123,
+    "elapsed": 2207.8000000715256,
+    "memory": 1799775,
+    "metrics": "time 2.02 / 10.00s · nodes 121 · render 0.60ms · paused"
+  },
+  "fps": 55.71156807501367,
+  "memoryDelta": 87731
+}

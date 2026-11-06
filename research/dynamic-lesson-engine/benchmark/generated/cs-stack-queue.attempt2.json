@@ -1,0 +1,638 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#0b1220"
+  },
+  "metadata": {
+    "title": "Stack vs Queue: LIFO and FIFO",
+    "subject": "Computer Science",
+    "objective": "Contrast last-in, first-out and first-in, first-out with the same input sequence.",
+    "learner": "Knows what a list is.",
+    "misconceptions": [
+      "A stack and a queue are the same structure",
+      "The first item inserted is always removed first",
+      "Removing an item changes where the other items sit"
+    ],
+    "expectedUnderstanding": [
+      "A stack pushes and pops at the same end, so the newest item leaves first.",
+      "A queue enqueues at the back and dequeues at the front, so the oldest item leaves first.",
+      "The same input sequence 4, 7, 9 produces different removal orders in the two structures."
+    ]
+  },
+  "properties": [
+    {
+      "id": "focus",
+      "label": "Focus one structure",
+      "min": 0,
+      "max": 1,
+      "step": 1,
+      "default": 0
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 48,
+      "text": "Stack vs Queue",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "start"
+    },
+    {
+      "id": "subtitle",
+      "type": "text",
+      "x": 40,
+      "y": 80,
+      "text": "Same input, 4 then 7 then 9: a stack removes last in, a queue removes first in.",
+      "fontSize": 16,
+      "fill": "#cbd5e1",
+      "anchor": "start"
+    },
+    {
+      "id": "stackBay",
+      "type": "rect",
+      "x": 170,
+      "y": 140,
+      "width": 180,
+      "height": 270,
+      "rx": 10,
+      "fill": "#0f172a",
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "queueBay",
+      "type": "rect",
+      "x": 480,
+      "y": 230,
+      "width": 340,
+      "height": 90,
+      "rx": 10,
+      "fill": "#0f172a",
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "stackHead",
+      "type": "text",
+      "x": 260,
+      "y": 120,
+      "text": "Stack - LIFO",
+      "fontSize": 18,
+      "fill": "#fdba74",
+      "anchor": "middle"
+    },
+    {
+      "id": "queueHead",
+      "type": "text",
+      "x": 650,
+      "y": 120,
+      "text": "Queue - FIFO",
+      "fontSize": 18,
+      "fill": "#7dd3fc",
+      "anchor": "middle"
+    },
+    {
+      "id": "s4",
+      "type": "text",
+      "x": 260,
+      "y": 378,
+      "text": "4",
+      "fontSize": 26,
+      "fill": "#f97316",
+      "anchor": "middle",
+      "opacity": 0
+    },
+    {
+      "id": "s7",
+      "type": "text",
+      "x": 260,
+      "y": 318,
+      "text": "7",
+      "fontSize": 26,
+      "fill": "#f97316",
+      "anchor": "middle",
+      "opacity": 0
+    },
+    {
+      "id": "s9",
+      "type": "text",
+      "x": 260,
+      "y": 258,
+      "text": "9",
+      "fontSize": 26,
+      "fill": "#f97316",
+      "anchor": "middle",
+      "opacity": 0
+    },
+    {
+      "id": "q4",
+      "type": "text",
+      "x": 530,
+      "y": 286,
+      "text": "4",
+      "fontSize": 26,
+      "fill": "#06b6d4",
+      "anchor": "middle",
+      "opacity": 0
+    },
+    {
+      "id": "q7",
+      "type": "text",
+      "x": 650,
+      "y": 286,
+      "text": "7",
+      "fontSize": 26,
+      "fill": "#06b6d4",
+      "anchor": "middle",
+      "opacity": 0
+    },
+    {
+      "id": "q9",
+      "type": "text",
+      "x": 770,
+      "y": 286,
+      "text": "9",
+      "fontSize": 26,
+      "fill": "#06b6d4",
+      "anchor": "middle",
+      "opacity": 0
+    },
+    {
+      "id": "popNote",
+      "type": "text",
+      "x": 260,
+      "y": 452,
+      "text": "pop removes 9",
+      "fontSize": 16,
+      "fill": "#fdba74",
+      "anchor": "middle",
+      "opacity": 0
+    },
+    {
+      "id": "deqNote",
+      "type": "text",
+      "x": 650,
+      "y": 452,
+      "text": "dequeue removes 4",
+      "fontSize": 16,
+      "fill": "#7dd3fc",
+      "anchor": "middle",
+      "opacity": 0
+    },
+    {
+      "id": "focusBar",
+      "type": "rect",
+      "x": {
+        "expr": "170 + 310 * focus"
+      },
+      "y": 136,
+      "width": {
+        "expr": "180 + 160 * focus"
+      },
+      "height": 6,
+      "rx": 3,
+      "fill": "#facc15"
+    }
+  ],
+  "timeline": {
+    "duration": 10,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "s4",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.8,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.2,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "s7",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "s9",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 7,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 7.6,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "s9",
+          "property": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 258,
+            "easing": "linear"
+          },
+          {
+            "at": 7,
+            "value": 258,
+            "easing": "linear"
+          },
+          {
+            "at": 7.6,
+            "value": 190,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 190,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "q4",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.8,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.2,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 7,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 7.6,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "q4",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 530,
+            "easing": "linear"
+          },
+          {
+            "at": 7,
+            "value": 530,
+            "easing": "linear"
+          },
+          {
+            "at": 7.6,
+            "value": 450,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 450,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "q7",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "q7",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 650,
+            "easing": "linear"
+          },
+          {
+            "at": 7.6,
+            "value": 650,
+            "easing": "linear"
+          },
+          {
+            "at": 8.4,
+            "value": 530,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 530,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "q9",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "q9",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 770,
+            "easing": "linear"
+          },
+          {
+            "at": 7.6,
+            "value": 770,
+            "easing": "linear"
+          },
+          {
+            "at": 8.4,
+            "value": 650,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 650,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "popNote",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 7.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 7.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "deqNote",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 7.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 7.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "ctl-focus",
+      "kind": "slider",
+      "propertyId": "focus",
+      "label": "Focus: 0 stack, 1 queue"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-sq-empty",
+      "at": 0,
+      "title": "One input, two structures",
+      "body": "Both structures start empty. The input sequence is 4, then 7, then 9. A stack inserts and removes at the same end; a queue inserts at the back and removes at the front.",
+      "pause": true
+    },
+    {
+      "id": "cp-sq-first",
+      "at": 1.2,
+      "title": "Insert 4",
+      "body": "4 is pushed onto the stack and enqueued into the queue. It is the bottom of the stack and the front of the queue, so it is already in the position each structure will remove from differently.",
+      "pause": true
+    },
+    {
+      "id": "cp-sq-second",
+      "at": 2.8,
+      "title": "Insert 7",
+      "body": "7 sits above 4 on the stack, so the stack top is now 7. In the queue, 4 is still the front and 7 is behind it.",
+      "pause": true
+    },
+    {
+      "id": "cp-sq-third",
+      "at": 4.4,
+      "title": "Insert 9",
+      "body": "The stack reads 4, 7, 9 from bottom to top, with 9 on top. The queue reads 4, 7, 9 from front to back, with 4 still first.",
+      "pause": true
+    },
+    {
+      "id": "cp-sq-remove",
+      "at": 8.4,
+      "title": "Remove once from each",
+      "body": "Pop takes 9, because 9 was inserted last. Dequeue takes 4, because 4 was inserted first. The queue then shifts forward, but the stack keeps 4 at its bottom.",
+      "pause": false
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "Both structures start empty. The input 4, then 7, then 9 will go into each one."
+    },
+    {
+      "at": 1.2,
+      "text": "4 is pushed onto the stack and enqueued at the back of the queue."
+    },
+    {
+      "at": 2.8,
+      "text": "7 is added. The stack top is now 7, but the queue front is still 4."
+    },
+    {
+      "at": 4.4,
+      "text": "9 is added. The stack holds 4, 7, 9 with 9 on top. The queue holds 4, 7, 9 with 4 at the front."
+    },
+    {
+      "at": 7.8,
+      "text": "Pop takes 9 from the stack. Dequeue takes 4 from the queue. The same input produced different removal orders."
+    }
+  ],
+  "fallback": {
+    "text": "A stack and a queue each receive 4, 7 and 9 in that order. The stack grows upward with 9 on top, so pop removes 9. The queue lines up with 4 at the front, so dequeue removes 4 and the remaining items shift forward."
+  },
+  "accessibility": {
+    "alt": "A stack and a queue each receive 4, 7 and 9 in that order. The stack grows upward with 9 on top and 4 at the bottom; the queue runs left to right with 4 at the front. On removal the stack releases 9 while the queue releases 4, and the queue shifts forward.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

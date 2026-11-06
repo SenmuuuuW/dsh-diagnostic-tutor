@@ -1,0 +1,331 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#0b1220"
+  },
+  "metadata": {
+    "title": "Graph Traversal: BFS vs DFS",
+    "subject": "Computer Science",
+    "objective": "Show the BFS and DFS visiting orders and the frontier each one uses.",
+    "learner": "Knows nodes and edges.",
+    "misconceptions": [
+      "DFS always finds the shortest path in an unweighted graph",
+      "A visited node can be visited again",
+      "BFS and DFS always produce the same order"
+    ],
+    "expectedUnderstanding": [
+      "BFS explores level by level with a queue, while DFS follows one branch with a stack.",
+      "The visited set grows and each node is visited exactly once.",
+      "For this graph BFS visits A, B, C, D, E and DFS visits A, B, D, E, C."
+    ]
+  },
+  "properties": [
+    {
+      "id": "mode",
+      "label": "Traversal mode",
+      "min": 0,
+      "max": 1,
+      "step": 1,
+      "default": 0
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 48,
+      "text": "Graph Traversal: BFS vs DFS",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "start"
+    },
+    {
+      "id": "edges",
+      "type": "path",
+      "d": "M460 150 L340 250 M460 150 L580 250 M340 250 L300 370 M340 250 L500 370 M500 370 L580 250",
+      "fill": "none",
+      "stroke": "#475569",
+      "strokeWidth": 3
+    },
+    {
+      "id": "nodeA",
+      "type": "circle",
+      "cx": 460,
+      "cy": 150,
+      "r": 32,
+      "fill": "#1e40af"
+    },
+    {
+      "id": "nodeB",
+      "type": "circle",
+      "cx": 340,
+      "cy": 250,
+      "r": 32,
+      "fill": "#1e40af"
+    },
+    {
+      "id": "nodeC",
+      "type": "circle",
+      "cx": 580,
+      "cy": 250,
+      "r": 32,
+      "fill": "#1e40af"
+    },
+    {
+      "id": "nodeD",
+      "type": "circle",
+      "cx": 300,
+      "cy": 370,
+      "r": 32,
+      "fill": "#1e40af"
+    },
+    {
+      "id": "nodeE",
+      "type": "circle",
+      "cx": 500,
+      "cy": 370,
+      "r": 32,
+      "fill": "#1e40af"
+    },
+    {
+      "id": "labA",
+      "type": "text",
+      "x": 460,
+      "y": 159,
+      "text": "A",
+      "fontSize": 22,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "id": "labB",
+      "type": "text",
+      "x": 340,
+      "y": 259,
+      "text": "B",
+      "fontSize": 22,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "id": "labC",
+      "type": "text",
+      "x": 580,
+      "y": 259,
+      "text": "C",
+      "fontSize": 22,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "id": "labD",
+      "type": "text",
+      "x": 300,
+      "y": 379,
+      "text": "D",
+      "fontSize": 22,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "id": "labE",
+      "type": "text",
+      "x": 500,
+      "y": 379,
+      "text": "E",
+      "fontSize": 22,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "id": "visitedBand",
+      "type": "rect",
+      "x": 718,
+      "y": {
+        "expr": "188 + 60 * mode"
+      },
+      "width": 0,
+      "height": 22,
+      "rx": 4,
+      "fill": "#22c55e",
+      "opacity": 0.25
+    },
+    {
+      "id": "bfsText",
+      "type": "text",
+      "x": 720,
+      "y": 205,
+      "text": "BFS: A  B  C  D  E",
+      "fontSize": 16,
+      "fill": "#e2e8f0",
+      "anchor": "start"
+    },
+    {
+      "id": "dfsText",
+      "type": "text",
+      "x": 720,
+      "y": 265,
+      "text": "DFS: A  B  D  E  C",
+      "fontSize": 16,
+      "fill": "#e2e8f0",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 10,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "visitedBand",
+          "property": "width"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.8,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.2,
+            "value": 34,
+            "easing": "linear"
+          },
+          {
+            "at": 3.8,
+            "value": 34,
+            "easing": "linear"
+          },
+          {
+            "at": 4.2,
+            "value": 68,
+            "easing": "linear"
+          },
+          {
+            "at": 5.8,
+            "value": 68,
+            "easing": "linear"
+          },
+          {
+            "at": 6.2,
+            "value": 102,
+            "easing": "linear"
+          },
+          {
+            "at": 7.8,
+            "value": 102,
+            "easing": "linear"
+          },
+          {
+            "at": 8.2,
+            "value": 136,
+            "easing": "linear"
+          },
+          {
+            "at": 9.8,
+            "value": 136,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 170,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "ctl-mode",
+      "kind": "slider",
+      "propertyId": "mode",
+      "label": "Mode: 0 BFS, 1 DFS"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-graph-start",
+      "at": 0,
+      "title": "Begin at A",
+      "body": "A is the only node in the frontier. A queue puts each new neighbour at the back; a stack puts it on top. That one difference decides the whole visiting order.",
+      "pause": true
+    },
+    {
+      "id": "cp-graph-a",
+      "at": 2.2,
+      "title": "Visit A",
+      "body": "A is marked visited. BFS enqueues B and C, so the whole next level waits in the queue before either child is explored.",
+      "pause": true
+    },
+    {
+      "id": "cp-graph-b",
+      "at": 4.2,
+      "title": "Visit B",
+      "body": "BFS visits B and enqueues D and E behind C, so the frontier is C, D, E. DFS would instead push D and descend into it immediately, leaving C for later.",
+      "pause": true
+    },
+    {
+      "id": "cp-graph-c",
+      "at": 6.2,
+      "title": "Visit C",
+      "body": "C adds no new nodes because B and E are already known. BFS has finished the second level, and D and E are next in the queue.",
+      "pause": true
+    },
+    {
+      "id": "cp-graph-d",
+      "at": 8.2,
+      "title": "Visit D",
+      "body": "D is visited once and adds no new nodes. E is the last node still queued.",
+      "pause": true
+    },
+    {
+      "id": "cp-graph-e",
+      "at": 10,
+      "title": "Visit E and compare the orders",
+      "body": "BFS finishes with A, B, C, D, E. Set the mode slider to 1 to see the DFS order A, B, D, E, C. Each node appears once, and only BFS guarantees shortest unweighted distances.",
+      "pause": false
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "Start at A. BFS uses a queue, so it will finish a level before going deeper."
+    },
+    {
+      "at": 2.2,
+      "text": "Visit A. B and C enter the queue, in that order."
+    },
+    {
+      "at": 4.2,
+      "text": "Visit B. Its unvisited neighbours D and E join the queue behind C."
+    },
+    {
+      "at": 6.2,
+      "text": "Visit C. It adds no new nodes, so the frontier is D and E."
+    },
+    {
+      "at": 8.2,
+      "text": "Visit D. E is the last node in the queue."
+    },
+    {
+      "at": 10,
+      "text": "Visit E. The BFS order is A, B, C, D, E. Switch the mode slider to compare the DFS order A, B, D, E, C."
+    }
+  ],
+  "fallback": {
+    "text": "A graph with edges A-B, A-C, B-D, B-E and E-C. BFS uses a queue and visits A, B, C, D, E level by level. DFS uses a stack and visits A, B, D, E, C by following one branch as far as it goes. Each node is visited exactly once."
+  },
+  "accessibility": {
+    "alt": "A graph with nodes A to E and edges A-B, A-C, B-D, B-E and E-C. Two rows give the BFS order A, B, C, D, E and the DFS order A, B, D, E, C. A green band marks how many nodes have been visited as the mode slider switches rows.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

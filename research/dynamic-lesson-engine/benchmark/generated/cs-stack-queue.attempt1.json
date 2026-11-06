@@ -1,0 +1,341 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#0b1220"
+  },
+  "metadata": {
+    "title": "Stack vs Queue",
+    "subject": "Computer Science",
+    "objective": "Contrast LIFO and FIFO operations with the same sequence.",
+    "learner": "Knows a list.",
+    "misconceptions": [
+      "Stacks and queues are the same structure",
+      "The first inserted item is always removed first"
+    ],
+    "expectedUnderstanding": [
+      "A stack pushes and pops at the same end, giving last-in, first-out order.",
+      "A queue enqueues at the back and dequeues at the front, giving first-in, first-out order.",
+      "The same input sequence produces different removal orders in the two structures."
+    ]
+  },
+  "properties": [
+    {
+      "id": "step",
+      "label": "Operation step",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "default": 0
+    }
+  ],
+  "primitives": [
+    {
+      "type": "text",
+      "x": 40,
+      "y": 48,
+      "text": "Stack vs Queue",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 40,
+      "y": 78,
+      "text": "Input order 4, 7, 9. A stack removes last in; a queue removes first in.",
+      "fontSize": 16,
+      "fill": "#cbd5e1",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 250,
+      "y": 120,
+      "text": "Stack - LIFO",
+      "fontSize": 18,
+      "fill": "#fdba74",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 650,
+      "y": 120,
+      "text": "Queue - FIFO",
+      "fontSize": 18,
+      "fill": "#7dd3fc",
+      "anchor": "middle"
+    },
+    {
+      "type": "rect",
+      "x": 175,
+      "y": 155,
+      "width": 150,
+      "height": 245,
+      "fill": "#111827"
+    },
+    {
+      "type": "rect",
+      "x": 480,
+      "y": 245,
+      "width": 330,
+      "height": 110,
+      "fill": "#111827"
+    },
+    {
+      "type": "circle",
+      "cx": 250,
+      "cy": {
+        "expr": "620 - 260 * min(max(step, 0), 1)"
+      },
+      "r": 30,
+      "fill": "#f97316"
+    },
+    {
+      "type": "text",
+      "x": 250,
+      "y": {
+        "expr": "629 - 260 * min(max(step, 0), 1)"
+      },
+      "text": "4",
+      "fontSize": 24,
+      "fill": "#0b1220",
+      "anchor": "middle"
+    },
+    {
+      "type": "circle",
+      "cx": 250,
+      "cy": {
+        "expr": "620 - 340 * min(max(step - 1, 0), 1)"
+      },
+      "r": 30,
+      "fill": "#f97316"
+    },
+    {
+      "type": "text",
+      "x": 250,
+      "y": {
+        "expr": "629 - 340 * min(max(step - 1, 0), 1)"
+      },
+      "text": "7",
+      "fontSize": 24,
+      "fill": "#0b1220",
+      "anchor": "middle"
+    },
+    {
+      "type": "circle",
+      "cx": 250,
+      "cy": {
+        "expr": "620 - 420 * min(max(step - 2, 0), 1) + 270 * min(max(step - 3, 0), 1)"
+      },
+      "r": 30,
+      "fill": "#f97316"
+    },
+    {
+      "type": "text",
+      "x": 250,
+      "y": {
+        "expr": "629 - 420 * min(max(step - 2, 0), 1) + 270 * min(max(step - 3, 0), 1)"
+      },
+      "text": "9",
+      "fontSize": 24,
+      "fill": "#0b1220",
+      "anchor": "middle"
+    },
+    {
+      "type": "circle",
+      "cx": {
+        "expr": "1000 - 460 * min(max(step, 0), 1) + 110 * min(max(step - 3, 0), 1)"
+      },
+      "cy": {
+        "expr": "300 + 170 * min(max(step - 3, 0), 1)"
+      },
+      "r": 30,
+      "fill": "#06b6d4"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "1000 - 460 * min(max(step, 0), 1) + 110 * min(max(step - 3, 0), 1)"
+      },
+      "y": {
+        "expr": "309 + 170 * min(max(step - 3, 0), 1)"
+      },
+      "text": "4",
+      "fontSize": 24,
+      "fill": "#0b1220",
+      "anchor": "middle"
+    },
+    {
+      "type": "circle",
+      "cx": {
+        "expr": "1000 - 350 * min(max(step - 1, 0), 1) - 110 * min(max(step - 3, 0), 1)"
+      },
+      "cy": 300,
+      "r": 30,
+      "fill": "#06b6d4"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "1000 - 350 * min(max(step - 1, 0), 1) - 110 * min(max(step - 3, 0), 1)"
+      },
+      "y": 309,
+      "text": "7",
+      "fontSize": 24,
+      "fill": "#0b1220",
+      "anchor": "middle"
+    },
+    {
+      "type": "circle",
+      "cx": {
+        "expr": "1000 - 240 * min(max(step - 2, 0), 1) - 110 * min(max(step - 3, 0), 1)"
+      },
+      "cy": 300,
+      "r": 30,
+      "fill": "#06b6d4"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "1000 - 240 * min(max(step - 2, 0), 1) - 110 * min(max(step - 3, 0), 1)"
+      },
+      "y": 309,
+      "text": "9",
+      "fontSize": 24,
+      "fill": "#0b1220",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 540,
+      "y": 232,
+      "text": "front",
+      "fontSize": 12,
+      "fill": "#7dd3fc",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 450,
+      "y": 510,
+      "text": "removed by pop / dequeue",
+      "fontSize": 14,
+      "fill": "#94a3b8",
+      "anchor": "middle"
+    }
+  ],
+  "timeline": {
+    "duration": 12,
+    "tracks": [
+      {
+        "target": "step",
+        "keyframes": [
+          {
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 1.6,
+            "value": 0
+          },
+          {
+            "t": 2,
+            "value": 1
+          },
+          {
+            "t": 3.6,
+            "value": 1
+          },
+          {
+            "t": 4,
+            "value": 2
+          },
+          {
+            "t": 5.6,
+            "value": 2
+          },
+          {
+            "t": 6,
+            "value": 3
+          },
+          {
+            "t": 7.6,
+            "value": 3
+          },
+          {
+            "t": 8,
+            "value": 4
+          },
+          {
+            "t": 12,
+            "value": 4
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "type": "slider",
+      "target": "step",
+      "label": "Operation step",
+      "min": 0,
+      "max": 4,
+      "step": 1
+    }
+  ],
+  "checkpoints": [
+    {
+      "t": 0,
+      "label": "Both structures are empty. The input sequence is 4, 7, 9."
+    },
+    {
+      "t": 2,
+      "label": "Push 4 and enqueue 4."
+    },
+    {
+      "t": 4,
+      "label": "Push 7 and enqueue 7. Stack top is 7; queue front is 4."
+    },
+    {
+      "t": 6,
+      "label": "Push 9 and enqueue 9. Stack top is 9; queue front is still 4."
+    },
+    {
+      "t": 8,
+      "label": "Pop removes 9 from the stack. Dequeue removes 4 from the queue."
+    }
+  ],
+  "narration": [
+    {
+      "t": 0,
+      "text": "Both structures start empty. The same input sequence, 4 then 7 then 9, will be inserted into each."
+    },
+    {
+      "t": 2,
+      "text": "4 is pushed onto the stack and enqueued at the back of the queue."
+    },
+    {
+      "t": 4,
+      "text": "7 is added. The stack top is now 7, but the queue front is still 4."
+    },
+    {
+      "t": 6,
+      "text": "9 is added. The stack holds 4, 7, 9 with 9 on top. The queue holds 4, 7, 9 with 4 at the front."
+    },
+    {
+      "t": 8,
+      "text": "Pop takes the most recent item, 9. Dequeue takes the oldest item, 4. The same input produced different removal orders."
+    }
+  ],
+  "fallback": {
+    "text": "A stack and a queue each receive 4, 7, 9. Pop removes 9 from the stack, while dequeue removes 4 from the queue."
+  },
+  "accessibility": {
+    "alt": "A stack and a queue each receive 4, 7, and 9 in that order. The stack grows upward with 9 on top; the queue lines up with 4 at the front. On removal, the stack releases 9 while the queue releases 4, and both move to a removed row.",
+    "reducedMotion": true,
+    "keyboard": true
+  }
+}

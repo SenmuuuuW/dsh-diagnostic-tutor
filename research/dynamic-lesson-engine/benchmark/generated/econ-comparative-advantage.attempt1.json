@@ -1,0 +1,290 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 600,
+    "background": "#f8fafc"
+  },
+  "metadata": {
+    "title": "Comparative Advantage and Gains from Trade",
+    "subject": "Economics",
+    "objective": "Show opportunity costs, specialization gains, and a range of beneficial terms of trade.",
+    "learner": "Can read a production table.",
+    "misconceptions": [
+      "Absolute advantage determines gains from trade",
+      "One country must lose in every trade"
+    ],
+    "expectedUnderstanding": [
+      "Opportunity cost is what must be given up to produce one more unit.",
+      "A has a lower opportunity cost for cloth and B has a lower opportunity cost for wheat.",
+      "Specialization raises total output of both goods in this example.",
+      "Mutually beneficial terms of trade lie between the two opportunity costs, and gains need not be equal."
+    ]
+  },
+  "properties": [
+    {
+      "id": "specialize",
+      "label": "Specialization",
+      "min": 0,
+      "max": 100,
+      "step": 10,
+      "default": 0
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 48,
+      "y": 42,
+      "text": "Comparative Advantage and Gains from Trade",
+      "fontSize": 26,
+      "fill": "#0f172a",
+      "anchor": "start"
+    },
+    {
+      "id": "tableHeader",
+      "type": "text",
+      "x": 60,
+      "y": 105,
+      "text": "Producer | Wheat/day | Cloth/day | Opportunity costs",
+      "fontSize": 15,
+      "fill": "#334155",
+      "anchor": "start"
+    },
+    {
+      "id": "rowA",
+      "type": "text",
+      "x": 60,
+      "y": 145,
+      "text": "A | 10 | 20 | 1 wheat = 2 cloth; 1 cloth = 0.5 wheat",
+      "fontSize": 16,
+      "fill": "#1e3a8a",
+      "anchor": "start"
+    },
+    {
+      "id": "rowB",
+      "type": "text",
+      "x": 60,
+      "y": 178,
+      "text": "B | 20 | 10 | 1 wheat = 0.5 cloth; 1 cloth = 2 wheat",
+      "fontSize": 16,
+      "fill": "#166534",
+      "anchor": "start"
+    },
+    {
+      "id": "ocNote",
+      "type": "text",
+      "x": 60,
+      "y": 218,
+      "text": "Lower opportunity cost: A for cloth, B for wheat. Absolute output alone does not decide.",
+      "fontSize": 14,
+      "fill": "#475569",
+      "anchor": "start"
+    },
+    {
+      "id": "wheatBack",
+      "type": "rect",
+      "x": 60,
+      "y": 300,
+      "width": 440,
+      "height": 36,
+      "fill": "#dbeafe"
+    },
+    {
+      "id": "wheatBar",
+      "type": "rect",
+      "x": 60,
+      "y": 300,
+      "width": {
+        "expr": "300 + specialize"
+      },
+      "height": 36,
+      "fill": "#2563eb",
+      "stroke": "#1e40af",
+      "strokeWidth": 2
+    },
+    {
+      "id": "wheatLabel",
+      "type": "text",
+      "x": 60,
+      "y": 288,
+      "text": "Total wheat: 15 at split, up to 20 with specialization",
+      "fontSize": 14,
+      "fill": "#1e3a8a",
+      "anchor": "start"
+    },
+    {
+      "id": "clothBack",
+      "type": "rect",
+      "x": 60,
+      "y": 400,
+      "width": 440,
+      "height": 36,
+      "fill": "#dcfce7"
+    },
+    {
+      "id": "clothBar",
+      "type": "rect",
+      "x": 60,
+      "y": 400,
+      "width": {
+        "expr": "300 + specialize"
+      },
+      "height": 36,
+      "fill": "#16a34a",
+      "stroke": "#166534",
+      "strokeWidth": 2
+    },
+    {
+      "id": "clothLabel",
+      "type": "text",
+      "x": 60,
+      "y": 388,
+      "text": "Total cloth: 15 at split, up to 20 with specialization",
+      "fontSize": 14,
+      "fill": "#166534",
+      "anchor": "start"
+    },
+    {
+      "id": "splitText",
+      "type": "text",
+      "x": 530,
+      "y": 300,
+      "text": "Split: A 5W/10C; B 10W/5C",
+      "fontSize": 15,
+      "fill": "#334155",
+      "anchor": "start"
+    },
+    {
+      "id": "specText",
+      "type": "text",
+      "x": 530,
+      "y": 334,
+      "text": "Specialized: A 0W/20C; B 20W/0C",
+      "fontSize": 15,
+      "fill": "#334155",
+      "anchor": "start"
+    },
+    {
+      "id": "gainText",
+      "type": "text",
+      "x": 530,
+      "y": 368,
+      "text": "Gain: +5 wheat and +5 cloth",
+      "fontSize": 17,
+      "fill": "#b45309",
+      "anchor": "start"
+    },
+    {
+      "id": "tradeText",
+      "type": "text",
+      "x": 60,
+      "y": 500,
+      "text": "Terms of trade: 1 wheat for 0.5 to 2 cloth. Example 1 for 1 helps both; gains need not be equal.",
+      "fontSize": 14,
+      "fill": "#475569",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "wheatBar",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 4,
+            "easing": "linear"
+          },
+          {
+            "at": 8,
+            "value": 2,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "clothBar",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 4,
+            "easing": "linear"
+          },
+          {
+            "at": 8,
+            "value": 2,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "type": "slider",
+      "target": "specialize",
+      "label": "Move toward specialization",
+      "min": 0,
+      "max": 100,
+      "step": 10
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": 0,
+      "title": "Read opportunity cost",
+      "body": "For A, one wheat costs two cloth, so one cloth costs half a wheat. For B, one wheat costs half a cloth, so one cloth costs two wheat."
+    },
+    {
+      "at": 2.5,
+      "title": "Find comparative advantage",
+      "body": "A gives up less cloth to make cloth, and B gives up less wheat to make wheat. Those lower opportunity costs decide specialization, not absolute output alone."
+    },
+    {
+      "at": 5,
+      "title": "Specialize and trade",
+      "body": "Both totals rise from 15 to 20. Any wheat price between 0.5 and 2 cloth can benefit both, such as 1 for 1. The gains need not be equal."
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "Start with what each producer gives up. A can make 10 wheat or 20 cloth, so one wheat costs A two cloth. B can make 20 wheat or 10 cloth, so one wheat costs B half a cloth."
+    },
+    {
+      "at": 2.8,
+      "text": "A has the lower opportunity cost for cloth. B has the lower opportunity cost for wheat. Absolute output alone does not decide who should specialize."
+    },
+    {
+      "at": 5.6,
+      "text": "As production moves toward specialization, total wheat and total cloth both rise from 15 to 20. Trade at a price between the two opportunity costs can help both, but the gains need not be equal."
+    }
+  ],
+  "fallback": {
+    "text": "A can produce 10 wheat or 20 cloth, so one wheat costs A 2 cloth and one cloth costs A 0.5 wheat. B can produce 20 wheat or 10 cloth, so one wheat costs B 0.5 cloth and one cloth costs B 2 wheat. A has comparative advantage in cloth and B in wheat. Moving from split production to specialization raises both totals from 15 to 20. Terms of trade between 0.5 and 2 cloth per wheat can benefit both, with gains not necessarily equal."
+  },
+  "accessibility": {
+    "alt": "Production table compares A, which can make 10 wheat or 20 cloth, with B, which can make 20 wheat or 10 cloth, including opportunity costs. A specializes in cloth and B in wheat. A slider raises total output bars from 15 to 20 for both goods.",
+    "reducedMotion": true,
+    "keyboard": true
+  }
+}

@@ -1,0 +1,333 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 600,
+    "background": "#f8fafc"
+  },
+  "metadata": {
+    "title": "Central Limit Theorem: Means Turn Bell-Shaped",
+    "subject": "Statistics",
+    "objective": "Show means of a non-normal variable becoming bell-shaped as n grows.",
+    "learner": "Knows histograms.",
+    "misconceptions": [
+      "The original data becomes normal",
+      "CLT needs normal data to start"
+    ],
+    "expectedUnderstanding": [
+      "The raw population can be non-normal and stays non-normal.",
+      "The sampling distribution of the mean centers near the population mean.",
+      "Its spread narrows as n grows.",
+      "With larger n, the shape of the means distribution approaches a bell."
+    ]
+  },
+  "properties": [
+    {
+      "id": "n",
+      "label": "Sample size n",
+      "min": 1,
+      "max": 50,
+      "step": 1,
+      "default": 1
+    },
+    {
+      "id": "resample",
+      "label": "Resample draw",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "default": 2
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 48,
+      "y": 42,
+      "text": "Central Limit Theorem: Means Turn Bell-Shaped",
+      "fontSize": 26,
+      "fill": "#0f172a",
+      "anchor": "start"
+    },
+    {
+      "id": "rawLabel",
+      "type": "text",
+      "x": 70,
+      "y": 105,
+      "text": "Raw population: uniform, not normal",
+      "fontSize": 16,
+      "fill": "#1e3a8a",
+      "anchor": "start"
+    },
+    {
+      "id": "rawBar1",
+      "type": "rect",
+      "x": 356,
+      "y": 150,
+      "width": 56,
+      "height": 70,
+      "fill": "#60a5fa"
+    },
+    {
+      "id": "rawBar2",
+      "type": "rect",
+      "x": 420,
+      "y": 150,
+      "width": 56,
+      "height": 70,
+      "fill": "#60a5fa"
+    },
+    {
+      "id": "rawBar3",
+      "type": "rect",
+      "x": 484,
+      "y": 150,
+      "width": 56,
+      "height": 70,
+      "fill": "#60a5fa"
+    },
+    {
+      "id": "rawBar4",
+      "type": "rect",
+      "x": 548,
+      "y": 150,
+      "width": 56,
+      "height": 70,
+      "fill": "#60a5fa"
+    },
+    {
+      "id": "meansLabel",
+      "type": "text",
+      "x": 70,
+      "y": 300,
+      "text": "Distribution of sample means for size n (center near mu)",
+      "fontSize": 16,
+      "fill": "#9a3412",
+      "anchor": "start"
+    },
+    {
+      "id": "meanBar1",
+      "type": "rect",
+      "x": 288,
+      "y": {
+        "expr": "480 - max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 9) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * -3)"
+      },
+      "width": 48,
+      "height": {
+        "expr": "max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 9) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * -3)"
+      },
+      "fill": "#fb923c",
+      "stroke": "#c2410c",
+      "strokeWidth": 1
+    },
+    {
+      "id": "meanBar2",
+      "type": "rect",
+      "x": 344,
+      "y": {
+        "expr": "480 - max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 4) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * -2)"
+      },
+      "width": 48,
+      "height": {
+        "expr": "max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 4) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * -2)"
+      },
+      "fill": "#fb923c",
+      "stroke": "#c2410c",
+      "strokeWidth": 1
+    },
+    {
+      "id": "meanBar3",
+      "type": "rect",
+      "x": 400,
+      "y": {
+        "expr": "480 - max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 1) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * -1)"
+      },
+      "width": 48,
+      "height": {
+        "expr": "max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 1) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * -1)"
+      },
+      "fill": "#fb923c",
+      "stroke": "#c2410c",
+      "strokeWidth": 1
+    },
+    {
+      "id": "meanBar4",
+      "type": "rect",
+      "x": 456,
+      "y": {
+        "expr": "480 - max(12, 70 + min(max((n - 1) / 49, 0), 1) * 100)"
+      },
+      "width": 48,
+      "height": {
+        "expr": "max(12, 70 + min(max((n - 1) / 49, 0), 1) * 100)"
+      },
+      "fill": "#f97316",
+      "stroke": "#c2410c",
+      "strokeWidth": 1
+    },
+    {
+      "id": "meanBar5",
+      "type": "rect",
+      "x": 512,
+      "y": {
+        "expr": "480 - max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 1) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * 1)"
+      },
+      "width": 48,
+      "height": {
+        "expr": "max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 1) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * 1)"
+      },
+      "fill": "#fb923c",
+      "stroke": "#c2410c",
+      "strokeWidth": 1
+    },
+    {
+      "id": "meanBar6",
+      "type": "rect",
+      "x": 568,
+      "y": {
+        "expr": "480 - max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 4) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * 2)"
+      },
+      "width": 48,
+      "height": {
+        "expr": "max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 4) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * 2)"
+      },
+      "fill": "#fb923c",
+      "stroke": "#c2410c",
+      "strokeWidth": 1
+    },
+    {
+      "id": "meanBar7",
+      "type": "rect",
+      "x": 624,
+      "y": {
+        "expr": "480 - max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 9) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * 3)"
+      },
+      "width": 48,
+      "height": {
+        "expr": "max(12, 70 + min(max((n - 1) / 49, 0), 1) * (100 - 30 * 9) + min(max((n - 1) / 49, 0), 1) * (resample - 2) * 2 * 3)"
+      },
+      "fill": "#fb923c",
+      "stroke": "#c2410c",
+      "strokeWidth": 1
+    },
+    {
+      "id": "note",
+      "type": "text",
+      "x": 70,
+      "y": 555,
+      "text": "Raw data stays uniform; larger n makes the means histogram narrower and bell-shaped. Resampling changes the sample, not the population.",
+      "fontSize": 14,
+      "fill": "#475569",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "meanBar1",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 3,
+            "easing": "linear"
+          },
+          {
+            "at": 8,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "meanBar4",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 3,
+            "easing": "linear"
+          },
+          {
+            "at": 8,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "type": "slider",
+      "target": "n",
+      "label": "Sample size n",
+      "min": 1,
+      "max": 50,
+      "step": 1
+    },
+    {
+      "type": "slider",
+      "target": "resample",
+      "label": "Resample (redraw sample)",
+      "min": 0,
+      "max": 4,
+      "step": 1
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": 0,
+      "title": "Start non-normal",
+      "body": "The top bars are uniform, not normal. The bottom bars show means of samples of size n; at n equal to 1 they are also uniform."
+    },
+    {
+      "at": 2.5,
+      "title": "Increase n",
+      "body": "As n grows, the means histogram gains a tall center and short tails, and its spread narrows. The raw uniform bars never change shape."
+    },
+    {
+      "at": 5,
+      "title": "Resample and check",
+      "body": "Move the resample slider and the sample fluctuates, but the means distribution stays centered near the population mean and becomes more bell-shaped with larger n. The raw data did not become normal."
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The raw population is uniform, not normal. At a sample size of one, the distribution of sample means is also uniform."
+    },
+    {
+      "at": 2.8,
+      "text": "As n grows, the middle of the means histogram rises and the tails fall. The spread narrows. The raw bars stay uniform, so the original data did not become normal."
+    },
+    {
+      "at": 5.6,
+      "text": "Resampling changes which sample you get, not the population. With larger n, the means distribution stays centered near the population mean and approaches a bell shape."
+    }
+  ],
+  "fallback": {
+    "text": "The raw population is uniform and remains uniform; the data does not become normal. For sample means, small n gives a wide, flat distribution. As n grows, the distribution of means centers near the population mean, its spread narrows, and its shape approaches a bell. Resampling changes the sample, not the population, and the theorem does not require the raw data to be normal."
+  },
+  "accessibility": {
+    "alt": "Top: four equal bars show a uniform raw population. Bottom: seven bars show the distribution of sample means. As the n slider rises, the middle bars grow and the tails shrink toward a bell, while the raw bars stay flat. A resample slider redraws the sample.",
+    "reducedMotion": true,
+    "keyboard": true
+  }
+}

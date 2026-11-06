@@ -1,0 +1,68 @@
+{
+  "malicious": {
+    "validation": "primitives[0].onclick: unsupported field [unknown-key]\nprimitives[1].fill: use a bounded CSS color [color]\nprimitives[2].d: bounded SVG path data only [path]\ntimeline.tracks[0].target.primitive: unknown primitive [target]",
+    "bad": true,
+    "svg": 0,
+    "scripts": 0,
+    "foreign": 0,
+    "handlers": 0,
+    "externalHrefs": 0,
+    "status": "invalid",
+    "playDisabled": false,
+    "alt": "",
+    "metrics": "time 0.00 / 4.00s · nodes 10 · render 0.30ms · paused"
+  },
+  "oversized": {
+    "validation": "primitives: 1-120 primitives required [array]\ntimeline.tracks[0].target.primitive: unknown primitive [target]",
+    "bad": true,
+    "svg": 0,
+    "scripts": 0,
+    "foreign": 0,
+    "handlers": 0,
+    "externalHrefs": 0,
+    "status": "invalid",
+    "playDisabled": false,
+    "alt": "",
+    "metrics": "time 0.00 / 4.00s · nodes 10 · render 0.30ms · paused"
+  },
+  "stress": {
+    "validation": "Valid SceneSpec.",
+    "bad": false,
+    "svg": 1,
+    "scripts": 0,
+    "foreign": 0,
+    "handlers": 0,
+    "externalHrefs": 0,
+    "status": "rendered",
+    "playDisabled": false,
+    "alt": "A point on a parabola and a red arrow showing a gradient-descent step",
+    "metrics": "time 0.00 / 10.00s · nodes 121 · render 1.10ms · paused"
+  },
+  "reducedMotion": {
+    "validation": "Valid SceneSpec.",
+    "bad": false,
+    "svg": 1,
+    "scripts": 0,
+    "foreign": 0,
+    "handlers": 0,
+    "externalHrefs": 0,
+    "status": "reduced motion: static fallback (no autoplay)",
+    "playDisabled": true,
+    "alt": "A point on a parabola and a red arrow showing a gradient-descent step",
+    "metrics": "time 0.00 / 4.00s · nodes 10 · render 0.00ms · paused"
+  },
+  "keyboard": {
+    "afterSpace": "0.30s",
+    "afterArrow": "0.80s"
+  },
+  "checkpoint": {
+    "time": "2.00s",
+    "status": "checkpoint: Predict first"
+  },
+  "determinism": {
+    "equalAfterSeek": true,
+    "chars": 1430
+  },
+  "exceptions": [],
+  "externalRequests": []
+}

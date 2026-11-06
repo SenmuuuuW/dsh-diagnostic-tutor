@@ -1,0 +1,387 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 900,
+    "height": 600,
+    "background": "#f8fafc"
+  },
+  "metadata": {
+    "title": "Forces on an Incline",
+    "subject": "Physics",
+    "objective": "Show how gravity components change with incline angle.",
+    "learner": "Knows forces as pushes and pulls.",
+    "misconceptions": [
+      "Normal force equals weight at every angle",
+      "Friction is always equal to weight"
+    ],
+    "expectedUnderstanding": [
+      "The component of gravity along the plane is mg sin(theta).",
+      "The component of gravity perpendicular to the plane is mg cos(theta).",
+      "The normal force balances the perpendicular component, so it is not always equal to mg.",
+      "Friction is a separate force and is not generally equal to weight."
+    ]
+  },
+  "properties": [
+    {
+      "id": "angle",
+      "label": "Incline angle",
+      "min": 5,
+      "max": 60,
+      "step": 1,
+      "default": 30,
+      "unit": "deg"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "ground",
+      "type": "line",
+      "x1": 100,
+      "y1": 430,
+      "x2": 860,
+      "y2": 430,
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "slope",
+      "type": "line",
+      "x1": 160,
+      "y1": 430,
+      "x2": {
+        "expr": "160 + 400*cos(angle*3.14159265/180)"
+      },
+      "y2": {
+        "expr": "430 - 400*sin(angle*3.14159265/180)"
+      },
+      "stroke": "#334155",
+      "strokeWidth": 5
+    },
+    {
+      "id": "side",
+      "type": "line",
+      "x1": {
+        "expr": "160 + 400*cos(angle*3.14159265/180)"
+      },
+      "y1": {
+        "expr": "430 - 400*sin(angle*3.14159265/180)"
+      },
+      "x2": {
+        "expr": "160 + 400*cos(angle*3.14159265/180)"
+      },
+      "y2": 430,
+      "stroke": "#64748b",
+      "strokeWidth": 2
+    },
+    {
+      "id": "arc1",
+      "type": "line",
+      "x1": 230,
+      "y1": 430,
+      "x2": {
+        "expr": "160 + 70*cos(angle*3.14159265/540)"
+      },
+      "y2": {
+        "expr": "430 - 70*sin(angle*3.14159265/540)"
+      },
+      "stroke": "#94a3b8",
+      "strokeWidth": 3
+    },
+    {
+      "id": "arc2",
+      "type": "line",
+      "x1": {
+        "expr": "160 + 70*cos(angle*3.14159265/540)"
+      },
+      "y1": {
+        "expr": "430 - 70*sin(angle*3.14159265/540)"
+      },
+      "x2": {
+        "expr": "160 + 70*cos(angle*3.14159265/270)"
+      },
+      "y2": {
+        "expr": "430 - 70*sin(angle*3.14159265/270)"
+      },
+      "stroke": "#94a3b8",
+      "strokeWidth": 3
+    },
+    {
+      "id": "arc3",
+      "type": "line",
+      "x1": {
+        "expr": "160 + 70*cos(angle*3.14159265/270)"
+      },
+      "y1": {
+        "expr": "430 - 70*sin(angle*3.14159265/270)"
+      },
+      "x2": {
+        "expr": "160 + 70*cos(angle*3.14159265/180)"
+      },
+      "y2": {
+        "expr": "430 - 70*sin(angle*3.14159265/180)"
+      },
+      "stroke": "#94a3b8",
+      "strokeWidth": 3
+    },
+    {
+      "id": "block",
+      "type": "circle",
+      "cx": {
+        "expr": "160 + 248*cos(angle*3.14159265/180)"
+      },
+      "cy": {
+        "expr": "430 - 248*sin(angle*3.14159265/180)"
+      },
+      "r": 18,
+      "fill": "#1d4ed8",
+      "stroke": "#1e3a8a",
+      "strokeWidth": 3
+    },
+    {
+      "id": "weight",
+      "type": "arrow",
+      "x1": {
+        "expr": "160 + 248*cos(angle*3.14159265/180)"
+      },
+      "y1": {
+        "expr": "430 - 248*sin(angle*3.14159265/180)"
+      },
+      "x2": {
+        "expr": "160 + 248*cos(angle*3.14159265/180)"
+      },
+      "y2": {
+        "expr": "550 - 248*sin(angle*3.14159265/180)"
+      },
+      "stroke": "#b91c1c",
+      "strokeWidth": 4
+    },
+    {
+      "id": "parallel",
+      "type": "arrow",
+      "x1": {
+        "expr": "160 + 248*cos(angle*3.14159265/180)"
+      },
+      "y1": {
+        "expr": "430 - 248*sin(angle*3.14159265/180)"
+      },
+      "x2": {
+        "expr": "160 + 248*cos(angle*3.14159265/180) - 120*sin(angle*3.14159265/180)*cos(angle*3.14159265/180)"
+      },
+      "y2": {
+        "expr": "430 - 248*sin(angle*3.14159265/180) + 120*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)"
+      },
+      "stroke": "#ea580c",
+      "strokeWidth": 4
+    },
+    {
+      "id": "perpendicular",
+      "type": "arrow",
+      "x1": {
+        "expr": "160 + 248*cos(angle*3.14159265/180)"
+      },
+      "y1": {
+        "expr": "430 - 248*sin(angle*3.14159265/180)"
+      },
+      "x2": {
+        "expr": "160 + 248*cos(angle*3.14159265/180) + 120*cos(angle*3.14159265/180)*sin(angle*3.14159265/180)"
+      },
+      "y2": {
+        "expr": "430 - 248*sin(angle*3.14159265/180) + 120*cos(angle*3.14159265/180)*cos(angle*3.14159265/180)"
+      },
+      "stroke": "#7c3aed",
+      "strokeWidth": 4
+    },
+    {
+      "id": "normal",
+      "type": "arrow",
+      "x1": {
+        "expr": "160 + 248*cos(angle*3.14159265/180)"
+      },
+      "y1": {
+        "expr": "430 - 248*sin(angle*3.14159265/180)"
+      },
+      "x2": {
+        "expr": "160 + 248*cos(angle*3.14159265/180) - 120*cos(angle*3.14159265/180)*sin(angle*3.14159265/180)"
+      },
+      "y2": {
+        "expr": "430 - 248*sin(angle*3.14159265/180) - 120*cos(angle*3.14159265/180)*cos(angle*3.14159265/180)"
+      },
+      "stroke": "#0f766e",
+      "strokeWidth": 4
+    },
+    {
+      "id": "angleLabel",
+      "type": "text",
+      "x": {
+        "expr": "160 + 92*cos(angle*3.14159265/360)"
+      },
+      "y": {
+        "expr": "430 - 92*sin(angle*3.14159265/360)"
+      },
+      "text": "θ",
+      "fontSize": 22,
+      "fill": "#0f766e",
+      "anchor": "start"
+    },
+    {
+      "id": "weightLabel",
+      "type": "text",
+      "x": {
+        "expr": "170 + 248*cos(angle*3.14159265/180)"
+      },
+      "y": {
+        "expr": "540 - 248*sin(angle*3.14159265/180)"
+      },
+      "text": "mg",
+      "fontSize": 17,
+      "fill": "#b91c1c",
+      "anchor": "start"
+    },
+    {
+      "id": "parallelLabel",
+      "type": "text",
+      "x": {
+        "expr": "152 + 248*cos(angle*3.14159265/180) - 120*sin(angle*3.14159265/180)*cos(angle*3.14159265/180)"
+      },
+      "y": {
+        "expr": "435 - 248*sin(angle*3.14159265/180) + 120*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)"
+      },
+      "text": "mg sinθ",
+      "fontSize": 15,
+      "fill": "#c2410c",
+      "anchor": "end"
+    },
+    {
+      "id": "perpLabel",
+      "type": "text",
+      "x": {
+        "expr": "172 + 248*cos(angle*3.14159265/180) + 120*cos(angle*3.14159265/180)*sin(angle*3.14159265/180)"
+      },
+      "y": {
+        "expr": "435 - 248*sin(angle*3.14159265/180) + 120*cos(angle*3.14159265/180)*cos(angle*3.14159265/180)"
+      },
+      "text": "mg cosθ",
+      "fontSize": 15,
+      "fill": "#6d28d9",
+      "anchor": "start"
+    },
+    {
+      "id": "normalLabel",
+      "type": "text",
+      "x": {
+        "expr": "156 + 248*cos(angle*3.14159265/180) - 120*cos(angle*3.14159265/180)*sin(angle*3.14159265/180)"
+      },
+      "y": {
+        "expr": "420 - 248*sin(angle*3.14159265/180) - 120*cos(angle*3.14159265/180)*cos(angle*3.14159265/180)"
+      },
+      "text": "N",
+      "fontSize": 18,
+      "fill": "#0f766e",
+      "anchor": "end"
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 60,
+      "y": 45,
+      "text": "Gravity components on an incline",
+      "fontSize": 22,
+      "fill": "#0f172a",
+      "anchor": "start"
+    },
+    {
+      "id": "normalNote",
+      "type": "text",
+      "x": 840,
+      "y": 90,
+      "text": "N = mg cosθ, not mg",
+      "fontSize": 16,
+      "fill": "#0f766e",
+      "anchor": "end"
+    },
+    {
+      "id": "frictionNote",
+      "type": "text",
+      "x": 840,
+      "y": 585,
+      "text": "Friction is separate and is not generally equal to weight",
+      "fontSize": 14,
+      "fill": "#475569",
+      "anchor": "end"
+    },
+    {
+      "id": "componentNote",
+      "type": "text",
+      "x": 60,
+      "y": 585,
+      "text": "Component sizes follow sinθ and cosθ",
+      "fontSize": 14,
+      "fill": "#475569",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 6.5,
+    "tracks": []
+  },
+  "controls": [
+    {
+      "id": "angleControl",
+      "kind": "slider",
+      "propertyId": "angle",
+      "label": "Incline angle"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "incline-orient",
+      "at": 0.7,
+      "title": "Find the two directions",
+      "body": "The red arrow is weight, mg, straight down. The orange arrow is the part of weight along the slope; the violet arrow is the part perpendicular to the slope.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "incline-components",
+      "at": 2.4,
+      "title": "Connect angle to components",
+      "body": "As the incline steepens, mg sinθ grows and mg cosθ shrinks. The teal normal force is equal and opposite to the perpendicular component, so N = mg cosθ.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "incline-check",
+      "at": 4.4,
+      "title": "Check the claims",
+      "body": "At 60 degrees, is the normal force still equal to mg? No; it is mg cos60, half of mg. Is friction always equal to weight? No; friction depends on the surfaces and the normal force, not directly on mg alone.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "Gravity always points straight down. On an incline, we split it into a component along the slope and a component perpendicular to the slope."
+    },
+    {
+      "at": 1.8,
+      "text": "The along-slope component is mg sine theta. The perpendicular component is mg cosine theta."
+    },
+    {
+      "at": 3.4,
+      "text": "The normal force balances the perpendicular component, so it equals mg cosine theta, not mg at every angle."
+    },
+    {
+      "at": 5,
+      "text": "Friction is a separate force. Its size is not generally equal to the weight."
+    }
+  ],
+  "fallback": {
+    "text": "On an incline, weight splits into mg sin(theta) along the slope and mg cos(theta) perpendicular to the slope. The normal force balances the perpendicular component and therefore equals mg cos(theta) in this model. Friction is a separate force and is not generally equal to weight."
+  },
+  "accessibility": {
+    "alt": "A block on a wedge shows weight down, a component along the slope, a perpendicular component, and the normal force. Labels give mg, mg sin theta, mg cos theta, and N, while the angle slider changes the incline.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

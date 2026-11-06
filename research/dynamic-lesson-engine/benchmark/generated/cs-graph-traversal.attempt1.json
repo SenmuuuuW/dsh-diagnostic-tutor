@@ -1,0 +1,351 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#0b1220"
+  },
+  "metadata": {
+    "title": "Graph Traversal: BFS vs DFS",
+    "subject": "Computer Science",
+    "objective": "Show BFS/DFS visiting order and frontier differences.",
+    "learner": "Knows nodes and edges.",
+    "misconceptions": [
+      "DFS always finds the shortest path in an unweighted graph",
+      "Visited nodes can be revisited forever"
+    ],
+    "expectedUnderstanding": [
+      "BFS explores level by level with a queue, while DFS follows one branch with a stack.",
+      "The visited set grows and each node is visited once.",
+      "BFS gives shortest unweighted path distances, while DFS order can go deep before returning."
+    ]
+  },
+  "properties": [
+    {
+      "id": "step",
+      "label": "Nodes visited",
+      "min": 0,
+      "max": 5,
+      "step": 1,
+      "default": 0
+    },
+    {
+      "id": "mode",
+      "label": "Mode: 0 BFS, 1 DFS",
+      "min": 0,
+      "max": 1,
+      "step": 1,
+      "default": 0
+    }
+  ],
+  "primitives": [
+    {
+      "type": "text",
+      "x": 40,
+      "y": 48,
+      "text": "Graph Traversal: BFS vs DFS",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 40,
+      "y": 80,
+      "text": "BFS uses a queue; DFS uses a stack. Both visit each node once.",
+      "fontSize": 16,
+      "fill": "#cbd5e1",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 480,
+      "y": 112,
+      "text": "start: A",
+      "fontSize": 14,
+      "fill": "#94a3b8",
+      "anchor": "middle"
+    },
+    {
+      "type": "path",
+      "d": "M480 192 L350 228 M480 192 L610 228 M350 292 L300 358 M350 292 L500 358 M500 358 L610 292",
+      "fill": "none",
+      "stroke": "#475569",
+      "strokeWidth": 3
+    },
+    {
+      "type": "circle",
+      "cx": 480,
+      "cy": 160,
+      "r": 32,
+      "fill": "#1e40af"
+    },
+    {
+      "type": "circle",
+      "cx": 350,
+      "cy": 260,
+      "r": 32,
+      "fill": "#1e40af"
+    },
+    {
+      "type": "circle",
+      "cx": 610,
+      "cy": 260,
+      "r": 32,
+      "fill": "#1e40af"
+    },
+    {
+      "type": "circle",
+      "cx": 300,
+      "cy": 390,
+      "r": 32,
+      "fill": "#1e40af"
+    },
+    {
+      "type": "circle",
+      "cx": 500,
+      "cy": 390,
+      "r": 32,
+      "fill": "#1e40af"
+    },
+    {
+      "type": "text",
+      "x": 480,
+      "y": 169,
+      "text": "A",
+      "fontSize": 24,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 350,
+      "y": 269,
+      "text": "B",
+      "fontSize": 24,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 610,
+      "y": 269,
+      "text": "C",
+      "fontSize": 24,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 300,
+      "y": 399,
+      "text": "D",
+      "fontSize": 24,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 500,
+      "y": 399,
+      "text": "E",
+      "fontSize": 24,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "type": "rect",
+      "x": 714,
+      "y": {
+        "expr": "170 + 70 * mode"
+      },
+      "width": 240,
+      "height": 30,
+      "fill": "#1e293b"
+    },
+    {
+      "type": "rect",
+      "x": 766,
+      "y": {
+        "expr": "168 + 70 * mode"
+      },
+      "width": {
+        "expr": "34 * step"
+      },
+      "height": 26,
+      "fill": "#22c55e66"
+    },
+    {
+      "type": "text",
+      "x": 730,
+      "y": 190,
+      "text": "BFS: A  B  C  D  E",
+      "fontSize": 18,
+      "fill": "#e2e8f0",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 730,
+      "y": 260,
+      "text": "DFS: A  B  D  E  C",
+      "fontSize": 18,
+      "fill": "#e2e8f0",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 730,
+      "y": 145,
+      "text": "visited | frontier",
+      "fontSize": 14,
+      "fill": "#86efac",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 730,
+      "y": 322,
+      "text": "queue for BFS, stack for DFS",
+      "fontSize": 14,
+      "fill": "#94a3b8",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 12,
+    "tracks": [
+      {
+        "target": "step",
+        "keyframes": [
+          {
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 1.6,
+            "value": 0
+          },
+          {
+            "t": 2,
+            "value": 1
+          },
+          {
+            "t": 3.6,
+            "value": 1
+          },
+          {
+            "t": 4,
+            "value": 2
+          },
+          {
+            "t": 5.6,
+            "value": 2
+          },
+          {
+            "t": 6,
+            "value": 3
+          },
+          {
+            "t": 7.6,
+            "value": 3
+          },
+          {
+            "t": 8,
+            "value": 4
+          },
+          {
+            "t": 9.6,
+            "value": 4
+          },
+          {
+            "t": 10,
+            "value": 5
+          },
+          {
+            "t": 12,
+            "value": 5
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "type": "slider",
+      "target": "step",
+      "label": "Nodes visited",
+      "min": 0,
+      "max": 5,
+      "step": 1
+    },
+    {
+      "type": "slider",
+      "target": "mode",
+      "label": "Mode: 0 BFS, 1 DFS",
+      "min": 0,
+      "max": 1,
+      "step": 1
+    }
+  ],
+  "checkpoints": [
+    {
+      "t": 0,
+      "label": "Start at A. The frontier contains A."
+    },
+    {
+      "t": 2,
+      "label": "BFS visits A. Its queue adds B and C."
+    },
+    {
+      "t": 4,
+      "label": "BFS visits B. Its queue frontier becomes C, D, E."
+    },
+    {
+      "t": 6,
+      "label": "BFS visits C. Frontier is D, E."
+    },
+    {
+      "t": 8,
+      "label": "BFS visits D. Frontier is E."
+    },
+    {
+      "t": 10,
+      "label": "BFS visits E. All five nodes are visited once."
+    }
+  ],
+  "narration": [
+    {
+      "t": 0,
+      "text": "Start at A. BFS will use a queue, so it explores level by level."
+    },
+    {
+      "t": 2,
+      "text": "Visit A. Its neighbors B and C enter the queue. DFS would follow B first instead of finishing the level."
+    },
+    {
+      "t": 4,
+      "text": "Visit B. Its unvisited neighbors D and E enter the queue, behind C."
+    },
+    {
+      "t": 6,
+      "text": "Visit C. It adds no new nodes, so the frontier is D and E."
+    },
+    {
+      "t": 8,
+      "text": "Visit D. E remains next for BFS."
+    },
+    {
+      "t": 10,
+      "text": "Visit E. The BFS order is A, B, C, D, E. Switch mode to compare the DFS order A, B, D, E, C. Each node appears once."
+    }
+  ],
+  "fallback": {
+    "text": "Graph with edges A-B, A-C, B-D, B-E, E-C. BFS visits A, B, C, D, E using a queue; DFS visits A, B, D, E, C using a stack."
+  },
+  "accessibility": {
+    "alt": "A graph with nodes A through E and edges A-B, A-C, B-D, B-E, E-C. BFS order A, B, C, D, E and DFS order A, B, D, E, C appear as two rows. A green visited band advances along the active row as mode switches.",
+    "reducedMotion": true,
+    "keyboard": true
+  }
+}

@@ -1,0 +1,736 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#0b1220"
+  },
+  "metadata": {
+    "title": "Recursion: the Call Stack for factorial(3)",
+    "subject": "Computer Science",
+    "objective": "Show the call stack growing to the base case and unwinding last-in, first-out.",
+    "learner": "Can read a simple function and a return statement.",
+    "misconceptions": [
+      "Recursion runs all calls at the same time",
+      "The base case is executed before the deeper calls",
+      "The first call returns first"
+    ],
+    "expectedUnderstanding": [
+      "Each recursive call pushes a frame and waits for the call inside it.",
+      "The base case makes no deeper call, so it is the first frame to return.",
+      "Frames pop in last-in, first-out order and pass values back up the stack."
+    ]
+  },
+  "properties": [
+    {
+      "id": "focus",
+      "label": "Inspect one frame",
+      "min": 0,
+      "max": 3,
+      "step": 1,
+      "default": 0
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 48,
+      "text": "Recursion: factorial(3)",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "start"
+    },
+    {
+      "id": "subtitle",
+      "type": "text",
+      "x": 40,
+      "y": 80,
+      "text": "fact(n) = n * fact(n - 1), with fact(0) = 1. Newest call is at the top.",
+      "fontSize": 16,
+      "fill": "#cbd5e1",
+      "anchor": "start"
+    },
+    {
+      "id": "frame3",
+      "type": "rect",
+      "x": 80,
+      "y": 380,
+      "width": 380,
+      "height": 56,
+      "rx": 8,
+      "fill": "#1d4ed8",
+      "opacity": 0
+    },
+    {
+      "id": "frame2",
+      "type": "rect",
+      "x": 80,
+      "y": 310,
+      "width": 380,
+      "height": 56,
+      "rx": 8,
+      "fill": "#1d4ed8",
+      "opacity": 0
+    },
+    {
+      "id": "frame1",
+      "type": "rect",
+      "x": 80,
+      "y": 240,
+      "width": 380,
+      "height": 56,
+      "rx": 8,
+      "fill": "#1d4ed8",
+      "opacity": 0
+    },
+    {
+      "id": "frame0",
+      "type": "rect",
+      "x": 80,
+      "y": 170,
+      "width": 380,
+      "height": 56,
+      "rx": 8,
+      "fill": "#1d4ed8",
+      "opacity": 0
+    },
+    {
+      "id": "call3",
+      "type": "text",
+      "x": 104,
+      "y": 415,
+      "text": "fact(3) - waits for fact(2)",
+      "fontSize": 18,
+      "fill": "#e0f2fe",
+      "anchor": "start",
+      "opacity": 0
+    },
+    {
+      "id": "call2",
+      "type": "text",
+      "x": 104,
+      "y": 345,
+      "text": "fact(2) - waits for fact(1)",
+      "fontSize": 18,
+      "fill": "#e0f2fe",
+      "anchor": "start",
+      "opacity": 0
+    },
+    {
+      "id": "call1",
+      "type": "text",
+      "x": 104,
+      "y": 275,
+      "text": "fact(1) - waits for fact(0)",
+      "fontSize": 18,
+      "fill": "#e0f2fe",
+      "anchor": "start",
+      "opacity": 0
+    },
+    {
+      "id": "call0",
+      "type": "text",
+      "x": 104,
+      "y": 205,
+      "text": "fact(0) - base case",
+      "fontSize": 18,
+      "fill": "#e0f2fe",
+      "anchor": "start",
+      "opacity": 0
+    },
+    {
+      "id": "ret0",
+      "type": "text",
+      "x": 880,
+      "y": 205,
+      "text": "fact(0) = 1",
+      "fontSize": 18,
+      "fill": "#86efac",
+      "anchor": "end",
+      "opacity": 0
+    },
+    {
+      "id": "ret1",
+      "type": "text",
+      "x": 880,
+      "y": 275,
+      "text": "fact(1) = 1 * 1 = 1",
+      "fontSize": 18,
+      "fill": "#86efac",
+      "anchor": "end",
+      "opacity": 0
+    },
+    {
+      "id": "ret2",
+      "type": "text",
+      "x": 880,
+      "y": 345,
+      "text": "fact(2) = 2 * 1 = 2",
+      "fontSize": 18,
+      "fill": "#86efac",
+      "anchor": "end",
+      "opacity": 0
+    },
+    {
+      "id": "ret3",
+      "type": "text",
+      "x": 880,
+      "y": 415,
+      "text": "fact(3) = 3 * 2 = 6",
+      "fontSize": 18,
+      "fill": "#86efac",
+      "anchor": "end",
+      "opacity": 0
+    },
+    {
+      "id": "focusRing",
+      "type": "rect",
+      "x": 70,
+      "y": {
+        "expr": "164 + 70 * focus"
+      },
+      "width": 400,
+      "height": 68,
+      "rx": 8,
+      "fill": "none",
+      "stroke": "#facc15",
+      "strokeWidth": 2,
+      "opacity": 0.7
+    }
+  ],
+  "timeline": {
+    "duration": 14,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "frame3",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 12.9,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 13.3,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "call3",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 12.9,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 13.3,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "frame2",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.8,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 3.2,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 11.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 11.8,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "call2",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.8,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 3.2,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 11.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 11.8,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "frame1",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4.6,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 9.9,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 10.3,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "call1",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4.6,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 9.9,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 10.3,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "frame0",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 6.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 6.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 8.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 8.8,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "call0",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 6.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 6.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 8.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 8.8,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "ret0",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 8.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 8.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "ret1",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 9.9,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 10.3,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "ret2",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 11.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 11.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "ret3",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 12.9,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 13.3,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "ctl-focus",
+      "kind": "slider",
+      "propertyId": "focus",
+      "label": "Inspect a frame: 0 is the newest call at the top"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-rec-start",
+      "at": 0,
+      "title": "Calling fact(3) does not answer yet",
+      "body": "The stack is empty. A call cannot return until the call inside it returns, so the first thing to watch is what gets pushed.",
+      "pause": true
+    },
+    {
+      "id": "cp-rec-push3",
+      "at": 1.4,
+      "title": "Push fact(3)",
+      "body": "fact(3) needs fact(2), so its frame waits on the bottom of the stack. The stack now has one waiting call.",
+      "pause": true
+    },
+    {
+      "id": "cp-rec-push2",
+      "at": 3.2,
+      "title": "Push fact(2)",
+      "body": "fact(2) needs fact(1). Two frames are waiting, and neither can return until the newest call finishes.",
+      "pause": true
+    },
+    {
+      "id": "cp-rec-push1",
+      "at": 5,
+      "title": "Push fact(1)",
+      "body": "fact(1) needs fact(0). The stack grows upward, and the top frame is always the newest call.",
+      "pause": true
+    },
+    {
+      "id": "cp-rec-base",
+      "at": 6.8,
+      "title": "The base case stops the descent",
+      "body": "fact(0) matches the base case, so it makes no deeper call. Only now can a return value be produced.",
+      "pause": true
+    },
+    {
+      "id": "cp-rec-return0",
+      "at": 8.8,
+      "title": "fact(0) returns first",
+      "body": "The top frame returns 1 and pops. This is LIFO: the most recently pushed frame is the first to return.",
+      "pause": true
+    },
+    {
+      "id": "cp-rec-unwind",
+      "at": 11.8,
+      "title": "Each frame hands a value upward",
+      "body": "fact(1) computes 1 * 1, fact(2) computes 2 * 1, and fact(3) computes 3 * 2. Every frame returns after the frame above it.",
+      "pause": true
+    },
+    {
+      "id": "cp-rec-done",
+      "at": 13.3,
+      "title": "The stack empties with the answer 6",
+      "body": "The last frame returns 6, so factorial(3) = 6. The call order was 3, 2, 1, 0 and the return order was 0, 1, 2, 3.",
+      "pause": false
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "Call fact(3). The stack is empty, and nothing can return yet."
+    },
+    {
+      "at": 1.4,
+      "text": "Push fact(3). It waits for fact(2)."
+    },
+    {
+      "at": 3.2,
+      "text": "Push fact(2). It waits for fact(1)."
+    },
+    {
+      "at": 5,
+      "text": "Push fact(1). It waits for fact(0). The newest call sits at the top of the stack."
+    },
+    {
+      "at": 6.8,
+      "text": "fact(0) is the base case, so it makes no deeper call. The descent stops here."
+    },
+    {
+      "at": 8.8,
+      "text": "fact(0) returns 1 and its frame pops. Last in, first out."
+    },
+    {
+      "at": 10.3,
+      "text": "fact(1) receives 1, computes 1 * 1, and returns 1."
+    },
+    {
+      "at": 11.8,
+      "text": "fact(2) receives 1, computes 2 * 1, and returns 2."
+    },
+    {
+      "at": 13.3,
+      "text": "fact(3) receives 2, computes 3 * 2, and returns 6. The stack is empty."
+    }
+  ],
+  "fallback": {
+    "text": "factorial(3) pushes fact(3), fact(2), fact(1) and then fact(0). fact(0) is the base case and returns 1 without a deeper call. The frames then pop in last-in, first-out order: fact(1) returns 1, fact(2) returns 2, and fact(3) returns 6."
+  },
+  "accessibility": {
+    "alt": "Four call frames stack upward for factorial(3), with fact(3) at the bottom and fact(0) on top. After fact(0) hits the base case it returns 1 first, then frames pop from the top and return values 1, 2 and 6 appear in order.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

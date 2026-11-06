@@ -1,0 +1,317 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#0b1220"
+  },
+  "metadata": {
+    "title": "Binary Search: Sorted Input",
+    "subject": "Computer Science",
+    "objective": "Show the interval shrinking and why a sorted array is required.",
+    "learner": "Can read array indices.",
+    "misconceptions": [
+      "Binary search works on any array",
+      "The midpoint is always the answer"
+    ],
+    "expectedUnderstanding": [
+      "Binary search keeps a low and high bound around the remaining interval.",
+      "A midpoint comparison discards one half because the input is sorted.",
+      "The search terminates when the target is found or when low passes high."
+    ]
+  },
+  "properties": [
+    {
+      "id": "step",
+      "label": "Search step",
+      "min": 0,
+      "max": 3,
+      "step": 1,
+      "default": 0
+    }
+  ],
+  "primitives": [
+    {
+      "type": "text",
+      "x": 40,
+      "y": 50,
+      "text": "Binary Search: Sorted Input",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 920,
+      "y": 50,
+      "text": "target = 12",
+      "fontSize": 18,
+      "fill": "#fbbf24",
+      "anchor": "end"
+    },
+    {
+      "type": "rect",
+      "x": 160,
+      "y": 255,
+      "width": 80,
+      "height": 90,
+      "fill": "#1e293b"
+    },
+    {
+      "type": "rect",
+      "x": 270,
+      "y": 255,
+      "width": 80,
+      "height": 90,
+      "fill": "#1e293b"
+    },
+    {
+      "type": "rect",
+      "x": 380,
+      "y": 255,
+      "width": 80,
+      "height": 90,
+      "fill": "#1e293b"
+    },
+    {
+      "type": "rect",
+      "x": 490,
+      "y": 255,
+      "width": 80,
+      "height": 90,
+      "fill": "#1e293b"
+    },
+    {
+      "type": "rect",
+      "x": 600,
+      "y": 255,
+      "width": 80,
+      "height": 90,
+      "fill": "#1e293b"
+    },
+    {
+      "type": "rect",
+      "x": 710,
+      "y": 255,
+      "width": 80,
+      "height": 90,
+      "fill": "#1e293b"
+    },
+    {
+      "type": "text",
+      "x": 200,
+      "y": 312,
+      "text": "2",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 310,
+      "y": 312,
+      "text": "5",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 420,
+      "y": 312,
+      "text": "8",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 530,
+      "y": 312,
+      "text": "12",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 640,
+      "y": 312,
+      "text": "16",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 750,
+      "y": 312,
+      "text": "23",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "type": "rect",
+      "x": 160,
+      "y": 255,
+      "width": {
+        "expr": "110 * (3 * min(max(step, 0), 1))"
+      },
+      "height": 90,
+      "fill": "#020617b3"
+    },
+    {
+      "type": "rect",
+      "x": {
+        "expr": "240 + 110 * (5 - 2 * min(max(step - 1, 0), 1))"
+      },
+      "y": 255,
+      "width": {
+        "expr": "max(0, 600 - 110 * (5 - 2 * min(max(step - 1, 0), 1)))"
+      },
+      "height": 90,
+      "fill": "#020617b3"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "200 + 330 * min(max(step, 0), 1)"
+      },
+      "y": 227,
+      "text": "low",
+      "fontSize": 15,
+      "fill": "#fbbf24",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "420 + 220 * min(max(step, 0), 1) - 110 * min(max(step - 1, 0), 1)"
+      },
+      "y": 207,
+      "text": "mid",
+      "fontSize": 15,
+      "fill": "#e879f9",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "750 - 220 * min(max(step - 1, 0), 1)"
+      },
+      "y": 392,
+      "text": "high",
+      "fontSize": 15,
+      "fill": "#38bdf8",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": 530,
+      "y": {
+        "expr": "560 - 80 * min(max(step - 2, 0), 1)"
+      },
+      "text": "found: index 3, value 12",
+      "fontSize": 18,
+      "fill": "#4ade80",
+      "anchor": "middle"
+    }
+  ],
+  "timeline": {
+    "duration": 12,
+    "tracks": [
+      {
+        "target": "step",
+        "keyframes": [
+          {
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 2.4,
+            "value": 0
+          },
+          {
+            "t": 3,
+            "value": 1
+          },
+          {
+            "t": 5.4,
+            "value": 1
+          },
+          {
+            "t": 6,
+            "value": 2
+          },
+          {
+            "t": 8.4,
+            "value": 2
+          },
+          {
+            "t": 9,
+            "value": 3
+          },
+          {
+            "t": 12,
+            "value": 3
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "type": "slider",
+      "target": "step",
+      "label": "Search step",
+      "min": 0,
+      "max": 3,
+      "step": 1
+    }
+  ],
+  "checkpoints": [
+    {
+      "t": 0,
+      "label": "low=0, high=5, mid=2. A[2]=8 is below 12."
+    },
+    {
+      "t": 3,
+      "label": "Discard indices 0 to 2. low=3, high=5, mid=4."
+    },
+    {
+      "t": 6,
+      "label": "A[4]=16 is above 12. Discard indices 4 and 5. high=3."
+    },
+    {
+      "t": 9,
+      "label": "low=high=3. A[3]=12, so the search returns index 3."
+    }
+  ],
+  "narration": [
+    {
+      "t": 0,
+      "text": "The input is sorted: 2, 5, 8, 12, 16, 23. Search for 12 with low 0, high 5, and mid 2."
+    },
+    {
+      "t": 3,
+      "text": "8 is below 12. Because the array is sorted, everything at or left of mid is too small, so low moves to 3."
+    },
+    {
+      "t": 6,
+      "text": "Now mid is 4 and the value is 16. It is above 12, so high moves left to 3. The right half is excluded."
+    },
+    {
+      "t": 9,
+      "text": "low and high meet at index 3. The midpoint value is 12, so the result is index 3."
+    }
+  ],
+  "fallback": {
+    "text": "Sorted array 2, 5, 8, 12, 16, 23. Low, high, and mid shrink the interval until index 3 contains target 12."
+  },
+  "accessibility": {
+    "alt": "A sorted array 2, 5, 8, 12, 16, 23 with target 12. Low, mid, and high labels move as whole halves dim out. The interval narrows until all three meet at index 3, where 12 is found.",
+    "reducedMotion": true,
+    "keyboard": true
+  }
+}

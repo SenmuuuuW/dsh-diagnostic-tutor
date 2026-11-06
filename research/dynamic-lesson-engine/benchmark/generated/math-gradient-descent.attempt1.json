@@ -1,0 +1,78 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 900, "height": 520, "background": "#f7f9fc" },
+  "metadata": {
+    "title": "Gradient Descent: Steps Go Against the Gradient",
+    "subject": "Mathematics",
+    "objective": "Let a learner who knows algebra but not calculus see why a step goes opposite the gradient.",
+    "learner": "Knows basic algebra; has not studied calculus.",
+    "misconceptions": [
+      "A larger learning rate is always better",
+      "The gradient points downhill"
+    ],
+    "expectedUnderstanding": [
+      "The gradient of f(x)=x^2 is 2x, which points toward increasing f, that is, uphill.",
+      "The update x - eta*(2x) moves opposite the gradient, toward the valley at x=0.",
+      "The learning rate eta scales how far the step goes, and a step larger than half the valley width crosses over instead of settling."
+    ]
+  },
+  "properties": [
+    { "id": "x", "label": "Current position x", "min": -2, "max": 2, "step": 0.01, "default": 1.5 },
+    { "id": "eta", "label": "Learning rate (step size)", "min": 0.1, "max": 1, "step": 0.01, "default": 0.2 }
+  ],
+  "primitives": [
+    { "id": "axisX", "type": "line", "x1": 120, "y1": 430, "x2": 780, "y2": 430, "stroke": "#94a3b8", "strokeWidth": 1.5 },
+    { "id": "axisY", "type": "line", "x1": 450, "y1": 205, "x2": 450, "y2": 450, "stroke": "#cbd5e1", "strokeWidth": 1 },
+    { "id": "curve", "type": "path", "d": "M 130 210 Q 450 650 770 210", "stroke": "#1e293b", "strokeWidth": 3, "fill": "none" },
+    { "id": "tangent", "type": "line", "x1": { "expr": "450 + 160 * x - 120" }, "y1": { "expr": "430 - 55 * x ^ 2 + 82.5 * x" }, "x2": { "expr": "450 + 160 * x + 120" }, "y2": { "expr": "430 - 55 * x ^ 2 - 82.5 * x" }, "stroke": "#7c3aed", "strokeWidth": 2 },
+    { "id": "drop", "type": "line", "x1": { "expr": "450 + 160 * x" }, "y1": { "expr": "430 - 55 * x ^ 2" }, "x2": { "expr": "450 + 160 * x" }, "y2": 430, "stroke": "#94a3b8", "strokeWidth": 1 },
+    { "id": "point", "type": "circle", "cx": { "expr": "450 + 160 * x" }, "cy": { "expr": "430 - 55 * x ^ 2" }, "r": 9, "fill": "#1d4ed8", "stroke": "#ffffff", "strokeWidth": 2 },
+    { "id": "nextPoint", "type": "circle", "cx": { "expr": "450 + 160 * (x - 2 * eta * x)" }, "cy": { "expr": "430 - 55 * (x - 2 * eta * x) ^ 2" }, "r": 8, "fill": "#ffffff", "stroke": "#047857", "strokeWidth": 3 },
+    { "id": "gradArrow", "type": "arrow", "x1": { "expr": "450 + 160 * x" }, "y1": 456, "x2": { "expr": "450 + 220 * x" }, "y2": 456, "stroke": "#b91c1c", "strokeWidth": 3 },
+    { "id": "stepArrow", "type": "arrow", "x1": { "expr": "450 + 160 * x" }, "y1": 484, "x2": { "expr": "450 + 160 * x - 320 * eta * x" }, "y2": 484, "stroke": "#047857", "strokeWidth": 3 },
+    { "id": "title", "type": "text", "x": 450, "y": 38, "text": "Gradient descent: each step goes against the gradient", "fontSize": 19, "fill": "#0f172a", "anchor": "middle" },
+    { "id": "fnLabel", "type": "text", "x": 700, "y": 250, "text": "f(x) = x^2", "fontSize": 16, "fill": "#1e293b", "anchor": "start" },
+    { "id": "valleyLabel", "type": "text", "x": 450, "y": 198, "text": "valley: x = 0, gradient = 0", "fontSize": 13, "fill": "#475569", "anchor": "middle" },
+    { "id": "legGrad", "type": "text", "x": 60, "y": 70, "text": "red: gradient +2x, which points uphill", "fontSize": 14, "fill": "#b91c1c", "anchor": "start" },
+    { "id": "legStep", "type": "text", "x": 60, "y": 94, "text": "green: step = -eta * gradient, which points downhill", "fontSize": 14, "fill": "#047857", "anchor": "start" },
+    { "id": "hint", "type": "text", "x": 60, "y": 118, "text": "eta below 0.5 stops before the valley; above 0.5 it overshoots", "fontSize": 13, "fill": "#475569", "anchor": "start" },
+    { "id": "xLabel", "type": "text", "x": 790, "y": 436, "text": "x", "fontSize": 14, "fill": "#475569", "anchor": "start" },
+    { "id": "fLabel", "type": "text", "x": 462, "y": 210, "text": "f", "fontSize": 14, "fill": "#475569", "anchor": "start" }
+  ],
+  "timeline": {
+    "duration": 9,
+    "tracks": [
+      { "target": { "primitive": "tangent", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 1.2, "value": 1 } ] },
+      { "target": { "primitive": "gradArrow", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 2.4, "value": 0 }, { "at": 3, "value": 1 } ] },
+      { "target": { "primitive": "stepArrow", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 4.8, "value": 0 }, { "at": 5.4, "value": 1 } ] },
+      { "target": { "primitive": "nextPoint", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 5.4, "value": 0 }, { "at": 6, "value": 1 } ] },
+      { "target": { "primitive": "point", "property": "r" }, "keyframes": [ { "at": 0, "value": 7 }, { "at": 1.2, "value": 9 }, { "at": 6, "value": 9 }, { "at": 6.6, "value": 11 }, { "at": 7.2, "value": 9 } ] }
+    ]
+  },
+  "controls": [
+    { "id": "ctlX", "kind": "slider", "propertyId": "x", "label": "Drag the point along the curve" },
+    { "id": "ctlEta", "kind": "slider", "propertyId": "eta", "label": "Change the step size" }
+  ],
+  "checkpoints": [
+    { "id": "cp1", "at": 0, "title": "A point on a cost curve", "body": "The blue dot sits at position x on f(x) = x^2. The curve is a cost we want to make small, and the bottom of the valley is at x = 0.", "pause": true, "learnerAction": "continue" },
+    { "id": "cp2", "at": 2.4, "title": "Which way does the gradient point?", "body": "Predict: the gradient here is 2x. On the right of the valley it points right, toward higher f. Is that uphill or downhill? Say your answer, then continue.", "pause": true, "learnerAction": "answer" },
+    { "id": "cp3", "at": 4.8, "title": "Turn it around", "body": "The update is x - eta*(2x). The green arrow is the red gradient reversed and scaled by eta, so it points downhill toward the valley. The gradient itself points uphill.", "pause": true, "learnerAction": "continue" },
+    { "id": "cp4", "at": 6.6, "title": "Step size is a trade-off", "body": "Raise eta past 0.5 and the green step lands on the far side of the valley. Near eta = 1 the point flips side to side instead of settling. A larger learning rate is not automatically better.", "pause": true, "learnerAction": "continue" },
+    { "id": "cp5", "at": 7.8, "title": "Try it yourself", "body": "Set eta near 0.2 and drag x from 2 down to 0. Watch the green arrow shrink as the slope flattens, and watch the hollow green dot land closer to the valley.", "pause": true, "learnerAction": "continue" }
+  ],
+  "narration": [
+    { "at": 0, "text": "Here is a cost curve, f of x equals x squared. The blue point is our current guess." },
+    { "at": 2.4, "text": "The slope at that point is 2x. Taken as a direction, the gradient points toward bigger cost, which is uphill." },
+    { "at": 3.6, "text": "Because the gradient points uphill, the update subtracts it. That minus sign is the whole idea." },
+    { "at": 4.8, "text": "Now the step: x minus eta times 2x. Eta sets how far along the downhill direction we travel." },
+    { "at": 6.6, "text": "Push eta past one half and the step crosses the valley. Near eta equals one, the point just flips side to side." }
+  ],
+  "fallback": {
+    "text": "Static figure. A parabola f(x) = x^2 with a blue point at x on the curve and a drop line to the x-axis. A red arrow along the axis points in the +2x direction, which is uphill. A green arrow from the same start points in the -2x direction, scaled by eta, which is the step. A hollow green dot marks the next position x - 2*eta*x on the curve. With eta above 0.5 the next dot lands on the far side of the valley at x = 0."
+  },
+  "accessibility": {
+    "alt": "A parabola f(x)=x squared with a movable point. A red arrow shows the gradient +2x pointing uphill; a green arrow shows the step -eta*2x pointing downhill and scaled by the learning rate eta; a hollow green dot shows where the next step lands, crossing the valley at x=0 when eta is above 0.5.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

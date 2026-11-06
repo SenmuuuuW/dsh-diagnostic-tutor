@@ -1,0 +1,998 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 900,
+    "height": 600,
+    "background": "#0f172a"
+  },
+  "metadata": {
+    "title": "Wave Interference: Adding Two Waves",
+    "subject": "Physics",
+    "objective": "Show constructive and destructive interference as two waves combine.",
+    "learner": "Knows wave peaks and troughs.",
+    "misconceptions": [
+      "Waves cancel by destroying energy",
+      "Interference means the waves stop existing"
+    ],
+    "expectedUnderstanding": [
+      "In-phase waves add to a larger displacement.",
+      "Opposite-phase waves cancel at the observation points while the individual waves continue.",
+      "A phase shift changes whether interference is constructive or destructive.",
+      "Cancellation redistributes energy rather than destroying it."
+    ]
+  },
+  "properties": [
+    {
+      "id": "phase",
+      "label": "Phase shift of wave 2",
+      "min": 0,
+      "max": 360,
+      "step": 10,
+      "default": 0,
+      "unit": "deg"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "baseline1",
+      "type": "line",
+      "x1": 280,
+      "y1": 150,
+      "x2": 830,
+      "y2": 150,
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "baseline2",
+      "type": "line",
+      "x1": 280,
+      "y1": 300,
+      "x2": 830,
+      "y2": 300,
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "baselineSum",
+      "type": "line",
+      "x1": 280,
+      "y1": 450,
+      "x2": 830,
+      "y2": 450,
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "label1",
+      "type": "text",
+      "x": 80,
+      "y": 155,
+      "text": "Wave 1",
+      "fontSize": 17,
+      "fill": "#e2e8f0",
+      "anchor": "start"
+    },
+    {
+      "id": "label2",
+      "type": "text",
+      "x": 80,
+      "y": 305,
+      "text": "Wave 2: phase φ",
+      "fontSize": 17,
+      "fill": "#e2e8f0",
+      "anchor": "start"
+    },
+    {
+      "id": "labelSum",
+      "type": "text",
+      "x": 80,
+      "y": 455,
+      "text": "Sum 1 + 2",
+      "fontSize": 17,
+      "fill": "#e2e8f0",
+      "anchor": "start"
+    },
+    {
+      "id": "topNote",
+      "type": "text",
+      "x": 80,
+      "y": 55,
+      "text": "Two waves + sum: φ = 0° adds; φ = 180° cancels",
+      "fontSize": 19,
+      "fill": "#f8fafc",
+      "anchor": "start"
+    },
+    {
+      "id": "energyNote",
+      "type": "text",
+      "x": 80,
+      "y": 580,
+      "text": "Cancellation redistributes energy; it does not destroy it",
+      "fontSize": 14,
+      "fill": "#cbd5e1",
+      "anchor": "start"
+    },
+    {
+      "id": "wave1a",
+      "type": "circle",
+      "cx": 330,
+      "cy": {
+        "expr": "150 - 45*sin(-0.0)"
+      },
+      "r": 11,
+      "fill": "#38bdf8",
+      "stroke": "#0ea5e9",
+      "strokeWidth": 2
+    },
+    {
+      "id": "wave1b",
+      "type": "circle",
+      "cx": 480,
+      "cy": {
+        "expr": "150 - 45*sin(0.9 - 0.0)"
+      },
+      "r": 11,
+      "fill": "#38bdf8",
+      "stroke": "#0ea5e9",
+      "strokeWidth": 2
+    },
+    {
+      "id": "wave1c",
+      "type": "circle",
+      "cx": 630,
+      "cy": {
+        "expr": "150 - 45*sin(1.8 - 0.0)"
+      },
+      "r": 11,
+      "fill": "#38bdf8",
+      "stroke": "#0ea5e9",
+      "strokeWidth": 2
+    },
+    {
+      "id": "wave1d",
+      "type": "circle",
+      "cx": 780,
+      "cy": {
+        "expr": "150 - 45*sin(2.7 - 0.0)"
+      },
+      "r": 11,
+      "fill": "#38bdf8",
+      "stroke": "#0ea5e9",
+      "strokeWidth": 2
+    },
+    {
+      "id": "wave2a",
+      "type": "circle",
+      "cx": 330,
+      "cy": {
+        "expr": "300 - 45*sin(-0.0 + phase*0.0174532925)"
+      },
+      "r": 11,
+      "fill": "#fb923c",
+      "stroke": "#f97316",
+      "strokeWidth": 2
+    },
+    {
+      "id": "wave2b",
+      "type": "circle",
+      "cx": 480,
+      "cy": {
+        "expr": "300 - 45*sin(0.9 - 0.0 + phase*0.0174532925)"
+      },
+      "r": 11,
+      "fill": "#fb923c",
+      "stroke": "#f97316",
+      "strokeWidth": 2
+    },
+    {
+      "id": "wave2c",
+      "type": "circle",
+      "cx": 630,
+      "cy": {
+        "expr": "300 - 45*sin(1.8 - 0.0 + phase*0.0174532925)"
+      },
+      "r": 11,
+      "fill": "#fb923c",
+      "stroke": "#f97316",
+      "strokeWidth": 2
+    },
+    {
+      "id": "wave2d",
+      "type": "circle",
+      "cx": 780,
+      "cy": {
+        "expr": "300 - 45*sin(2.7 - 0.0 + phase*0.0174532925)"
+      },
+      "r": 11,
+      "fill": "#fb923c",
+      "stroke": "#f97316",
+      "strokeWidth": 2
+    },
+    {
+      "id": "suma",
+      "type": "circle",
+      "cx": 330,
+      "cy": {
+        "expr": "450 - 45*sin(-0.0) - 45*sin(-0.0 + phase*0.0174532925)"
+      },
+      "r": 15,
+      "fill": "#4ade80",
+      "stroke": "#22c55e",
+      "strokeWidth": 2
+    },
+    {
+      "id": "sumb",
+      "type": "circle",
+      "cx": 480,
+      "cy": {
+        "expr": "450 - 45*sin(0.9 - 0.0) - 45*sin(0.9 - 0.0 + phase*0.0174532925)"
+      },
+      "r": 15,
+      "fill": "#4ade80",
+      "stroke": "#22c55e",
+      "strokeWidth": 2
+    },
+    {
+      "id": "sumc",
+      "type": "circle",
+      "cx": 630,
+      "cy": {
+        "expr": "450 - 45*sin(1.8 - 0.0) - 45*sin(1.8 - 0.0 + phase*0.0174532925)"
+      },
+      "r": 15,
+      "fill": "#4ade80",
+      "stroke": "#22c55e",
+      "strokeWidth": 2
+    },
+    {
+      "id": "sumd",
+      "type": "circle",
+      "cx": 780,
+      "cy": {
+        "expr": "450 - 45*sin(2.7 - 0.0) - 45*sin(2.7 - 0.0 + phase*0.0174532925)"
+      },
+      "r": 15,
+      "fill": "#4ade80",
+      "stroke": "#22c55e",
+      "strokeWidth": 2
+    }
+  ],
+  "timeline": {
+    "duration": 4.5,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "wave1a",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "150 - 45*sin(-0.0)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "150 - 45*sin(-1.08)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "150 - 45*sin(-2.16)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "150 - 45*sin(-3.24)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "150 - 45*sin(-4.32)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "150 - 45*sin(-5.4)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "150 - 45*sin(-6.48)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "150 - 45*sin(-7.56)"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "wave1b",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "150 - 45*sin(0.9 - 0.0)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "150 - 45*sin(0.9 - 1.08)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "150 - 45*sin(0.9 - 2.16)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "150 - 45*sin(0.9 - 3.24)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "150 - 45*sin(0.9 - 4.32)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "150 - 45*sin(0.9 - 5.4)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "150 - 45*sin(0.9 - 6.48)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "150 - 45*sin(0.9 - 7.56)"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "wave1c",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "150 - 45*sin(1.8 - 0.0)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "150 - 45*sin(1.8 - 1.08)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "150 - 45*sin(1.8 - 2.16)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "150 - 45*sin(1.8 - 3.24)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "150 - 45*sin(1.8 - 4.32)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "150 - 45*sin(1.8 - 5.4)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "150 - 45*sin(1.8 - 6.48)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "150 - 45*sin(1.8 - 7.56)"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "wave1d",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "150 - 45*sin(2.7 - 0.0)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "150 - 45*sin(2.7 - 1.08)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "150 - 45*sin(2.7 - 2.16)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "150 - 45*sin(2.7 - 3.24)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "150 - 45*sin(2.7 - 4.32)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "150 - 45*sin(2.7 - 5.4)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "150 - 45*sin(2.7 - 6.48)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "150 - 45*sin(2.7 - 7.56)"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "wave2a",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "300 - 45*sin(-0.0 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "300 - 45*sin(-1.08 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "300 - 45*sin(-2.16 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "300 - 45*sin(-3.24 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "300 - 45*sin(-4.32 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "300 - 45*sin(-5.4 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "300 - 45*sin(-6.48 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "300 - 45*sin(-7.56 + phase*0.0174532925)"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "wave2b",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "300 - 45*sin(0.9 - 0.0 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "300 - 45*sin(0.9 - 1.08 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "300 - 45*sin(0.9 - 2.16 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "300 - 45*sin(0.9 - 3.24 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "300 - 45*sin(0.9 - 4.32 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "300 - 45*sin(0.9 - 5.4 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "300 - 45*sin(0.9 - 6.48 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "300 - 45*sin(0.9 - 7.56 + phase*0.0174532925)"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "wave2c",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "300 - 45*sin(1.8 - 0.0 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "300 - 45*sin(1.8 - 1.08 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "300 - 45*sin(1.8 - 2.16 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "300 - 45*sin(1.8 - 3.24 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "300 - 45*sin(1.8 - 4.32 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "300 - 45*sin(1.8 - 5.4 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "300 - 45*sin(1.8 - 6.48 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "300 - 45*sin(1.8 - 7.56 + phase*0.0174532925)"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "wave2d",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "300 - 45*sin(2.7 - 0.0 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "300 - 45*sin(2.7 - 1.08 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "300 - 45*sin(2.7 - 2.16 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "300 - 45*sin(2.7 - 3.24 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "300 - 45*sin(2.7 - 4.32 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "300 - 45*sin(2.7 - 5.4 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "300 - 45*sin(2.7 - 6.48 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "300 - 45*sin(2.7 - 7.56 + phase*0.0174532925)"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "suma",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "450 - 45*sin(-0.0) - 45*sin(-0.0 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "450 - 45*sin(-1.08) - 45*sin(-1.08 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "450 - 45*sin(-2.16) - 45*sin(-2.16 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "450 - 45*sin(-3.24) - 45*sin(-3.24 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "450 - 45*sin(-4.32) - 45*sin(-4.32 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "450 - 45*sin(-5.4) - 45*sin(-5.4 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "450 - 45*sin(-6.48) - 45*sin(-6.48 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "450 - 45*sin(-7.56) - 45*sin(-7.56 + phase*0.0174532925)"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "sumb",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "450 - 45*sin(0.9 - 0.0) - 45*sin(0.9 - 0.0 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "450 - 45*sin(0.9 - 1.08) - 45*sin(0.9 - 1.08 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "450 - 45*sin(0.9 - 2.16) - 45*sin(0.9 - 2.16 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "450 - 45*sin(0.9 - 3.24) - 45*sin(0.9 - 3.24 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "450 - 45*sin(0.9 - 4.32) - 45*sin(0.9 - 4.32 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "450 - 45*sin(0.9 - 5.4) - 45*sin(0.9 - 5.4 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "450 - 45*sin(0.9 - 6.48) - 45*sin(0.9 - 6.48 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "450 - 45*sin(0.9 - 7.56) - 45*sin(0.9 - 7.56 + phase*0.0174532925)"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "sumc",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "450 - 45*sin(1.8 - 0.0) - 45*sin(1.8 - 0.0 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "450 - 45*sin(1.8 - 1.08) - 45*sin(1.8 - 1.08 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "450 - 45*sin(1.8 - 2.16) - 45*sin(1.8 - 2.16 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "450 - 45*sin(1.8 - 3.24) - 45*sin(1.8 - 3.24 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "450 - 45*sin(1.8 - 4.32) - 45*sin(1.8 - 4.32 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "450 - 45*sin(1.8 - 5.4) - 45*sin(1.8 - 5.4 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "450 - 45*sin(1.8 - 6.48) - 45*sin(1.8 - 6.48 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "450 - 45*sin(1.8 - 7.56) - 45*sin(1.8 - 7.56 + phase*0.0174532925)"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "sumd",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "450 - 45*sin(2.7 - 0.0) - 45*sin(2.7 - 0.0 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 0.6,
+            "value": {
+              "expr": "450 - 45*sin(2.7 - 1.08) - 45*sin(2.7 - 1.08 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.2,
+            "value": {
+              "expr": "450 - 45*sin(2.7 - 2.16) - 45*sin(2.7 - 2.16 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 1.8,
+            "value": {
+              "expr": "450 - 45*sin(2.7 - 3.24) - 45*sin(2.7 - 3.24 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 2.4,
+            "value": {
+              "expr": "450 - 45*sin(2.7 - 4.32) - 45*sin(2.7 - 4.32 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.0,
+            "value": {
+              "expr": "450 - 45*sin(2.7 - 5.4) - 45*sin(2.7 - 5.4 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 3.6,
+            "value": {
+              "expr": "450 - 45*sin(2.7 - 6.48) - 45*sin(2.7 - 6.48 + phase*0.0174532925)"
+            }
+          },
+          {
+            "at": 4.2,
+            "value": {
+              "expr": "450 - 45*sin(2.7 - 7.56) - 45*sin(2.7 - 7.56 + phase*0.0174532925)"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "phaseControl",
+      "kind": "slider",
+      "propertyId": "phase",
+      "label": "Phase shift of wave 2"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "wave-watch",
+      "at": 0.8,
+      "title": "Watch the three rows",
+      "body": "The top row is wave 1, the middle row is wave 2, and the bottom row is their sum at the same positions. The individual waves keep moving even when the sum is zero.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "wave-phase",
+      "at": 2.3,
+      "title": "Change the phase",
+      "body": "At a phase of 0 degrees the waves are in step and the sum has twice the displacement. At 180 degrees a peak meets a trough and the sum sits on the baseline.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "wave-check",
+      "at": 4.0,
+      "title": "Check the energy claim",
+      "body": "When the sum is zero at these points, has the energy been destroyed? No. The waves still carry energy; interference redistributes it. The waves do not stop existing, and they do not cancel each other out of existence.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "Two waves oscillate at the same points. The bottom row adds their displacements."
+    },
+    {
+      "at": 1.2,
+      "text": "With zero phase shift, peaks meet peaks and troughs meet troughs. The sum is larger."
+    },
+    {
+      "at": 2.4,
+      "text": "Set the phase to 180 degrees. A peak meets a trough, so the sum is zero at these positions."
+    },
+    {
+      "at": 3.6,
+      "text": "The cancellation is local. The waves still exist and still carry energy; the energy is redistributed."
+    }
+  ],
+  "fallback": {
+    "text": "Two waves with a controllable phase shift are added at several positions. In phase, their displacements add. At 180 degrees out of phase, a peak meets a trough and the sum is zero at the observed points. The individual waves continue, and their energy is redistributed rather than destroyed."
+  },
+  "accessibility": {
+    "alt": "Three labeled rows of dots show wave 1, wave 2, and their sum. The dots oscillate vertically; the sum doubles when in phase and flattens at 180 degrees. A note says cancellation redistributes energy rather than destroying it.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

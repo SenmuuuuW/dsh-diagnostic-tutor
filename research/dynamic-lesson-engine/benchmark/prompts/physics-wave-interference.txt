@@ -1,0 +1,30 @@
+You are participating in a v0.7 research spike on AI-generated teaching scenes. Design ONE SceneSpec v0 for the learning case below.
+
+Read the schema at /Users/sunjungong/Documents/DSH/dsh-diagnostic-tutor/research/dynamic-lesson-engine/SCHEMA.md and inspect examples only if useful. The scene must be safe declarative JSON; no JavaScript, HTML, CSS, external URLs, event handlers, or images. Use only the documented primitives, bounded expressions, timeline, controls, checkpoints and narration. Let your teaching judgment decide the visual representation; do not force a fixed diagram.
+
+Use the write tool to save ONLY the JSON object (no markdown, no commentary) to /tmp/udt-scene-bench/physics-wave-interference.json, then reply with "saved physics-wave-interference".
+
+CASE:
+{
+  "id": "physics-wave-interference",
+  "subject": "Physics",
+  "topic": "Wave Interference",
+  "objective": "Show constructive and destructive interference as two waves combine.",
+  "learner": "Knows wave peaks and troughs.",
+  "expectedBehavior": [
+    "Two source waves move",
+    "Their sum is shown",
+    "Phase shift changes the sum"
+  ],
+  "misconceptions": [
+    "Waves cancel by destroying energy",
+    "Interference means the waves stop existing"
+  ],
+  "requiredInteraction": "Change phase or distance between sources.",
+  "correctnessCriteria": [
+    "In-phase waves add",
+    "Opposite-phase waves cancel at the observed point",
+    "Energy language is not false"
+  ],
+  "accessibility": "alt; keyboard; pattern not color-only"
+}

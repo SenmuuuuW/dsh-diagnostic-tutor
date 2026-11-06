@@ -1,0 +1,393 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#0b1220"
+  },
+  "metadata": {
+    "title": "Recursion: Call Stack",
+    "subject": "Computer Science",
+    "objective": "Show the call stack growing and unwinding for a recursive function.",
+    "learner": "Can read a simple function.",
+    "misconceptions": [
+      "Recursion runs all calls simultaneously",
+      "The base case is executed first"
+    ],
+    "expectedUnderstanding": [
+      "A recursive call adds a frame to the call stack and waits for its result.",
+      "The base case stops the descent before any return value is produced.",
+      "Frames return in last-in, first-out order and pass values back up the stack."
+    ]
+  },
+  "properties": [
+    {
+      "id": "step",
+      "label": "Call stack step",
+      "min": 0,
+      "max": 8,
+      "step": 1,
+      "default": 0
+    }
+  ],
+  "primitives": [
+    {
+      "type": "text",
+      "x": 40,
+      "y": 50,
+      "text": "Recursion: factorial(3)",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 40,
+      "y": 82,
+      "text": "Calls wait on a stack; the newest call returns first.",
+      "fontSize": 16,
+      "fill": "#cbd5e1",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 40,
+      "y": 118,
+      "text": "fact(n) = n * fact(n - 1), with fact(0) = 1",
+      "fontSize": 16,
+      "fill": "#93c5fd",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 560,
+      "y": 118,
+      "text": "base case: fact(0) = 1",
+      "fontSize": 16,
+      "fill": "#86efac",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 90,
+      "y": 150,
+      "text": "call stack (top first)",
+      "fontSize": 16,
+      "fill": "#94a3b8",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": 560,
+      "y": 150,
+      "text": "returned values",
+      "fontSize": 16,
+      "fill": "#94a3b8",
+      "anchor": "start"
+    },
+    {
+      "type": "rect",
+      "x": {
+        "expr": "1100 - 1010 * min(max(step - 3, 0), 1) + 470 * min(max(step - 4, 0), 1)"
+      },
+      "y": 170,
+      "width": 380,
+      "height": 58,
+      "fill": "#1d4ed8"
+    },
+    {
+      "type": "rect",
+      "x": {
+        "expr": "1100 - 1010 * min(max(step - 2, 0), 1) + 470 * min(max(step - 5, 0), 1)"
+      },
+      "y": 240,
+      "width": 380,
+      "height": 58,
+      "fill": "#1d4ed8"
+    },
+    {
+      "type": "rect",
+      "x": {
+        "expr": "1100 - 1010 * min(max(step - 1, 0), 1) + 470 * min(max(step - 6, 0), 1)"
+      },
+      "y": 310,
+      "width": 380,
+      "height": 58,
+      "fill": "#1d4ed8"
+    },
+    {
+      "type": "rect",
+      "x": {
+        "expr": "1100 - 1010 * min(max(step, 0), 1) + 470 * min(max(step - 7, 0), 1)"
+      },
+      "y": 380,
+      "width": 380,
+      "height": 58,
+      "fill": "#1d4ed8"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "1124 - 1010 * min(max(step - 3, 0), 1) + 470 * min(max(step - 4, 0), 1)"
+      },
+      "y": 205,
+      "text": "fact(0) - base case",
+      "fontSize": 20,
+      "fill": "#e0f2fe",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "1124 - 1010 * min(max(step - 2, 0), 1) + 470 * min(max(step - 5, 0), 1)"
+      },
+      "y": 275,
+      "text": "fact(1) - needs fact(0)",
+      "fontSize": 20,
+      "fill": "#e0f2fe",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "1124 - 1010 * min(max(step - 1, 0), 1) + 470 * min(max(step - 6, 0), 1)"
+      },
+      "y": 345,
+      "text": "fact(2) - needs fact(1)",
+      "fontSize": 20,
+      "fill": "#e0f2fe",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "1124 - 1010 * min(max(step, 0), 1) + 470 * min(max(step - 7, 0), 1)"
+      },
+      "y": 415,
+      "text": "fact(3) - needs fact(2)",
+      "fontSize": 20,
+      "fill": "#e0f2fe",
+      "anchor": "start"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "1060 - 170 * min(max(step - 4, 0), 1)"
+      },
+      "y": 205,
+      "text": "= 1",
+      "fontSize": 22,
+      "fill": "#86efac",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "1060 - 170 * min(max(step - 5, 0), 1)"
+      },
+      "y": 275,
+      "text": "= 1",
+      "fontSize": 22,
+      "fill": "#86efac",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "1060 - 170 * min(max(step - 6, 0), 1)"
+      },
+      "y": 345,
+      "text": "= 2",
+      "fontSize": 22,
+      "fill": "#86efac",
+      "anchor": "middle"
+    },
+    {
+      "type": "text",
+      "x": {
+        "expr": "1060 - 170 * min(max(step - 7, 0), 1)"
+      },
+      "y": 415,
+      "text": "= 6",
+      "fontSize": 22,
+      "fill": "#86efac",
+      "anchor": "middle"
+    }
+  ],
+  "timeline": {
+    "duration": 16,
+    "tracks": [
+      {
+        "target": "step",
+        "keyframes": [
+          {
+            "t": 0,
+            "value": 0
+          },
+          {
+            "t": 1.6,
+            "value": 0
+          },
+          {
+            "t": 2,
+            "value": 1
+          },
+          {
+            "t": 3.6,
+            "value": 1
+          },
+          {
+            "t": 4,
+            "value": 2
+          },
+          {
+            "t": 5.6,
+            "value": 2
+          },
+          {
+            "t": 6,
+            "value": 3
+          },
+          {
+            "t": 7.6,
+            "value": 3
+          },
+          {
+            "t": 8,
+            "value": 4
+          },
+          {
+            "t": 9.2,
+            "value": 4
+          },
+          {
+            "t": 9.6,
+            "value": 5
+          },
+          {
+            "t": 10.6,
+            "value": 5
+          },
+          {
+            "t": 11,
+            "value": 6
+          },
+          {
+            "t": 12,
+            "value": 6
+          },
+          {
+            "t": 12.4,
+            "value": 7
+          },
+          {
+            "t": 13.4,
+            "value": 7
+          },
+          {
+            "t": 13.8,
+            "value": 8
+          },
+          {
+            "t": 16,
+            "value": 8
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "type": "slider",
+      "target": "step",
+      "label": "Call stack step",
+      "min": 0,
+      "max": 8,
+      "step": 1
+    }
+  ],
+  "checkpoints": [
+    {
+      "t": 0,
+      "label": "The stack is empty. fact(3) is called."
+    },
+    {
+      "t": 2,
+      "label": "Push fact(3). It waits for fact(2)."
+    },
+    {
+      "t": 4,
+      "label": "Push fact(2). It waits for fact(1)."
+    },
+    {
+      "t": 6,
+      "label": "Push fact(1). It waits for fact(0)."
+    },
+    {
+      "t": 8,
+      "label": "fact(0) is the base case, so the descent stops."
+    },
+    {
+      "t": 9.6,
+      "label": "fact(0) returns 1. The newest frame pops first."
+    },
+    {
+      "t": 11,
+      "label": "fact(1) returns 1; fact(2) can now return 2."
+    },
+    {
+      "t": 12.4,
+      "label": "fact(2) returns 2; fact(3) can now return 6."
+    },
+    {
+      "t": 13.8,
+      "label": "fact(3) returns 6. The stack is empty."
+    }
+  ],
+  "narration": [
+    {
+      "t": 0,
+      "text": "Call fact(3). The call stack is empty."
+    },
+    {
+      "t": 2,
+      "text": "Push fact(3). It cannot finish until fact(2) returns."
+    },
+    {
+      "t": 4,
+      "text": "Push fact(2). It waits for fact(1)."
+    },
+    {
+      "t": 6,
+      "text": "Push fact(1). It waits for fact(0)."
+    },
+    {
+      "t": 8,
+      "text": "fact(0) matches the base case. No deeper call is made, so the descent stops."
+    },
+    {
+      "t": 9.6,
+      "text": "fact(0) returns 1. The top frame pops, and the stack unwinds."
+    },
+    {
+      "t": 11,
+      "text": "fact(1) returns 1, so fact(2) computes 2 times 1 and returns 2."
+    },
+    {
+      "t": 12.4,
+      "text": "fact(2) returns 2, so fact(3) computes 3 times 2 and returns 6."
+    },
+    {
+      "t": 13.8,
+      "text": "The last frame returns 6. Unwinding followed last-in, first-out order."
+    }
+  ],
+  "fallback": {
+    "text": "factorial(3) pushes fact(3), fact(2), fact(1), then fact(0). The base case returns 1, and the frames pop in LIFO order with values 1, 1, 2, and 6."
+  },
+  "accessibility": {
+    "alt": "Four call frames for factorial(3) slide onto a stack in call order. The newest frame, fact(0), reaches the base case and returns 1 first; then frames move to a return column showing 1, 2, and 6 in LIFO order.",
+    "reducedMotion": true,
+    "keyboard": true
+  }
+}

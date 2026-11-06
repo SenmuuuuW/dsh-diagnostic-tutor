@@ -1,0 +1,30 @@
+You are participating in a v0.7 research spike on AI-generated teaching scenes. Design ONE SceneSpec v0 for the learning case below.
+
+Read the schema at /Users/sunjungong/Documents/DSH/dsh-diagnostic-tutor/research/dynamic-lesson-engine/SCHEMA.md and inspect examples only if useful. The scene must be safe declarative JSON; no JavaScript, HTML, CSS, external URLs, event handlers, or images. Use only the documented primitives, bounded expressions, timeline, controls, checkpoints and narration. Let your teaching judgment decide the visual representation; do not force a fixed diagram.
+
+Use the write tool to save ONLY the JSON object (no markdown, no commentary) to /tmp/udt-scene-bench/econ-comparative-advantage.json, then reply with "saved econ-comparative-advantage".
+
+CASE:
+{
+  "id": "econ-comparative-advantage",
+  "subject": "Economics",
+  "topic": "Comparative Advantage",
+  "objective": "Show opportunity costs and gains from specialization.",
+  "learner": "Can read a production table.",
+  "expectedBehavior": [
+    "Each producer's opportunity cost is visible",
+    "Specialization changes total output",
+    "Terms of trade can be compared"
+  ],
+  "misconceptions": [
+    "Absolute advantage determines gains from trade",
+    "One country must lose in every trade"
+  ],
+  "requiredInteraction": "Change production allocation or compare opportunity costs.",
+  "correctnessCriteria": [
+    "Opportunity costs are computed consistently",
+    "Specialization increases total output when comparative advantage exists",
+    "No false claim of guaranteed equal gains"
+  ],
+  "accessibility": "alt; table/text alternative; keyboard"
+}

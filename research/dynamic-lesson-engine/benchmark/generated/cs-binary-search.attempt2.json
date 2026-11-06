@@ -1,0 +1,431 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#0b1220"
+  },
+  "metadata": {
+    "title": "Binary Search: Sorted Input",
+    "subject": "Computer Science",
+    "objective": "Show the bounds shrinking and why a sorted array is required.",
+    "learner": "Can read array indices.",
+    "misconceptions": [
+      "Binary search works on any array",
+      "The midpoint is always the answer"
+    ],
+    "expectedUnderstanding": [
+      "Binary search keeps a low and a high bound around the remaining interval.",
+      "A midpoint comparison discards one whole half because the input is sorted.",
+      "The search stops when the target is found or when low passes high."
+    ]
+  },
+  "properties": [
+    {
+      "id": "excluded",
+      "label": "Show the excluded halves",
+      "min": 0,
+      "max": 1,
+      "step": 1,
+      "default": 1
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 48,
+      "text": "Binary Search: Sorted Input",
+      "fontSize": 28,
+      "fill": "#f8fafc",
+      "anchor": "start"
+    },
+    {
+      "id": "targetTag",
+      "type": "text",
+      "x": 920,
+      "y": 52,
+      "text": "target = 8",
+      "fontSize": 18,
+      "fill": "#fbbf24",
+      "anchor": "end"
+    },
+    {
+      "id": "arrayBack",
+      "type": "rect",
+      "x": 170,
+      "y": 250,
+      "width": 520,
+      "height": 110,
+      "rx": 10,
+      "fill": "#0f172a",
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "val0",
+      "type": "text",
+      "x": 225,
+      "y": 310,
+      "text": "4",
+      "fontSize": 26,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "id": "val1",
+      "type": "text",
+      "x": 325,
+      "y": 310,
+      "text": "8",
+      "fontSize": 26,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "id": "val2",
+      "type": "text",
+      "x": 425,
+      "y": 310,
+      "text": "12",
+      "fontSize": 26,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "id": "val3",
+      "type": "text",
+      "x": 525,
+      "y": 310,
+      "text": "16",
+      "fontSize": 26,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "id": "val4",
+      "type": "text",
+      "x": 625,
+      "y": 310,
+      "text": "20",
+      "fontSize": 26,
+      "fill": "#f8fafc",
+      "anchor": "middle"
+    },
+    {
+      "id": "dimRight",
+      "type": "rect",
+      "x": 380,
+      "y": 250,
+      "width": 0,
+      "height": 110,
+      "rx": 6,
+      "fill": "#020617",
+      "opacity": {
+        "expr": "0.8 * excluded"
+      }
+    },
+    {
+      "id": "dimLeft",
+      "type": "rect",
+      "x": 180,
+      "y": 250,
+      "width": 0,
+      "height": 110,
+      "rx": 6,
+      "fill": "#020617",
+      "opacity": {
+        "expr": "0.8 * excluded"
+      }
+    },
+    {
+      "id": "lowTag",
+      "type": "text",
+      "x": 225,
+      "y": 228,
+      "text": "low",
+      "fontSize": 14,
+      "fill": "#fbbf24",
+      "anchor": "middle"
+    },
+    {
+      "id": "midTag",
+      "type": "text",
+      "x": 425,
+      "y": 206,
+      "text": "mid",
+      "fontSize": 14,
+      "fill": "#e879f9",
+      "anchor": "middle"
+    },
+    {
+      "id": "highTag",
+      "type": "text",
+      "x": 625,
+      "y": 392,
+      "text": "high",
+      "fontSize": 14,
+      "fill": "#38bdf8",
+      "anchor": "middle"
+    },
+    {
+      "id": "found",
+      "type": "text",
+      "x": 425,
+      "y": 462,
+      "text": "found: index 1, value 8",
+      "fontSize": 18,
+      "fill": "#4ade80",
+      "anchor": "middle",
+      "opacity": 0
+    }
+  ],
+  "timeline": {
+    "duration": 10,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "lowTag",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 225,
+            "easing": "linear"
+          },
+          {
+            "at": 4.4,
+            "value": 225,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 325,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 325,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "midTag",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 425,
+            "easing": "linear"
+          },
+          {
+            "at": 2.4,
+            "value": 425,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 225,
+            "easing": "linear"
+          },
+          {
+            "at": 4.4,
+            "value": 225,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 325,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 325,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "highTag",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 625,
+            "easing": "linear"
+          },
+          {
+            "at": 2.4,
+            "value": 625,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 325,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 325,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "dimRight",
+          "property": "width"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 290,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 290,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "dimLeft",
+          "property": "width"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 90,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 90,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "found",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 6.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 7,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "ctl-excluded",
+      "kind": "slider",
+      "propertyId": "excluded",
+      "label": "Show the excluded halves"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-binary-mid",
+      "at": 0,
+      "title": "Compare with the midpoint",
+      "body": "The sorted array is 4, 8, 12, 16, 20 and the target is 8. Low is index 0, high is index 4, so mid is index 2 and holds 12.",
+      "pause": true
+    },
+    {
+      "id": "cp-binary-right-discard",
+      "at": 3,
+      "title": "Discard the right half",
+      "body": "12 is greater than 8, and the array is sorted, so index 2 and everything to its right is too large. High moves to 1: only indices 0 and 1 remain.",
+      "pause": true
+    },
+    {
+      "id": "cp-binary-left-discard",
+      "at": 5,
+      "title": "Discard the left half",
+      "body": "Now low is 0, high is 1 and mid is 0. The value 4 is smaller than 8, so index 0 is too small and low moves to 1. Only index 1 remains.",
+      "pause": true
+    },
+    {
+      "id": "cp-binary-found",
+      "at": 7,
+      "title": "The bounds meet at the answer",
+      "body": "Low, mid and high all equal index 1, whose value is 8. If the target were missing, the loop would stop as soon as low passes high.",
+      "pause": false
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The input is sorted: 4, 8, 12, 16, 20. Search for 8 with low 0, high 4 and mid 2."
+    },
+    {
+      "at": 3,
+      "text": "The midpoint holds 12, which is greater than 8. Because the array is sorted, the right half is discarded and high moves to 1."
+    },
+    {
+      "at": 5,
+      "text": "Mid is now index 0 with value 4. It is smaller than 8, so index 0 is discarded and low moves to 1."
+    },
+    {
+      "at": 7,
+      "text": "Low, mid and high meet at index 1. The value there is 8, so the search returns index 1."
+    }
+  ],
+  "fallback": {
+    "text": "Sorted array 4, 8, 12, 16, 20 with target 8. The midpoint 12 is too large, so the right half is discarded; the new midpoint 4 is too small, so index 0 is discarded. Low and high meet at index 1, which holds the target 8."
+  },
+  "accessibility": {
+    "alt": "A sorted array 4, 8, 12, 16, 20 with target 8. Low, mid and high labels shift as whole halves dim out, first the right half from 12 onward and then index 0. The bounds converge on index 1, where 8 is found.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

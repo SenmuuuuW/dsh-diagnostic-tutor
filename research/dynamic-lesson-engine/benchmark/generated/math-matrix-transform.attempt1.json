@@ -1,0 +1,79 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 1000, "height": 600, "background": "#f8fafc" },
+  "metadata": {
+    "title": "Matrix Transformation: Columns Are Where the Basis Vectors Land",
+    "subject": "Mathematics",
+    "objective": "Show how a matrix maps basis vectors and a shape in the plane.",
+    "learner": "Has seen vectors but not matrix geometry.",
+    "misconceptions": [
+      "Matrix multiplication is just elementwise multiplication",
+      "The transformed grid is unchanged"
+    ],
+    "expectedUnderstanding": [
+      "The first column of M is the image of e1 and the second column is the image of e2.",
+      "Every point, and therefore every edge of the unit square, is sent to M times that point.",
+      "The whole grid is carried along, so vertical lines tilt and horizontal lines stretch by the entry a."
+    ]
+  },
+  "properties": [
+    { "id": "a", "label": "Matrix entry a (column 1, row 1)", "min": -1.4, "max": 1.6, "step": 0.05, "default": 1.2 },
+    { "id": "b", "label": "Matrix entry b (column 2, row 1)", "min": -1, "max": 1, "step": 0.05, "default": 0.5 }
+  ],
+  "primitives": [
+    { "id": "vMinus1", "type": "line", "x1": { "expr": "500 - 120 * a - 192 * b" }, "y1": 572, "x2": { "expr": "500 - 120 * a + 192 * b" }, "y2": 188, "stroke": "#dbe4f0", "strokeWidth": 1.5 },
+    { "id": "vZero", "type": "line", "x1": { "expr": "500 - 192 * b" }, "y1": 572, "x2": { "expr": "500 + 192 * b" }, "y2": 188, "stroke": "#94a3b8", "strokeWidth": 2 },
+    { "id": "vPlus1", "type": "line", "x1": { "expr": "500 + 120 * a - 192 * b" }, "y1": 572, "x2": { "expr": "500 + 120 * a + 192 * b" }, "y2": 188, "stroke": "#dbe4f0", "strokeWidth": 1.5 },
+    { "id": "hMinus1", "type": "line", "x1": { "expr": "500 - 228 * a - 120 * b" }, "y1": 500, "x2": { "expr": "500 + 228 * a - 120 * b" }, "y2": 500, "stroke": "#dbe4f0", "strokeWidth": 1.5 },
+    { "id": "hZero", "type": "line", "x1": { "expr": "500 - 228 * a" }, "y1": 380, "x2": { "expr": "500 + 228 * a" }, "y2": 380, "stroke": "#94a3b8", "strokeWidth": 2 },
+    { "id": "hPlus1", "type": "line", "x1": { "expr": "500 - 228 * a + 120 * b" }, "y1": 260, "x2": { "expr": "500 + 228 * a + 120 * b" }, "y2": 260, "stroke": "#dbe4f0", "strokeWidth": 1.5 },
+    { "id": "edge1", "type": "line", "x1": 500, "y1": 380, "x2": { "expr": "500 + 120 * a" }, "y2": 380, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "edge2", "type": "line", "x1": { "expr": "500 + 120 * a" }, "y1": 380, "x2": { "expr": "500 + 120 * (a + b)" }, "y2": 260, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "edge3", "type": "line", "x1": { "expr": "500 + 120 * (a + b)" }, "y1": 260, "x2": { "expr": "500 + 120 * b" }, "y2": 260, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "edge4", "type": "line", "x1": { "expr": "500 + 120 * b" }, "y1": 260, "x2": 500, "y2": 380, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "basis1", "type": "arrow", "x1": 500, "y1": 380, "x2": { "expr": "500 + 120 * a" }, "y2": 380, "stroke": "#b45309", "strokeWidth": 3.5 },
+    { "id": "basis2", "type": "arrow", "x1": 500, "y1": 380, "x2": { "expr": "500 + 120 * b" }, "y2": 260, "stroke": "#b45309", "strokeWidth": 3.5 },
+    { "id": "origSquare", "type": "path", "d": "M 500 380 L 620 380 L 620 260 L 500 260 Z", "stroke": "#94a3b8", "strokeWidth": 2, "fill": "none" },
+    { "id": "label1", "type": "text", "x": { "expr": "500 + 120 * a + 12" }, "y": 404, "text": "M e1 = (a, 0)", "fontSize": 13, "fill": "#b45309", "anchor": "start" },
+    { "id": "label2", "type": "text", "x": { "expr": "500 + 120 * b + 14" }, "y": 250, "text": "M e2 = (b, 1)", "fontSize": 13, "fill": "#b45309", "anchor": "start" },
+    { "id": "title", "type": "text", "x": 500, "y": 44, "text": "A matrix moves the basis vectors, the grid, and every shape together", "fontSize": 18, "fill": "#0f172a", "anchor": "middle" },
+    { "id": "formula", "type": "text", "x": 44, "y": 96, "text": "M = [ [a, b], [0, 1] ]   the columns are where e1 and e2 land", "fontSize": 14, "fill": "#1e293b", "anchor": "start" },
+    { "id": "hint", "type": "text", "x": 44, "y": 122, "text": "Grey outline: the original unit square. Drag a and b and watch the grid follow.", "fontSize": 13, "fill": "#475569", "anchor": "start" },
+    { "id": "detLabel", "type": "text", "x": 44, "y": 566, "text": "det M = a*1 - b*0 = a, so areas scale by |a| and the shape flattens when a = 0", "fontSize": 13, "fill": "#334155", "anchor": "start" }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      { "target": { "primitive": "origSquare", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 1, "value": 1 } ] },
+      { "target": { "primitive": "edge1", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 2.2, "value": 0 }, { "at": 2.8, "value": 1 } ] },
+      { "target": { "primitive": "edge2", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 2.2, "value": 0 }, { "at": 2.8, "value": 1 } ] },
+      { "target": { "primitive": "edge3", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 2.2, "value": 0 }, { "at": 2.8, "value": 1 } ] },
+      { "target": { "primitive": "edge4", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 2.2, "value": 0 }, { "at": 2.8, "value": 1 } ] },
+      { "target": { "primitive": "basis2", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 4.6, "value": 0 }, { "at": 5.2, "value": 1 } ] }
+    ]
+  },
+  "controls": [
+    { "id": "ctlA", "kind": "slider", "propertyId": "a", "label": "Change entry a: stretch of the first column" },
+    { "id": "ctlB", "kind": "slider", "propertyId": "b", "label": "Change entry b: tilt of the second column" }
+  ],
+  "checkpoints": [
+    { "id": "cp1", "at": 0, "title": "Read the columns", "body": "The grey square is the original unit square, spanned by e1 and e2. The matrix M has first column (a, 0) and second column (b, 1): those are exactly where the two basis vectors land.", "pause": true, "learnerAction": "continue" },
+    { "id": "cp2", "at": 2.2, "title": "The shape follows the corners", "body": "Each corner p is sent to M p. So (0,0), (1,0), (1,1), (0,1) become (0,0), (a,0), (a+b,1), (b,1). The blue parallelogram is the unit square after the map.", "pause": true, "learnerAction": "continue" },
+    { "id": "cp3", "at": 4.6, "title": "The grid itself moves", "body": "The whole grid is carried along: former vertical lines tilt by b, former horizontal lines stretch by a. A transformed grid is visibly different, so the transformation is not elementwise multiplication of the entries.", "pause": true, "learnerAction": "answer" },
+    { "id": "cp4", "at": 6.6, "title": "Area and determinant", "body": "det M = a*1 - b*0 = a, so the area of the image of the unit square is |a|. Push a toward 0 and the shape collapses onto a line; make a negative and it flips to the other side.", "pause": true, "learnerAction": "continue" }
+  ],
+  "narration": [
+    { "at": 0, "text": "Here is the plane with a unit square. The matrix M will move everything in it." },
+    { "at": 2.2, "text": "Its first column is a zero: that is where the first basis vector goes. The second column, b one, is where the second basis vector goes." },
+    { "at": 4.6, "text": "Notice the grid is not left alone. Vertical lines tilt, horizontal lines stretch, and every corner moves by the same rule." },
+    { "at": 6.6, "text": "The determinant of this matrix is a, so the square's area scales by the size of a. At a equal to zero the square is squashed flat." }
+  ],
+  "fallback": {
+    "text": "Static figure. A light grid of vertical and horizontal lines in the plane, with a grey unit square at the origin. The matrix M = [[a,b],[0,1]] sends the basis vector e1 to (a,0), drawn as an arrow along the horizontal axis, and e2 to (b,1), drawn as a tilted arrow. The unit square becomes the blue parallelogram with corners (0,0), (a,0), (a+b,1), (b,1). Vertical grid lines tilt and horizontal grid lines stretch, so the grid visibly changes. The determinant is a, so areas scale by |a|."
+  },
+  "accessibility": {
+    "alt": "A plane with a unit square at the origin and a grid. Arrows show the basis vectors being sent to the two columns of the matrix: e1 to (a,0) along the horizontal axis and e2 to (b,1) tilted upward. The unit square becomes a parallelogram with the same four moved corners, and the grid lines tilt and stretch with it. Areas scale by the determinant a.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

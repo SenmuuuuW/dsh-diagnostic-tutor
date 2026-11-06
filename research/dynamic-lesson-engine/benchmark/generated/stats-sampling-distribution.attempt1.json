@@ -1,0 +1,340 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 600,
+    "background": "#f8fafc"
+  },
+  "metadata": {
+    "title": "Sampling Distribution of the Mean",
+    "subject": "Statistics",
+    "objective": "Show sample means varying around the population mean and their spread shrinking as n grows.",
+    "learner": "Knows mean and standard deviation.",
+    "misconceptions": [
+      "A larger sample makes each observation closer to the mean",
+      "The sampling distribution is the population distribution"
+    ],
+    "expectedUnderstanding": [
+      "Individual observations keep the population spread.",
+      "Sample means center near the population mean.",
+      "The spread of sample means decreases as n increases, roughly as sigma divided by the square root of n.",
+      "The sampling distribution of the mean is not the population distribution."
+    ]
+  },
+  "properties": [
+    {
+      "id": "sampleSize",
+      "label": "Sample size n",
+      "min": 4,
+      "max": 64,
+      "step": 4,
+      "default": 16
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 48,
+      "y": 42,
+      "text": "Sampling Distribution of the Sample Mean",
+      "fontSize": 26,
+      "fill": "#0f172a",
+      "anchor": "start"
+    },
+    {
+      "id": "popLabel",
+      "type": "text",
+      "x": 70,
+      "y": 100,
+      "text": "Population of individual values (wide spread)",
+      "fontSize": 17,
+      "fill": "#1e3a8a",
+      "anchor": "start"
+    },
+    {
+      "id": "popAxis",
+      "type": "line",
+      "x1": 120,
+      "y1": 230,
+      "x2": 840,
+      "y2": 230,
+      "stroke": "#94a3b8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "popDot1",
+      "type": "circle",
+      "cx": 240,
+      "cy": 230,
+      "r": 9,
+      "fill": "#60a5fa",
+      "stroke": "#2563eb",
+      "strokeWidth": 2
+    },
+    {
+      "id": "popDot2",
+      "type": "circle",
+      "cx": 360,
+      "cy": 230,
+      "r": 9,
+      "fill": "#60a5fa",
+      "stroke": "#2563eb",
+      "strokeWidth": 2
+    },
+    {
+      "id": "popDot3",
+      "type": "circle",
+      "cx": 480,
+      "cy": 230,
+      "r": 9,
+      "fill": "#60a5fa",
+      "stroke": "#2563eb",
+      "strokeWidth": 2
+    },
+    {
+      "id": "popDot4",
+      "type": "circle",
+      "cx": 600,
+      "cy": 230,
+      "r": 9,
+      "fill": "#60a5fa",
+      "stroke": "#2563eb",
+      "strokeWidth": 2
+    },
+    {
+      "id": "popDot5",
+      "type": "circle",
+      "cx": 720,
+      "cy": 230,
+      "r": 9,
+      "fill": "#60a5fa",
+      "stroke": "#2563eb",
+      "strokeWidth": 2
+    },
+    {
+      "id": "sampleLabel",
+      "type": "text",
+      "x": 70,
+      "y": 300,
+      "text": "Sample means x-bar (center near mu; spread shrinks with n)",
+      "fontSize": 17,
+      "fill": "#9a3412",
+      "anchor": "start"
+    },
+    {
+      "id": "sampleAxis",
+      "type": "line",
+      "x1": 120,
+      "y1": 400,
+      "x2": 840,
+      "y2": 400,
+      "stroke": "#94a3b8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "meanLine",
+      "type": "line",
+      "x1": 480,
+      "y1": 90,
+      "x2": 480,
+      "y2": 430,
+      "stroke": "#f59e0b",
+      "strokeWidth": 2
+    },
+    {
+      "id": "meanDot1",
+      "type": "circle",
+      "cx": {
+        "expr": "480 - 320 / sqrt(sampleSize)"
+      },
+      "cy": 400,
+      "r": 9,
+      "fill": "#f97316",
+      "stroke": "#c2410c",
+      "strokeWidth": 2
+    },
+    {
+      "id": "meanDot2",
+      "type": "circle",
+      "cx": {
+        "expr": "480 - 160 / sqrt(sampleSize)"
+      },
+      "cy": 400,
+      "r": 9,
+      "fill": "#f97316",
+      "stroke": "#c2410c",
+      "strokeWidth": 2
+    },
+    {
+      "id": "meanDot3",
+      "type": "circle",
+      "cx": {
+        "expr": "480 + 160 / sqrt(sampleSize)"
+      },
+      "cy": 400,
+      "r": 9,
+      "fill": "#f97316",
+      "stroke": "#c2410c",
+      "strokeWidth": 2
+    },
+    {
+      "id": "meanDot4",
+      "type": "circle",
+      "cx": {
+        "expr": "480 + 320 / sqrt(sampleSize)"
+      },
+      "cy": 400,
+      "r": 9,
+      "fill": "#f97316",
+      "stroke": "#c2410c",
+      "strokeWidth": 2
+    }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "meanDot1",
+          "property": "r"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 6,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 12,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 6,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "meanDot2",
+          "property": "r"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 12,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 6,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 12,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "meanDot3",
+          "property": "r"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 6,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 12,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 6,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "meanDot4",
+          "property": "r"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 12,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 6,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 12,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "type": "slider",
+      "target": "sampleSize",
+      "label": "Sample size n",
+      "min": 4,
+      "max": 64,
+      "step": 4
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": 0,
+      "title": "Two distributions",
+      "body": "Top: individual values, spread wide across the population. Bottom: sample means. The orange line marks the population mean, and the means sit around it."
+    },
+    {
+      "at": 3,
+      "title": "Change n",
+      "body": "Increase n and the sample means cluster more tightly. Standard error is sigma divided by the square root of n. Individual observations do not move closer to the mean; only the spread of the means shrinks."
+    },
+    {
+      "at": 6,
+      "title": "Keep them distinct",
+      "body": "A sample mean is an average of n observations. The sampling distribution is the distribution of those averages, not the population distribution."
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The top row shows individual values from a population. They stay spread out. The bottom row shows sample means, centered near the population mean."
+    },
+    {
+      "at": 3,
+      "text": "As the sample size grows, the sample means cluster more tightly. The standard error is sigma divided by the square root of n. A larger sample does not pull each observation closer to the mean."
+    },
+    {
+      "at": 6,
+      "text": "Keep the two distributions separate. The sampling distribution describes sample means, not individual observations, so it is not the population distribution."
+    }
+  ],
+  "fallback": {
+    "text": "Individual observations keep the population spread. Sample means center near the population mean. As sample size n grows, the standard error sigma divided by the square root of n shrinks, so the sample means cluster more tightly. A larger n does not make each observation closer to the mean, and the sampling distribution of the mean is not the population distribution."
+  },
+  "accessibility": {
+    "alt": "Top strip: five individual observations spread widely around a center line. Bottom strip: four sample means clustered near the same center. A sample-size slider from 4 to 64 makes the sample means move closer together while the individual observations stay spread out.",
+    "reducedMotion": true,
+    "keyboard": true
+  }
+}

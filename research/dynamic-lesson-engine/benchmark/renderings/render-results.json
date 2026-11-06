@@ -1,0 +1,526 @@
+{
+  "base": "http://127.0.0.1:8391",
+  "chromeExceptions": [],
+  "results": [
+    {
+      "id": "math-unit-circle",
+      "file": "generated/math-unit-circle.attempt1.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 47,
+      "textNodes": 21,
+      "metrics": "time 0.00 / 20.00s · nodes 60 · render 0.80ms · paused",
+      "title": "Unit circle to sine wave: the height is the sine",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 6,
+      "timelineMax": 20,
+      "fallbackHidden": true,
+      "ariaLabel": "Unit circle with a point at angle θ set by a slider: a red vertical bar shows the height sin θ, a blue dashed bar shows cos θ. A dashed line carries the same height to a sine curve, where a red dot marks it; the curve is on the axis at 0 and π and peaks at π/2.",
+      "interaction": {
+        "playing": {
+          "time": "0.65s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "6.28rad"
+      }
+    },
+    {
+      "id": "math-gradient-descent",
+      "file": "generated/math-gradient-descent.attempt1.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 15,
+      "textNodes": 8,
+      "metrics": "time 0.00 / 9.00s · nodes 22 · render 0.20ms · paused",
+      "title": "Gradient Descent: Steps Go Against the Gradient",
+      "status": "rendered",
+      "controls": 2,
+      "checkpoints": 5,
+      "timelineMax": 9,
+      "fallbackHidden": true,
+      "ariaLabel": "A parabola f(x)=x squared with a movable point. A red arrow shows the gradient +2x pointing uphill; a green arrow shows the step -eta*2x pointing downhill and scaled by the learning rate eta; a hollow green dot shows where the next step lands, crossing the valley at x=0 when eta is above 0.5.",
+      "interaction": {
+        "playing": {
+          "time": "0.65s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "2.00"
+      }
+    },
+    {
+      "id": "math-derivative-slope",
+      "file": "generated/math-derivative-slope.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 17,
+      "textNodes": 9,
+      "metrics": "time 0.00 / 9.00s · nodes 21 · render 0.10ms · paused",
+      "title": "Derivative as Slope: The Tangent Tells the Story",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 4,
+      "timelineMax": 9,
+      "fallbackHidden": true,
+      "ariaLabel": "A curve f(x)=1.6 sin x with a movable point p. The tangent line there has slope 1.6 cos p, also shown as a rise-over-run triangle. A vertical needle shows the slope sign by direction, not color: up while the curve rises, down while it falls, and it shrinks to nothing at the crest.",
+      "interaction": {
+        "playing": {
+          "time": "0.64s",
+          "label": "Pause"
+        },
+        "paused": "0.64s",
+        "stepped": "1.14s",
+        "controlValue": "6.40"
+      }
+    },
+    {
+      "id": "math-matrix-transform",
+      "file": "generated/math-matrix-transform.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 17,
+      "textNodes": 6,
+      "metrics": "time 0.00 / 8.00s · nodes 24 · render 0.30ms · paused",
+      "title": "Matrix Transformation: Columns Are Where the Basis Vectors Land",
+      "status": "rendered",
+      "controls": 2,
+      "checkpoints": 4,
+      "timelineMax": 8,
+      "fallbackHidden": true,
+      "ariaLabel": "A plane with a unit square at the origin and a grid. Arrows show the basis vectors sent to the matrix columns: e1 to (a,0) and e2 to (b,1), tilted upward. The square becomes a parallelogram with the same moved corners, and the grid lines tilt and stretch with it. Areas scale by the determinant a.",
+      "interaction": {
+        "playing": {
+          "time": "0.65s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "1.60"
+      }
+    },
+    {
+      "id": "math-function-composition",
+      "file": "generated/math-function-composition.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 17,
+      "textNodes": 8,
+      "metrics": "time 0.00 / 9.00s · nodes 24 · render 0.10ms · paused",
+      "title": "Function Composition: Two Stages, In Order",
+      "status": "rendered",
+      "controls": 2,
+      "checkpoints": 4,
+      "timelineMax": 9,
+      "fallbackHidden": true,
+      "ariaLabel": "Three horizontal number lines on one scale: input x, intermediate value, final value. Dots mark each level, joined by arrows. With order 0 the amber dot is at x+1 and the green at 2(x+1); with order 1 the amber is at 2x and the green at 2x+1. The finals differ, so order matters.",
+      "interaction": {
+        "playing": {
+          "time": "0.65s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "2.40"
+      }
+    },
+    {
+      "id": "physics-projectile",
+      "file": "generated/physics-projectile.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 19,
+      "textNodes": 5,
+      "metrics": "time 0.00 / 5.50s · nodes 23 · render 0.20ms · paused",
+      "title": "Projectile Motion: Fixed Speed, Changing Angle",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 3,
+      "timelineMax": 5.5,
+      "fallbackHidden": true,
+      "ariaLabel": "Projectile at fixed speed arcs from a launch point as the angle slider changes. A thick curve shows the current path, a thin curve the paired angle, and labels mark apex, range, and the 45-degree maximum.",
+      "interaction": {
+        "playing": {
+          "time": "0.60s",
+          "label": "Pause"
+        },
+        "paused": "0.60s",
+        "stepped": "1.10s",
+        "controlValue": "80.00deg"
+      }
+    },
+    {
+      "id": "physics-pendulum",
+      "file": "generated/physics-pendulum.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 19,
+      "textNodes": 7,
+      "metrics": "time 0.00 / 5.50s · nodes 20 · render 0.20ms · paused",
+      "title": "Pendulum Motion: Length and Release Angle",
+      "status": "rendered",
+      "controls": 2,
+      "checkpoints": 3,
+      "timelineMax": 5.5,
+      "fallbackHidden": true,
+      "ariaLabel": "A pendulum bob swings from a release angle. A pale arc marks its path. Two sliders set length and release angle, and a bar graph compares period with a 0.5-meter reference. Text notes that mass does not set the period.",
+      "interaction": {
+        "playing": {
+          "time": "0.51s",
+          "label": "Pause"
+        },
+        "paused": "0.51s",
+        "stepped": "1.01s",
+        "controlValue": "2.00m"
+      }
+    },
+    {
+      "id": "physics-incline",
+      "file": "generated/physics-incline.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 16,
+      "textNodes": 9,
+      "metrics": "time 0.00 / 6.50s · nodes 29 · render 0.10ms · paused",
+      "title": "Forces on an Incline",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 3,
+      "timelineMax": 6.5,
+      "fallbackHidden": true,
+      "ariaLabel": "A block on a wedge shows weight down, a component along the slope, a perpendicular component, and the normal force. Labels give mg, mg sin theta, mg cos theta, and N, while the angle slider changes the incline.",
+      "interaction": {
+        "playing": {
+          "time": "0.65s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "60.00deg"
+      }
+    },
+    {
+      "id": "physics-wave-interference",
+      "file": "generated/physics-wave-interference.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 20,
+      "textNodes": 5,
+      "metrics": "time 0.00 / 4.50s · nodes 21 · render 0.80ms · paused",
+      "title": "Wave Interference: Adding Two Waves",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 3,
+      "timelineMax": 4.5,
+      "fallbackHidden": true,
+      "ariaLabel": "Three labeled rows of dots show wave 1, wave 2, and their sum. The dots oscillate vertically; the sum doubles when in phase and flattens at 180 degrees. A note says cancellation redistributes energy rather than destroying it.",
+      "interaction": {
+        "playing": {
+          "time": "0.65s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "360.00deg"
+      }
+    },
+    {
+      "id": "physics-electric-field",
+      "file": "generated/physics-electric-field.attempt1.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 13,
+      "textNodes": 10,
+      "metrics": "time 0.00 / 5.00s · nodes 35 · render 0.20ms · paused",
+      "title": "Electric Field of Two Point Charges",
+      "status": "rendered",
+      "controls": 2,
+      "checkpoints": 3,
+      "timelineMax": 5,
+      "fallbackHidden": true,
+      "ariaLabel": "Two labeled point charges with six blue field arrows and a red probe arrow. Sliders move the test point and change charge two's sign; arrows point away from positive and toward negative charge. Labels explain strength and that field is not force.",
+      "interaction": {
+        "playing": {
+          "time": "0.62s",
+          "label": "Pause"
+        },
+        "paused": "0.62s",
+        "stepped": "1.12s",
+        "controlValue": "2.00"
+      }
+    },
+    {
+      "id": "cs-bubble-sort",
+      "file": "generated/cs-bubble-sort.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 14,
+      "textNodes": 7,
+      "metrics": "time 0.00 / 10.00s · nodes 15 · render 0.00ms · paused",
+      "title": "Bubble Sort: Adjacent Swaps",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 5,
+      "timelineMax": 10,
+      "fallbackHidden": true,
+      "ariaLabel": "Three numbered tokens 3, 2 and 1 sit in slots. Tokens swap places as adjacent pairs are compared, and a green band grows from the right edge until all three slots are marked as the sorted suffix.",
+      "interaction": {
+        "playing": {
+          "time": "0.64s",
+          "label": "Pause"
+        },
+        "paused": "0.64s",
+        "stepped": "1.14s",
+        "controlValue": "1.00"
+      }
+    },
+    {
+      "id": "cs-binary-search",
+      "file": "generated/cs-binary-search.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 14,
+      "textNodes": 11,
+      "metrics": "time 0.00 / 10.00s · nodes 15 · render 0.10ms · paused",
+      "title": "Binary Search: Sorted Input",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 4,
+      "timelineMax": 10,
+      "fallbackHidden": true,
+      "ariaLabel": "A sorted array 4, 8, 12, 16, 20 with target 8. Low, mid and high labels shift as whole halves dim out, first the right half from 12 onward and then index 0. The bounds converge on index 1, where 8 is found.",
+      "interaction": {
+        "playing": {
+          "time": "0.65s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "1.00"
+      }
+    },
+    {
+      "id": "cs-recursion",
+      "file": "generated/cs-recursion.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 15,
+      "textNodes": 10,
+      "metrics": "time 0.00 / 14.00s · nodes 16 · render 0.10ms · paused",
+      "title": "Recursion: the Call Stack for factorial(3)",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 8,
+      "timelineMax": 14,
+      "fallbackHidden": true,
+      "ariaLabel": "Four call frames stack upward for factorial(3), with fact(3) at the bottom and fact(0) on top. After fact(0) hits the base case it returns 1 first, then frames pop from the top and return values 1, 2 and 6 appear in order.",
+      "interaction": {
+        "playing": {
+          "time": "0.64s",
+          "label": "Pause"
+        },
+        "paused": "0.64s",
+        "stepped": "1.14s",
+        "controlValue": "3.00"
+      }
+    },
+    {
+      "id": "cs-stack-queue",
+      "file": "generated/cs-stack-queue.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 15,
+      "textNodes": 12,
+      "metrics": "time 0.00 / 10.00s · nodes 16 · render 0.10ms · paused",
+      "title": "Stack vs Queue: LIFO and FIFO",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 5,
+      "timelineMax": 10,
+      "fallbackHidden": true,
+      "ariaLabel": "A stack and a queue each receive 4, 7 and 9 in that order. The stack grows upward with 9 on top and 4 at the bottom; the queue runs left to right with 4 at the front. On removal the stack releases 9 while the queue releases 4, and the queue shifts forward.",
+      "interaction": {
+        "playing": {
+          "time": "0.65s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "1.00"
+      }
+    },
+    {
+      "id": "cs-graph-traversal",
+      "file": "generated/cs-graph-traversal.attempt2.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 15,
+      "textNodes": 8,
+      "metrics": "time 0.00 / 10.00s · nodes 16 · render 0.10ms · paused",
+      "title": "Graph Traversal: BFS vs DFS",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 6,
+      "timelineMax": 10,
+      "fallbackHidden": true,
+      "ariaLabel": "A graph with nodes A to E and edges A-B, A-C, B-D, B-E and E-C. Two rows give the BFS order A, B, C, D, E and the DFS order A, B, D, E, C. A green band marks how many nodes have been visited as the mode slider switches rows.",
+      "interaction": {
+        "playing": {
+          "time": "0.65s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "1.00"
+      }
+    },
+    {
+      "id": "econ-supply-demand",
+      "file": "generated/econ-supply-demand.attempt1.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 14,
+      "textNodes": 7,
+      "metrics": "time 0.00 / 10.00s · nodes 18 · render 0.20ms · paused",
+      "title": "Supply, Demand, and Equilibrium",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 3,
+      "timelineMax": 10,
+      "fallbackHidden": true,
+      "ariaLabel": "Graph with price on the vertical axis and quantity on the horizontal. Demand slopes down and supply slopes up, meeting at E. A slider shifts demand right, and the E marker moves to a new higher-price, higher-quantity intersection.",
+      "interaction": {
+        "playing": {
+          "time": "0.64s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "100.00"
+      }
+    },
+    {
+      "id": "econ-price-ceiling",
+      "file": "generated/econ-price-ceiling.attempt1.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 14,
+      "textNodes": 6,
+      "metrics": "time 0.00 / 8.00s · nodes 18 · render 0.10ms · paused",
+      "title": "Binding Price Ceiling and Shortage",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 3,
+      "timelineMax": 8,
+      "fallbackHidden": true,
+      "ariaLabel": "Price-quantity graph. Supply slopes up and demand slopes down, crossing at E. A red ceiling line lies below E. At the ceiling, demand quantity Qd is right of supply quantity Qs, and a red arrow marks the shortage between them.",
+      "interaction": {
+        "playing": {
+          "time": "0.65s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "50.00"
+      }
+    },
+    {
+      "id": "econ-comparative-advantage",
+      "file": "generated/econ-comparative-advantage.attempt1.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 15,
+      "textNodes": 11,
+      "metrics": "time 0.00 / 8.00s · nodes 16 · render 0.10ms · paused",
+      "title": "Comparative Advantage and Gains from Trade",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 3,
+      "timelineMax": 8,
+      "fallbackHidden": true,
+      "ariaLabel": "Production table compares A, which can make 10 wheat or 20 cloth, with B, which can make 20 wheat or 10 cloth, including opportunity costs. A specializes in cloth and B in wheat. A slider raises total output bars from 15 to 20 for both goods.",
+      "interaction": {
+        "playing": {
+          "time": "0.64s",
+          "label": "Pause"
+        },
+        "paused": "0.64s",
+        "stepped": "1.14s",
+        "controlValue": "100.00"
+      }
+    },
+    {
+      "id": "stats-sampling-distribution",
+      "file": "generated/stats-sampling-distribution.attempt1.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 15,
+      "textNodes": 3,
+      "metrics": "time 0.00 / 8.00s · nodes 16 · render 0.10ms · paused",
+      "title": "Sampling Distribution of the Mean",
+      "status": "rendered",
+      "controls": 1,
+      "checkpoints": 3,
+      "timelineMax": 8,
+      "fallbackHidden": true,
+      "ariaLabel": "Top strip: five individual observations spread widely around a center line. Bottom strip: four sample means clustered near the same center. A sample-size slider from 4 to 64 makes the sample means move closer together while the individual observations stay spread out.",
+      "interaction": {
+        "playing": {
+          "time": "0.65s",
+          "label": "Pause"
+        },
+        "paused": "0.65s",
+        "stepped": "1.15s",
+        "controlValue": "64.00"
+      }
+    },
+    {
+      "id": "stats-clt",
+      "file": "generated/stats-clt.attempt1.json",
+      "validation": "Valid SceneSpec.",
+      "validationBad": false,
+      "svg": true,
+      "primitives": 15,
+      "textNodes": 4,
+      "metrics": "time 0.00 / 8.00s · nodes 16 · render 0.10ms · paused",
+      "title": "Central Limit Theorem: Means Turn Bell-Shaped",
+      "status": "rendered",
+      "controls": 2,
+      "checkpoints": 3,
+      "timelineMax": 8,
+      "fallbackHidden": true,
+      "ariaLabel": "Top: four equal bars show a uniform raw population. Bottom: seven bars show the distribution of sample means. As the n slider rises, the middle bars grow and the tails shrink toward a bell, while the raw bars stay flat. A resample slider redraws the sample.",
+      "interaction": {
+        "playing": {
+          "time": "0.64s",
+          "label": "Pause"
+        },
+        "paused": "0.64s",
+        "stepped": "1.14s",
+        "controlValue": "50.00"
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+You are participating in a v0.7 research spike on AI-generated teaching scenes. Design ONE SceneSpec v0 for the learning case below.
+
+Read the schema at /Users/sunjungong/Documents/DSH/dsh-diagnostic-tutor/research/dynamic-lesson-engine/SCHEMA.md and inspect examples only if useful. The scene must be safe declarative JSON; no JavaScript, HTML, CSS, external URLs, event handlers, or images. Use only the documented primitives, bounded expressions, timeline, controls, checkpoints and narration. Let your teaching judgment decide the visual representation; do not force a fixed diagram.
+
+Use the write tool to save ONLY the JSON object (no markdown, no commentary) to /tmp/udt-scene-bench/cs-graph-traversal.json, then reply with "saved cs-graph-traversal".
+
+CASE:
+{
+  "id": "cs-graph-traversal",
+  "subject": "Computer Science",
+  "topic": "Graph Traversal",
+  "objective": "Show BFS/DFS visiting order and frontier differences.",
+  "learner": "Knows nodes and edges.",
+  "expectedBehavior": [
+    "Frontier is visible",
+    "Visited set grows",
+    "BFS/DFS order differs"
+  ],
+  "misconceptions": [
+    "DFS always finds the shortest path in an unweighted graph",
+    "Visited nodes can be revisited forever"
+  ],
+  "requiredInteraction": "Step through traversal and optionally switch BFS/DFS.",
+  "correctnessCriteria": [
+    "Each node is visited once",
+    "BFS uses a queue and DFS a stack",
+    "BFS gives shortest unweighted path distances when shown"
+  ],
+  "accessibility": "alt; keyboard; node labels, not color only"
+}

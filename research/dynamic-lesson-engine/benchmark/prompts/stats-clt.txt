@@ -1,0 +1,30 @@
+You are participating in a v0.7 research spike on AI-generated teaching scenes. Design ONE SceneSpec v0 for the learning case below.
+
+Read the schema at /Users/sunjungong/Documents/DSH/dsh-diagnostic-tutor/research/dynamic-lesson-engine/SCHEMA.md and inspect examples only if useful. The scene must be safe declarative JSON; no JavaScript, HTML, CSS, external URLs, event handlers, or images. Use only the documented primitives, bounded expressions, timeline, controls, checkpoints and narration. Let your teaching judgment decide the visual representation; do not force a fixed diagram.
+
+Use the write tool to save ONLY the JSON object (no markdown, no commentary) to /tmp/udt-scene-bench/stats-clt.json, then reply with "saved stats-clt".
+
+CASE:
+{
+  "id": "stats-clt",
+  "subject": "Statistics",
+  "topic": "Central Limit Theorem",
+  "objective": "Show sums/means of non-normal variables approaching a bell shape.",
+  "learner": "Knows histograms.",
+  "expectedBehavior": [
+    "Raw distribution can be non-normal",
+    "Distribution of means changes with n",
+    "Shape approaches bell as n grows"
+  ],
+  "misconceptions": [
+    "The original data becomes normal",
+    "CLT needs normal data to start"
+  ],
+  "requiredInteraction": "Change n and resample.",
+  "correctnessCriteria": [
+    "Sampling distribution of means centers near population mean",
+    "Spread narrows with n",
+    "No claim that raw data turned normal"
+  ],
+  "accessibility": "alt; keyboard; textual summary"
+}

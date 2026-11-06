@@ -1,0 +1,77 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 900, "height": 580, "background": "#f7f9fc" },
+  "metadata": {
+    "title": "Function Composition: Two Stages, In Order",
+    "subject": "Mathematics",
+    "objective": "Show g(x) then f(g(x)) as a two-stage machine or graph mapping.",
+    "learner": "Knows function notation.",
+    "misconceptions": [
+      "f(g(x)) always equals g(f(x))",
+      "Composition is multiplication of outputs"
+    ],
+    "expectedUnderstanding": [
+      "The intermediate value is g(x) when g runs first; it is not yet the answer.",
+      "The final value is f evaluated at that intermediate value, that is f(g(x)).",
+      "Swapping the order generally changes the result, so f(g(x)) and g(f(x)) must be checked separately."
+    ]
+  },
+  "properties": [
+    { "id": "x", "label": "Input value x", "min": -2.4, "max": 2.4, "step": 0.05, "default": 1 },
+    { "id": "order", "label": "Order: 0 = g then f, 1 = f then g", "min": 0, "max": 1, "step": 1, "default": 0 }
+  ],
+  "primitives": [
+    { "id": "row1", "type": "line", "x1": 140, "y1": 130, "x2": 800, "y2": 130, "stroke": "#cbd5e1", "strokeWidth": 2 },
+    { "id": "row2", "type": "line", "x1": 140, "y1": 280, "x2": 800, "y2": 280, "stroke": "#cbd5e1", "strokeWidth": 2 },
+    { "id": "row3", "type": "line", "x1": 140, "y1": 430, "x2": 800, "y2": 430, "stroke": "#cbd5e1", "strokeWidth": 2 },
+    { "id": "tick1", "type": "line", "x1": 450, "y1": 120, "x2": 450, "y2": 140, "stroke": "#94a3b8", "strokeWidth": 1.5 },
+    { "id": "tick2", "type": "line", "x1": 450, "y1": 270, "x2": 450, "y2": 290, "stroke": "#94a3b8", "strokeWidth": 1.5 },
+    { "id": "tick3", "type": "line", "x1": 450, "y1": 420, "x2": 450, "y2": 440, "stroke": "#94a3b8", "strokeWidth": 1.5 },
+    { "id": "inDot", "type": "circle", "cx": { "expr": "450 + 50 * x" }, "cy": 130, "r": 10, "fill": "#1d4ed8", "stroke": "#ffffff", "strokeWidth": 2 },
+    { "id": "midDot", "type": "circle", "cx": { "expr": "450 + 50 * ((1 - order) * (x + 1) + order * 2 * x)" }, "cy": 280, "r": 10, "fill": "#b45309", "stroke": "#ffffff", "strokeWidth": 2 },
+    { "id": "outDot", "type": "circle", "cx": { "expr": "450 + 50 * ((1 - order) * 2 * (x + 1) + order * (2 * x + 1))" }, "cy": 430, "r": 10, "fill": "#047857", "stroke": "#ffffff", "strokeWidth": 2 },
+    { "id": "flow1", "type": "arrow", "x1": { "expr": "450 + 50 * x" }, "y1": 144, "x2": { "expr": "450 + 50 * ((1 - order) * (x + 1) + order * 2 * x)" }, "y2": 266, "stroke": "#94a3b8", "strokeWidth": 2 },
+    { "id": "flow2", "type": "arrow", "x1": { "expr": "450 + 50 * ((1 - order) * (x + 1) + order * 2 * x)" }, "y1": 294, "x2": { "expr": "450 + 50 * ((1 - order) * 2 * (x + 1) + order * (2 * x + 1))" }, "y2": 416, "stroke": "#94a3b8", "strokeWidth": 2 },
+    { "id": "rowLabel1", "type": "text", "x": 140, "y": 106, "text": "input x", "fontSize": 13, "fill": "#475569", "anchor": "start" },
+    { "id": "rowLabel2", "type": "text", "x": 140, "y": 256, "text": "after the first stage: the intermediate value", "fontSize": 13, "fill": "#475569", "anchor": "start" },
+    { "id": "rowLabel3", "type": "text", "x": 140, "y": 406, "text": "after the second stage: the final value", "fontSize": 13, "fill": "#475569", "anchor": "start" },
+    { "id": "zeroLabel", "type": "text", "x": 450, "y": 158, "text": "0", "fontSize": 12, "fill": "#64748b", "anchor": "middle" },
+    { "id": "title", "type": "text", "x": 450, "y": 44, "text": "Composition: feed the output of one function into the next", "fontSize": 18, "fill": "#0f172a", "anchor": "middle" },
+    { "id": "formula", "type": "text", "x": 450, "y": 74, "text": "g(x) = x + 1     f(u) = 2u     so f(g(x)) = 2x + 2", "fontSize": 14, "fill": "#1e293b", "anchor": "middle" },
+    { "id": "orderNote", "type": "text", "x": 450, "y": 522, "text": "order 0: g first, then f     |     order 1: f first, then g", "fontSize": 13, "fill": "#475569", "anchor": "middle" },
+    { "id": "nonCommute", "type": "text", "x": 450, "y": 552, "text": "f(g(x)) = 2x + 2 and g(f(x)) = 2x + 1: these differ for every x", "fontSize": 14, "fill": "#334155", "anchor": "middle" }
+  ],
+  "timeline": {
+    "duration": 9,
+    "tracks": [
+      { "target": { "primitive": "flow1", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 1.2, "value": 0 }, { "at": 1.8, "value": 1 } ] },
+      { "target": { "primitive": "flow2", "property": "opacity" }, "keyframes": [ { "at": 0, "value": 0 }, { "at": 3.6, "value": 0 }, { "at": 4.2, "value": 1 } ] },
+      { "target": { "primitive": "outDot", "property": "r" }, "keyframes": [ { "at": 0, "value": 6 }, { "at": 3.6, "value": 10 }, { "at": 4.2, "value": 13 }, { "at": 4.8, "value": 10 } ] },
+      { "target": { "primitive": "midDot", "property": "r" }, "keyframes": [ { "at": 0, "value": 6 }, { "at": 1.2, "value": 10 }, { "at": 1.8, "value": 13 }, { "at": 2.4, "value": 10 } ] }
+    ]
+  },
+  "controls": [
+    { "id": "ctlX", "kind": "slider", "propertyId": "x", "label": "Choose the input x" },
+    { "id": "ctlOrder", "kind": "slider", "propertyId": "order", "label": "Swap the two stages" }
+  ],
+  "checkpoints": [
+    { "id": "cp1", "at": 0, "title": "Three levels of the same trip", "body": "The top line holds the input x. The middle line holds the value after one function has been applied. The bottom line holds the value after both have. All three share one scale, so equal positions mean equal values.", "pause": true, "learnerAction": "continue" },
+    { "id": "cp2", "at": 2.4, "title": "The middle dot is not the answer", "body": "With order 0 the first stage is g(x) = x + 1, so the amber dot sits at x + 1. That is the input to f, not the final output. Substituting it into f is the whole of f(g(x)).", "pause": true, "learnerAction": "continue" },
+    { "id": "cp3", "at": 4.6, "title": "The bottom dot is f of the middle dot", "body": "Order 0 finishes at f(x+1) = 2(x+1) = 2x + 2. This is not the product of the outputs: f(x)*g(x) would be 2x*(x+1), a different number for every x except 0 and 1.", "pause": true, "learnerAction": "answer" },
+    { "id": "cp4", "at": 7.2, "title": "Swap and compare", "body": "Move the order slider to 1: f runs first, so the final value becomes g(f(x)) = 2x + 1. At x = 1 that is 3 instead of 4. The two orders agree only for special functions, not in general.", "pause": true, "learnerAction": "continue" }
+  ],
+  "narration": [
+    { "at": 0, "text": "Think of two machines in a row. The input goes into the first, and whatever comes out goes straight into the second." },
+    { "at": 2.4, "text": "After the first machine we are only halfway: x plus one. Remember this middle value, because the second machine eats it, not x." },
+    { "at": 4.6, "text": "The final value is f of that middle value, so twice x plus one. Composing is substitution, not multiplication of the two outputs." },
+    { "at": 7.2, "text": "Now swap the machines. The answer changes to two x plus one, so order matters here." }
+  ],
+  "fallback": {
+    "text": "Static figure. Three horizontal number lines stacked vertically, all on the same scale: the input x, the intermediate value, and the final value. A blue dot marks the input, an amber dot the intermediate, and a green dot the final value, joined by two arrows. With order 0, g(x) = x + 1 runs first so the amber dot is at x + 1 and the green dot at 2(x + 1). With order 1, f(x) = 2x runs first so the amber dot is at 2x and the green dot at 2x + 1. The two orders give different final values."
+  },
+  "accessibility": {
+    "alt": "Three horizontal number lines on a shared scale: input x, intermediate value, and final value. Dots mark each level, connected by arrows. With order 0 the amber dot is at x+1 and the green dot at 2(x+1); with order 1 the amber dot is at 2x and the green dot at 2x+1. The final values differ, so composition order matters.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

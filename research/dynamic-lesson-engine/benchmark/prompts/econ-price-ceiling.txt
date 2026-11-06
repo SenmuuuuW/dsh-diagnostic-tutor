@@ -1,0 +1,30 @@
+You are participating in a v0.7 research spike on AI-generated teaching scenes. Design ONE SceneSpec v0 for the learning case below.
+
+Read the schema at /Users/sunjungong/Documents/DSH/dsh-diagnostic-tutor/research/dynamic-lesson-engine/SCHEMA.md and inspect examples only if useful. The scene must be safe declarative JSON; no JavaScript, HTML, CSS, external URLs, event handlers, or images. Use only the documented primitives, bounded expressions, timeline, controls, checkpoints and narration. Let your teaching judgment decide the visual representation; do not force a fixed diagram.
+
+Use the write tool to save ONLY the JSON object (no markdown, no commentary) to /tmp/udt-scene-bench/econ-price-ceiling.json, then reply with "saved econ-price-ceiling".
+
+CASE:
+{
+  "id": "econ-price-ceiling",
+  "subject": "Economics",
+  "topic": "Price Ceiling",
+  "objective": "Show a binding price ceiling producing shortage.",
+  "learner": "Knows supply/demand basics.",
+  "expectedBehavior": [
+    "Ceiling line is below equilibrium",
+    "Quantity supplied and demanded diverge",
+    "Shortage is visible"
+  ],
+  "misconceptions": [
+    "A ceiling always helps buyers",
+    "Shortage equals zero supply"
+  ],
+  "requiredInteraction": "Move the ceiling price.",
+  "correctnessCriteria": [
+    "Binding only when below equilibrium",
+    "Shortage = quantity demanded - quantity supplied",
+    "No claim that price controls raise total surplus"
+  ],
+  "accessibility": "alt; labels; keyboard"
+}

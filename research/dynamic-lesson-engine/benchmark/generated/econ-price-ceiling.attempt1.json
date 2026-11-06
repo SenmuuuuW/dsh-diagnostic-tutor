@@ -1,0 +1,325 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 600,
+    "background": "#f8fafc"
+  },
+  "metadata": {
+    "title": "Binding Price Ceiling and Shortage",
+    "subject": "Economics",
+    "objective": "Show a binding price ceiling below equilibrium and the resulting shortage.",
+    "learner": "Knows supply and demand basics.",
+    "misconceptions": [
+      "A ceiling always helps buyers",
+      "Shortage equals zero supply"
+    ],
+    "expectedUnderstanding": [
+      "A ceiling binds only when it is set below the equilibrium price.",
+      "At the ceiling, quantity demanded exceeds quantity supplied, creating a shortage.",
+      "Shortage equals quantity demanded minus quantity supplied, not zero supply.",
+      "A price ceiling does not raise total surplus."
+    ]
+  },
+  "properties": [
+    {
+      "id": "ceiling",
+      "label": "Ceiling price",
+      "min": 20,
+      "max": 50,
+      "step": 1,
+      "default": 30
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 48,
+      "y": 42,
+      "text": "Price Ceiling: Shortage = Qd - Qs",
+      "fontSize": 26,
+      "fill": "#0f172a",
+      "anchor": "start"
+    },
+    {
+      "id": "guide",
+      "type": "text",
+      "x": 48,
+      "y": 70,
+      "text": "Ceiling below E: Qd is greater than Qs. Shortage is not zero supply.",
+      "fontSize": 14,
+      "fill": "#475569",
+      "anchor": "start"
+    },
+    {
+      "id": "yAxis",
+      "type": "line",
+      "x1": 110,
+      "y1": 90,
+      "x2": 110,
+      "y2": 520,
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "xAxis",
+      "type": "line",
+      "x1": 110,
+      "y1": 520,
+      "x2": 880,
+      "y2": 520,
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "priceLabel",
+      "type": "text",
+      "x": 72,
+      "y": 305,
+      "text": "Price",
+      "fontSize": 16,
+      "fill": "#334155",
+      "anchor": "middle"
+    },
+    {
+      "id": "quantityLabel",
+      "type": "text",
+      "x": 495,
+      "y": 566,
+      "text": "Quantity",
+      "fontSize": 16,
+      "fill": "#334155",
+      "anchor": "middle"
+    },
+    {
+      "id": "demandLine",
+      "type": "line",
+      "x1": 180,
+      "y1": 140,
+      "x2": 820,
+      "y2": 470,
+      "stroke": "#2563eb",
+      "strokeWidth": 4
+    },
+    {
+      "id": "supplyLine",
+      "type": "line",
+      "x1": 180,
+      "y1": 470,
+      "x2": 820,
+      "y2": 140,
+      "stroke": "#16a34a",
+      "strokeWidth": 4
+    },
+    {
+      "id": "eqDot",
+      "type": "circle",
+      "cx": 500,
+      "cy": 305,
+      "r": 7,
+      "fill": "#0f172a"
+    },
+    {
+      "id": "eqLabel",
+      "type": "text",
+      "x": 512,
+      "y": 296,
+      "text": "E",
+      "fontSize": 18,
+      "fill": "#0f172a",
+      "anchor": "start"
+    },
+    {
+      "id": "ceilingLine",
+      "type": "line",
+      "x1": 110,
+      "y1": {
+        "expr": "520 - 4 * ceiling"
+      },
+      "x2": 880,
+      "y2": {
+        "expr": "520 - 4 * ceiling"
+      },
+      "stroke": "#dc2626",
+      "strokeWidth": 3
+    },
+    {
+      "id": "ceilingLabel",
+      "type": "text",
+      "x": 850,
+      "y": {
+        "expr": "510 - 4 * ceiling"
+      },
+      "text": "Ceiling",
+      "fontSize": 15,
+      "fill": "#b91c1c",
+      "anchor": "end"
+    },
+    {
+      "id": "qsDot",
+      "type": "circle",
+      "cx": {
+        "expr": "180 + (4 * ceiling - 50) * 1.939393939"
+      },
+      "cy": {
+        "expr": "520 - 4 * ceiling"
+      },
+      "r": 6,
+      "fill": "#16a34a"
+    },
+    {
+      "id": "qdDot",
+      "type": "circle",
+      "cx": {
+        "expr": "180 + (380 - 4 * ceiling) * 1.939393939"
+      },
+      "cy": {
+        "expr": "520 - 4 * ceiling"
+      },
+      "r": 6,
+      "fill": "#2563eb"
+    },
+    {
+      "id": "shortageArrow",
+      "type": "arrow",
+      "x1": {
+        "expr": "190 + (4 * ceiling - 50) * 1.939393939"
+      },
+      "y1": {
+        "expr": "520 - 4 * ceiling"
+      },
+      "x2": {
+        "expr": "170 + (380 - 4 * ceiling) * 1.939393939"
+      },
+      "y2": {
+        "expr": "520 - 4 * ceiling"
+      },
+      "stroke": "#dc2626",
+      "strokeWidth": 3
+    }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "shortageArrow",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 5,
+            "easing": "linear"
+          },
+          {
+            "at": 8,
+            "value": 2,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "ceilingLine",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 4,
+            "easing": "linear"
+          },
+          {
+            "at": 8,
+            "value": 2,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "qdDot",
+          "property": "r"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 5,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 8,
+            "easing": "linear"
+          },
+          {
+            "at": 8,
+            "value": 5,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "type": "slider",
+      "target": "ceiling",
+      "label": "Ceiling price (below E)",
+      "min": 20,
+      "max": 50,
+      "step": 1
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": 0,
+      "title": "Find a binding ceiling",
+      "body": "The red ceiling line is below the equilibrium point E. Because the legal price is below equilibrium, the ceiling binds."
+    },
+    {
+      "at": 2.5,
+      "title": "Read the gap",
+      "body": "At the ceiling, follow the green supply curve to Qs and the blue demand curve to Qd. Qd is to the right of Qs, so quantity demanded exceeds quantity supplied."
+    },
+    {
+      "at": 5,
+      "title": "Shortage, not zero supply",
+      "body": "Shortage equals Qd minus Qs. Sellers still supply Qs, so a shortage does not mean zero supply. Some buyers gain, but others cannot buy, and total surplus does not rise."
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "A price ceiling is a legal maximum price. It binds only when it is set below the equilibrium price, as this red line is."
+    },
+    {
+      "at": 2.7,
+      "text": "At the ceiling, the quantity demanded Qd is larger than the quantity supplied Qs. The red arrow between them is the shortage."
+    },
+    {
+      "at": 5.4,
+      "text": "Shortage is Qd minus Qs, not zero supply. A ceiling helps some buyers but leaves others unable to buy, and it does not increase total surplus."
+    }
+  ],
+  "fallback": {
+    "text": "A price ceiling is a maximum legal price. It binds when set below equilibrium. At a binding ceiling, quantity demanded Qd exceeds quantity supplied Qs, so the shortage is Qd minus Qs. Sellers still supply a positive Qs. Some buyers gain, but others cannot buy, and price controls do not raise total surplus."
+  },
+  "accessibility": {
+    "alt": "Price-quantity graph. Supply slopes up and demand slopes down, crossing at E. A red ceiling line lies below E. At the ceiling, demand quantity Qd is right of supply quantity Qs, and a red arrow marks the shortage between them.",
+    "reducedMotion": true,
+    "keyboard": true
+  }
+}

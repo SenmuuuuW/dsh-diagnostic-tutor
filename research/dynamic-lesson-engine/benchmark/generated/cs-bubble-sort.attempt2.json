@@ -1,0 +1,579 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#0b1220"
+  },
+  "metadata": {
+    "title": "Bubble Sort: Adjacent Swaps",
+    "subject": "Computer Science",
+    "objective": "Show why bubble sort compares only neighbours and needs more than one pass.",
+    "learner": "Can read a simple loop and array indices.",
+    "misconceptions": [
+      "One pass always sorts the whole array",
+      "Bubble sort compares values that are far apart"
+    ],
+    "expectedUnderstanding": [
+      "Bubble sort compares each adjacent pair and swaps only when the left value is larger.",
+      "Each pass moves the largest remaining value to the right edge and grows the sorted suffix.",
+      "The array 3, 2, 1 needs two passes, so passes repeat until no swap is needed."
+    ]
+  },
+  "properties": [
+    {
+      "id": "suffix",
+      "label": "Show the sorted suffix",
+      "min": 0,
+      "max": 1,
+      "step": 1,
+      "default": 1
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 48,
+      "text": "Bubble Sort: Adjacent Swaps",
+      "fontSize": 30,
+      "fill": "#f8fafc",
+      "anchor": "start"
+    },
+    {
+      "id": "subtitle",
+      "type": "text",
+      "x": 40,
+      "y": 84,
+      "text": "Compare each adjacent pair and swap when the left value is larger.",
+      "fontSize": 16,
+      "fill": "#cbd5e1",
+      "anchor": "start"
+    },
+    {
+      "id": "slot0",
+      "type": "rect",
+      "x": 180,
+      "y": 240,
+      "width": 140,
+      "height": 140,
+      "rx": 10,
+      "fill": "#1e293b"
+    },
+    {
+      "id": "slot1",
+      "type": "rect",
+      "x": 360,
+      "y": 240,
+      "width": 140,
+      "height": 140,
+      "rx": 10,
+      "fill": "#1e293b"
+    },
+    {
+      "id": "slot2",
+      "type": "rect",
+      "x": 540,
+      "y": 240,
+      "width": 140,
+      "height": 140,
+      "rx": 10,
+      "fill": "#1e293b"
+    },
+    {
+      "id": "token3",
+      "type": "circle",
+      "cx": 250,
+      "cy": 310,
+      "r": 44,
+      "fill": "#f97316"
+    },
+    {
+      "id": "token2",
+      "type": "circle",
+      "cx": 430,
+      "cy": 310,
+      "r": 44,
+      "fill": "#14b8a6"
+    },
+    {
+      "id": "token1",
+      "type": "circle",
+      "cx": 610,
+      "cy": 310,
+      "r": 44,
+      "fill": "#8b5cf6"
+    },
+    {
+      "id": "lab3",
+      "type": "text",
+      "x": 250,
+      "y": 324,
+      "text": "3",
+      "fontSize": 32,
+      "fill": "#0b1220",
+      "anchor": "middle"
+    },
+    {
+      "id": "lab2",
+      "type": "text",
+      "x": 430,
+      "y": 324,
+      "text": "2",
+      "fontSize": 32,
+      "fill": "#0b1220",
+      "anchor": "middle"
+    },
+    {
+      "id": "lab1",
+      "type": "text",
+      "x": 610,
+      "y": 324,
+      "text": "1",
+      "fontSize": 32,
+      "fill": "#0b1220",
+      "anchor": "middle"
+    },
+    {
+      "id": "band",
+      "type": "rect",
+      "x": 680,
+      "y": 404,
+      "width": 0,
+      "height": 8,
+      "rx": 4,
+      "fill": "#22c55e",
+      "opacity": {
+        "expr": "suffix"
+      }
+    },
+    {
+      "id": "bandLabel",
+      "type": "text",
+      "x": 680,
+      "y": 438,
+      "text": "green band = sorted suffix",
+      "fontSize": 14,
+      "fill": "#86efac",
+      "anchor": "end",
+      "opacity": {
+        "expr": "suffix"
+      }
+    },
+    {
+      "id": "hint",
+      "type": "text",
+      "x": 40,
+      "y": 506,
+      "text": "Two passes are needed before every adjacent pair is in order.",
+      "fontSize": 14,
+      "fill": "#64748b",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 10,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "token3",
+          "property": "cx"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 250,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 250,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 610,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 610,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "lab3",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 250,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 250,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 610,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 610,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "token2",
+          "property": "cx"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 250,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 250,
+            "easing": "linear"
+          },
+          {
+            "at": 7,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 430,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "lab2",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 250,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 250,
+            "easing": "linear"
+          },
+          {
+            "at": 7,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 430,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "token1",
+          "property": "cx"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 610,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 610,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 7,
+            "value": 250,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 250,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "lab1",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 610,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 610,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 430,
+            "easing": "linear"
+          },
+          {
+            "at": 7,
+            "value": 250,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 250,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "band",
+          "property": "width"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4.6,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 5.2,
+            "value": 140,
+            "easing": "linear"
+          },
+          {
+            "at": 6.6,
+            "value": 140,
+            "easing": "linear"
+          },
+          {
+            "at": 7.2,
+            "value": 320,
+            "easing": "linear"
+          },
+          {
+            "at": 7.9,
+            "value": 320,
+            "easing": "linear"
+          },
+          {
+            "at": 8.2,
+            "value": 500,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 500,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "band",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 680,
+            "easing": "linear"
+          },
+          {
+            "at": 4.6,
+            "value": 680,
+            "easing": "linear"
+          },
+          {
+            "at": 5.2,
+            "value": 540,
+            "easing": "linear"
+          },
+          {
+            "at": 6.6,
+            "value": 540,
+            "easing": "linear"
+          },
+          {
+            "at": 7.2,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 7.9,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 8.2,
+            "value": 180,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 180,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "ctl-suffix",
+      "kind": "slider",
+      "propertyId": "suffix",
+      "label": "Show the sorted suffix"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-bubble-start",
+      "at": 0,
+      "title": "Start with 3, 2, 1",
+      "body": "The array is 3, 2, 1. Bubble sort never jumps: it looks at the first adjacent pair, 3 and 2.",
+      "pause": true
+    },
+    {
+      "id": "cp-bubble-first-swap",
+      "at": 2,
+      "title": "Swap only when the left value is larger",
+      "body": "3 is greater than 2, so the pair swaps and the array becomes 2, 3, 1. The scan moves one slot right and compares 3 with 1.",
+      "pause": true
+    },
+    {
+      "id": "cp-bubble-pass-one",
+      "at": 5,
+      "title": "Pass 1 locks the largest value at the edge",
+      "body": "3 is greater than 1, so they swap and the array becomes 2, 1, 3. The 3 has reached the right edge, so the green suffix starts at the last slot.",
+      "pause": true
+    },
+    {
+      "id": "cp-bubble-pass-two",
+      "at": 7,
+      "title": "One pass was not enough",
+      "body": "Pass 2 compares 2 and 1 and swaps them, giving 1, 2, 3. After pass 1 the array was still 2, 1, 3, so passes must repeat until a pass makes no swap.",
+      "pause": true
+    },
+    {
+      "id": "cp-bubble-done",
+      "at": 8.2,
+      "title": "A final pass finds no inversion",
+      "body": "Every adjacent pair is now in order, so the loop stops. The sorted suffix covers the whole array.",
+      "pause": false
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "Start with 3, 2, 1. Bubble sort only compares neighbours, so it begins with 3 and 2."
+    },
+    {
+      "at": 2,
+      "text": "3 is greater than 2, so they swap. The scan moves right and compares 3 with 1."
+    },
+    {
+      "at": 5,
+      "text": "3 is greater than 1, so they swap. Pass 1 ends with 3 locked at the right edge."
+    },
+    {
+      "at": 7,
+      "text": "Pass 2 compares 2 and 1 and swaps them, so the array becomes 1, 2, 3."
+    },
+    {
+      "at": 8.2,
+      "text": "A final pass finds no inversion, so the sorted suffix covers the whole array."
+    }
+  ],
+  "fallback": {
+    "text": "Array 3, 2, 1. Bubble sort compares adjacent values and swaps them when the left one is larger: 3 and 2 swap, then 3 and 1 swap, giving 2, 1, 3. A second pass swaps 2 and 1 to give 1, 2, 3, and a final pass finds no inversion."
+  },
+  "accessibility": {
+    "alt": "Three numbered tokens 3, 2 and 1 sit in slots. Tokens swap places as adjacent pairs are compared, and a green band grows from the right edge until all three slots are marked as the sorted suffix.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

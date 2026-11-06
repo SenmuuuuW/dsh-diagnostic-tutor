@@ -1,0 +1,336 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 900,
+    "height": 600,
+    "background": "#f8fafc"
+  },
+  "metadata": {
+    "title": "Projectile Motion: Fixed Speed, Changing Angle",
+    "subject": "Physics",
+    "objective": "Show how launch angle changes the trajectory at a fixed speed.",
+    "learner": "Knows speed and vectors informally.",
+    "misconceptions": [
+      "45 degrees always gives the maximum range regardless of launch height",
+      "Horizontal speed changes the vertical acceleration"
+    ],
+    "expectedUnderstanding": [
+      "A fixed-speed projectile follows a parabola whose height and range change with launch angle.",
+      "At equal launch and landing heights, 45 degrees gives the maximum range.",
+      "The vertical acceleration is independent of the horizontal speed.",
+      "Supplementary launch angles can produce the same range with different maximum heights."
+    ]
+  },
+  "properties": [
+    {
+      "id": "angle",
+      "label": "Launch angle",
+      "min": 10,
+      "max": 80,
+      "step": 1,
+      "default": 45,
+      "unit": "deg"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "ground",
+      "type": "line",
+      "x1": 80,
+      "y1": 520,
+      "x2": 880,
+      "y2": 520,
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "angleArrow",
+      "type": "arrow",
+      "x1": 130,
+      "y1": 520,
+      "x2": "130 + 95*cos(angle*3.14159265/180)",
+      "y2": "520 - 95*sin(angle*3.14159265/180)",
+      "stroke": "#0f766e",
+      "strokeWidth": 3
+    },
+    {
+      "id": "traj1",
+      "type": "line",
+      "x1": 130,
+      "y1": 520,
+      "x2": "130 + 101.333333*sin(angle*3.14159265/90)",
+      "y2": "520 - 115.555556*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)",
+      "stroke": "#ea580c",
+      "strokeWidth": 4
+    },
+    {
+      "id": "traj2",
+      "type": "line",
+      "x1": "130 + 101.333333*sin(angle*3.14159265/90)",
+      "y1": "520 - 115.555556*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)",
+      "x2": "130 + 202.666667*sin(angle*3.14159265/90)",
+      "y2": "520 - 184.888889*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)",
+      "stroke": "#ea580c",
+      "strokeWidth": 4
+    },
+    {
+      "id": "traj3",
+      "type": "line",
+      "x1": "130 + 202.666667*sin(angle*3.14159265/90)",
+      "y1": "520 - 184.888889*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)",
+      "x2": "130 + 304*sin(angle*3.14159265/90)",
+      "y2": "520 - 208*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)",
+      "stroke": "#ea580c",
+      "strokeWidth": 4
+    },
+    {
+      "id": "traj4",
+      "type": "line",
+      "x1": "130 + 304*sin(angle*3.14159265/90)",
+      "y1": "520 - 208*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)",
+      "x2": "130 + 405.333333*sin(angle*3.14159265/90)",
+      "y2": "520 - 184.888889*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)",
+      "stroke": "#ea580c",
+      "strokeWidth": 4
+    },
+    {
+      "id": "traj5",
+      "type": "line",
+      "x1": "130 + 405.333333*sin(angle*3.14159265/90)",
+      "y1": "520 - 184.888889*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)",
+      "x2": "130 + 506.666667*sin(angle*3.14159265/90)",
+      "y2": "520 - 115.555556*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)",
+      "stroke": "#ea580c",
+      "strokeWidth": 4
+    },
+    {
+      "id": "traj6",
+      "type": "line",
+      "x1": "130 + 506.666667*sin(angle*3.14159265/90)",
+      "y1": "520 - 115.555556*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)",
+      "x2": "130 + 608*sin(angle*3.14159265/90)",
+      "y2": 520,
+      "stroke": "#ea580c",
+      "strokeWidth": 4
+    },
+    {
+      "id": "pair1",
+      "type": "line",
+      "x1": 130,
+      "y1": 520,
+      "x2": "130 + 152*sin(angle*3.14159265/90)",
+      "y2": "520 - 156*cos(angle*3.14159265/180)*cos(angle*3.14159265/180)",
+      "stroke": "#94a3b8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "pair2",
+      "type": "line",
+      "x1": "130 + 152*sin(angle*3.14159265/90)",
+      "y1": "520 - 156*cos(angle*3.14159265/180)*cos(angle*3.14159265/180)",
+      "x2": "130 + 304*sin(angle*3.14159265/90)",
+      "y2": "520 - 208*cos(angle*3.14159265/180)*cos(angle*3.14159265/180)",
+      "stroke": "#94a3b8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "pair3",
+      "type": "line",
+      "x1": "130 + 304*sin(angle*3.14159265/90)",
+      "y1": "520 - 208*cos(angle*3.14159265/180)*cos(angle*3.14159265/180)",
+      "x2": "130 + 456*sin(angle*3.14159265/90)",
+      "y2": "520 - 156*cos(angle*3.14159265/180)*cos(angle*3.14159265/180)",
+      "stroke": "#94a3b8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "pair4",
+      "type": "line",
+      "x1": "130 + 456*sin(angle*3.14159265/90)",
+      "y1": "520 - 156*cos(angle*3.14159265/180)*cos(angle*3.14159265/180)",
+      "x2": "130 + 608*sin(angle*3.14159265/90)",
+      "y2": 520,
+      "stroke": "#94a3b8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "ball",
+      "type": "circle",
+      "cx": 130,
+      "cy": 520,
+      "r": 10,
+      "fill": "#1d4ed8",
+      "stroke": "#1e3a8a",
+      "strokeWidth": 2
+    },
+    {
+      "id": "rangeBar",
+      "type": "line",
+      "x1": 130,
+      "y1": 548,
+      "x2": "130 + 608*sin(angle*3.14159265/90)",
+      "y2": 548,
+      "stroke": "#0f766e",
+      "strokeWidth": 3
+    },
+    {
+      "id": "maxTick",
+      "type": "line",
+      "x1": 738,
+      "y1": 520,
+      "x2": 738,
+      "y2": 558,
+      "stroke": "#b91c1c",
+      "strokeWidth": 2
+    },
+    {
+      "id": "apexLabel",
+      "type": "text",
+      "x": "130 + 304*sin(angle*3.14159265/90)",
+      "y": "506 - 208*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)",
+      "text": "apex",
+      "fontSize": 15,
+      "fill": "#475569",
+      "anchor": "middle"
+    },
+    {
+      "id": "angleLabel",
+      "type": "text",
+      "x": "130 + 108*cos(angle*3.14159265/180)",
+      "y": "508 - 108*sin(angle*3.14159265/180)",
+      "text": "θ",
+      "fontSize": 22,
+      "fill": "#0f766e",
+      "anchor": "middle"
+    },
+    {
+      "id": "pairLabel",
+      "type": "text",
+      "x": 860,
+      "y": 82,
+      "text": "Thin curve: 90° − θ",
+      "fontSize": 16,
+      "fill": "#475569",
+      "anchor": "end"
+    },
+    {
+      "id": "maxLabel",
+      "type": "text",
+      "x": 738,
+      "y": 580,
+      "text": "45°: maximum range at equal heights",
+      "fontSize": 14,
+      "fill": "#b91c1c",
+      "anchor": "middle"
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 80,
+      "y": 48,
+      "text": "Fixed speed, varying launch angle",
+      "fontSize": 22,
+      "fill": "#0f172a",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 5.5,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "ball",
+          "property": "cx"
+        },
+        "keyframes": [
+          {"at": 0, "value": 130},
+          {"at": 0.5, "value": "130 + 76*sin(angle*3.14159265/90)"},
+          {"at": 1, "value": "130 + 152*sin(angle*3.14159265/90)"},
+          {"at": 1.5, "value": "130 + 228*sin(angle*3.14159265/90)"},
+          {"at": 2, "value": "130 + 304*sin(angle*3.14159265/90)"},
+          {"at": 2.5, "value": "130 + 380*sin(angle*3.14159265/90)"},
+          {"at": 3, "value": "130 + 456*sin(angle*3.14159265/90)"},
+          {"at": 3.5, "value": "130 + 532*sin(angle*3.14159265/90)"},
+          {"at": 4, "value": "130 + 608*sin(angle*3.14159265/90)"}
+        ]
+      },
+      {
+        "target": {
+          "primitive": "ball",
+          "property": "cy"
+        },
+        "keyframes": [
+          {"at": 0, "value": 520},
+          {"at": 0.5, "value": "520 - 91.0*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)"},
+          {"at": 1, "value": "520 - 156.0*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)"},
+          {"at": 1.5, "value": "520 - 195.0*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)"},
+          {"at": 2, "value": "520 - 208.0*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)"},
+          {"at": 2.5, "value": "520 - 195.0*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)"},
+          {"at": 3, "value": "520 - 156.0*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)"},
+          {"at": 3.5, "value": "520 - 91.0*sin(angle*3.14159265/180)*sin(angle*3.14159265/180)"},
+          {"at": 4, "value": 520}
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "angleControl",
+      "kind": "slider",
+      "propertyId": "angle",
+      "label": "Launch angle"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "projectile-watch",
+      "at": 0.6,
+      "title": "Watch the shape",
+      "body": "The ball rises and falls along the thick orange curve. Change the angle and replay to see how the apex and landing point move.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "projectile-range",
+      "at": 2.6,
+      "title": "Compare the range",
+      "body": "The teal bar measures the horizontal range. At equal launch and landing heights, the red tick at 45 degrees is the farthest landing point.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "projectile-check",
+      "at": 4.3,
+      "title": "Check the reasoning",
+      "body": "Does a larger horizontal speed change the downward acceleration? No. The vertical acceleration stays the same; horizontal speed only changes how far the ball travels. Also, the 45-degree maximum assumes equal launch and landing heights.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "A projectile launched at fixed speed follows a parabola. Change the launch angle, then replay."
+    },
+    {
+      "at": 1.2,
+      "text": "The vertical acceleration is the same at every angle. Horizontal speed does not change it."
+    },
+    {
+      "at": 2.5,
+      "text": "At equal launch and landing heights, the horizontal range peaks at 45 degrees."
+    },
+    {
+      "at": 3.8,
+      "text": "The thin curve is the paired angle 90 degrees minus theta. It lands at the same range but reaches a different height."
+    }
+  ],
+  "fallback": {
+    "text": "At fixed speed, launch angle sets the projectile's maximum height and range. The path is parabolic, and at equal launch and landing heights the range is greatest at 45 degrees. Angles that add to 90 degrees give equal ranges with different heights."
+  },
+  "accessibility": {
+    "alt": "Projectile at fixed speed arcs from a launch point as the angle slider changes. A thick curve shows the current path, a thin curve the paired angle, and labels mark apex, range, and the 45-degree maximum.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

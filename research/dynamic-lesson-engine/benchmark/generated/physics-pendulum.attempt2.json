@@ -1,0 +1,887 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 900,
+    "height": 600,
+    "background": "#f8fafc"
+  },
+  "metadata": {
+    "title": "Pendulum Motion: Length and Release Angle",
+    "subject": "Physics",
+    "objective": "Show how length and initial release angle affect the period of a pendulum.",
+    "learner": "Knows energy informally.",
+    "misconceptions": [
+      "Pendulum period depends strongly on mass",
+      "The small-angle approximation is exact at all angles"
+    ],
+    "expectedUnderstanding": [
+      "A longer pendulum has a longer period.",
+      "Changing the release angle changes the amplitude and slightly changes the period.",
+      "Mass is not a significant period driver in the ideal pendulum model.",
+      "The small-angle formula is an approximation that becomes less accurate at large angles."
+    ]
+  },
+  "properties": [
+    {
+      "id": "length",
+      "label": "Pendulum length",
+      "min": 0.5,
+      "max": 2,
+      "step": 0.1,
+      "default": 1.2,
+      "unit": "m"
+    },
+    {
+      "id": "angle",
+      "label": "Release angle",
+      "min": 10,
+      "max": 70,
+      "step": 1,
+      "default": 35,
+      "unit": "deg"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "ceiling",
+      "type": "line",
+      "x1": 320,
+      "y1": 80,
+      "x2": 580,
+      "y2": 80,
+      "stroke": "#334155",
+      "strokeWidth": 6
+    },
+    {
+      "id": "pivot",
+      "type": "circle",
+      "cx": 450,
+      "cy": 100,
+      "r": 7,
+      "fill": "#0f172a",
+      "stroke": "#0f172a",
+      "strokeWidth": 1
+    },
+    {
+      "id": "arc1",
+      "type": "line",
+      "x1": {
+        "expr": "450 - (80 + 150*length)*sin(angle*3.14159265/180)"
+      },
+      "y1": {
+        "expr": "100 + (80 + 150*length)*cos(angle*3.14159265/180)"
+      },
+      "x2": {
+        "expr": "450 - (80 + 150*length)*sin(angle*1.570796325/180)"
+      },
+      "y2": {
+        "expr": "100 + (80 + 150*length)*cos(angle*1.570796325/180)"
+      },
+      "stroke": "#cbd5e1",
+      "strokeWidth": 3
+    },
+    {
+      "id": "arc2",
+      "type": "line",
+      "x1": {
+        "expr": "450 - (80 + 150*length)*sin(angle*1.570796325/180)"
+      },
+      "y1": {
+        "expr": "100 + (80 + 150*length)*cos(angle*1.570796325/180)"
+      },
+      "x2": 450,
+      "y2": {
+        "expr": "100 + (80 + 150*length)"
+      },
+      "stroke": "#cbd5e1",
+      "strokeWidth": 3
+    },
+    {
+      "id": "arc3",
+      "type": "line",
+      "x1": 450,
+      "y1": {
+        "expr": "100 + (80 + 150*length)"
+      },
+      "x2": {
+        "expr": "450 + (80 + 150*length)*sin(angle*1.570796325/180)"
+      },
+      "y2": {
+        "expr": "100 + (80 + 150*length)*cos(angle*1.570796325/180)"
+      },
+      "stroke": "#cbd5e1",
+      "strokeWidth": 3
+    },
+    {
+      "id": "arc4",
+      "type": "line",
+      "x1": {
+        "expr": "450 + (80 + 150*length)*sin(angle*1.570796325/180)"
+      },
+      "y1": {
+        "expr": "100 + (80 + 150*length)*cos(angle*1.570796325/180)"
+      },
+      "x2": {
+        "expr": "450 + (80 + 150*length)*sin(angle*3.14159265/180)"
+      },
+      "y2": {
+        "expr": "100 + (80 + 150*length)*cos(angle*3.14159265/180)"
+      },
+      "stroke": "#cbd5e1",
+      "strokeWidth": 3
+    },
+    {
+      "id": "rod",
+      "type": "line",
+      "x1": 450,
+      "y1": 100,
+      "x2": {
+        "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(0/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+      },
+      "y2": {
+        "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(0/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+      },
+      "stroke": "#475569",
+      "strokeWidth": 4
+    },
+    {
+      "id": "bob",
+      "type": "circle",
+      "cx": {
+        "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(0/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+      },
+      "cy": {
+        "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(0/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+      },
+      "r": 21,
+      "fill": "#1d4ed8",
+      "stroke": "#1e3a8a",
+      "strokeWidth": 3
+    },
+    {
+      "id": "centerGuide",
+      "type": "line",
+      "x1": 450,
+      "y1": 108,
+      "x2": 450,
+      "y2": 510,
+      "stroke": "#e2e8f0",
+      "strokeWidth": 2
+    },
+    {
+      "id": "barBg",
+      "type": "rect",
+      "x": 80,
+      "y": 520,
+      "width": 300,
+      "height": 16,
+      "fill": "#e2e8f0",
+      "stroke": "#94a3b8",
+      "strokeWidth": 1
+    },
+    {
+      "id": "barFill",
+      "type": "rect",
+      "x": 80,
+      "y": 520,
+      "width": {
+        "expr": "300*sqrt(length/2)"
+      },
+      "height": 16,
+      "fill": "#0f766e",
+      "stroke": "#0f766e",
+      "strokeWidth": 1
+    },
+    {
+      "id": "refTick",
+      "type": "line",
+      "x1": 230,
+      "y1": 512,
+      "x2": 230,
+      "y2": 546,
+      "stroke": "#b91c1c",
+      "strokeWidth": 2
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 60,
+      "y": 44,
+      "text": "Pendulum: length and release angle set the motion",
+      "fontSize": 21,
+      "fill": "#0f172a",
+      "anchor": "start"
+    },
+    {
+      "id": "lengthLabel",
+      "type": "text",
+      "x": 462,
+      "y": 220,
+      "text": "L",
+      "fontSize": 20,
+      "fill": "#475569",
+      "anchor": "start"
+    },
+    {
+      "id": "thetaLabel",
+      "type": "text",
+      "x": {
+        "expr": "450 + 86*sin(angle*3.14159265/180)"
+      },
+      "y": {
+        "expr": "108 + 86*cos(angle*3.14159265/180)"
+      },
+      "text": "θ₀",
+      "fontSize": 18,
+      "fill": "#0f766e",
+      "anchor": "middle"
+    },
+    {
+      "id": "periodLabel",
+      "type": "text",
+      "x": 80,
+      "y": 500,
+      "text": "Period comparison: T grows with √L",
+      "fontSize": 16,
+      "fill": "#0f172a",
+      "anchor": "start"
+    },
+    {
+      "id": "refLabel",
+      "type": "text",
+      "x": 230,
+      "y": 566,
+      "text": "0.5 m reference",
+      "fontSize": 14,
+      "fill": "#b91c1c",
+      "anchor": "middle"
+    },
+    {
+      "id": "massNote",
+      "type": "text",
+      "x": 80,
+      "y": 592,
+      "text": "Mass does not set the period",
+      "fontSize": 15,
+      "fill": "#475569",
+      "anchor": "start"
+    },
+    {
+      "id": "angleNote",
+      "type": "text",
+      "x": 470,
+      "y": 592,
+      "text": "Large θ: period grows; small-angle formula is approximate",
+      "fontSize": 14,
+      "fill": "#475569",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 5.5,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "bob",
+          "property": "cx"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(0/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.25,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(0.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(0.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.75,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(0.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(1/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.25,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(1.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(1.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.75,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(1.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(2/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.25,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(2.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(2.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.75,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(2.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(3/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.25,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(3.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(3.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.75,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(3.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(4/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.25,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(4.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(4.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.75,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(4.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "bob",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(0/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.25,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(0.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(0.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.75,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(0.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(1/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.25,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(1.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(1.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.75,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(1.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(2/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.25,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(2.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(2.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.75,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(2.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(3/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.25,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(3.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(3.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.75,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(3.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(4/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.25,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(4.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(4.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.75,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(4.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "rod",
+          "property": "x2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(0/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.25,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(0.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(0.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.75,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(0.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(1/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.25,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(1.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(1.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.75,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(1.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(2/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.25,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(2.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(2.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.75,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(2.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(3/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.25,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(3.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(3.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.75,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(3.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(4/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.25,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(4.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(4.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.75,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(4.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 5,
+            "value": {
+              "expr": "450 + (80 + 150*length)*sin((angle*3.14159265/180)*cos(5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "rod",
+          "property": "y2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(0/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.25,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(0.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(0.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 0.75,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(0.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(1/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.25,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(1.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(1.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 1.75,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(1.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(2/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.25,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(2.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(2.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 2.75,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(2.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(3/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.25,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(3.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(3.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 3.75,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(3.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(4/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.25,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(4.25/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(4.5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 4.75,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(4.75/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          },
+          {
+            "at": 5,
+            "value": {
+              "expr": "100 + (80 + 150*length)*cos((angle*3.14159265/180)*cos(5/(sqrt(length/9.8)*(1 + (angle*3.14159265/180)*(angle*3.14159265/180)/16))))"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "lengthControl",
+      "kind": "slider",
+      "propertyId": "length",
+      "label": "Pendulum length"
+    },
+    {
+      "id": "angleControl",
+      "kind": "slider",
+      "propertyId": "angle",
+      "label": "Release angle"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "pendulum-watch",
+      "at": 0.5,
+      "title": "Watch one full swing",
+      "body": "The bob starts at the release angle and swings through the lowest point. The pale arc marks the full path of the bob.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "pendulum-length",
+      "at": 2.5,
+      "title": "Compare the period",
+      "body": "Increase the length and replay. A longer pendulum takes more time for each swing, so the period is longer. The teal bar is proportional to the square root of length.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "pendulum-check",
+      "at": 4.2,
+      "title": "Test the two misconceptions",
+      "body": "Does adding mass change the period? No, in this ideal model mass is not a period input. Is the small-angle formula exact at a 70-degree release? No, the period is longer than the formula predicts; the formula is only a small-angle approximation.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The bob is released at the angle set by the slider. Gravity pulls it back toward the middle."
+    },
+    {
+      "at": 1.4,
+      "text": "A longer string makes each swing take more time. Period grows with the square root of length."
+    },
+    {
+      "at": 2.8,
+      "text": "Mass is not the driver here. The period comparison depends on length, with a small correction for large angles."
+    },
+    {
+      "at": 4.1,
+      "text": "At large release angles the small-angle formula is only approximate. The real period is a little longer."
+    }
+  ],
+  "fallback": {
+    "text": "A pendulum released from an angle swings back and forth. Increasing its length increases the period, proportional to the square root of length. Mass is not a significant period driver in the ideal model, and the small-angle period formula becomes less exact at large release angles."
+  },
+  "accessibility": {
+    "alt": "A pendulum bob swings from a release angle. A pale arc marks its path. Two sliders set length and release angle, and a bar graph compares period with a 0.5-meter reference. Text notes that mass does not set the period.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}
