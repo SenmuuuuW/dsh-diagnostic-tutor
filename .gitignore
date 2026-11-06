@@ -8,3 +8,6 @@ lib/
 
 .DS_Store
 *.log
+
+# Scene Lab headless browser profiles (research only)
+research/**/.chrome-profile/

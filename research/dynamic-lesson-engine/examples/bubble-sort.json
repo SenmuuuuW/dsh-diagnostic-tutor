@@ -1,0 +1,36 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 820, "height": 380, "background": "#ffffff" },
+  "metadata": {
+    "title": "Bubble sort swaps",
+    "subject": "Computer science / algorithms",
+    "objective": "See that bubble sort swaps adjacent out-of-order values and grows the sorted tail.",
+    "learner": "Can read a simple loop",
+    "misconceptions": ["Bubble sort scans the whole array once"],
+    "expectedUnderstanding": ["Each pass moves the largest remaining value to the right"]
+  },
+  "properties": [],
+  "primitives": [
+    { "id": "b0", "type": "rect", "x": 80, "y": 180, "width": 70, "height": 110, "fill": "#93c5fd", "rx": 5 },
+    { "id": "b1", "type": "rect", "x": 170, "y": 120, "width": 70, "height": 170, "fill": "#93c5fd", "rx": 5 },
+    { "id": "b2", "type": "rect", "x": 260, "y": 220, "width": 70, "height": 70, "fill": "#93c5fd", "rx": 5 },
+    { "id": "b3", "type": "rect", "x": 350, "y": 90, "width": 70, "height": 200, "fill": "#93c5fd", "rx": 5 },
+    { "id": "b4", "type": "rect", "x": 440, "y": 150, "width": 70, "height": 140, "fill": "#93c5fd", "rx": 5 },
+    { "id": "scan", "type": "line", "x1": 80, "y1": 320, "x2": 150, "y2": 320, "stroke": "#dc2626", "strokeWidth": 4 },
+    { "id": "caption", "type": "text", "x": 80, "y": 45, "text": "adjacent swap: larger values drift right", "fontSize": 14, "fill": "#111827" }
+  ],
+  "timeline": {
+    "duration": 6,
+    "tracks": [
+      { "target": { "primitive": "scan", "property": "x1" }, "keyframes": [{ "at": 0, "value": 80 }, { "at": 5, "value": 420 }] },
+      { "target": { "primitive": "scan", "property": "x2" }, "keyframes": [{ "at": 0, "value": 150 }, { "at": 5, "value": 490 }] },
+      { "target": { "primitive": "b2", "property": "y" }, "keyframes": [{ "at": 2, "value": 220 }, { "at": 3, "value": 120, "easing": "ease-in-out" }] },
+      { "target": { "primitive": "b4", "property": "opacity" }, "keyframes": [{ "at": 4, "value": 1 }, { "at": 5.5, "value": 0.3 }] }
+    ]
+  },
+  "checkpoints": [{ "id": "cp-1", "at": 3, "title": "Predict the next swap", "body": "Which pair is compared next?", "pause": true, "learnerAction": "answer" }],
+  "narration": [{ "at": 0, "text": "Compare two neighbors." }, { "at": 3, "text": "Swap when the left value is larger." }],
+  "fallback": { "text": "Five bars with a scan line moving right; the sorted tail grows from the right." },
+  "accessibility": { "alt": "Five vertical bars and a scan line illustrating bubble sort", "reducedMotion": "static", "keyboard": true },
+  "sourceRefs": []
+}

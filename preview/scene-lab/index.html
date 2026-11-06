@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scene Lab — Dynamic Lesson Engine research</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="lab-head">
+    <div>
+      <p class="eyebrow">v0.7.0 research · isolated from production</p>
+      <h1>Scene Lab</h1>
+      <p class="sub">Load a SceneSpec, validate it, then play/seek/step and change its bounded parameters. This page does not import the production lesson renderer.</p>
+    </div>
+    <div class="head-actions">
+      <button id="validate">Validate</button>
+      <button id="render" class="primary">Render</button>
+      <button id="reset" class="ghost">Reset example</button>
+    </div>
+  </header>
+
+  <main class="lab-grid">
+    <section class="panel spec-panel">
+      <div class="panel-head">
+        <h2>SceneSpec JSON</h2>
+        <select id="example-select" aria-label="Example scene">
+          <option value="gradient-descent">Gradient descent</option>
+          <option value="unit-circle">Unit circle / sine</option>
+          <option value="bubble-sort">Bubble sort</option>
+        </select>
+      </div>
+      <textarea id="spec-input" spellcheck="false" aria-label="SceneSpec JSON"></textarea>
+      <div id="validation" class="validation" role="status" aria-live="polite">Loading…</div>
+      <p class="hint">A generated AI spec can be pasted here. The validator rejects unsupported fields, expressions, colors, URLs, and oversized arrays before rendering.</p>
+    </section>
+
+    <section class="panel viewer-panel">
+      <div class="panel-head">
+        <h2 id="scene-title">Scene</h2>
+        <span id="scene-meta" class="meta"></span>
+      </div>
+      <div id="stage" class="stage" aria-live="polite"></div>
+      <div id="fallback" class="fallback" hidden></div>
+      <div class="timeline-row">
+        <button id="replay" title="Replay">⟲</button>
+        <button id="back" title="Step back 0.5s (Left)">−0.5s</button>
+        <button id="play" class="primary" title="Play/pause (Space)">Play</button>
+        <button id="forward" title="Step forward 0.5s (Right)">+0.5s</button>
+        <input id="timeline" type="range" min="0" max="1" step="0.01" value="0" aria-label="Timeline" />
+        <output id="time-label">0.00s</output>
+      </div>
+      <div id="controls" class="controls"></div>
+      <div class="narration-row">
+        <strong>Narration:</strong>
+        <span id="narration">—</span>
+      </div>
+      <div class="checkpoint-row">
+        <strong>Checkpoints:</strong>
+        <ul id="checkpoints"></ul>
+      </div>
+      <div class="metrics" id="metrics" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="lab-foot">
+    <span>Safety: no model JavaScript, no HTML injection, no external URLs, bounded primitives/keyframes/expressions.</span>
+    <span id="status">ready</span>
+  </footer>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

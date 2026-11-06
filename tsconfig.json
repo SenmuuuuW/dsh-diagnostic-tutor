@@ -27,6 +27,7 @@
     // typical machine — see docs/planning/PLAN.md 2.12 #16).
     "verbatimModuleSyntax": true,
 
+    "allowJs": true,
     "skipLibCheck": true,
     "noEmit": true
   },

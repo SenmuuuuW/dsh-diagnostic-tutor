@@ -1,0 +1,43 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 800, "height": 420, "background": "#ffffff" },
+  "metadata": {
+    "title": "One gradient step",
+    "subject": "Mathematics / optimization",
+    "objective": "See that a step moves opposite the gradient at the current point.",
+    "learner": "Understands basic algebra; new to calculus",
+    "misconceptions": ["A big learning rate is always better"],
+    "expectedUnderstanding": ["The step uses the slope at the current point"]
+  },
+  "properties": [
+    { "id": "eta", "label": "learning rate", "min": 0.02, "max": 0.8, "step": 0.02, "default": 0.2, "unit": "x" }
+  ],
+  "primitives": [
+    { "id": "x-axis", "type": "line", "x1": 80, "y1": 340, "x2": 740, "y2": 340, "stroke": "#6b7280", "strokeWidth": 2 },
+    { "id": "y-axis", "type": "line", "x1": 80, "y1": 340, "x2": 80, "y2": 40, "stroke": "#6b7280", "strokeWidth": 2 },
+    { "id": "curve", "type": "path", "d": "M 120 90 Q 360 430 700 120", "fill": "none", "stroke": "#93c5fd", "strokeWidth": 3 },
+    { "id": "start-label", "type": "text", "x": 150, "y": 80, "text": "start", "fontSize": 14, "fill": "#374151" },
+    { "id": "start", "type": "circle", "cx": 150, "cy": 180, "r": 8, "fill": "#2563eb" },
+    { "id": "step", "type": "arrow", "x1": 150, "y1": 180, "x2": { "expr": "150 + 500*eta" }, "y2": { "expr": "180 + 120*eta" }, "stroke": "#dc2626", "strokeWidth": 3 },
+    { "id": "step-label", "type": "text", "x": 390, "y": 210, "text": "move against the slope", "fontSize": 14, "fill": "#dc2626" }
+  ],
+  "timeline": {
+    "duration": 4,
+    "tracks": [
+      { "target": { "primitive": "start", "property": "cy" }, "keyframes": [{ "at": 0, "value": 180 }, { "at": 4, "value": 220, "easing": "ease-in-out" }] }
+    ]
+  },
+  "controls": [
+    { "id": "eta-control", "kind": "slider", "propertyId": "eta", "label": "learning rate" }
+  ],
+  "checkpoints": [
+    { "id": "cp-1", "at": 2, "title": "Predict first", "body": "Which direction should the point move when the slope is positive?", "pause": true, "learnerAction": "answer" }
+  ],
+  "narration": [
+    { "at": 0, "text": "The slope at the current point tells us which way the function rises." },
+    { "at": 2, "text": "We move the opposite way; the learning rate scales the step." }
+  ],
+  "fallback": { "text": "A point on a curve with an arrow pointing opposite the positive slope. A larger learning rate lengthens the arrow." },
+  "accessibility": { "alt": "A point on a parabola and a red arrow showing a gradient-descent step", "reducedMotion": "static", "keyboard": true },
+  "sourceRefs": [{ "sourceId": "fixture", "locator": "hand-authored research fixture" }]
+}
