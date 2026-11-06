@@ -1,6 +1,6 @@
 # 0.6.0 development readiness
 
-> Status: **development candidate, not published**. Branch
+> Status: **release-gate passed with documented limitations, not published**. Branch
 > `feat/v0.6.0-learning-materials`, based on the prepared 0.5.0 release.
 > No git push, npm publish, tag or GitHub Release has been performed.
 
@@ -12,6 +12,10 @@
 - local PNG/JPEG/WebP assets, backup/restore and an `image` lesson block;
 - evidence dedupe and explicit interaction/evidence contract;
 - Study save ordering / page-hide hardening.
+
+## Release gate
+
+Full gate evidence: `V0.6.0-RELEASE-GATE.md` (Node 22.19 + 24.16, real arXiv PDF quality, package/DSH smoke test).
 
 ## Verification gate
 
