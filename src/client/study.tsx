@@ -48,6 +48,7 @@ const TYPE_LABELS = {
   slider: { zh: '拖动探索', en: 'Explore' },
   'step-through': { zh: '分步演示', en: 'Step through' },
   figure: { zh: '图示', en: 'Figure' },
+  image: { zh: '图片', en: 'Image' },
 } as const
 
 /** Interactive blocks cannot be skipped until their answer is recorded. */

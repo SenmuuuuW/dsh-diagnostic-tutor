@@ -65,11 +65,21 @@ export async function recordBlockResponse(state: UdState, input: AnswerInput): P
   })
   if (attempt.nodeId !== null) {
     const at = response.submittedAt
-    await state.mutateNode(input.courseId, attempt.nodeId, (node) => ({
-      ...node,
-      evidence: [...node.evidence, { kind: 'practice', at, note: `Submitted ${block.type} response for ${block.id}.`, sessionId: input.sessionId, attemptId: attempt.id }],
-      updatedAt: at,
-    }))
+    const note = `Submitted ${block.type} response for ${block.id}.`
+    await state.mutateNode(input.courseId, attempt.nodeId, (node) => {
+      // Re-submitting the same block updates the response snapshot, not the
+      // evidence log. A retry or a changed answer is still one observation for
+      // this attempt/block; only the tutor can promote it to a check.
+      const alreadyRecorded = node.evidence.some((entry) =>
+        entry.kind === 'practice' && entry.attemptId === attempt.id && entry.sessionId === input.sessionId && entry.note === note,
+      )
+      if (alreadyRecorded) return node
+      return {
+        ...node,
+        evidence: [...node.evidence, { kind: 'practice', at, note, sessionId: input.sessionId, attemptId: attempt.id }],
+        updatedAt: at,
+      }
+    })
   }
   return pathView(state, input.courseId, input.sessionId)
 }

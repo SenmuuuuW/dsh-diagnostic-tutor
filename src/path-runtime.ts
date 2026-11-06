@@ -2,7 +2,7 @@
 import { randomUUID } from 'node:crypto'
 import { z } from 'zod'
 import type { UdState } from './state.js'
-import { LessonSchema } from './lesson.js'
+import { MAX_BLOCKS_PER_LESSON, MAX_LESSON_BYTES, LessonSchema } from './lesson.js'
 import { isKnownBlock } from './block-types.js'
 import type { LessonRecord } from './lesson.js'
 import {
@@ -186,6 +186,8 @@ export interface SaveStudyProgressInput {
   sessionId: string
   attemptId: string
   progress: StudyProgressInput
+  /** Optional browser stamp for rejecting a late, older save. */
+  savedAt?: string | undefined
 }
 
 export async function saveStudyProgress(state: UdState, input: SaveStudyProgressInput): Promise<PathView> {
@@ -198,6 +200,13 @@ export async function saveStudyProgress(state: UdState, input: SaveStudyProgress
     }
     const blocks = attempt.units.at(-1)?.lesson.blocks ?? []
     if (blocks.length === 0) throw new Error('no-lesson: this lesson has no written blocks yet')
+    if (input.savedAt !== undefined) {
+      const incoming = Date.parse(input.savedAt)
+      const current = attempt.study === undefined ? undefined : Date.parse(attempt.study.updatedAt)
+      if (Number.isFinite(incoming) && current !== undefined && Number.isFinite(current) && incoming + 5_000 < current) {
+        throw new Error('stale-study-save: this position was superseded by a newer save')
+      }
+    }
     const blockIndex = blocks.findIndex((block) => block.id === input.progress.blockId)
     if (blockIndex < 0) throw new Error('no-such-block: refresh the lesson before saving progress')
     const stepIndex = Math.min(Math.max(input.progress.stepIndex, 0), blocks.length - 1)
@@ -366,6 +375,72 @@ export async function writeCourseTeaching(state: UdState, courseId: string, sess
   })
   return run.attempts.find((entry) => entry.id === attemptId)!.units.at(-1)!.lesson
 }
+export interface AppendCourseBlockResult {
+  lesson: LessonRecord
+  added: boolean
+  idempotent: boolean
+}
+
+/**
+ * Append exactly one validated block to the latest planned lesson.
+ *
+ * The single-block shape is deliberate: it keeps a complex `figure` payload
+ * small enough for a model to emit reliably, and it makes retries safe. A
+ * duplicate block id with identical content is an idempotent no-op; a duplicate
+ * id with different content is refused rather than silently rewriting.
+ *
+ * `expectedRevision` is optional because append is naturally merge-safe, but a
+ * caller that has just read the run can pass it to reject a stale draft.
+ */
+export async function appendCourseTeachingBlock(
+  state: UdState,
+  courseId: string,
+  sessionId: string,
+  attemptId: string,
+  nodeId: string,
+  block: LessonRecord['blocks'][number],
+  expectedRevision?: number,
+): Promise<AppendCourseBlockResult> {
+  let result: AppendCourseBlockResult | undefined
+  await state.mutateCourseRun(courseId, sessionId, (run) => {
+    const attempt = requireAttempt(state, courseId, sessionId, attemptId)
+    if (attempt.nodeId !== nodeId || state.readNode(nodeId)?.courseId !== courseId) throw new Error('bind-the-node-before-writing-planned-teaching')
+    if (expectedRevision !== undefined && run.revision !== expectedRevision) {
+      throw new Error(`append-revision-conflict: the run is now at revision ${run.revision}; re-read udt_path_get and retry`)
+    }
+    const existing = [...attempt.units].reverse().find((unit) => unit.lesson.nodeId === nodeId)?.lesson
+    const duplicate = existing?.blocks.find((candidate) => candidate.id === block.id)
+    if (duplicate !== undefined) {
+      if (JSON.stringify(duplicate) !== JSON.stringify(block)) {
+        throw new Error(`append-block-id-conflict: block "${block.id}" already exists with different content; use a new stable id or replace the lesson explicitly`)
+      }
+      result = { lesson: existing!, added: false, idempotent: true }
+      return run
+    }
+    if ((existing?.blocks.length ?? 0) + 1 > MAX_BLOCKS_PER_LESSON) {
+      throw new Error(`append-block-limit: a lesson holds at most ${MAX_BLOCKS_PER_LESSON} blocks`)
+    }
+    const now = new Date().toISOString()
+    const lesson = LessonSchema.parse({
+      id: existing?.id ?? `${attempt.id}:${nodeId}:lesson`,
+      courseId,
+      nodeId,
+      title: existing?.title ?? state.readNode(nodeId)!.title,
+      blocks: [...(existing?.blocks ?? []), block],
+      origin: 'tutor',
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    })
+    if (Buffer.byteLength(JSON.stringify(lesson.blocks), 'utf8') > MAX_LESSON_BYTES) {
+      throw new Error('append-block-too-large: this would exceed the lesson byte limit')
+    }
+    result = { lesson, added: true, idempotent: false }
+    return teachingSnapshot(run, attemptId, lesson)
+  })
+  if (result === undefined) throw new Error('append-failed: no lesson was written')
+  return result
+}
+
 export async function completeCourseItem(state: UdState, courseId: string, sessionId: string, attemptId: string, reason: string, rawRefs: unknown) {
   const refs = z.array(EvidenceRefSchema).min(1).max(40).parse(rawRefs)
   if (!reason.trim() || reason.length > 2000) throw new Error('completion-needs-an-observed-reason')

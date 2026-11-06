@@ -50,6 +50,7 @@ describe('domain declaration', () => {
       'learning_paths',
       'course_runs',
       'sources',
+      'assets',
       'tasks',
       'review_cards',
       'review_log',

@@ -1,3 +1,57 @@
+## [0.6.0] — 2026-11-06
+
+Development release candidate. Not published.
+
+### Added — Incremental lesson writes
+
+- `udt_lesson_append_block`: one-block append with stable ids, idempotent exact
+  retries, id conflicts, optional run-revision checks, lesson byte/block caps and
+  the same schema/source/asset validation as `udt_lesson_update`.
+- Appending to a planned attempt creates a history snapshot; appending to a
+  legacy lesson keeps one lesson record.
+
+### Added — PDF learning materials
+
+- Local PDF upload (`POST /source/pdf`) with byte sniffing and bounded extraction
+  via `pdfjs-dist`; page text is stored with original 1-based page numbers.
+- PDF sources carry SHA-256, byte size, page count and per-page text; encrypted,
+  corrupt and oversized files are rejected before a source is written.
+- `udt_source_get` accepts `pages` and `maxChars` (20 pages / 20k chars per call).
+- `sourceRefs` supports structured `page` / `pageEnd`; out-of-range citations are
+  refused. Materials UI accepts PDFs and shows page counts/deletion.
+
+### Added — Local image assets and `image` block
+
+- Content-addressed local asset store outside `udt.json`; PNG/JPEG/WebP sniffed
+  by bytes, max 5 MB and 4096×4096, SHA-256 dedupe and bounded asset count.
+- `/asset` upload/read/delete/list and `/assets/export` + `/assets/import`
+  backup routes; asset access stays behind the local trust fence.
+- New `image` block with local `assetId`, alt and caption; remote URLs and paths
+  are refused. Renderer degrades if the asset is missing.
+- The model can list/add asset metadata but receives no image pixels; the UI says
+  so explicitly.
+
+### Changed — Evidence semantics
+
+- Quiz/flashcard re-submission no longer appends duplicate practice evidence.
+- Added an explicit interaction/evidence contract and Skill reference: chat
+  checks become evidence only when the tutor records them; no auto-grading,
+  auto-mastery or auto-advance.
+
+### Changed — Study persistence hardening
+
+- Optional `savedAt` rejects a save older than the stored position by more than
+  5s (`stale-study-save`), preventing out-of-order tab writes.
+- `pagehide` / hidden-visibility flush and `keepalive` reduce lost final saves.
+
+### Verification
+
+- `pnpm typecheck` pass
+- `pnpm test`: **704 tests passed (62 files)**
+- `pnpm build` pass
+- `scripts/path-check.mjs`: 31 browser cases passed (to be re-run)
+- Real-model DSH E2E: see `docs/planning/V0.6.0-E2E.md`
+
 ## [0.5.0] — 2026-11-05
 
 ### Added — Study persistence / resume

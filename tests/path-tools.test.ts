@@ -209,6 +209,56 @@ describe('native planning tool integration', () => {
     expect(snapshots.some((blocks) => blocks.length === 2 && new Set(blocks).size === 2)).toBe(true)
   })
 
+  it('appends one block idempotently, rejects conflicts, and preserves prior content', async () => {
+    await prepare()
+    await acceptCurriculum(state, COURSE, SESSION, revision(), 1)
+    const attemptId = await start(SESSION, 'append-single')
+    await native('udt_course_run_update', { action: 'bind-node', attemptId, nodeId: NODE })
+    const block = { id: 'append-one', type: 'text', content: { md: 'Appended one.' } }
+    const first = await native('udt_lesson_append_block', { attemptId, block })
+    expect(first).toMatchObject({ blockId: 'append-one', blockCount: 1, added: true, idempotent: false })
+    const beforeUnits = activeAttempt(state.readCourseRun(COURSE, SESSION))!.units.length
+    const retry = await native('udt_lesson_append_block', { attemptId, block })
+    expect(retry).toMatchObject({ blockId: 'append-one', blockCount: 1, added: false, idempotent: true })
+    expect(activeAttempt(state.readCourseRun(COURSE, SESSION))!.units).toHaveLength(beforeUnits)
+    await expect(native('udt_lesson_append_block', { attemptId,
+      block: { id: 'append-one', type: 'text', content: { md: 'Different content.' } } }))
+      .rejects.toThrow(/append-block-id-conflict/)
+    await expect(native('udt_lesson_append_block', { attemptId,
+      block: { id: 'bad', type: 'text', content: { md: '' } } })).rejects.toThrow(/append-invalid-block/)
+    expect(activeAttempt(state.readCourseRun(COURSE, SESSION))!.units.at(-1)!.lesson.blocks.map((entry) => entry.id)).toEqual(['append-one'])
+  })
+
+  it('rejects a stale run revision and serializes concurrent append calls', async () => {
+    await prepare()
+    await acceptCurriculum(state, COURSE, SESSION, revision(), 1)
+    const attemptId = await start(SESSION, 'append-revision')
+    await native('udt_course_run_update', { action: 'bind-node', attemptId, nodeId: NODE })
+    await native('udt_lesson_append_block', { attemptId, block: { id: 'append-first', type: 'text', content: { md: 'First.' } } })
+    const currentRevision = state.readCourseRun(COURSE, SESSION)!.revision
+    await expect(native('udt_lesson_append_block', { attemptId, expectedRevision: 1,
+      block: { id: 'append-stale', type: 'text', content: { md: 'Stale.' } } }))
+      .rejects.toThrow(new RegExp(`append-revision-conflict.*${currentRevision}`))
+    const [left, right] = await Promise.all([
+      native('udt_lesson_append_block', { attemptId, block: { id: 'append-left', type: 'text', content: { md: 'Left.' } } }),
+      native('udt_lesson_append_block', { attemptId, block: { id: 'append-right', type: 'text', content: { md: 'Right.' } } }),
+    ])
+    expect([left.blockCount, right.blockCount].sort()).toEqual([2, 3])
+    const ids = activeAttempt(state.readCourseRun(COURSE, SESSION))!.units.at(-1)!.lesson.blocks.map((entry) => entry.id)
+    expect(ids).toEqual(expect.arrayContaining(['append-first', 'append-left', 'append-right']))
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it('appends to a legacy lesson without a planned attempt', async () => {
+    const first = await native('udt_lesson_append_block', { nodeId: NODE,
+      block: { id: 'legacy-append', type: 'text', content: { md: 'Standalone append.' } } })
+    expect(first).toMatchObject({ blockCount: 1, added: true })
+    const again = await native('udt_lesson_append_block', { nodeId: NODE,
+      block: { id: 'legacy-append', type: 'text', content: { md: 'Standalone append.' } } })
+    expect(again).toMatchObject({ blockCount: 1, idempotent: true })
+    expect(state.listLessons()).toHaveLength(1)
+  })
+
   it('guards a legacy lesson queued behind a course-item start', async () => {
     await prepare()
     await acceptCurriculum(state, COURSE, SESSION, revision(), 1)

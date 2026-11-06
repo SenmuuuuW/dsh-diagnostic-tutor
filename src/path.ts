@@ -145,6 +145,8 @@ export const StudyProgressSchema = z.object({
 }).strict()
 export type StudyProgress = z.infer<typeof StudyProgressSchema>
 export type StudyProgressInput = Omit<StudyProgress, 'updatedAt'>
+/** Browser clock stamp used only to reject an out-of-order write. */
+export interface StudySaveInput extends StudyProgressInput { savedAt?: string | undefined }
 
 export const CourseAttemptSchema = z.object({
   id: short, operationId: short, operations: z.array(short).max(100), dispatchId: short.nullable(), version: z.number().int().min(1), itemId: short,

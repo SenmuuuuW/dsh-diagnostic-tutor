@@ -21,7 +21,7 @@ export function blocksMarkdown(blocks: readonly StoredBlock[]): string {
   for (const block of blocks) {
     if (!isKnownBlock(block)) {
       parts.push(`[unsupported block: ${block.type}]`)
-      if (block.sourceRefs !== undefined) parts.push(`Sources: ${block.sourceRefs.map((ref) => ref.locator).join(', ')}`)
+      if (block.sourceRefs !== undefined) parts.push(`Sources: ${block.sourceRefs.map((ref) => `${ref.locator}${ref.page === undefined ? '' : ` p.${ref.page}${ref.pageEnd === undefined || ref.pageEnd === ref.page ? '' : `–${ref.pageEnd}`}`}`).join(', ')}`)
       continue
     }
     switch (block.type) {
@@ -77,6 +77,9 @@ export function blocksMarkdown(blocks: readonly StoredBlock[]): string {
       case 'figure':
         parts.push(`**Figure:** ${block.content.alt}${block.content.caption === undefined ? '' : ` — ${block.content.caption}`}`)
         break
+      case 'image':
+        parts.push(`**Image:** ${block.content.alt}${block.content.caption === undefined ? '' : ` — ${block.content.caption}`} (local asset ${block.content.assetId})`)
+        break
       case 'step-through':
         parts.push([
           `### ${block.content.title ?? 'Step through'}`,
@@ -88,7 +91,7 @@ export function blocksMarkdown(blocks: readonly StoredBlock[]): string {
         ].filter(Boolean).join('\n\n'))
         break
     }
-    if (block.sourceRefs !== undefined) parts.push(`Sources: ${block.sourceRefs.map((ref) => ref.locator).join(', ')}`)
+    if (block.sourceRefs !== undefined) parts.push(`Sources: ${block.sourceRefs.map((ref) => `${ref.locator}${ref.page === undefined ? '' : ` p.${ref.page}${ref.pageEnd === undefined || ref.pageEnd === ref.page ? '' : `–${ref.pageEnd}`}`}`).join(', ')}`)
   }
   return parts.join('\n\n')
 }

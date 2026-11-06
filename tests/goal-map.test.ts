@@ -61,9 +61,12 @@ describe('tool surface', () => {
         .map((schema) => schema.name)
         .sort()
       expect(names).toEqual([
+        'udt_asset_add',
+        'udt_asset_list',
         'udt_course_run_update',
         'udt_decide_next',
         'udt_goal_create',
+        'udt_lesson_append_block',
         'udt_lesson_update',
         'udt_map_get',
         'udt_map_update',

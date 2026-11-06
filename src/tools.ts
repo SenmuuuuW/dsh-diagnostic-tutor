@@ -47,11 +47,13 @@ import {
 import type { EvidenceKind, NodeRelation, NodeState, Readiness } from './vocabulary.js'
 import { planningTools } from './path-tools.js'
 import { sourceTools } from './source-tools.js'
+import { assetTools } from './asset-tools.js'
+import type { AssetStore } from './assets.js'
 import { planTools } from './plan-tools.js'
 import { reviewTools } from './review-tools.js'
 import { syncLessonFlashcards } from './review-sync.js'
 import { activeAttempt } from './path.js'
-import { requireAttempt, writeCourseTeaching } from './path-runtime.js'
+import { appendCourseTeachingBlock, requireAttempt, writeCourseTeaching } from './path-runtime.js'
 
 /**
  * The slice of `ctx` this module needs.
@@ -857,6 +859,21 @@ function udtMapUpdateTool(state: UdState): ToolDefinition {
  * mismatched pair before `execute` ever runs. Zod validates the same shapes
  * again on the way in, with messages that name the offending block.
  */
+const SOURCE_REF_PARAM_SPEC = {
+  type: 'array',
+  description: 'Optional citations. For PDF sources, page/pageEnd are 1-based inclusive original page numbers.',
+  items: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      sourceId: { type: 'string', required: true },
+      locator: { type: 'string', required: true },
+      page: { type: 'integer', description: 'PDF page number, 1-based.' },
+      pageEnd: { type: 'integer', description: 'Optional inclusive end page.' },
+    },
+  },
+} as const
+
 const BLOCK_PARAM_SPEC = {
   oneOf: [
     {
@@ -864,17 +881,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['text'] },
         content: {
           type: 'object',
@@ -888,17 +895,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['example'] },
         content: {
           type: 'object',
@@ -916,17 +913,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['diagram'] },
         content: {
           type: 'object',
@@ -944,17 +931,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['check'] },
         content: {
           type: 'object',
@@ -972,17 +949,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['formula'] },
         content: {
           type: 'object',
@@ -1000,17 +967,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['code'] },
         content: {
           type: 'object',
@@ -1028,17 +985,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['quiz'] },
         content: {
           type: 'object',
@@ -1051,17 +998,7 @@ const BLOCK_PARAM_SPEC = {
                 type: 'object', additionalProperties: false,
                 properties: {
                   id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
                   kind: { type: 'string', required: true, enum: ['mcq', 'short'] },
                   prompt: { type: 'string', required: true },
                   options: { type: 'array', items: { type: 'string' } },
@@ -1080,17 +1017,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['flashcard'] },
         content: {
           type: 'object',
@@ -1108,17 +1035,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['resource'] },
         content: {
           type: 'object',
@@ -1138,17 +1055,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['comparison'] },
         content: {
           type: 'object',
@@ -1166,17 +1073,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['slider'] },
         content: {
           type: 'object',
@@ -1200,17 +1097,7 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
-          },
-        },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['step-through'] },
         content: {
           type: 'object',
@@ -1238,17 +1125,25 @@ const BLOCK_PARAM_SPEC = {
       additionalProperties: false,
       properties: {
         id: { type: 'string', required: true },
-        sourceRefs: {
-          type: 'array',
-          items: {
-            type: 'object',
-            additionalProperties: false,
-            properties: {
-              sourceId: { type: 'string', required: true },
-              locator: { type: 'string', required: true },
-            },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
+        type: { type: 'string', required: true, enum: ['image'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            assetId: { type: 'string', required: true, description: 'Local asset id from udt_asset_list; never a URL or path.' },
+            alt: { type: 'string', required: true, description: 'What the image shows, for accessibility.' },
+            caption: { type: 'string' },
           },
         },
+      },
+    },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
         type: { type: 'string', required: true, enum: ['figure'] },
         content: {
           type: 'object',
@@ -1316,6 +1211,16 @@ function assertSources(state: UdState, block: KnownBlock, index: number): void {
     if (source === undefined || source.status !== 'ready') {
       throw new Error(`block[${index}] references unknown source "${reference.sourceId}" — add it with udt_source_add first`)
     }
+    if (reference.page !== undefined) {
+      if (source.kind !== 'pdf') throw new Error(`block[${index}] cites page ${reference.page} of a non-PDF source`)
+      const end = reference.pageEnd ?? reference.page
+      if (end > (source.pageCount ?? 0)) throw new Error(`block[${index}] cites page ${end}, but "${source.title}" has ${source.pageCount ?? 0} pages`)
+    }
+  }
+  if (block.type === 'image') {
+    if (state.readAsset(block.content.assetId) === undefined) {
+      throw new Error(`block[${index}] references unknown local asset "${block.content.assetId}" — add it with udt_asset_add or the Materials upload first`)
+    }
   }
   if (block.type === 'resource' && block.content.sourceId !== undefined) {
     const source = state.readSource(block.content.sourceId)
@@ -1336,7 +1241,8 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
       '**diagram** {format: ascii|mermaid, spec, caption?}, **check** {prompt, expect?, hint?}, ' +
       '**formula** {tex, display?, caption?}, **code** {language?, source, caption?}, ' +
       '**quiz** {title?, questions[]}, **flashcard** {front, back, tags?}, ' +
-      '**resource** {title, sourceId?, locator?, url?, note?}, **comparison** {columns[], rows[][], caption?}.\n' +
+      '**resource** {title, sourceId?, locator?, url?, note?}, **comparison** {columns[], rows[][], caption?}, ' +
+      '**image** {assetId, alt, caption?} (local uploaded raster only).\n' +
       `At most ${MAX_BLOCKS_PER_UPDATE} blocks per call and ${MAX_BLOCKS_PER_LESSON} per lesson; a teaching unit is a few ` +
       'blocks, not a chapter.\n' +
       '**Write your first unit as soon as you know it** rather than composing the whole thing first: ' +
@@ -1505,6 +1411,150 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
   })
 }
 
+
+/* -------------------------------------------------------------------------- */
+/* udt_lesson_append_block                                                    */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Append one block. This exists because a single rich block is a much smaller
+ * and more reliable model output than a whole unit, and because retrying a
+ * failed figure should not risk rewriting blocks that already rendered.
+ *
+ * The block id is the idempotency key: an identical retry is a no-op, while a
+ * reused id with different content is a conflict. That keeps the lesson ordered
+ * and stable without requiring the model to resend everything.
+ */
+function udtLessonAppendBlockTool(state: UdState): ToolDefinition {
+  return defineTool({
+    name: 'udt_lesson_append_block',
+    description:
+      'Append exactly one structured block to the current lesson. Use this for incremental or retryable writing, especially for a complex figure or a single quiz: it avoids resending the whole lesson. ' +
+      'The block goes at the end of the lesson; its `id` must be stable and unique. Retrying the exact same block is idempotent; reusing an id with different content is refused. ' +
+      'Same block types and limits as udt_lesson_update. For planned teaching, bind the attempt first and pass its attemptId; this tool validates sources, MathML, size and the block cap exactly like udt_lesson_update. ' +
+      'Use udt_lesson_update when you need to replace the lesson or write a few simple blocks at once.',
+    parameters: {
+      nodeId: { type: 'string', description: 'Node to write for. Omit to use this conversation\'s current focus.' },
+      attemptId: { type: 'string', description: 'Required for planned teaching: active attemptId from udt_path_get.' },
+      title: { type: 'string', description: 'Lesson title when this append creates the lesson.' },
+      expectedRevision: { type: 'integer', description: 'Optional run revision from udt_path_get. When supplied, a stale run is refused with the current revision.' },
+      block: { ...BLOCK_PARAM_SPEC, required: true },
+    },
+    output: {
+      schema: {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          lessonId: { type: 'string', required: true },
+          nodeId: { type: 'string', required: true },
+          courseId: { type: 'string', required: true },
+          blockId: { type: 'string', required: true },
+          blockCount: { type: 'integer', required: true },
+          added: { type: 'boolean', required: true },
+          idempotent: { type: 'boolean', required: true },
+          reviewCardCount: { type: 'integer', required: true },
+          markdown: { type: 'string', required: true },
+          ...PROJECT_BINDING_PROPERTIES,
+        },
+      },
+      render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }],
+    },
+    execute: async (args, exec) => {
+      const input = args as {
+        nodeId?: string
+        attemptId?: string
+        title?: string
+        expectedRevision?: number
+        block?: unknown
+      }
+      if (input.block === undefined || input.block === null || typeof input.block !== 'object' || Array.isArray(input.block)) {
+        throw new Error('append-block-required: pass one block object')
+      }
+      if (input.expectedRevision !== undefined && (!Number.isInteger(input.expectedRevision) || input.expectedRevision < 0)) {
+        throw new Error('append-invalid-revision: expectedRevision must be a nonnegative integer')
+      }
+      const sessionId = sessionOf(exec)
+      const project = state.resolveProject(sessionId)
+      const focused = sessionId === undefined ? undefined : state.activeFocus(sessionId)
+      const planned = sessionId && project.course ? activeAttempt(state.readCourseRun(project.course.id, sessionId)) : undefined
+      if (planned && ['requested', 'working'].includes(planned.status) && !input.attemptId) throw new Error('planned-lesson-needs-attemptId: read udt_path_get and bind its diagnosed node')
+      const attempt = input.attemptId && project.course ? requireAttempt(state, project.course.id, sessionId, input.attemptId) : undefined
+      if (input.attemptId && !attempt) throw new Error('no-active-course-attempt')
+      const nodeId = input.nodeId ?? attempt?.nodeId ?? focused?.node.id
+      if (nodeId === undefined) throw new Error('no nodeId given and no learning focus is active; call udt_status to see the focus')
+      const node = state.readNode(nodeId)
+      if (node === undefined) throw new Error(`no node "${nodeId}"`)
+      const courseId = resolveCourseId(state, node.courseId, project)
+      requireProjectMatch(project, courseId)
+
+      const prepared = prepareMath(input.block, 0)
+      const parsed = KnownBlockSchema.safeParse(prepared)
+      if (!parsed.success) {
+        const issue = parsed.error.issues[0]
+        const where = issue === undefined ? '' : `${issue.path.join('.') || '(root)'}: ${issue.message}`
+        throw new Error(`append-invalid-block: ${where}`)
+      }
+      const block = parsed.data
+      assertSources(state, block, 0)
+      if (Buffer.byteLength(JSON.stringify(block), 'utf8') > MAX_LESSON_BYTES) throw new Error('append-invalid-block: block is too large')
+
+      let lesson: LessonRecord
+      let added = true
+      let idempotent = false
+      if (attempt && sessionId) {
+        const result = await appendCourseTeachingBlock(state, courseId, sessionId, attempt.id, nodeId, block, input.expectedRevision)
+        lesson = result.lesson
+        added = result.added
+        idempotent = result.idempotent
+      } else {
+        const now = nowIso()
+        lesson = await state.mutateLesson(courseId, nodeId, (existing) => {
+          const duplicate = existing?.blocks.find((candidate) => candidate.id === block.id)
+          if (duplicate !== undefined) {
+            if (JSON.stringify(duplicate) !== JSON.stringify(block)) throw new Error(`append-block-id-conflict: block "${block.id}" already exists with different content; use a new stable id or replace the lesson explicitly`)
+            added = false
+            idempotent = true
+            return existing!
+          }
+          const blocks = [...(existing?.blocks ?? []), block]
+          if (blocks.length > MAX_BLOCKS_PER_LESSON) throw new Error(`append-block-limit: a lesson holds at most ${MAX_BLOCKS_PER_LESSON} blocks`)
+          if (Buffer.byteLength(JSON.stringify(blocks), 'utf8') > MAX_LESSON_BYTES) throw new Error('append-block-too-large: this would exceed the lesson byte limit')
+          return LessonSchema.parse({
+            id: existing?.id ?? `${nodeId}:lesson`,
+            courseId,
+            nodeId,
+            title: input.title ?? existing?.title ?? node.title,
+            blocks,
+            origin: 'tutor',
+            createdAt: existing?.createdAt ?? now,
+            updatedAt: now,
+          })
+        })
+      }
+      if (sessionId !== undefined && state.readHandoff(sessionId, nodeId) !== undefined) {
+        await state.updateHandoff(sessionId, nodeId, (current) => withLesson(current, lesson.updatedAt))
+      }
+      return {
+        lessonId: lesson.id,
+        nodeId,
+        courseId,
+        blockId: block.id,
+        blockCount: lesson.blocks.length,
+        added,
+        idempotent,
+        reviewCardCount: (await syncLessonFlashcards(state, { courseId, nodeId, lesson, now: lesson.updatedAt })).length,
+        markdown: blocksMarkdown(lesson.blocks),
+        ...await state.adoptProject(sessionId, courseId, lesson.updatedAt, project),
+      }
+    },
+    presentCall: (args) => ({
+      card: 'generic',
+      title: `Append learning block: ${(args as { block?: { type?: string } }).block?.type ?? ''}`,
+      kind: 'other',
+      rawInput: args,
+    }),
+  })
+}
 
 /* -------------------------------------------------------------------------- */
 /* udt_quiz_update                                                            */
@@ -1714,20 +1764,22 @@ function udtDecideNextTool(state: UdState): ToolDefinition {
  * @returns how many tools were registered, so the loader log cannot drift from
  *   the registry itself (it used to say "4" while nine were registered).
  */
-export function registerTools(host: ToolsHost, state: UdState): number {
+export function registerTools(host: ToolsHost, state: UdState, options: { assetStore?: AssetStore | undefined } = {}): number {
   const core = [
     udtStatusTool(state),
     udtGoalCreateTool(state),
     udtMapGetTool(state),
     udtMapUpdateTool(state),
     udtLessonUpdateTool(state),
+    udtLessonAppendBlockTool(state),
     udtQuizUpdateTool(state),
     udtDecideNextTool(state),
   ]
   const planning = planningTools(state)
   const sources = sourceTools(state)
+  const assets = assetTools(state, options.assetStore)
   const plan = planTools(state)
   const review = reviewTools(state)
-  for (const tool of [...core, ...planning, ...sources, ...plan, ...review]) host.tools.register(tool)
-  return core.length + planning.length + sources.length + plan.length + review.length
+  for (const tool of [...core, ...planning, ...sources, ...assets, ...plan, ...review]) host.tools.register(tool)
+  return core.length + planning.length + sources.length + assets.length + plan.length + review.length
 }

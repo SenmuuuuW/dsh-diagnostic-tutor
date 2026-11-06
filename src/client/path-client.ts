@@ -25,6 +25,7 @@ export interface SaveStudyParams {
   sessionId: string
   attemptId: string
   progress: StudyProgressInput
+  savedAt?: string | undefined
 }
 export interface StartPathParams extends AcceptPathParams {
   itemId: string
@@ -36,7 +37,7 @@ export interface StartPathParams extends AcceptPathParams {
 }
 export interface SourceView {
   id: string
-  kind: 'text' | 'file' | 'markdown'
+  kind: 'text' | 'file' | 'markdown' | 'pdf'
   title: string
   locator: string
   sha256: string
@@ -44,6 +45,7 @@ export interface SourceView {
   createdAt: string
   status: 'ready' | 'error'
   content?: string
+  pageCount?: number
 }
 export interface AddSourceParams {
   text: string
@@ -51,12 +53,32 @@ export interface AddSourceParams {
   locator?: string
   kind?: 'text' | 'markdown'
 }
+export interface PdfUpload {
+  ok: true
+  source: SourceView
+  deduped: boolean
+}
+
 export interface SourceList {
   ok: true
   count: number
   bytes: number
   sources: SourceView[]
 }
+
+export interface AssetView {
+  id: string
+  sha256: string
+  mediaType: 'image/png' | 'image/jpeg' | 'image/webp'
+  bytes: number
+  width: number
+  height: number
+  createdAt: string
+  filename?: string
+}
+export interface AssetUpload { ok: true; asset: AssetView; deduped: boolean }
+export interface AssetList { ok: true; assets: AssetView[] }
+export interface AssetImport { ok: true; imported: number; deduped: number; assets: AssetView[] }
 
 export interface ReviewGradeParams {
   cardId: string
@@ -92,6 +114,18 @@ export interface PathClient {
   source?(sourceId: string): Promise<{ ok: true; source: SourceView }>
   /** Add pasted text/markdown material; content is stored locally and deduped. */
   addSource?(params: AddSourceParams): Promise<{ ok: true; source: SourceView; deduped: boolean }>
+  /** Upload one explicitly selected PDF as raw bytes; extraction is local. */
+  addPdf?(file: File): Promise<PdfUpload>
+  /** Delete one learner-owned source. */
+  deleteSource?(sourceId: string): Promise<{ ok: true; deleted: true; id: string }>
+  /** Upload one explicitly selected local image; the model does not read pixels. */
+  addImage?(file: File): Promise<AssetUpload>
+  /** List local image metadata only. */
+  listAssets?(): Promise<AssetList>
+  /** Delete one local image asset. */
+  deleteAsset?(assetId: string): Promise<{ ok: true; deleted: true; id: string }>
+  /** Restore a local JSON asset backup produced by GET /assets/export. */
+  importAssets?(file: File): Promise<AssetImport>
   /** List source metadata only; never returns the contents. */
   listSources?(): Promise<SourceList>
   /** Download the open, dated Today plan as an ICS calendar. */
@@ -116,7 +150,7 @@ export class PathClientError extends Error {
   }
 }
 
-async function request<T extends PathView>(suffix: string, body?: unknown): Promise<T> {
+async function request<T extends PathView>(suffix: string, body?: unknown, options: { keepalive?: boolean } = {}): Promise<T> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 12_000)
   try {
@@ -141,6 +175,85 @@ async function request<T extends PathView>(suffix: string, body?: unknown): Prom
     }
     return value as T
   } finally { clearTimeout(timeout) }
+}
+
+async function requestAddPdf(file: File): Promise<PdfUpload> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 45_000)
+  try {
+    const response = await fetch(`${API}/source/pdf?filename=${encodeURIComponent(file.name)}`, {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': 'application/pdf' },
+      body: file,
+      signal: controller.signal,
+    })
+    const value = await response.json() as { ok?: unknown; source?: unknown; deduped?: unknown; error?: { message?: string; code?: string } }
+    if (!response.ok || value?.ok !== true || value.source === undefined) {
+      throw new PathClientError(value?.error?.message ?? `PDF upload failed (HTTP ${response.status}).`, value?.error?.code ?? 'pdf_failed', response.status)
+    }
+    return { ok: true, source: value.source as SourceView, deduped: value.deduped === true }
+  } finally { clearTimeout(timeout) }
+}
+
+async function requestDeleteSource(sourceId: string): Promise<{ ok: true; deleted: true; id: string }> {
+  const response = await fetch(`${API}/source/delete`, {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'application/json' },
+    body: JSON.stringify({ id: sourceId }),
+  })
+  const value = await response.json() as { ok?: unknown; deleted?: unknown; id?: unknown; error?: { message?: string; code?: string } }
+  if (!response.ok || value?.ok !== true || value.deleted !== true) throw new PathClientError(value?.error?.message ?? `Source delete failed (HTTP ${response.status}).`, value?.error?.code ?? 'source_delete_failed', response.status)
+  return { ok: true, deleted: true, id: sourceId }
+}
+
+async function requestAddImage(file: File): Promise<AssetUpload> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 30_000)
+  try {
+    const response = await fetch(`${API}/asset?filename=${encodeURIComponent(file.name)}`, {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': file.type || 'application/octet-stream' },
+      body: file,
+      signal: controller.signal,
+    })
+    const value = await response.json() as { ok?: unknown; asset?: unknown; deduped?: unknown; error?: { message?: string; code?: string } }
+    if (!response.ok || value?.ok !== true || value.asset === undefined) {
+      throw new PathClientError(value?.error?.message ?? `Image upload failed (HTTP ${response.status}).`, value?.error?.code ?? 'asset_failed', response.status)
+    }
+    return { ok: true, asset: value.asset as AssetView, deduped: value.deduped === true }
+  } finally { clearTimeout(timeout) }
+}
+
+async function requestAssetList(): Promise<AssetList> {
+  const response = await fetch(`${API}/assets`, { headers: { accept: 'application/json' } })
+  const value = await response.json() as { ok?: unknown; assets?: unknown; error?: { message?: string; code?: string } }
+  if (!response.ok || value?.ok !== true || !Array.isArray(value.assets)) throw new PathClientError(value?.error?.message ?? `Asset list failed (HTTP ${response.status}).`, value?.error?.code ?? 'asset_list_failed', response.status)
+  return { ok: true, assets: value.assets as AssetView[] }
+}
+
+async function requestImportAssets(file: File): Promise<AssetImport> {
+  const text = await file.text()
+  let parsed: unknown
+  try { parsed = JSON.parse(text) } catch { throw new PathClientError('This is not an asset backup JSON file.', 'asset_backup_invalid', 400) }
+  const response = await fetch(`${API}/assets/import`, {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'application/json' },
+    body: JSON.stringify(parsed),
+  })
+  const value = await response.json() as { ok?: unknown; imported?: unknown; deduped?: unknown; assets?: unknown; error?: { message?: string; code?: string } }
+  if (!response.ok || value?.ok !== true || !Array.isArray(value.assets)) throw new PathClientError(value?.error?.message ?? `Asset restore failed (HTTP ${response.status}).`, value?.error?.code ?? 'asset_import_failed', response.status)
+  return { ok: true, imported: typeof value.imported === 'number' ? value.imported : 0, deduped: typeof value.deduped === 'number' ? value.deduped : 0, assets: value.assets as AssetView[] }
+}
+
+async function requestDeleteAsset(assetId: string): Promise<{ ok: true; deleted: true; id: string }> {
+  const response = await fetch(`${API}/asset/delete`, {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'application/json' },
+    body: JSON.stringify({ id: assetId }),
+  })
+  const value = await response.json() as { ok?: unknown; deleted?: unknown; error?: { message?: string; code?: string } }
+  if (!response.ok || value?.ok !== true || value.deleted !== true) throw new PathClientError(value?.error?.message ?? `Asset delete failed (HTTP ${response.status}).`, value?.error?.code ?? 'asset_delete_failed', response.status)
+  return { ok: true, deleted: true, id: assetId }
 }
 
 async function requestSource(sourceId: string): Promise<{ ok: true; source: SourceView }> {
@@ -290,9 +403,15 @@ export const defaultPathClient: PathClient = {
   start: (params) => request<PromptedPathView>('/start', params),
   pause: (params) => request('/pause', params),
   answer: (params) => request('/answer', params),
-  saveStudy: (params) => request('/study', params),
+  saveStudy: (params) => request('/study', params, { keepalive: true }),
   source: requestSource,
   addSource: requestAddSource,
+  addPdf: requestAddPdf,
+  deleteSource: requestDeleteSource,
+  addImage: requestAddImage,
+  listAssets: requestAssetList,
+  deleteAsset: requestDeleteAsset,
+  importAssets: requestImportAssets,
   listSources: requestSourceList,
   exportPlan: requestPlanIcs,
   updateTask: requestTaskMutation,

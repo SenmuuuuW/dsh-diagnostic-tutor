@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { API_PREFIX, createApiHandler } from '../src/api.js'
@@ -40,7 +41,7 @@ function request(path: string, method: string, body?: unknown, headers: Record<s
   return {
     method, url: `${API_PREFIX}${path}`, headers: { host: '127.0.0.1:3080', ...headers },
     async *[Symbol.asyncIterator]() {
-      if (body !== undefined) yield Buffer.from(typeof body === 'string' ? body : JSON.stringify(body), 'utf8')
+      if (body !== undefined) yield body instanceof Uint8Array ? Buffer.from(body) : Buffer.from(typeof body === 'string' ? body : JSON.stringify(body), 'utf8')
     },
   } as unknown as IncomingMessage
 }
@@ -238,6 +239,22 @@ describe('guarded path HTTP API', () => {
     })
     expect(bad.status).toBe(400)
     expect(bad.json.error.code).toBe('no-such-block')
+  })
+
+  it('uploads a PDF, keeps page numbers, and deletes it', async () => {
+    const pdf = new Uint8Array(await readFile(new URL('./fixtures/pdf/sample-3-pages.pdf', import.meta.url)))
+    const uploaded = await call('/source/pdf?filename=sample.pdf', 'POST', pdf, { 'content-type': 'application/pdf' })
+    expect(uploaded.status).toBe(200)
+    expect(uploaded.json.source).toMatchObject({ kind: 'pdf', title: 'sample.pdf', pageCount: 3, status: 'ready' })
+    expect(uploaded.json.source.content).toBeUndefined()
+    const id = uploaded.json.source.id as string
+    const read = await call(`/source?id=${encodeURIComponent(id)}`)
+    expect(read.status).toBe(200)
+    expect(read.json.source.pages).toHaveLength(3)
+    expect(read.json.source.pages[1].text).toBe('')
+    const deleted = await call('/source/delete', 'POST', { id })
+    expect(deleted).toEqual({ status: 200, json: { ok: true, deleted: true, id } })
+    expect((await call(`/source?id=${encodeURIComponent(id)}`)).status).toBe(404)
   })
 
   it('rejects unsupported methods, routes, invalid bodies, unselected writes, and untrusted origins', async () => {

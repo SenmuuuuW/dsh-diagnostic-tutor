@@ -4,16 +4,22 @@ import { lstat, readFile } from 'node:fs/promises'
 import { basename, extname, isAbsolute, resolve } from 'node:path'
 import { TextDecoder } from 'node:util'
 
-import { MAX_SOURCE_BYTES, MAX_SOURCE_TITLE_CHARS, MAX_SOURCES, type SourceRecord } from './source-schema.js'
+import { MAX_SOURCE_BYTES, MAX_SOURCE_TITLE_CHARS, MAX_SOURCES, type SourcePage, type SourceRecord } from './source-schema.js'
 
 const ALLOWED_EXTENSIONS = new Set(['.md', '.markdown', '.txt'])
 const decoder = new TextDecoder('utf-8', { fatal: true })
 
 export interface SourceDraft {
-  kind: 'text' | 'file' | 'markdown'
+  kind: 'text' | 'file' | 'markdown' | 'pdf'
   title: string
   locator: string
   content: string
+  /** PDF extraction facts; absent for text sources. */
+  pages?: SourcePage[]
+  pageCount?: number
+  /** Original-byte identity for a PDF; text sources hash their content instead. */
+  sha256?: string
+  bytes?: number
 }
 
 export function sourceDraftFromText(input: {
@@ -60,6 +66,16 @@ function sha256(content: string): string {
 }
 
 export function sourceRecord(draft: SourceDraft, now = new Date().toISOString()): SourceRecord {
+  if (draft.kind === 'pdf') {
+    if (draft.sha256 === undefined || draft.bytes === undefined || draft.pages === undefined || draft.pageCount === undefined) {
+      throw new Error('source-pdf-extraction-incomplete: retry the PDF import')
+    }
+    return {
+      id: randomUUID(), kind: draft.kind, title: draft.title, locator: draft.locator,
+      sha256: draft.sha256, bytes: draft.bytes, createdAt: now, status: 'ready',
+      content: draft.content, pages: draft.pages, pageCount: draft.pageCount,
+    }
+  }
   const bytes = Buffer.byteLength(draft.content, 'utf8')
   if (bytes > MAX_SOURCE_BYTES) throw new Error(`source-too-large: keep one source under ${MAX_SOURCE_BYTES} bytes`)
   return {

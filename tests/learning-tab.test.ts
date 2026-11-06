@@ -271,6 +271,25 @@ describe('active lesson', () => {
     expect(saveStudy).toHaveBeenLastCalledWith(expect.objectContaining({ attemptId: 'a1', progress: expect.objectContaining({ blockId: 'b2', stepIndex: 1, fullscreen: true }) }))
   })
 
+  it('flushes a pending Study position when the page is hidden', async () => {
+    const view = pathView()
+    const base = makeClient(view)
+    const saveStudy = vi.fn(async () => view)
+    await act(async () => {
+      root.render(createElement(LearningTab, {
+        client: { ...base, pathClient: { ...base.pathClient!, saveStudy } },
+        sessionId: 's1', onOpenMapPage: () => {},
+      }))
+      await Promise.resolve(); await Promise.resolve()
+    })
+    await act(async () => { button('Start focused study').click(); await Promise.resolve() })
+    await act(async () => {
+      window.dispatchEvent(new Event('pagehide'))
+      await Promise.resolve(); await Promise.resolve()
+    })
+    expect(saveStudy).toHaveBeenCalled()
+  })
+
   it('folds a long diagram until the learner opens it', async () => {
     const withDiagram = {
       ...lesson,

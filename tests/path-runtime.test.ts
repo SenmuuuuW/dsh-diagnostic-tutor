@@ -338,6 +338,29 @@ describe('planning runtime with temporary DSH storage', () => {
       expect(pathView(fixture.state, COURSE, SESSION).run?.attempts[0]?.study).toMatchObject({ blockId: 'two', stepIndex: 1, fullscreen: true })
     })
 
+    it('rejects an out-of-order Study save but accepts the latest position', async () => {
+      await prepare(state)
+      const started = await beginCourseItem(state, beginInput(state))
+      await bindCourseNode(state, COURSE, SESSION, started.attempt.id, NODE)
+      await recordCourseTeaching(state, COURSE, SESSION, started.attempt.id, lesson())
+      await saveStudyProgress(state, {
+        courseId: COURSE, sessionId: SESSION, attemptId: started.attempt.id,
+        progress: { blockId: 'unit', stepIndex: 0, scrollRatio: 0, fullscreen: false, finished: false },
+        savedAt: new Date(Date.now() + 1000).toISOString(),
+      })
+      await expect(saveStudyProgress(state, {
+        courseId: COURSE, sessionId: SESSION, attemptId: started.attempt.id,
+        progress: { blockId: 'unit', stepIndex: 0, scrollRatio: 0.5, fullscreen: false, finished: false },
+        savedAt: new Date(Date.now() - 60_000).toISOString(),
+      })).rejects.toThrow(/stale-study-save/)
+      const later = await saveStudyProgress(state, {
+        courseId: COURSE, sessionId: SESSION, attemptId: started.attempt.id,
+        progress: { blockId: 'unit', stepIndex: 0, scrollRatio: 0.7, fullscreen: false, finished: false },
+        savedAt: new Date(Date.now() + 2000).toISOString(),
+      })
+      expect(later.run?.attempts[0]?.study?.scrollRatio).toBeCloseTo(0.7)
+    })
+
     it('rejects a stale attempt, an unknown block, and a mismatched step block', async () => {
       await prepare(state)
       const started = await beginCourseItem(state, beginInput(state))

@@ -285,10 +285,11 @@ describe('block renderers', () => {
     },
     { id: 'c', type: 'diagram', content: { format: 'ascii', spec: 'root\n└─ child', caption: 'a map' } },
     { id: 'd', type: 'check', content: { prompt: 'What do you already know?', expect: 'reasoning' } },
+    { id: 'e', type: 'image', content: { assetId: 'local-asset', alt: 'A local diagram', caption: 'Course material' } },
   ]
 
   it('registers every known block renderer', () => {
-    expect(Object.keys(BLOCK_RENDERERS).sort()).toEqual(['check', 'code', 'comparison', 'diagram', 'example', 'figure', 'flashcard', 'formula', 'quiz', 'resource', 'slider', 'step-through', 'text'])
+    expect(Object.keys(BLOCK_RENDERERS).sort()).toEqual(['check', 'code', 'comparison', 'diagram', 'example', 'figure', 'flashcard', 'formula', 'image', 'quiz', 'resource', 'slider', 'step-through', 'text'])
   })
 
   it('renders every type in order', () => {
@@ -298,6 +299,9 @@ describe('block renderers', () => {
     expect(html).toContain('step two')
     expect(html).toContain('root')
     expect(html).toContain('What do you already know?')
+    expect(html).toContain('/diagnostic-tutor/api/asset?id=local-asset')
+    expect(html).toContain('A local diagram')
+    expect(html).not.toContain('http://')
     // Declaration order is preserved in the output.
     expect(html.indexOf('First paragraph.')).toBeLessThan(html.indexOf('A worked case'))
     expect(html.indexOf('A worked case')).toBeLessThan(html.indexOf('What do you already know?'))

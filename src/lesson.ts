@@ -28,6 +28,7 @@
 import { z } from 'zod'
 
 import { KNOWN_BLOCK_TYPE_NAMES } from './block-types.js'
+import { MAX_PDF_PAGES } from './source-schema.js'
 import { isValidExpression, MAX_EXPRESSION_CHARS } from './expression.js'
 
 import type { CourseRecord, NodeRecord } from './state.js'
@@ -93,7 +94,13 @@ export const SourceRefSchema = z.object({
   sourceId: z.string().min(1).max(120),
   /** Line range, heading, page or the original URL fragment. */
   locator: z.string().min(1).max(300),
-}).strict()
+  /** Optional structured PDF pagination; 1-based, inclusive. */
+  page: z.number().int().min(1).max(MAX_PDF_PAGES).optional(),
+  pageEnd: z.number().int().min(1).max(MAX_PDF_PAGES).optional(),
+}).strict().superRefine((ref, ctx) => {
+  if (ref.pageEnd !== undefined && ref.page === undefined) ctx.addIssue({ code: 'custom', message: 'pageEnd requires page' })
+  if (ref.page !== undefined && ref.pageEnd !== undefined && ref.pageEnd < ref.page) ctx.addIssue({ code: 'custom', message: 'pageEnd must be at least page' })
+})
 export type SourceRef = z.infer<typeof SourceRefSchema>
 
 /** Fields every block carries, whatever its type. */
@@ -303,6 +310,17 @@ export const FigureBlockSchema = z.object({
   }),
 })
 
+export const ImageBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('image'),
+  content: z.object({
+    /** Content-addressed local asset id. Never a URL or a filesystem path. */
+    assetId: z.string().min(1).max(120),
+    alt: z.string().min(1).max(300),
+    caption: z.string().min(1).max(MAX_TITLE_CHARS).optional(),
+  }).strict(),
+})
+
 const KNOWN_BLOCK_SCHEMAS = [
   TextBlockSchema,
   ExampleBlockSchema,
@@ -317,6 +335,7 @@ const KNOWN_BLOCK_SCHEMAS = [
   SliderBlockSchema,
   StepThroughBlockSchema,
   FigureBlockSchema,
+  ImageBlockSchema,
 ] as const
 
 /** Every block type this version understands. */
@@ -336,6 +355,7 @@ export const KnownBlockSchema = z.discriminatedUnion('type', [
   SliderBlockSchema,
   StepThroughBlockSchema,
   FigureBlockSchema,
+  ImageBlockSchema,
 ])
 
 const KNOWN_BLOCK_TYPES = new Set<string>(KNOWN_BLOCK_TYPE_NAMES)
@@ -372,6 +392,7 @@ export type ComparisonBlock = z.infer<typeof ComparisonBlockSchema>
 export type SliderBlock = z.infer<typeof SliderBlockSchema>
 export type StepThroughBlock = z.infer<typeof StepThroughBlockSchema>
 export type FigureBlock = z.infer<typeof FigureBlockSchema>
+export type ImageBlock = z.infer<typeof ImageBlockSchema>
 export type KnownBlock = z.infer<typeof KnownBlockSchema>
 export type UnknownBlock = z.infer<typeof UnknownBlockSchema>
 /** A block this build can render. Kept as the default `Block` name for callers. */

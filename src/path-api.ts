@@ -43,6 +43,7 @@ export async function handlePathApi(route: string, req: IncomingMessage, res: Se
       const input = z.object({
         courseId: z.string().min(1), sessionId: z.string().min(1), attemptId: z.string().min(1),
         progress: StudyProgressSchema.omit({ updatedAt: true }),
+        savedAt: z.string().optional(),
       }).parse(raw)
       const view = await saveStudyProgress(deps.state, input)
       deps.onEvent?.('path.study', { courseId: input.courseId, sessionId: input.sessionId, attemptId: input.attemptId, stepIndex: input.progress.stepIndex })

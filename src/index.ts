@@ -49,6 +49,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-agent'
 
 import { API_PREFIX, registerApi } from './api.js'
+import { LocalAssetStore } from './assets.js'
 import type { WebServerLike } from './api.js'
 import { withActivity } from './handoff.js'
 import { openJournal } from './journal.js'
@@ -134,6 +135,7 @@ export async function apply(ctx: Context): Promise<void> {
   // Local, content-free monitoring. Disabled under the test runner and never
   // allowed to fail the runtime (all writes are best-effort).
   const journal = openJournal()
+  const assetStore = new LocalAssetStore()
 
   // Mount the browser API if this profile has a web surface.
   //
@@ -159,6 +161,7 @@ export async function apply(ctx: Context): Promise<void> {
         },
         teachingBrain: (sessionId) => teachingBrainForSession(ctx, sessionId),
         journal,
+        assetStore,
         pluginVersion: packageVersion(),
         onEvent: (event, fields) => journal.append(event, fields),
       }),
@@ -229,7 +232,7 @@ export async function apply(ctx: Context): Promise<void> {
       .catch(() => {})
   })
 
-  const toolCount = registerTools({ tools }, state)
+  const toolCount = registerTools({ tools }, state, { assetStore })
   journal.append('plugin.ready', { tools: toolCount, version: packageVersion() })
   ctx.logger.debug(
     `[diagnostic-tutor] ready — domain "${state.name}" v${state.version}, ${toolCount} tools registered`,

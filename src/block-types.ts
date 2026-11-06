@@ -22,6 +22,7 @@ export const KNOWN_BLOCK_TYPE_NAMES = [
   'slider',
   'step-through',
   'figure',
+  'image',
 ] as const
 
 const KNOWN = new Set<string>(KNOWN_BLOCK_TYPE_NAMES)

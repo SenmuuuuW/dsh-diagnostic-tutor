@@ -52,10 +52,13 @@ describe('recording a quiz answer', () => {
       const state = await openUdState(harness.ctx.get('storageDomain')!)
       await seed(state)
       await recordBlockResponse(state, answer('quiz', 'A'))
+      const firstEvidence = state.readNode(NODE)!.evidence.length
       const view = await recordBlockResponse(state, answer('quiz', 'B'))
       const attempt = view.run?.attempts.find((entry) => entry.id === ATTEMPT)
       expect(attempt?.responses).toHaveLength(1)
       expect(attempt?.responses?.[0]?.answers[0]?.value).toBe('B')
+      expect(state.readNode(NODE)!.evidence).toHaveLength(firstEvidence)
+      expect(state.readNode(NODE)!.evidence.at(-1)).toMatchObject({ kind: 'practice', attemptId: ATTEMPT })
     } finally { await harness.close() }
   })
 

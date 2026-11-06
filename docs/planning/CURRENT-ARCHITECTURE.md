@@ -1,6 +1,6 @@
 # UDT 当前框架总览（以代码为准）
 
-状态：现行架构说明，对应 `feat/phase1-content-sources`（2026-10-27）的 Phase 1 内容/输入改动。
+状态：现行架构说明，已并入 v0.5.0 Study 持久化与 v0.6.0 增量写入 / PDF / 图片资产改动（2026-11-06）。
 这份文档只描述代码里真实存在的东西；每节都标注了对应文件，便于核对。
 产品设计背景见 [`LEARNING-PATH-ARCHITECTURE.md`](./LEARNING-PATH-ARCHITECTURE.md)。
 
@@ -74,7 +74,8 @@ DSH Runtime
 | `session_projects` | sessionId | 本会话选中的项目（会话隔离根） | `POST /project` / 工具 |
 | `learning_paths` | courseId | 项目级规划聚合（revision CAS） | `udt_path_update`、`POST /path/*` |
 | `course_runs` | sessionId+courseId | 会话级课次尝试 + 教学快照 + 作答记录 + 可选 Study 位置 | `/path/start`、`udt_course_run_update`、`udt_lesson_update(attemptId)`、`udt_quiz_update`、`/path/study` |
-| `sources` | sourceId | 学习者提供的本地/粘贴文本、哈希与引用原文 | `udt_source_add`（additive v1 表） |
+| `sources` | sourceId | 学习者提供的本地/粘贴文本或 PDF 按页文本、哈希与引用 | `udt_source_add`、`/source/pdf`（additive v1 表） |
+| `assets` | assetId | 本地 PNG/JPEG/WebP 元数据；字节在独立内容寻址目录 | `/asset`、`udt_asset_add`（additive v1 表） |
 | `tasks` | taskId | 今天/计划项与到期时间；不参与教学判断 | `udt_plan_update`（additive v1 表） |
 | `review_cards` | cardId | 复习卡与本地间隔调度字段；flashcard 写入时按 node+block 幂等投影 | `udt_review_add/grade`、`udt_lesson_update`（additive v1 表） |
 | `review_log` | logId | 每次复习评分与前后 due | `udt_review_grade`（additive v1 表） |
@@ -82,7 +83,7 @@ DSH Runtime
 
 注意：当前存在两套教学落盘方式——旧循环写 `lessons`；路线循环写 `course_runs.attempts[].units`。导出同时包含两者。
 
-## 6. 模型工具（18 个）
+## 6. 模型工具（21 个）
 
 | 组 | 工具 | 作用 |
 | --- | --- | --- |
@@ -90,13 +91,15 @@ DSH Runtime
 | | `udt_goal_create` | 建项目 + 根节点 |
 | | `udt_map_get` | 读完整诊断图 |
 | | `udt_map_update` | 加节点/证据/改状态（有 schema 与证据约束） |
-| | `udt_lesson_update` | 写教学；预渲染 MathML；有 attemptId 时写尝试快照，否则写旧 lesson 表 |
+| | `udt_lesson_update` | 写整段教学；预渲染 MathML；有 attemptId 时写尝试快照，否则写旧 lesson 表 |
+| | `udt_lesson_append_block` | 单 block 增量追加；稳定 id 幂等、冲突拒绝、可选 run revision；不绕过 schema/asset/source 校验 |
 | | `udt_quiz_update` | 记录 quiz/闪卡作答；不改节点状态、不判定掌握 |
 | | `udt_decide_next` | 记录下一步（模型决定目标，运行时只校验形状） |
 | 课程路线 | `udt_path_get` | 读 brief、初诊、全部路线、当前 attempt |
 | | `udt_path_update` | 写 brief / 初诊 / 路线草案 |
 | | `udt_course_run_update` | 绑定诊断节点、带证据完成课次 |
-| 输入 / 引用 | `udt_source_add` / `udt_source_list` / `udt_source_get` | 本地单文件或粘贴文本入库、列元数据、按 sourceId 读原文；插件零外联 |
+| 输入 / 引用 | `udt_source_add` / `udt_source_list` / `udt_source_get` | 本地文本/PDF 或粘贴文本入库、列元数据、按 sourceId/页读原文；插件零外联 |
+| 图片资产 | `udt_asset_list` / `udt_asset_add` | 列出/显式添加本地 PNG/JPEG/WebP 元数据；模型不读取像素 |
 | 计划 | `udt_plan_get` / `udt_plan_update` | 读写 Today 任务；只记录计划，不改变教学状态 |
 | 复习 | `udt_review_add` / `udt_review_next` / `udt_review_grade` | 复习卡队列与本地间隔调度；不判定掌握、不改 node 状态 |
 
@@ -127,6 +130,13 @@ DSH Runtime
 | `/path/answer` | POST | 记录 quiz/闪卡作答（不判定、不改状态） |
 | `/path/study` | POST | 保存 Study 展示位置（block/step/scroll/fullscreen/finished），只改 attempt.study |
 | `/source` | GET | 读取一个 sources 原文（trust fence） |
+| `/source/pdf` | POST | 原始 PDF 上传并在本机按页提取；不执行 PDF 脚本 |
+| `/source/delete` | POST | 删除一个 source |
+| `/asset` | GET/POST | 读取/上传本地图片字节（trust fence；sniff 类型） |
+| `/assets` | GET | 列出本地图片元数据 |
+| `/asset/delete` | POST | 删除一个图片资产 |
+| `/assets/export` | GET | 本地图片 JSON 备份（含 base64，仅传输，不进 udt.json） |
+| `/assets/import` | POST | 恢复本地图片备份，重新校验每张图片 |
 | `/plan/ics` | GET | 导出有到期日的开放计划项为 ICS；DSH schedule 仍是 session-local |
 | `/plan/task` | POST | 学习者标记计划项完成/重新打开（只改计划状态） |
 | `/review` | GET | 到期复习卡（只读） |

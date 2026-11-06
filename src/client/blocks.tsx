@@ -590,6 +590,21 @@ function FigureBlockView({ block }: BlockRenderProps): ReactNode {
   )
 }
 
+function ImageBlockView({ block }: BlockRenderProps): ReactNode {
+  const text = useLessonText()
+  const [failed, setFailed] = useState(false)
+  if (block.type !== 'image') return null
+  return (
+    <div className="dt-block dt-block-image">
+      <BlockLabel icon={<span aria-hidden="true">▧</span>}>{text.image}</BlockLabel>
+      {failed
+        ? <p className="dt-caption">{text.imageUnavailable}</p>
+        : <img className="dt-image" src={`/diagnostic-tutor/api/asset?id=${encodeURIComponent(block.content.assetId)}`} alt={block.content.alt} loading="lazy" onError={() => setFailed(true)} />}
+      {block.content.caption !== undefined && <p className="dt-caption">{inline(block.content.caption)}</p>}
+    </div>
+  )
+}
+
 function QuizBlockView({ block, interaction }: BlockRenderProps): ReactNode {
   const text = useLessonText()
   const [values, setValues] = useState<Record<string, string>>({})
@@ -748,6 +763,7 @@ export const BLOCK_RENDERERS: Record<string, Renderer> = {
   slider: SliderBlockView,
   'step-through': StepThroughBlockView,
   figure: FigureBlockView,
+  image: ImageBlockView,
 }
 
 /** Shown for a block type this build does not know. Never throws. */

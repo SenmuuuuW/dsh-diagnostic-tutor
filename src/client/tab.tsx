@@ -141,7 +141,7 @@ export function LearningTab({
     pendingStudy.current = null
     savingStudy.current = true
     try {
-      await pathClient.saveStudy({ sessionId: activeSession, courseId, attemptId: attempt.id, progress })
+      await pathClient.saveStudy({ sessionId: activeSession, courseId, attemptId: attempt.id, progress, savedAt: new Date().toISOString() })
     } catch {
       // Study position is presentation state; a failed save must not interrupt reading.
     } finally {
@@ -168,6 +168,20 @@ export function LearningTab({
   useEffect(() => () => {
     if (saveTimer.current !== null) clearTimeout(saveTimer.current)
   }, [])
+
+  useEffect(() => {
+    const flush = (): void => {
+      if (saveTimer.current !== null) { clearTimeout(saveTimer.current); saveTimer.current = null }
+      void flushStudy()
+    }
+    const visibility = (): void => { if (document.visibilityState === 'hidden') flush() }
+    window.addEventListener('pagehide', flush)
+    document.addEventListener('visibilitychange', visibility)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      document.removeEventListener('visibilitychange', visibility)
+    }
+  }, [flushStudy])
   const nudge = async (kind: 'continue' | 'checkin' | 'teachback') => {
     if (pathClient === undefined || view === null || attempt === undefined || courseId === undefined || activeSession === undefined) return
     setBusy(true); setNotice('')

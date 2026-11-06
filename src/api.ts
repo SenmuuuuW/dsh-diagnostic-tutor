@@ -41,7 +41,11 @@ import { buildIcs, sortTasks, taskView } from './plan.js'
 import { buildInsights } from './insights.js'
 import { REVIEW_RATINGS, dueCards, scheduleReview } from './review.js'
 import { addSource, sourceDraftFromText } from './sources.js'
-import { MAX_SOURCE_BYTES } from './source-schema.js'
+import { sourceDraftFromPdfBytes } from './pdf.js'
+import { MAX_PDF_BYTES, MAX_SOURCE_BYTES } from './source-schema.js'
+import { deleteAsset, addAsset, readAssetBytes } from './assets.js'
+import type { AssetStore } from './assets.js'
+import { MAX_ASSET_BYTES } from './asset-schema.js'
 import type { ReviewCard } from './review.js'
 import type { ReviewCardView } from './contract.js'
 
@@ -58,6 +62,12 @@ export interface WebServerLike {
 export const MAX_BODY_BYTES = 64 * 1024
 /** A source post carries JSON-escaped text; keep it bounded but above the source cap. */
 export const MAX_SOURCE_BODY_BYTES = MAX_SOURCE_BYTES * 8
+/** A PDF upload is raw bytes; keep the HTTP cap aligned with the extraction cap. */
+export const MAX_PDF_BODY_BYTES = MAX_PDF_BYTES
+/** A raster upload is raw bytes; keep the HTTP cap aligned with the image cap. */
+export const MAX_ASSET_BODY_BYTES = MAX_ASSET_BYTES
+/** A local asset backup may carry several images; bounded well below process memory. */
+export const MAX_ASSET_BACKUP_BYTES = 64 * 1024 * 1024
 
 /** Route prefix owned by this plugin. */
 export const API_PREFIX = '/diagnostic-tutor/api'
@@ -136,9 +146,34 @@ async function readJsonBody(req: IncomingMessage, limit = MAX_BODY_BYTES): Promi
   }
 }
 
+function assetMetadata(asset: import('./asset-schema.js').AssetRecord) {
+  return {
+    id: asset.id, sha256: asset.sha256, mediaType: asset.mediaType, bytes: asset.bytes,
+    width: asset.width, height: asset.height, createdAt: asset.createdAt,
+    ...(asset.filename === undefined ? {} : { filename: asset.filename }),
+  }
+}
+
+/** Read a bounded raw upload body. Used only by the PDF route. */
+async function readRawBody(req: IncomingMessage, limit: number): Promise<Buffer | undefined> {
+  const chunks: Buffer[] = []
+  let size = 0
+  for await (const chunk of req) {
+    const buffer = chunk as Buffer
+    size += buffer.length
+    if (size > limit) return undefined
+    chunks.push(buffer)
+  }
+  return size === 0 ? undefined : Buffer.concat(chunks)
+}
+
 /** Browser-safe source metadata; content is only available through GET /source. */
 function sourceMetadata(source: ReturnType<UdState['listSources']>[number]) {
-  return { id: source.id, kind: source.kind, title: source.title, locator: source.locator, sha256: source.sha256, bytes: source.bytes, createdAt: source.createdAt, status: source.status }
+  return {
+    id: source.id, kind: source.kind, title: source.title, locator: source.locator,
+    sha256: source.sha256, bytes: source.bytes, createdAt: source.createdAt, status: source.status,
+    ...(source.pageCount === undefined ? {} : { pageCount: source.pageCount }),
+  }
 }
 
 /** A required non-empty string field, or `undefined` when absent/malformed. */
@@ -534,9 +569,10 @@ function handleExport(state: UdState, res: ServerResponse): void {
  * exactly what the learner asked to remove, which defeats the request. The
  * surface asks twice; the route does as it is told.
  */
-async function handleReset(state: UdState, res: ServerResponse): Promise<void> {
+async function handleReset(state: UdState, res: ServerResponse, assetStore?: AssetStore): Promise<void> {
   await state.resetState(new Date().toISOString())
   await state.ensureLearner(new Date().toISOString())
+  if (assetStore !== undefined) await assetStore.clear()
   sendJson(res, 200, { ok: true, reset: true })
 }
 
@@ -633,6 +669,8 @@ export interface ApiDeps {
   readonly pluginVersion?: string | undefined
   /** Fire-and-forget lifecycle hook used by the journal (never awaited). */
   readonly onEvent?: ((event: string, fields?: Readonly<Record<string, unknown>>) => void) | undefined
+  /** Content-addressed image store; absent in minimal callers/tests. */
+  readonly assetStore?: AssetStore | undefined
 }
 
 /**
@@ -669,7 +707,7 @@ export function createApiHandler(deps: ApiDeps) {
     }
     if (method === 'POST' && route === '/project') return await handleSelectProject(state, req, res)
     if (method === 'GET' && route === '/export') return handleExport(state, res)
-    if (method === 'POST' && route === '/reset') return await handleReset(state, res)
+    if (method === 'POST' && route === '/reset') return await handleReset(state, res, deps.assetStore)
     if (method === 'POST' && route === '/plan/task') {
       const input = await readJsonBody(req)
       const taskId = input === undefined ? undefined : stringField(input, 'taskId')
@@ -732,6 +770,110 @@ export function createApiHandler(deps: ApiDeps) {
     if (method === 'GET' && route === '/sources') {
       const sources = state.listSources().map(sourceMetadata)
       return sendJson(res, 200, { ok: true, count: sources.length, bytes: sources.reduce((sum, source) => sum + source.bytes, 0), sources })
+    }
+    if (method === 'GET' && route === '/assets') {
+      return sendJson(res, 200, { ok: true, assets: state.listAssets().map(assetMetadata) })
+    }
+    if (method === 'POST' && route === '/asset') {
+      if (deps.assetStore === undefined) return fail(res, 503, 'asset-storage-unavailable')
+      const buffer = await readRawBody(req, MAX_ASSET_BODY_BYTES)
+      if (buffer === undefined) return fail(res, 413, 'asset-too-large')
+      const filename = url.searchParams.get('filename') ?? req.headers['x-filename'] ?? undefined
+      try {
+        const { asset, deduped } = await addAsset(state, deps.assetStore, buffer, typeof filename === 'string' ? filename : undefined)
+        return sendJson(res, 200, { ok: true, asset: assetMetadata(asset), deduped })
+      } catch (cause) {
+        return fail(res, 400, 'asset-rejected', cause instanceof Error ? cause.message : undefined)
+      }
+    }
+    if (method === 'POST' && route === '/asset/delete') {
+      if (deps.assetStore === undefined) return fail(res, 503, 'asset-storage-unavailable')
+      const input = await readJsonBody(req)
+      const assetId = input === undefined ? undefined : stringField(input, 'id')
+      if (assetId === undefined) return fail(res, 400, 'missing-id')
+      try { await deleteAsset(state, deps.assetStore, assetId); return sendJson(res, 200, { ok: true, deleted: true, id: assetId }) }
+      catch (cause) { return fail(res, 404, 'no-such-asset', cause instanceof Error ? cause.message : undefined) }
+    }
+    if (method === 'GET' && route === '/asset') {
+      if (deps.assetStore === undefined) return fail(res, 503, 'asset-storage-unavailable')
+      const assetId = url.searchParams.get('id')
+      if (assetId === null || assetId.length === 0) return fail(res, 400, 'missing-id')
+      try {
+        const { asset, bytes } = await readAssetBytes(state, deps.assetStore, assetId)
+        res.statusCode = 200
+        res.setHeader('content-type', asset.mediaType)
+        res.setHeader('content-length', String(bytes.byteLength))
+        res.setHeader('cache-control', 'private, max-age=31536000, immutable')
+        res.setHeader('x-content-type-options', 'nosniff')
+        res.setHeader('content-security-policy', "default-src 'none'; sandbox")
+        res.end(bytes)
+        return
+      } catch (cause) {
+        return fail(res, 404, 'no-such-asset', cause instanceof Error ? cause.message : undefined)
+      }
+    }
+    if (method === 'GET' && route === '/assets/export') {
+      if (deps.assetStore === undefined) return fail(res, 503, 'asset-storage-unavailable')
+      try {
+        const assets: (ReturnType<typeof assetMetadata> & { dataBase64: string })[] = []
+        let total = 0
+        for (const asset of state.listAssets()) {
+          const { bytes } = await readAssetBytes(state, deps.assetStore, asset.id)
+          total += bytes.byteLength
+          if (total > MAX_ASSET_BACKUP_BYTES) return fail(res, 413, 'asset-backup-too-large')
+          assets.push({ ...assetMetadata(asset), dataBase64: bytes.toString('base64') })
+        }
+        const now = new Date().toISOString()
+        const body = JSON.stringify({ format: 'dsh-diagnostic-tutor-assets', version: 1, exportedAt: now, assets }, null, 2)
+        res.statusCode = 200
+        res.setHeader('content-type', 'application/json; charset=utf-8')
+        res.setHeader('content-disposition', `attachment; filename="dsh-diagnostic-tutor-assets-${now.slice(0, 10)}.json"`)
+        res.setHeader('cache-control', 'no-store')
+        res.end(body)
+        return
+      } catch (cause) {
+        return fail(res, 500, 'asset-export-failed', cause instanceof Error ? cause.message : undefined)
+      }
+    }
+    if (method === 'POST' && route === '/assets/import') {
+      if (deps.assetStore === undefined) return fail(res, 503, 'asset-storage-unavailable')
+      const input = await readJsonBody(req, MAX_ASSET_BACKUP_BYTES)
+      if (input === undefined || input.format !== 'dsh-diagnostic-tutor-assets' || !Array.isArray(input.assets)) return fail(res, 400, 'asset-backup-invalid')
+      let imported = 0
+      let deduped = 0
+      try {
+        for (const entry of input.assets) {
+          if (entry === null || typeof entry !== 'object' || typeof entry.dataBase64 !== 'string') throw new Error('asset-backup-entry-invalid')
+          const bytes = Buffer.from(entry.dataBase64, 'base64')
+          const result = await addAsset(state, deps.assetStore, bytes, typeof entry.filename === 'string' ? entry.filename : undefined)
+          if (result.deduped) deduped += 1
+          else imported += 1
+        }
+      } catch (cause) {
+        return fail(res, 400, 'asset-import-failed', cause instanceof Error ? cause.message : undefined)
+      }
+      return sendJson(res, 200, { ok: true, imported, deduped, assets: state.listAssets().map(assetMetadata) })
+    }
+    if (method === 'POST' && route === '/source/pdf') {
+      const buffer = await readRawBody(req, MAX_PDF_BODY_BYTES)
+      if (buffer === undefined) return fail(res, 413, 'source-pdf-too-large')
+      const filename = url.searchParams.get('filename') ?? req.headers['x-filename'] ?? 'document.pdf'
+      if (typeof filename !== 'string') return fail(res, 400, 'source-pdf-filename-invalid')
+      try {
+        const draft = await sourceDraftFromPdfBytes(buffer, filename, `upload:${filename}`)
+        const { source, deduped } = await addSource(state, draft)
+        return sendJson(res, 200, { ok: true, source: sourceMetadata(source), deduped })
+      } catch (cause) {
+        return fail(res, 400, 'source-pdf-rejected', cause instanceof Error ? cause.message : undefined)
+      }
+    }
+    if (method === 'POST' && route === '/source/delete') {
+      const input = await readJsonBody(req)
+      const sourceId = input === undefined ? undefined : stringField(input, 'id')
+      if (sourceId === undefined) return fail(res, 400, 'missing-id')
+      if (state.readSource(sourceId) === undefined) return fail(res, 404, 'no-such-source')
+      await state.deleteSource(sourceId)
+      return sendJson(res, 200, { ok: true, deleted: true, id: sourceId })
     }
     if (method === 'POST' && route === '/source') {
       const input = await readJsonBody(req, MAX_SOURCE_BODY_BYTES)

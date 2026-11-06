@@ -2,7 +2,7 @@
 import { useEffect, useState, type ChangeEvent, type ReactNode } from 'react'
 
 import type { GoalBrief, PathView } from '../path.js'
-import type { PathClient, SourceView } from './path-client.js'
+import type { AssetView, PathClient, SourceView } from './path-client.js'
 import { Icon } from './design-icons.jsx'
 import { useDesignText } from './design-text.js'
 import { announcePathState } from './path-events.js'
@@ -42,6 +42,7 @@ export function CourseSetup({ courseId, title, path, sessionId, client, onOpenCh
   const [material, setMaterial] = useState('')
   const [materialTitle, setMaterialTitle] = useState('')
   const [materials, setMaterials] = useState<SourceView[]>([])
+  const [assets, setAssets] = useState<AssetView[]>([])
   const [materialBusy, setMaterialBusy] = useState(false)
   const [materialError, setMaterialError] = useState('')
   const [notice, setNotice] = useState('')
@@ -58,6 +59,12 @@ export function CourseSetup({ courseId, title, path, sessionId, client, onOpenCh
     if (client.listSources === undefined) return
     let live = true
     void client.listSources().then((result) => { if (live) setMaterials(result.sources) }).catch(() => { /* sources are optional */ })
+    return () => { live = false }
+  }, [client])
+  useEffect(() => {
+    if (client.listAssets === undefined) return
+    let live = true
+    void client.listAssets().then((result) => { if (live) setAssets(result.assets) }).catch(() => { /* assets are optional */ })
     return () => { live = false }
   }, [client])
 
@@ -128,9 +135,48 @@ export function CourseSetup({ courseId, title, path, sessionId, client, onOpenCh
     const file = event.target.files?.[0]
     event.target.value = ''
     if (file === undefined) return
+    if (/\.(png|jpe?g|webp)$/i.test(file.name)) {
+      if (client.addImage === undefined) { setMaterialError(text.courseAssetFailed); return }
+      setMaterialBusy(true); setMaterialError('')
+      void client.addImage(file).then((result) => {
+        setAssets((current) => current.some((entry) => entry.id === result.asset.id) ? current : [...current, result.asset])
+      }).catch((error: unknown) => setMaterialError(error instanceof Error ? error.message : text.courseAssetFailed)).finally(() => setMaterialBusy(false))
+      return
+    }
+    if (/\.pdf$/i.test(file.name)) {
+      if (client.addPdf === undefined) { setMaterialError(text.courseMaterialPdfFailed); return }
+      setMaterialBusy(true); setMaterialError('')
+      void client.addPdf(file).then((result) => {
+        setMaterials((current) => current.some((entry) => entry.id === result.source.id) ? current : [...current, result.source])
+      }).catch((error: unknown) => setMaterialError(error instanceof Error ? error.message : text.courseMaterialPdfFailed)).finally(() => setMaterialBusy(false))
+      return
+    }
     if (!/\.(md|markdown|txt)$/i.test(file.name)) { setMaterialError(text.courseMaterialUnsupported); return }
     if (file.size > 131_072) { setMaterialError(text.courseMaterialTooLarge); return }
     void file.text().then((content) => addMaterial(content, file.name, file.name, file.name.toLowerCase().endsWith('.txt') ? 'text' : 'markdown')).catch(() => setMaterialError(text.courseMaterialFailed))
+  }
+  const importAssets = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (file === undefined || client.importAssets === undefined) return
+    setMaterialBusy(true); setMaterialError('')
+    void client.importAssets(file).then((result) => setAssets(result.assets))
+      .catch((error: unknown) => setMaterialError(error instanceof Error ? error.message : text.courseAssetImportFailed))
+      .finally(() => setMaterialBusy(false))
+  }
+  const removeAsset = (assetId: string) => {
+    if (client.deleteAsset === undefined || materialBusy) return
+    setMaterialBusy(true); setMaterialError('')
+    void client.deleteAsset(assetId).then(() => setAssets((current) => current.filter((entry) => entry.id !== assetId)))
+      .catch((error: unknown) => setMaterialError(error instanceof Error ? error.message : text.courseAssetFailed))
+      .finally(() => setMaterialBusy(false))
+  }
+  const removeMaterial = (sourceId: string) => {
+    if (client.deleteSource === undefined || materialBusy) return
+    setMaterialBusy(true); setMaterialError('')
+    void client.deleteSource(sourceId).then(() => setMaterials((current) => current.filter((entry) => entry.id !== sourceId)))
+      .catch((error: unknown) => setMaterialError(error instanceof Error ? error.message : text.courseMaterialFailed))
+      .finally(() => setMaterialBusy(false))
   }
   const accept = (version: number) => {
     if (sessionId === undefined) { setNotice(text.courseSetupNoSession); return }
@@ -159,9 +205,9 @@ export function CourseSetup({ courseId, title, path, sessionId, client, onOpenCh
         <div className="dtx-course-materials-head"><h3 id="dtx-course-materials-title">{text.courseMaterialsTitle}<span>{text.courseMaterialsOptional}</span></h3><span>{text.courseMaterialsCount(materials.length)}</span></div>
         <p>{text.courseMaterialsBody}</p>
         <textarea id="dtx-material" value={material} maxLength={131_072} placeholder={text.courseMaterialPlaceholder} onChange={(event) => setMaterial(event.target.value)} />
-        <div className="dtx-course-material-row"><input id="dtx-material-title" value={materialTitle} maxLength={200} placeholder={text.courseMaterialTitlePlaceholder} onChange={(event) => setMaterialTitle(event.target.value)} /><button type="button" className="dtx-secondary" disabled={materialBusy} onClick={addPasted}>{text.courseMaterialAdd}</button><label className="dtx-course-file">{text.courseMaterialFile}<input type="file" accept=".md,.markdown,.txt,text/plain,text/markdown" onChange={chooseFile} /></label></div>
-        {materials.length > 0 && <ul className="dtx-course-material-list">{materials.map((entry) => <li key={entry.id}><span><Icon name="file" size={13} />{entry.title}</span><small>{entry.kind} · {Math.ceil(entry.bytes / 1024)} KB</small></li>)}</ul>}
-        {materialError !== '' && <p className="dtx-caption dtx-course-material-error" role="alert">{materialError}</p>}
+        <div className="dtx-course-material-row"><input id="dtx-material-title" value={materialTitle} maxLength={200} placeholder={text.courseMaterialTitlePlaceholder} onChange={(event) => setMaterialTitle(event.target.value)} /><button type="button" className="dtx-secondary" disabled={materialBusy} onClick={addPasted}>{text.courseMaterialAdd}</button><label className="dtx-course-file">{text.courseMaterialFile}<input type="file" accept=".md,.markdown,.txt,.pdf,.png,.jpg,.jpeg,.webp,text/plain,text/markdown,application/pdf,image/png,image/jpeg,image/webp" onChange={chooseFile} /></label></div>
+        {materials.length > 0 && <ul className="dtx-course-material-list">{materials.map((entry) => <li key={entry.id}><span><Icon name="file" size={13} />{entry.title}</span><small>{entry.kind === 'pdf' ? `PDF · ${text.courseMaterialPages(entry.pageCount ?? 0)}` : `${entry.kind} · ${Math.ceil(entry.bytes / 1024)} KB`}</small>{client.deleteSource !== undefined && <button type="button" className="dtx-link" disabled={materialBusy} onClick={() => removeMaterial(entry.id)}>{text.courseMaterialRemove}</button>}</li>)}</ul>}
+        {client.addImage !== undefined && <div className="dtx-course-assets"><div className="dtx-course-materials-head"><h3>{text.courseAssetsTitle}</h3><span>{text.courseAssetsCount(assets.length)}</span></div><p>{text.courseAssetsBody}</p><div className="dtx-course-material-row"><a className="dtx-link" href="/diagnostic-tutor/api/assets/export" download>{text.courseAssetExport}</a>{client.importAssets !== undefined && <label className="dtx-course-file">{text.courseAssetImport}<input type="file" accept="application/json,.json" onChange={importAssets} /></label>}</div>{assets.length > 0 && <ul className="dtx-course-asset-list">{assets.map((asset) => <li key={asset.id}><img src={`/diagnostic-tutor/api/asset?id=${encodeURIComponent(asset.id)}`} alt={asset.filename ?? 'Course image'} loading="lazy" /><span>{asset.filename ?? asset.mediaType}<small>{asset.width}×{asset.height}</small></span>{client.deleteAsset !== undefined && <button type="button" className="dtx-link" disabled={materialBusy} onClick={() => removeAsset(asset.id)}>{text.courseAssetRemove}</button>}</li>)}</ul>}{materialError !== '' && <p className="dtx-caption dtx-course-material-error" role="alert">{materialError}</p>}</div>}
       </section>}
       <div className="dtx-course-setup-actions"><button type="button" className="dtx-primary" disabled={busy} onClick={saveGoal}>{text.courseSetupSaveGoal}<Icon name="arrow-right" size={15} /></button></div>
     </section>}

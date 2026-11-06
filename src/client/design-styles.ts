@@ -742,6 +742,14 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dtx-course-material-list li span { display:inline-flex; align-items:center; gap:5px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .dtx-course-material-list li small { color:var(--dt-muted,#6b7280); font-size:9.5px; white-space:nowrap; }
 .dtx-course-material-error { margin:8px 0 0; color:#b91c1c; }
+.dtx-course-assets { margin-top:14px; padding-top:12px; border-top:1px solid var(--dt-border,#eef0f4); }
+.dtx-course-assets h3 { margin:0; font-size:11px; }
+.dtx-course-assets p { margin:5px 0 8px; color:var(--dt-muted,#6b7280); font-size:10px; line-height:1.55; }
+.dtx-course-asset-list { display:grid; gap:7px; margin:8px 0 0; padding:0; list-style:none; }
+.dtx-course-asset-list li { display:flex; align-items:center; gap:9px; padding:6px; border:1px solid var(--dt-border,#eef0f4); border-radius:8px; font-size:10px; }
+.dtx-course-asset-list img { width:44px; height:36px; object-fit:cover; border-radius:5px; background:#f3f4f6; }
+.dtx-course-asset-list li > span { display:flex; flex-direction:column; gap:2px; min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dtx-course-asset-list small { color:var(--dt-muted,#6b7280); font-size:9px; }
 
 .dtx-study-layout { flex:none; display:inline-flex; align-items:center; gap:5px; height:28px; padding:0 8px; border:1px solid var(--dt-border,#e3e6ec); border-radius:8px; background:var(--dt-bg,#fff); color:var(--dt-muted,#6b7280); font-size:10px; cursor:pointer; }
 .dtx-study-layout:hover { color:var(--dt-text,#1c1f23); border-color:#c8d0df; }
@@ -920,6 +928,8 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
 .dt-block-figure { padding:14px; border:1px solid var(--dt-border,#e5e7eb); border-radius:10px; background:#fbfcff; }
 .dt-figure-canvas { margin-top:10px; padding:10px; border-radius:8px; background:#fff; border:1px solid #eef0f4; overflow:hidden; }
 .dt-figure-canvas svg { display:block; width:100%; height:auto; max-height:360px; }
+.dt-block-image { padding:14px; border:1px solid var(--dt-border,#e5e7eb); border-radius:10px; background:#fbfcff; }
+.dt-image { display:block; width:100%; height:auto; max-height:420px; object-fit:contain; margin-top:10px; border-radius:8px; background:#fff; border:1px solid #eef0f4; }
 .dt-figure-fade svg { animation:dt-figure-fade .7s ease both; }
 .dt-figure-pulse svg { animation:dt-figure-pulse 1.8s ease-in-out infinite; }
 .dt-figure-draw svg path, .dt-figure-draw svg polyline, .dt-figure-draw svg polygon { stroke-dasharray:1200; stroke-dashoffset:1200; animation:dt-figure-draw 1.4s ease both; }

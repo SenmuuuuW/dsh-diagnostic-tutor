@@ -81,6 +81,36 @@ describe('course setup', () => {
     expect(container.textContent).toContain('Pasted material')
   })
 
+  it('uploads a selected PDF through the local extraction transport', async () => {
+    const addPdf = vi.fn(async () => ({ ok: true, deduped: false, source: { id: 'pdf-1', kind: 'pdf' as const, title: 'notes.pdf', locator: 'upload', sha256: 'b'.repeat(64), bytes: 2048, createdAt: NOW, status: 'ready' as const, pageCount: 12 } }))
+    const listSources = vi.fn(async () => ({ ok: true, count: 0, bytes: 0, sources: [] }))
+    await mount(view(), { saveBrief: vi.fn(), addSource: vi.fn(), addPdf, listSources } as unknown as PathClient)
+    const input = container.querySelector<HTMLInputElement>('input[type=file]')!
+    const file = new File([new Uint8Array([37, 80, 68, 70])], 'notes.pdf', { type: 'application/pdf' })
+    Object.defineProperty(input, 'files', { value: [file], configurable: true })
+    await act(async () => { input.dispatchEvent(new Event('change', { bubbles: true })); await Promise.resolve(); await Promise.resolve() })
+    expect(addPdf).toHaveBeenCalledWith(file)
+    expect(container.textContent).toContain('notes.pdf')
+    expect(container.textContent).toContain('12 pages')
+  })
+
+  it('uploads and removes a local image asset without sending it to the model', async () => {
+    const addImage = vi.fn(async () => ({ ok: true, deduped: false, asset: { id: 'asset-1', sha256: 'c'.repeat(64), mediaType: 'image/png' as const, bytes: 200, width: 32, height: 24, createdAt: NOW, filename: 'diagram.png' } }))
+    const listAssets = vi.fn(async () => ({ ok: true, assets: [] }))
+    const listSources = vi.fn(async () => ({ ok: true, count: 0, bytes: 0, sources: [] }))
+    const deleteAsset = vi.fn(async () => ({ ok: true as const, deleted: true as const, id: 'asset-1' }))
+    await mount(view(), { saveBrief: vi.fn(), addSource: vi.fn(), addImage, listAssets, deleteAsset, listSources } as unknown as PathClient)
+    const input = container.querySelector<HTMLInputElement>('input[type=file]')!
+    const file = new File([new Uint8Array([0x89, 0x50])], 'diagram.png', { type: 'image/png' })
+    Object.defineProperty(input, 'files', { value: [file], configurable: true })
+    await act(async () => { input.dispatchEvent(new Event('change', { bubbles: true })); await Promise.resolve(); await Promise.resolve() })
+    expect(addImage).toHaveBeenCalledWith(file)
+    expect(container.textContent).toContain('diagram.png')
+    expect(container.textContent).toContain('Course images')
+    await act(async () => { button('Remove').click(); await Promise.resolve() })
+    expect(deleteAsset).toHaveBeenCalledWith('asset-1')
+  })
+
   it('asks for diagnosis and exposes the conversation, not internal assessment fields', async () => {
     const request = vi.fn(async () => ({ ok: true, prompted: true }))
     await mount(view({ brief }), { request } as unknown as PathClient)
