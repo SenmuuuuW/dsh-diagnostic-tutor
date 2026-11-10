@@ -1,0 +1,88 @@
+{
+  "version": "0.1",
+  "caseId": "v4-binary-search",
+  "needsScene": true,
+  "sceneFile": "v4-binary-search.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "whyScene": "The objective is an invariant maintained over a sequence of comparisons, not a single picture. The window is the invariant made visible: students can see that the shaded region always contains the red-ringed 23 even as the region halves, which a lo/hi/mid table states but does not show.",
+  "layout": "Array strip from x=120 to x=820 (7 cells of 100), values at y=302, window rectangle behind it, dashed red ring on the target at index 4, blue midpoint arrow above with its label, lo/hi labels under the window edges.",
+  "beats": [
+    {
+      "at": 2,
+      "beat": "Window is all seven cells; midpoint index 3."
+    },
+    {
+      "at": 4,
+      "beat": "19 is less than 23: lo jumps past the midpoint, window becomes cells 4..6."
+    },
+    {
+      "at": 6.2,
+      "beat": "Midpoint moves to index 5 (31)."
+    },
+    {
+      "at": 8.6,
+      "beat": "31 is greater than 23: hi falls to index 4, window is one cell."
+    },
+    {
+      "at": 10.4,
+      "beat": "Midpoint is index 4 and holds 23."
+    },
+    {
+      "at": 12.5,
+      "beat": "Termination: lo = hi = mid and the value matches."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 2.6,
+      "kind": "continue",
+      "prompt": "The window starts as the whole array. Continue to take the first probe."
+    },
+    {
+      "at": 5.0,
+      "kind": "answer",
+      "prompt": "19 is not 23. Which cells can you rule out: 0 to 3, or 4 to 6?"
+    },
+    {
+      "at": 9.4,
+      "kind": "answer",
+      "prompt": "31 is not 23. Which cells can you rule out now?"
+    },
+    {
+      "at": 11.6,
+      "kind": "answer",
+      "prompt": "The window is a single cell. What does lo = hi tell you before the probe?"
+    },
+    {
+      "at": 14.2,
+      "kind": "continue",
+      "prompt": "Continue to confirm the invariant at the end."
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "Every midpoint is the answer",
+      "move": "The first two midpoints hold 19 and 31, neither equal to 23; the comparison, not the probe itself, decides which half survives."
+    },
+    {
+      "misconception": "The interval can exclude the target",
+      "move": "After each shrink the dashed ring around 23 is still inside the shaded window; only the half that cannot contain it is removed."
+    }
+  ],
+  "correctnessChecks": [
+    "Input is sorted: 3, 8, 12, 19, 23, 31, 40.",
+    "mid = floor((lo+hi)/2) each step: 3, then 5, then 4, matching the standard algorithm.",
+    "Window after step 1 is 4..6 and after step 2 is 4..4, and each still contains index 4."
+  ],
+  "constraints": {
+    "primitives": 16,
+    "properties": 0,
+    "tracks": 8,
+    "keyframes": 35,
+    "checkpoints": 5,
+    "usesStates": false
+  }
+}

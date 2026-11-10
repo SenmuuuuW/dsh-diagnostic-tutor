@@ -1,0 +1,429 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Ideal gas: volume, temperature and pressure move together",
+    "subject": "Chemistry",
+    "topic": "Ideal Gas Law",
+    "objective": "Connect pressure, volume and temperature changes for a fixed amount of gas.",
+    "learner": "Knows ratio reasoning.",
+    "misconceptions": [
+      "Pressure and temperature are the same quantity",
+      "The volume of a gas can change by itself, without work"
+    ],
+    "expectedUnderstanding": [
+      "For a fixed amount of gas, P, V and T are linked: P times V divided by T stays constant, 0.0821 in these units for one mole.",
+      "Halving V at fixed T doubles P; doubling T at fixed V doubles P; the two effects combine, as at 3 litres and 600 kelvin where P is 16 atmospheres.",
+      "The mechanism is the fixed number of molecules: less room or faster molecules mean more collisions with each patch of wall per second.",
+      "The volume changes only because the piston moves, which is work done on or by the gas; this is the ideal-gas model and says nothing about real gases at high pressure."
+    ]
+  },
+  "properties": [
+    {
+      "id": "vol",
+      "label": "Volume V (litres)",
+      "min": 1.0,
+      "max": 3.0,
+      "step": 0.05,
+      "default": 2.0,
+      "unit": "L"
+    },
+    {
+      "id": "temp",
+      "label": "Temperature T (kelvin)",
+      "min": 200.0,
+      "max": 600.0,
+      "step": 10.0,
+      "default": 300.0,
+      "unit": "K"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 50,
+      "text": "Ideal gas: squeeze the volume or heat it, and watch the pressure respond",
+      "fontSize": 20,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "tint",
+      "type": "rect",
+      "x": 61,
+      "y": 166,
+      "width": {
+        "expr": "105*vol-6"
+      },
+      "height": 273,
+      "rx": 0,
+      "fill": "#dbeafe",
+      "stroke": "none",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "cylinder",
+      "type": "rect",
+      "x": 60,
+      "y": 165,
+      "width": 320,
+      "height": 275,
+      "rx": 4,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2.5,
+      "opacity": 1
+    },
+    {
+      "id": "piston",
+      "type": "rect",
+      "x": {
+        "expr": "55+105*vol"
+      },
+      "y": 166,
+      "width": 9,
+      "height": 273,
+      "rx": 0,
+      "fill": "#6b7280",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "mol1",
+      "type": "circle",
+      "cx": {
+        "expr": "59.92+18.9*vol"
+      },
+      "cy": 245,
+      "r": 4.5,
+      "fill": "#1d4ed8",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "mol2",
+      "type": "circle",
+      "cx": {
+        "expr": "58.3+47.25*vol"
+      },
+      "cy": 325,
+      "r": 4.5,
+      "fill": "#1d4ed8",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "mol3",
+      "type": "circle",
+      "cx": {
+        "expr": "56.8+73.5*vol"
+      },
+      "cy": 295,
+      "r": 4.5,
+      "fill": "#1d4ed8",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "pAxis",
+      "type": "line",
+      "x1": 490,
+      "y1": 440,
+      "x2": 490,
+      "y2": 108,
+      "fill": "none",
+      "stroke": "#6b7280",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "pBar",
+      "type": "rect",
+      "x": 500,
+      "y": {
+        "expr": "440-0.5416*temp/vol"
+      },
+      "width": 190,
+      "height": {
+        "expr": "0.5416*temp/vol"
+      },
+      "rx": 0,
+      "fill": "#fee2e2",
+      "stroke": "#dc2626",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "t40",
+      "type": "text",
+      "x": 484,
+      "y": 180,
+      "text": "40",
+      "fontSize": 13,
+      "anchor": "end",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "t30",
+      "type": "text",
+      "x": 484,
+      "y": 246,
+      "text": "30",
+      "fontSize": 13,
+      "anchor": "end",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "t20",
+      "type": "text",
+      "x": 484,
+      "y": 312,
+      "text": "20",
+      "fontSize": 13,
+      "anchor": "end",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "t10",
+      "type": "text",
+      "x": 484,
+      "y": 378,
+      "text": "10",
+      "fontSize": 13,
+      "anchor": "end",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "axisLabel",
+      "type": "text",
+      "x": 484,
+      "y": 96,
+      "text": "P (atm)",
+      "fontSize": 14,
+      "anchor": "end",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "vLabel",
+      "type": "text",
+      "x": 60,
+      "y": 468,
+      "text": "volume V (1 to 3 L): the slider moves the piston",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "formula",
+      "type": "text",
+      "x": 36,
+      "y": 508,
+      "text": "ideal gas, fixed amount: P·V = n·R·T; here n = 1 mol, so P·V/T = 0.0821",
+      "fontSize": 13,
+      "anchor": "start",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    }
+  ],
+  "timeline": {
+    "duration": 20.0,
+    "tracks": [
+      {
+        "target": {
+          "property": "vol"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2.0,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 2.0,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 7.0,
+            "value": 1.0,
+            "easing": "linear"
+          },
+          {
+            "at": 9.0,
+            "value": 1.0,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 10.5,
+            "value": 2.0,
+            "easing": "linear"
+          },
+          {
+            "at": 16.0,
+            "value": 2.0,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 19.0,
+            "value": 3.0,
+            "easing": "linear"
+          },
+          {
+            "at": 20.0,
+            "value": 3.0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "property": "temp"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 300.0,
+            "easing": "linear"
+          },
+          {
+            "at": 10.5,
+            "value": 300.0,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 14.0,
+            "value": 600.0,
+            "easing": "linear"
+          },
+          {
+            "at": 20.0,
+            "value": 600.0,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "volSlider",
+      "kind": "slider",
+      "propertyId": "vol",
+      "label": "Volume V"
+    },
+    {
+      "id": "tempSlider",
+      "kind": "slider",
+      "propertyId": "temp",
+      "label": "Temperature T"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-fixed",
+      "at": 1.6,
+      "title": "What is held fixed",
+      "body": "The cylinder is sealed and the amount of gas does not change. Which quantity does the left slider change, and what happens to the piston when it moves?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-squeeze",
+      "at": 7.4,
+      "title": "Half the room",
+      "body": "V fell from 2 litres to 1 at 300 kelvin and the bar climbed from 12 to 25 atmospheres. Why do the same molecules strike the walls twice as often per unit area?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-heat",
+      "at": 14.6,
+      "title": "Twice the temperature",
+      "body": "Now the volume is back at 2 litres and T rose from 300 to 600 kelvin; the pressure doubled again. Is pressure the same thing as temperature, or does it rise because the molecules move faster?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-invariant",
+      "at": 18.6,
+      "title": "Which product is constant",
+      "body": "From 2 litres and 600 kelvin to 3 litres and 600 kelvin the pressure fell to 16 atmospheres. Which quantity stayed fixed: P, P times V, or P times V over T?",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.8,
+      "text": "One mole of gas in a cylinder with a piston. The blue dots are the molecules: the number never changes, only the room they have."
+    },
+    {
+      "at": 3.9,
+      "text": "Push the piston in and you do work on the gas: the volume falls to 1 litre while the temperature stays at 300 kelvin."
+    },
+    {
+      "at": 7.2,
+      "text": "The pressure doubles, from 12 to 25 atmospheres. Same molecules, half the room, twice as many collisions with each patch of wall every second."
+    },
+    {
+      "at": 10.8,
+      "text": "Draw the piston back out and the pressure returns. At a fixed temperature the product P times V stays constant."
+    },
+    {
+      "at": 14.4,
+      "text": "Now heat it instead: 300 to 600 kelvin at fixed volume, and the pressure doubles again. Twice the temperature, twice the pressure."
+    },
+    {
+      "at": 17.6,
+      "text": "Move the piston to 3 litres while it stays at 600 kelvin and the pressure settles at 16 atmospheres. P times V over T is 0.0821 all along: that is the quantity the gas keeps."
+    }
+  ],
+  "fallback": {
+    "text": "Static figure. A cylinder from 1 litre to 3 litres with a piston and the same six molecules drawn in it, and a pressure bar read against a printed scale from 0 to 40 atmospheres. Four states are tabulated beside it. State 1: V = 2 L, T = 300 K, P = 12.3 atm. State 2: V = 1 L, T = 300 K, P = 24.6 atm (half the volume, double the pressure). State 3: V = 2 L, T = 600 K, P = 24.6 atm (double the temperature, double the pressure). State 4: V = 3 L, T = 600 K, P = 16.4 atm. In every row P times V divided by T is 0.0821, the value of R for one mole. Caption: with the amount fixed, P V over T is constant; the volume changes only because the piston moves, which is work."
+  },
+  "accessibility": {
+    "alt": "A cylinder with a piston and three blue molecules inside, and to its right a vertical bar for pressure read against a printed scale from 10 to 40 atmospheres. As the volume slider moves the piston left, the blue region and the ring of molecules compress and the pressure bar rises; as the temperature slider rises, the pressure bar rises while the piston stays put. The bar is 12 atmospheres at 2 litres and 300 kelvin, 25 atmospheres at 1 litre and 300 kelvin, 25 at 2 litres and 600 kelvin, and 16 at 3 litres and 600 kelvin.",
+    "reducedMotion": "static",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    {
+      "sourceId": "case:v4s-ideal-gas",
+      "locator": "objective; correctnessCriteria"
+    }
+  ]
+}

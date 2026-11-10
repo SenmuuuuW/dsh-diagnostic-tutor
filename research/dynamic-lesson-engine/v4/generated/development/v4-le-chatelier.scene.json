@@ -1,0 +1,436 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "metadata": {
+    "title": "Le Chatelier: add A, Q falls below K, the system shifts forward",
+    "subject": "Chemistry",
+    "topic": "Le Chatelier's Principle",
+    "objective": "Show how a concentration change shifts an equilibrium and why the shift counteracts the disturbance.",
+    "learner": "Knows reversible reactions.",
+    "misconceptions": [
+      "Adding reactant always increases product yield without limit",
+      "The equilibrium position is the same thing as the rate"
+    ],
+    "expectedUnderstanding": "For A going to B, Q = [B] / [A]. Adding A raises the denominator, so Q drops below K. Q below K means the forward reaction outpaces the reverse one, so A is consumed and B is produced until Q returns to K. The equilibrium position has moved, K has not: the tick stays fixed because K depends only on temperature. Because A is left at a higher level each time, equal additions raise [B] by smaller and smaller amounts, and the conversion never goes to completion."
+  },
+  "properties": [
+    {
+      "id": "cA",
+      "label": "Concentration of A",
+      "value": 1,
+      "min": 1.2,
+      "max": 3.0,
+      "step": 0.1
+    },
+    {
+      "id": "cB",
+      "label": "Concentration of B",
+      "value": 1,
+      "min": 1.0,
+      "max": 2.6,
+      "step": 0.1
+    }
+  ],
+  "primitives": [
+    {
+      "id": "bg",
+      "type": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 960,
+      "height": 540,
+      "rx": 0,
+      "fill": "#ffffff",
+      "stroke": "#ffffff",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 54,
+      "text": "Le Chatelier: add A, Q falls below K, the system shifts forward",
+      "fontSize": 21,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "barAxis",
+      "type": "line",
+      "x1": 120,
+      "y1": 470,
+      "x2": 380,
+      "y2": 470,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "barA",
+      "type": "rect",
+      "x": 140,
+      "y": {
+        "expr": "470 - 45*cA"
+      },
+      "width": 80,
+      "height": {
+        "expr": "45*cA"
+      },
+      "rx": 2,
+      "fill": "#fee2e2",
+      "stroke": "#dc2626",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "barB",
+      "type": "rect",
+      "x": 270,
+      "y": {
+        "expr": "470 - 45*cB"
+      },
+      "width": 80,
+      "height": {
+        "expr": "45*cB"
+      },
+      "rx": 2,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "labA",
+      "type": "text",
+      "x": 180,
+      "y": 500,
+      "text": "[A] reactant",
+      "fontSize": 14,
+      "anchor": "middle",
+      "fill": "#dc2626",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "labB",
+      "type": "text",
+      "x": 310,
+      "y": 500,
+      "text": "[B] product",
+      "fontSize": 14,
+      "anchor": "middle",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "axisQ",
+      "type": "line",
+      "x1": 500,
+      "y1": 300,
+      "x2": 900,
+      "y2": 300,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "labQ",
+      "type": "text",
+      "x": 500,
+      "y": 120,
+      "text": "Q = [B] / [A], where the system sits now",
+      "fontSize": 15,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "kTick",
+      "type": "line",
+      "x1": 680,
+      "y1": 268,
+      "x2": 680,
+      "y2": 332,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2.5,
+      "opacity": 1
+    },
+    {
+      "id": "labK",
+      "type": "text",
+      "x": 680,
+      "y": 352,
+      "text": "K (fixed by temperature)",
+      "fontSize": 14,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "qMarker",
+      "type": "circle",
+      "cx": {
+        "expr": "500 + 180*cB/cA"
+      },
+      "cy": 300,
+      "r": 7,
+      "fill": "#dc2626",
+      "stroke": "#ffffff",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "fwd",
+      "type": "arrow",
+      "x1": 520,
+      "y1": 170,
+      "x2": 700,
+      "y2": 170,
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 2.5,
+      "opacity": {
+        "expr": "0.15 + 0.35*(2 - cB/cA)"
+      }
+    },
+    {
+      "id": "rev",
+      "type": "arrow",
+      "x1": 700,
+      "y1": 215,
+      "x2": 520,
+      "y2": 215,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 2.5,
+      "opacity": {
+        "expr": "0.15 + 0.35*(cB/cA)"
+      }
+    },
+    {
+      "id": "labFwd",
+      "type": "text",
+      "x": 520,
+      "y": 152,
+      "text": "forward: A becomes B",
+      "fontSize": 13,
+      "anchor": "start",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "labRev",
+      "type": "text",
+      "x": 520,
+      "y": 240,
+      "text": "reverse: B becomes A",
+      "fontSize": 13,
+      "anchor": "start",
+      "fill": "#dc2626",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    }
+  ],
+  "timeline": {
+    "duration": 26.0,
+    "tracks": [
+      {
+        "target": {
+          "property": "cA"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 5.0,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 6.6,
+            "value": 3,
+            "easing": "step"
+          },
+          {
+            "at": 7.2,
+            "value": 3,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 16,
+            "value": 2,
+            "easing": "linear"
+          },
+          {
+            "at": 17.6,
+            "value": 2,
+            "easing": "linear"
+          },
+          {
+            "at": 18.4,
+            "value": 3,
+            "easing": "step"
+          },
+          {
+            "at": 19,
+            "value": 3,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 26,
+            "value": 2.5,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "property": "cB"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 6.6,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 7.2,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 16,
+            "value": 2,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 17.6,
+            "value": 2,
+            "easing": "linear"
+          },
+          {
+            "at": 19,
+            "value": 2,
+            "easing": "linear"
+          },
+          {
+            "at": 26,
+            "value": 2.5,
+            "easing": "ease-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "sliderA",
+      "type": "slider",
+      "label": "Add reactant A",
+      "property": "cA",
+      "min": 1.2,
+      "max": 3.0,
+      "step": 0.1
+    },
+    {
+      "id": "sliderB",
+      "type": "slider",
+      "label": "Concentration of B",
+      "property": "cB",
+      "min": 1.0,
+      "max": 2.6,
+      "step": 0.1
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": 3.8,
+      "prompt": "At the start Q sits exactly on the tick marked K and both arrows are equally strong. Have the two reactions stopped?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 8.2,
+      "prompt": "A was just added, so Q is now below K. Which direction must the system move to bring Q back to K?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 16.8,
+      "prompt": "Continue and watch the marker and the two arrows as the reaction proceeds. Which one changes: the position of Q, or the tick for K?",
+      "learnerAction": "continue"
+    },
+    {
+      "at": 23.5,
+      "prompt": "The second addition produced a smaller rise in [B] than the first. Why does the yield not grow without limit?",
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 1.2,
+      "text": "At equilibrium both arrows are equally strong: both reactions are still running, at the same rate, so nothing changes on net."
+    },
+    {
+      "at": 4.6,
+      "text": "Q is the ratio [B] over [A], and it currently sits exactly on the tick marked K."
+    },
+    {
+      "at": 6.9,
+      "text": "Now more A is added. The A bar jumps up, the ratio falls, and the marker slides left: Q is below K."
+    },
+    {
+      "at": 9.8,
+      "text": "With Q below K the forward reaction outpaces the reverse one, so the system shifts to the right: A is consumed and B is produced."
+    },
+    {
+      "at": 13.4,
+      "text": "As B builds and A falls, Q climbs back toward K. The position shifted; the K tick did not move, because K depends only on temperature."
+    },
+    {
+      "at": 18.8,
+      "text": "A second equal addition of A gives a smaller rise in B, because some A is left over each time, so Q returns to K after a smaller change in B."
+    },
+    {
+      "at": 23.2,
+      "text": "The system stops shifting only when Q equals K again. Adding reactant never converts everything: the yield rises in ever smaller steps."
+    }
+  ],
+  "fallback": {
+    "text": "Static side-by-side figure. Left: two bars for [A] and [B] on a common baseline; right: a horizontal Q scale from 0 to 2 with a fixed vertical tick at Q = 1 labelled K, and a filled dot marking Q = [B] / [A]. Show three columns. Start: [A] = 1, [B] = 1, Q = 1 exactly on K, both direction arrows the same weight. After adding A: [A] = 3, [B] = 1, Q = 0.33, dot left of K, forward arrow dominant. After the shift: [A] = 2, [B] = 2, Q = 1 back on K. A second row repeats the cycle from [A] = 2, [B] = 2: add A to 3, then settle at [A] = 2.5, [B] = 2.5, so the same addition bought only 0.5 of B instead of 1.0. A caption reads: the shift opposes the disturbance, K never moves at fixed temperature, and conversion is never complete."
+  },
+  "accessibility": {
+    "alt": "Left: two vertical bars labelled A reactant (red) and B product (blue) on a baseline. Right: a horizontal scale for the reaction quotient Q with a fixed vertical tick marked K, and a red dot that slides along it. Arrows for the forward and reverse reactions sit above the scale, and their weight changes with the dot: when the dot is left of K the forward arrow is strongest, when it is right of K the reverse arrow is strongest, and when it is on K both are equal. When A is added the A bar rises and the dot jumps left, then the dot drifts back to K as the A bar falls and the B bar rises.",
+    "reducedMotion": "Show four static frames of the same two panels: equilibrium ([A] = 1, [B] = 1, Q on K), the instant after adding A ([A] = 3, Q = 0.33 left of K, forward arrow dominant), the second equilibrium ([A] = 2, [B] = 2, Q back on K), and the smaller increment from adding A again ([A] = 2.5, [B] = 2.5).",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    "case:v4-le-chatelier"
+  ]
+}

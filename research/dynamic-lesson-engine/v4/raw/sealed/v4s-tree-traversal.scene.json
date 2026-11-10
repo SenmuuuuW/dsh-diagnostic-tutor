@@ -1,0 +1,940 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Inorder traversal: left subtree, node, right subtree",
+    "subject": "Computer Science",
+    "topic": "Binary Tree Inorder Traversal",
+    "objective": "Show inorder traversal visiting left subtree, node, right subtree.",
+    "learner": "Knows recursion.",
+    "misconceptions": [
+      "Inorder equals level order",
+      "A node is visited before its left subtree is finished",
+      "Inorder is always sorted"
+    ],
+    "expectedUnderstanding": [
+      "Inorder emits a node only after its entire left subtree and before its right subtree.",
+      "The red ring follows the current call; the thickened path from the root is the recursion stack.",
+      "Every node appears exactly once, and the output sequence is D, B, E, A, C for this labelled tree.",
+      "Sorted output is guaranteed only for a binary search tree; these labels are not keys, so no sorted claim is made."
+    ]
+  },
+  "properties": [],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 44,
+      "text": "Inorder traversal: left, node, right; output below",
+      "fontSize": 20,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "eAB",
+      "type": "line",
+      "x1": 457.7508680466171,
+      "y1": 125.29627821795076,
+      "x2": 342.2491319533829,
+      "y2": 204.70372178204923,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "eAC",
+      "type": "line",
+      "x1": 502.2491319533829,
+      "y1": 125.29627821795076,
+      "x2": 617.750868046617,
+      "y2": 204.70372178204923,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "eBD",
+      "type": "line",
+      "x1": 301.83783456209954,
+      "y1": 239.9783819816905,
+      "x2": 238.16216543790043,
+      "y2": 310.02161801830954,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "eBE",
+      "type": "line",
+      "x1": 338.16216543790046,
+      "y1": 239.9783819816905,
+      "x2": 401.83783456209954,
+      "y2": 310.02161801830954,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "nA",
+      "type": "text",
+      "x": 480,
+      "y": 119,
+      "text": "A",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "nB",
+      "type": "text",
+      "x": 320,
+      "y": 229,
+      "text": "B",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "nC",
+      "type": "text",
+      "x": 640,
+      "y": 229,
+      "text": "C",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "nD",
+      "type": "text",
+      "x": 220,
+      "y": 339,
+      "text": "D",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "nE",
+      "type": "text",
+      "x": 420,
+      "y": 339,
+      "text": "E",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "oD",
+      "type": "text",
+      "x": 300,
+      "y": 492,
+      "text": "D",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 0
+    },
+    {
+      "id": "oB",
+      "type": "text",
+      "x": 390,
+      "y": 492,
+      "text": "B",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 0
+    },
+    {
+      "id": "oE",
+      "type": "text",
+      "x": 480,
+      "y": 492,
+      "text": "E",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 0
+    },
+    {
+      "id": "oA",
+      "type": "text",
+      "x": 570,
+      "y": 492,
+      "text": "A",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 0
+    },
+    {
+      "id": "oC",
+      "type": "text",
+      "x": 660,
+      "y": 492,
+      "text": "C",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 0
+    },
+    {
+      "id": "ring",
+      "type": "circle",
+      "cx": 480,
+      "cy": 110,
+      "r": 26,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 2.5,
+      "opacity": 0
+    }
+  ],
+  "timeline": {
+    "duration": 14.0,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "eAB",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 1.8,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 2.2,
+            "value": 4,
+            "easing": "linear"
+          },
+          {
+            "at": 9.2,
+            "value": 4,
+            "easing": "linear"
+          },
+          {
+            "at": 9.6,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1.5,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "eBD",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 3.4,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 3.8,
+            "value": 4,
+            "easing": "linear"
+          },
+          {
+            "at": 5.2,
+            "value": 4,
+            "easing": "linear"
+          },
+          {
+            "at": 5.6,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1.5,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "eBE",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 6.8,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 7.2,
+            "value": 4,
+            "easing": "linear"
+          },
+          {
+            "at": 8.4,
+            "value": 4,
+            "easing": "linear"
+          },
+          {
+            "at": 8.8,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1.5,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "eAC",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 10.8,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 11.2,
+            "value": 4,
+            "easing": "linear"
+          },
+          {
+            "at": 12.3,
+            "value": 4,
+            "easing": "linear"
+          },
+          {
+            "at": 12.7,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1.5,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "nA",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 9.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 9.6,
+            "value": 0.45,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0.45,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "oA",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 9.3,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 9.5,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "nB",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 6.6,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 6.8,
+            "value": 0.45,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0.45,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "oB",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 6.6,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 6.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "nC",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 12.3,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 12.5,
+            "value": 0.45,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0.45,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "oC",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 12.3,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 12.5,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "nD",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 5.0,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 5.2,
+            "value": 0.45,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0.45,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "oD",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 5.0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 5.2,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "nE",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 8.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 8.6,
+            "value": 0.45,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0.45,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "oE",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 8.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 8.6,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "ring",
+          "property": "cx"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 480,
+            "easing": "linear"
+          },
+          {
+            "at": 2.0,
+            "value": 480,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 2.6,
+            "value": 320,
+            "easing": "linear"
+          },
+          {
+            "at": 3.6,
+            "value": 320,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4.2,
+            "value": 220,
+            "easing": "linear"
+          },
+          {
+            "at": 5.2,
+            "value": 220,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 5.8,
+            "value": 320,
+            "easing": "linear"
+          },
+          {
+            "at": 6.8,
+            "value": 320,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 7.4,
+            "value": 420,
+            "easing": "linear"
+          },
+          {
+            "at": 8.8,
+            "value": 420,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 9.4,
+            "value": 480,
+            "easing": "linear"
+          },
+          {
+            "at": 10.8,
+            "value": 480,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 11.4,
+            "value": 640,
+            "easing": "linear"
+          },
+          {
+            "at": 12.4,
+            "value": 640,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "ring",
+          "property": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 110,
+            "easing": "linear"
+          },
+          {
+            "at": 2.0,
+            "value": 110,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 2.6,
+            "value": 220,
+            "easing": "linear"
+          },
+          {
+            "at": 3.6,
+            "value": 220,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4.2,
+            "value": 330,
+            "easing": "linear"
+          },
+          {
+            "at": 5.2,
+            "value": 330,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 5.8,
+            "value": 220,
+            "easing": "linear"
+          },
+          {
+            "at": 6.8,
+            "value": 220,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 7.4,
+            "value": 330,
+            "easing": "linear"
+          },
+          {
+            "at": 8.8,
+            "value": 330,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 9.4,
+            "value": 110,
+            "easing": "linear"
+          },
+          {
+            "at": 10.8,
+            "value": 110,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 11.4,
+            "value": 220,
+            "easing": "linear"
+          },
+          {
+            "at": 12.4,
+            "value": 220,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "ring",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 12.4,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 12.6,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [],
+  "checkpoints": [
+    {
+      "id": "cp-root",
+      "at": 1.7,
+      "title": "At the root",
+      "body": "The ring is on A. What must be completely finished before A itself can be output?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-leaf",
+      "at": 4.2,
+      "title": "A leaf",
+      "body": "D has no left child. What is output now, and where does the traversal go next?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-parent",
+      "at": 6.2,
+      "title": "Node before right child",
+      "body": "B is about to be output while its right subtree E is untouched. Why is that still correct inorder?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-three",
+      "at": 8.0,
+      "title": "First three",
+      "body": "Name the first three outputs. Which node is being handled now, and why is A not among them yet?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-last",
+      "at": 11.0,
+      "title": "Predict the end",
+      "body": "Predict the final output and say why A is not first even though the ring started there.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.9,
+      "text": "Inorder means: finish the left subtree, then visit the node, then the right subtree. The red ring marks the node being handled."
+    },
+    {
+      "at": 3.0,
+      "text": "At A the traversal descends left to B before touching A. The thick edges are the current call path, the recursion stack."
+    },
+    {
+      "at": 5.6,
+      "text": "At D there is no left child, so D is output first; the ring then returns to B."
+    },
+    {
+      "at": 8.0,
+      "text": "B's left subtree is finished, so B is output before its right child E: inorder puts the node between the two subtrees."
+    },
+    {
+      "at": 10.4,
+      "text": "Back at A, the whole left subtree is done, so A is output now, and then the right subtree starts."
+    },
+    {
+      "at": 12.8,
+      "text": "C is last. Every node appears exactly once. Sorted output would need a binary search tree; these letters are labels, not keys."
+    }
+  ],
+  "fallback": {
+    "text": "Static tree with root A, left child B, right child C, and B's children D and E. The inorder sequence is D, B, E, A, C: descend to the leftmost node D, output it, return to B and output it, visit B's right child E, then output A, then output C. The call path from the root, A to B to D, is the recursion stack at the deepest point. Caption: left subtree, node, right subtree; every node exactly once; sorted order only if the tree is a binary search tree."
+  },
+  "accessibility": {
+    "alt": "A five-node binary tree with root A, left child B, right child C, and B's children D and E. A red ring moves from node to node along the recursion path: A, then B, then D, back to B, then E, back to A, then C. A thick path from the root shows the current recursion stack. A row of blue letters at the bottom grows one at a time in the order D, B, E, A, C, and each node dims after it is output. Checkpoints pause to ask what must happen before the root, why B comes before E, and what the final sequence is.",
+    "reducedMotion": "static",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    {
+      "sourceId": "case:v4s-tree-traversal",
+      "locator": "objective; correctnessCriteria"
+    }
+  ]
+}

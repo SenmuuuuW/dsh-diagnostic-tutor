@@ -1,0 +1,1022 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "metadata": {
+    "title": "Bubble sort: passes, swaps and the growing sorted suffix",
+    "subject": "Computer Science",
+    "topic": "Bubble Sort Invariant",
+    "objective": "Show how larger elements move right and the sorted suffix grows each pass.",
+    "learner": "Can read arrays and loops.",
+    "misconceptions": [
+      "One pass always sorts everything",
+      "Swaps are free"
+    ],
+    "expectedUnderstanding": "Each pass compares only neighbours and moves the largest remaining value one step right per swap, so after pass p the last p cells are final and sorted; the suffix grows by exactly one cell per pass, and only a pass with zero swaps proves the whole array is sorted."
+  },
+  "properties": [],
+  "primitives": [
+    {
+      "id": "bg",
+      "type": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 960,
+      "height": 540,
+      "rx": 0,
+      "fill": "#ffffff",
+      "stroke": "#ffffff",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "band",
+      "type": "rect",
+      "x": 684,
+      "y": 216,
+      "width": 128,
+      "height": 120,
+      "rx": 10,
+      "fill": "#dbeafe",
+      "stroke": "none",
+      "strokeWidth": 0,
+      "opacity": 0
+    },
+    {
+      "id": "cell0",
+      "type": "rect",
+      "x": 152,
+      "y": 216,
+      "width": 120,
+      "height": 120,
+      "rx": 10,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "cell1",
+      "type": "rect",
+      "x": 286,
+      "y": 216,
+      "width": 120,
+      "height": 120,
+      "rx": 10,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "cell2",
+      "type": "rect",
+      "x": 420,
+      "y": 216,
+      "width": 120,
+      "height": 120,
+      "rx": 10,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "cell3",
+      "type": "rect",
+      "x": 554,
+      "y": 216,
+      "width": 120,
+      "height": 120,
+      "rx": 10,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "cell4",
+      "type": "rect",
+      "x": 688,
+      "y": 216,
+      "width": 120,
+      "height": 120,
+      "rx": 10,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "t3",
+      "type": "text",
+      "x": 212,
+      "y": 292,
+      "text": "3",
+      "fontSize": 46,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "t5",
+      "type": "text",
+      "x": 346,
+      "y": 292,
+      "text": "5",
+      "fontSize": 46,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "t1",
+      "type": "text",
+      "x": 480,
+      "y": 292,
+      "text": "1",
+      "fontSize": 46,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "t4",
+      "type": "text",
+      "x": 614,
+      "y": 292,
+      "text": "4",
+      "fontSize": 46,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "t2",
+      "type": "text",
+      "x": 748,
+      "y": 292,
+      "text": "2",
+      "fontSize": 46,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "cmp",
+      "type": "rect",
+      "x": 146,
+      "y": 209,
+      "width": 266,
+      "height": 134,
+      "rx": 12,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 3,
+      "opacity": 1
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 56,
+      "text": "Bubble sort: blue band = sorted suffix, red box = pair compared, bar = swaps",
+      "fontSize": 19,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "tlabel",
+      "type": "text",
+      "x": 60,
+      "y": 402,
+      "text": "swaps",
+      "fontSize": 17,
+      "anchor": "start",
+      "fill": "#374151",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "tally",
+      "type": "rect",
+      "x": 60,
+      "y": 414,
+      "width": 0,
+      "height": 16,
+      "rx": 4,
+      "fill": "#dc2626",
+      "stroke": "none",
+      "strokeWidth": 0,
+      "opacity": 1
+    }
+  ],
+  "timeline": {
+    "duration": 23.0,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "t3",
+          "field": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 212
+          },
+          {
+            "at": 10.05,
+            "value": 212
+          },
+          {
+            "at": 10.95,
+            "value": 346,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 17.65,
+            "value": 346
+          },
+          {
+            "at": 18.55,
+            "value": 480,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "t3",
+          "field": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 292
+          },
+          {
+            "at": 10.05,
+            "value": 292
+          },
+          {
+            "at": 10.23,
+            "value": 252
+          },
+          {
+            "at": 10.77,
+            "value": 252
+          },
+          {
+            "at": 10.95,
+            "value": 292
+          },
+          {
+            "at": 17.65,
+            "value": 292
+          },
+          {
+            "at": 17.83,
+            "value": 252
+          },
+          {
+            "at": 18.37,
+            "value": 252
+          },
+          {
+            "at": 18.55,
+            "value": 292
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "t5",
+          "field": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 346
+          },
+          {
+            "at": 4.35,
+            "value": 346
+          },
+          {
+            "at": 5.25,
+            "value": 480,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 6.25,
+            "value": 480
+          },
+          {
+            "at": 7.15,
+            "value": 614,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 8.15,
+            "value": 614
+          },
+          {
+            "at": 9.05,
+            "value": 748,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "t5",
+          "field": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 292
+          },
+          {
+            "at": 4.35,
+            "value": 292
+          },
+          {
+            "at": 4.53,
+            "value": 252
+          },
+          {
+            "at": 5.07,
+            "value": 252
+          },
+          {
+            "at": 5.25,
+            "value": 292
+          },
+          {
+            "at": 6.25,
+            "value": 292
+          },
+          {
+            "at": 6.43,
+            "value": 252
+          },
+          {
+            "at": 6.97,
+            "value": 252
+          },
+          {
+            "at": 7.15,
+            "value": 292
+          },
+          {
+            "at": 8.15,
+            "value": 292
+          },
+          {
+            "at": 8.33,
+            "value": 252
+          },
+          {
+            "at": 8.87,
+            "value": 252
+          },
+          {
+            "at": 9.05,
+            "value": 292
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "t1",
+          "field": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 480
+          },
+          {
+            "at": 4.35,
+            "value": 480
+          },
+          {
+            "at": 5.25,
+            "value": 346,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 10.05,
+            "value": 346
+          },
+          {
+            "at": 10.95,
+            "value": 212,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "t1",
+          "field": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 292
+          },
+          {
+            "at": 4.35,
+            "value": 292
+          },
+          {
+            "at": 4.53,
+            "value": 332
+          },
+          {
+            "at": 5.07,
+            "value": 332
+          },
+          {
+            "at": 5.25,
+            "value": 292
+          },
+          {
+            "at": 10.05,
+            "value": 292
+          },
+          {
+            "at": 10.23,
+            "value": 332
+          },
+          {
+            "at": 10.77,
+            "value": 332
+          },
+          {
+            "at": 10.95,
+            "value": 292
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "t4",
+          "field": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 614
+          },
+          {
+            "at": 6.25,
+            "value": 614
+          },
+          {
+            "at": 7.15,
+            "value": 480,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 13.85,
+            "value": 480
+          },
+          {
+            "at": 14.75,
+            "value": 614,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "t4",
+          "field": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 292
+          },
+          {
+            "at": 6.25,
+            "value": 292
+          },
+          {
+            "at": 6.43,
+            "value": 332
+          },
+          {
+            "at": 6.97,
+            "value": 332
+          },
+          {
+            "at": 7.15,
+            "value": 292
+          },
+          {
+            "at": 13.85,
+            "value": 292
+          },
+          {
+            "at": 14.03,
+            "value": 252
+          },
+          {
+            "at": 14.57,
+            "value": 252
+          },
+          {
+            "at": 14.75,
+            "value": 292
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "t2",
+          "field": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 748
+          },
+          {
+            "at": 8.15,
+            "value": 748
+          },
+          {
+            "at": 9.05,
+            "value": 614,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 13.85,
+            "value": 614
+          },
+          {
+            "at": 14.75,
+            "value": 480,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 17.65,
+            "value": 480
+          },
+          {
+            "at": 18.55,
+            "value": 346,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "t2",
+          "field": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 292
+          },
+          {
+            "at": 8.15,
+            "value": 292
+          },
+          {
+            "at": 8.33,
+            "value": 332
+          },
+          {
+            "at": 8.87,
+            "value": 332
+          },
+          {
+            "at": 9.05,
+            "value": 292
+          },
+          {
+            "at": 13.85,
+            "value": 292
+          },
+          {
+            "at": 14.03,
+            "value": 332
+          },
+          {
+            "at": 14.57,
+            "value": 332
+          },
+          {
+            "at": 14.75,
+            "value": 292
+          },
+          {
+            "at": 17.65,
+            "value": 292
+          },
+          {
+            "at": 17.83,
+            "value": 332
+          },
+          {
+            "at": 18.37,
+            "value": 332
+          },
+          {
+            "at": 18.55,
+            "value": 292
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "cmp",
+          "field": "x"
+        },
+        "keyframes": [
+          {
+            "at": 1.4,
+            "value": 146
+          },
+          {
+            "at": 1.9,
+            "value": 146
+          },
+          {
+            "at": 3.35,
+            "value": 146
+          },
+          {
+            "at": 3.8,
+            "value": 280,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 5.25,
+            "value": 280
+          },
+          {
+            "at": 5.7,
+            "value": 414,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 7.15,
+            "value": 414
+          },
+          {
+            "at": 7.6,
+            "value": 548,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 9.05,
+            "value": 548
+          },
+          {
+            "at": 9.5,
+            "value": 146,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 10.95,
+            "value": 146
+          },
+          {
+            "at": 11.4,
+            "value": 280,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 12.85,
+            "value": 280
+          },
+          {
+            "at": 13.3,
+            "value": 414,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 14.75,
+            "value": 414
+          },
+          {
+            "at": 15.2,
+            "value": 146,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 16.65,
+            "value": 146
+          },
+          {
+            "at": 17.1,
+            "value": 280,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 18.55,
+            "value": 280
+          },
+          {
+            "at": 19,
+            "value": 146,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "cmp",
+          "field": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1
+          },
+          {
+            "at": 21.4,
+            "value": 1
+          },
+          {
+            "at": 21.9,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "band",
+          "field": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 684
+          },
+          {
+            "at": 9.5,
+            "value": 684
+          },
+          {
+            "at": 10,
+            "value": 684,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 15.2,
+            "value": 684
+          },
+          {
+            "at": 15.7,
+            "value": 550,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 19,
+            "value": 550
+          },
+          {
+            "at": 19.5,
+            "value": 416,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 20.9,
+            "value": 416
+          },
+          {
+            "at": 21.4,
+            "value": 148,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "band",
+          "field": "width"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 128
+          },
+          {
+            "at": 9.5,
+            "value": 128
+          },
+          {
+            "at": 10,
+            "value": 128,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 15.2,
+            "value": 128
+          },
+          {
+            "at": 15.7,
+            "value": 262,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 19,
+            "value": 262
+          },
+          {
+            "at": 19.5,
+            "value": 396,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 20.9,
+            "value": 396
+          },
+          {
+            "at": 21.4,
+            "value": 664,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "band",
+          "field": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "step"
+          },
+          {
+            "at": 9.5,
+            "value": 1
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tally",
+          "field": "width"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0
+          },
+          {
+            "at": 4.7,
+            "value": 0
+          },
+          {
+            "at": 4.85,
+            "value": 55,
+            "easing": "ease-out"
+          },
+          {
+            "at": 6.6,
+            "value": 55
+          },
+          {
+            "at": 6.75,
+            "value": 110,
+            "easing": "ease-out"
+          },
+          {
+            "at": 8.5,
+            "value": 110
+          },
+          {
+            "at": 8.65,
+            "value": 165,
+            "easing": "ease-out"
+          },
+          {
+            "at": 10.4,
+            "value": 165
+          },
+          {
+            "at": 10.55,
+            "value": 220,
+            "easing": "ease-out"
+          },
+          {
+            "at": 14.2,
+            "value": 220
+          },
+          {
+            "at": 14.35,
+            "value": 275,
+            "easing": "ease-out"
+          },
+          {
+            "at": 18,
+            "value": 275
+          },
+          {
+            "at": 18.15,
+            "value": 330,
+            "easing": "ease-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [],
+  "checkpoints": [
+    {
+      "at": 3.9,
+      "prompt": "The box is on 5 and 1. Which value will move right, and which cell will it end in?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 9.7,
+      "prompt": "Pass 1 has finished. How many cells are guaranteed to be in their final position, and which ones?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 15.4,
+      "prompt": "Two cells are settled. Continue to run pass 3 on the remaining three.",
+      "learnerAction": "continue"
+    },
+    {
+      "at": 20.3,
+      "prompt": "This pass compares 1 and 2 and swaps nothing. What does one swap-free pass prove?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 22.6,
+      "prompt": "Continue for the final state and the swap count.",
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.8,
+      "text": "Five values in a row. A pass compares neighbours from left to right and swaps any pair that is out of order."
+    },
+    {
+      "at": 3.4,
+      "text": "5 meets 1: the two values trade cells, so 5 drifts one step right. Every swap is real work, counted by the red bar."
+    },
+    {
+      "at": 7.2,
+      "text": "5 keeps meeting smaller values and keeps moving right; after four comparisons it sits in the last cell."
+    },
+    {
+      "at": 9.8,
+      "text": "Pass 1 is over. The largest value is final, and the blue suffix is one cell wide: one cell per pass."
+    },
+    {
+      "at": 11.6,
+      "text": "Pass 2 scans from the left again: 3 and 1 swap, then 4 and 2 swap, so 4 settles next to 5."
+    },
+    {
+      "at": 15.6,
+      "text": "Two cells are final now. The suffix claims only what a pass actually proved."
+    },
+    {
+      "at": 17.4,
+      "text": "Pass 3: 3 and 2 trade once and 3 lands in cell three, so the suffix grows to three cells."
+    },
+    {
+      "at": 20.4,
+      "text": "Pass 4 compares the first two cells and swaps nothing. A whole pass with no swap is the proof that the array is sorted."
+    },
+    {
+      "at": 22.0,
+      "text": "Final: 1 2 3 4 5 after ten comparisons and six swaps. Bubble sort is correct, not optimal."
+    }
+  ],
+  "fallback": {
+    "text": "Static pass-by-pass table for [3, 5, 1, 4, 2]. Pass 1 compares 3-5 (no swap), 5-1, 5-4, 5-2 (three swaps) giving [3, 1, 4, 2, 5], so 5 is final and the sorted suffix is 1 cell. Pass 2: 3-1 swap, 3-4 no, 4-2 swap, giving [1, 3, 2, 4, 5] and a 2-cell suffix. Pass 3: 1-3 no, 3-2 swap, giving [1, 2, 3, 4, 5] and a 3-cell suffix. Pass 4: 1-2 no swap, so the whole array is declared sorted. Totals: 10 adjacent comparisons, 6 swaps. The suffix grows one cell per pass, never all at once."
+  },
+  "accessibility": {
+    "alt": "Five number cards in a row. A red box slides right along adjacent pairs; when the left card is larger the two cards cross, one arcing above the row and one below, and swap places. A blue band grows from the right after each pass, and a red bar at the lower left lengthens by one step at every swap.",
+    "reducedMotion": "Show five static rows, one per pass state, labelled 'start', 'after pass 1', 'after pass 2', 'after pass 3', 'pass 4: no swaps'. Each row shades the final suffix and prints the running total of swaps beneath it.",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    "case:v4-bubble-sort"
+  ]
+}

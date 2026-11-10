@@ -1,0 +1,92 @@
+{
+  "version": "0.1",
+  "caseId": "v4s-memory-hierarchy",
+  "needsScene": true,
+  "sceneFile": "v4s-memory-hierarchy.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "whyScene": "Two different claims sit in this objective and they want different treatment. That a hit path is shorter than a miss path is a static fact about the hierarchy, so it is drawn as static geometry: the same two arrows for the whole scene, one stopping at the cache and one continuing to memory, with the memory leg visibly longer. What genuinely needs a scene is the second claim, which is a threshold: a hit happens only while the number of lines the loop uses stays within the number the cache holds, and the interesting cases are on both sides of that boundary. That is a comparison between two quantities that the learner should vary, and varying them is what the case asks for. Because both quantities are counts, each is drawn as a length, and two lengths sharing a left origin can be compared by eye with no arithmetic - so the learner watches the blue bar approach the red, meet it exactly, overshoot it by more than double without further benefit, and then fall short again when the loop widens. The overshoot step is the answer to 'bigger is always better', and no static pair of panels can show that the benefit stops at the meeting point while the cost does not.",
+  "layout": "Left column, x 60 to 260: CPU box at y 96, cache box at y 206 outlined in blue, main memory box at y 340, each 200 by 62 with a centred label. A blue arrow runs from the CPU to the cache and a red arrow from the cache to memory; the memory leg is 70 px against the cache leg's 46 px, so the miss involves both legs and the longer one, with no cycle counts anywhere. Right side, x 580 and rightward: a red bar at y 192 whose length is 28 px per line of the loop, and a blue bar at y 284 whose length is 28 px per line of capacity, both from the same origin so the comparison is direct; eight lines is the maximum, giving 224 px, which stays clear of the right edge. Labels sit above each bar and both are text outside the plot area, so the bars themselves are the only moving geometry and nothing can collide with them.",
+  "beats": [
+    {
+      "at": 0.0,
+      "beat": "Loop touches 5 lines, cache holds 2: the blue bar covers 40 percent of the red, so lines are evicted before reuse."
+    },
+    {
+      "at": 2.5,
+      "beat": "Learner predicts: what happens to the loop's second pass with only two lines resident?"
+    },
+    {
+      "at": 7.0,
+      "beat": "Capacity reaches 5 and the bars meet exactly - the working set fits, and after the first pass the repeats are hits."
+    },
+    {
+      "at": 12.0,
+      "beat": "Capacity reaches 8, well past the red bar: nothing improves for this loop, and the cost of the larger cache is real."
+    },
+    {
+      "at": 17.0,
+      "beat": "Capacity falls to 3 and the loop widens to 7 lines: a gap of 4 lines, and the misses return."
+    },
+    {
+      "at": 18.0,
+      "beat": "Rest state: the widest gap in the run, with the memory leg of the miss path the only route left."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 0.0,
+      "kind": "slider",
+      "prompt": "Change the loop size and the cache size, and watch where the blue bar sits relative to the red."
+    },
+    {
+      "at": 2.0,
+      "kind": "answer",
+      "prompt": "The red bar is longer than the blue. What does that predict about the second pass of the loop?"
+    },
+    {
+      "at": 7.8,
+      "kind": "answer",
+      "prompt": "The bars now meet. What is true now, and what is still true about the loop's first pass?"
+    },
+    {
+      "at": 12.4,
+      "kind": "answer",
+      "prompt": "The blue bar is well past the red. What did the extra capacity buy, and what did it cost?"
+    },
+    {
+      "at": 16.0,
+      "kind": "answer",
+      "prompt": "Capacity has fallen below the loop size. Why is a line evicted before reuse, and does the cache speed up that access at all?"
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "The cache is faster for every access",
+      "move": "The two paths are separate: the blue arrow ends at the cache, but the red arrow starts there and continues to memory, so a miss is the hit path plus a longer leg. The caption says a cache does not shorten a miss, the narration says the missing access pays the memory trip, and the last checkpoint asks directly whether the cache made that access any faster. No latency numbers appear, so the claim is about the route, not a clock."
+    },
+    {
+      "misconception": "A bigger cache is always better",
+      "move": "The timeline overshoots on purpose: capacity goes from 2 to 8 while the loop stays at 5, so the blue bar passes the red bar and then doubles it, and nothing changes in the hit story. The narration and the third checkpoint name the tradeoff - larger caches cost area and take longer to search - and the fifth beat shows the case where capacity is not the problem at all because the loop itself widened."
+    }
+  ],
+  "correctnessChecks": [
+    "The hit path is strictly shorter than the miss path in the drawing: the cache leg is 46 px and the memory leg 70 px, so a hit traverses one leg and a miss traverses two, the longer of which is the memory leg. No cycle counts or nanosecond figures appear anywhere in the scene, the narration or the fallback.",
+    "The two bars use one scale (28 px per line) and a shared origin at x 580, so the comparison is scale-free and exact; the labels state that both are counts of lines, so the equality at 5 against 5 is meaningful.",
+    "Locality is represented as the size of the working set, not as a vague feeling: the red slider is 'lines the loop touches', and smaller is tighter reuse, which is what lets the blue bar cover it.",
+    "The eviction claim is the correct one for a cyclic loop with a capacity below the working set: a line is replaced before the loop returns to it, so the next access to it misses. The narration says 'after the first pass' for the fitting case, so the compulsory first-touch misses are acknowledged rather than hidden.",
+    "The tradeoff remark is stated qualitatively ('costs area and takes longer to search') and is not tied to any number on the canvas, so no exact latency or capacity-performance relation is asserted."
+  ],
+  "implementationNotes": "Two numeric properties, W and C, each drive one bar end. Since a bar is a line from a fixed origin to an expression, the crossing needs no conditional: the learner reads the inequality off the geometry. The static hierarchy owns the path-length claim and the animated bars own the threshold claim, which keeps each claim in the medium where it is actually legible.",
+  "constraints": {
+    "primitives": 16,
+    "properties": 2,
+    "tracks": 2,
+    "keyframes": 11,
+    "checkpoints": 4,
+    "usesStates": false
+  }
+}

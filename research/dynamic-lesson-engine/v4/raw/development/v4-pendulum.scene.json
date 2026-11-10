@@ -1,0 +1,1732 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "metadata": {
+    "title": "Pendulum: kinetic and potential energy exchange",
+    "subject": "Physics",
+    "topic": "Pendulum Energy",
+    "objective": "Show kinetic and potential energy exchanging during a pendulum swing.",
+    "learner": "Knows energy conservation.",
+    "misconceptions": [
+      "Both energies are maximum at the bottom",
+      "Energy disappears"
+    ],
+    "expectedUnderstanding": "Without damping, KE + PE is constant: PE is largest at the turning points where the bob is highest and momentarily at rest, KE is largest at the lowest point where PE is zero, and the stacked bar keeps the same total height throughout."
+  },
+  "properties": [
+    {
+      "id": "amplitude",
+      "label": "Initial amplitude (degrees)",
+      "value": 45,
+      "min": 25,
+      "max": 55,
+      "step": 5
+    }
+  ],
+  "primitives": [
+    {
+      "id": "bg",
+      "type": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 960,
+      "height": 540,
+      "rx": 0,
+      "fill": "#ffffff",
+      "stroke": "#ffffff",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "arc",
+      "type": "path",
+      "d": "M130.3 289.7 L137.9 296.9 L145.7 303.9 L153.9 310.4 L162.3 316.6 L171 322.4 L180 327.8 L189.2 332.9 L198.6 337.5 L208.2 341.7 L217.9 345.5 L227.8 348.9 L237.9 351.8 L248.1 354.3 L258.3 356.4 L268.7 357.9 L279.1 359.1 L289.5 359.8 L300 360 L310.5 359.8 L320.9 359.1 L331.3 357.9 L341.7 356.4 L351.9 354.3 L362.1 351.8 L372.2 348.9 L382.1 345.5 L391.8 341.7 L401.4 337.5 L410.8 332.9 L420 327.8 L429 322.4 L437.7 316.6 L446.1 310.4 L454.3 303.9 L462.1 296.9 L469.7 289.7",
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "dash": "5 5",
+      "opacity": 1
+    },
+    {
+      "id": "level",
+      "type": "line",
+      "x1": 110,
+      "y1": 360,
+      "x2": 500,
+      "y2": 360,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "dash": "6 5",
+      "opacity": 1
+    },
+    {
+      "id": "hbar",
+      "type": "line",
+      "x1": 469.7,
+      "y1": 289.7,
+      "x2": 469.7,
+      "y2": 360,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 4,
+      "opacity": 1
+    },
+    {
+      "id": "rod",
+      "type": "line",
+      "x1": 300.0,
+      "y1": 120.0,
+      "x2": 469.7,
+      "y2": 289.7,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 3,
+      "opacity": 1
+    },
+    {
+      "id": "pivot",
+      "type": "circle",
+      "cx": 300.0,
+      "cy": 120.0,
+      "r": 7,
+      "fill": "#111827",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "bob",
+      "type": "circle",
+      "cx": 469.7,
+      "cy": 289.7,
+      "r": 14,
+      "fill": "#1d4ed8",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "pe",
+      "type": "rect",
+      "x": 700.0,
+      "y": 210,
+      "width": 120.0,
+      "height": 260,
+      "rx": 0,
+      "fill": "#1d4ed8",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "ke",
+      "type": "rect",
+      "x": 700.0,
+      "y": 210,
+      "width": 120.0,
+      "height": 0,
+      "rx": 0,
+      "fill": "#dc2626",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "base",
+      "type": "line",
+      "x1": 700.0,
+      "y1": 470.0,
+      "x2": 820.0,
+      "y2": 470.0,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "total",
+      "type": "line",
+      "x1": 700.0,
+      "y1": 210,
+      "x2": 820.0,
+      "y2": 210,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "dash": "6 4",
+      "opacity": 1
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 30,
+      "y": 44,
+      "text": "Pendulum energy: kinetic and potential trade, the total stays fixed",
+      "fontSize": 22,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "barTitle",
+      "type": "text",
+      "x": 760,
+      "y": 196,
+      "text": "blue PE + red KE = total (constant)",
+      "fontSize": 14,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "barFoot",
+      "type": "text",
+      "x": 760,
+      "y": 494,
+      "text": "KE max at the bottom, PE max at the ends",
+      "fontSize": 13,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "barFoot2",
+      "type": "text",
+      "x": 760,
+      "y": 516,
+      "text": "no damping: the total never changes",
+      "fontSize": 13,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    }
+  ],
+  "timeline": {
+    "duration": 6.0,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "rod",
+          "field": "x2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 469.71,
+            "easing": "linear"
+          },
+          {
+            "at": 0.25,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 1.25,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 130.29,
+            "easing": "linear"
+          },
+          {
+            "at": 1.75,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 2.25,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 2.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 2.75,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 469.71,
+            "easing": "linear"
+          },
+          {
+            "at": 3.25,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 3.75,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 4.25,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 4.5,
+            "value": 130.29,
+            "easing": "linear"
+          },
+          {
+            "at": 4.75,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 5.25,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 5.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 5.75,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 469.71,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "rod",
+          "field": "y2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 0.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 1.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 1.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 2.25,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 2.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 2.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 3.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 3.75,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 4.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 4.5,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 4.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 5.25,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 5.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 5.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 289.71,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "bob",
+          "field": "cx"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 469.71,
+            "easing": "linear"
+          },
+          {
+            "at": 0.25,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 1.25,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 130.29,
+            "easing": "linear"
+          },
+          {
+            "at": 1.75,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 2.25,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 2.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 2.75,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 469.71,
+            "easing": "linear"
+          },
+          {
+            "at": 3.25,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 3.75,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 4.25,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 4.5,
+            "value": 130.29,
+            "easing": "linear"
+          },
+          {
+            "at": 4.75,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 5.25,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 5.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 5.75,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 469.71,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "bob",
+          "field": "cy"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 0.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 1.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 1.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 2.25,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 2.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 2.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 3.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 3.75,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 4.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 4.5,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 4.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 5.25,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 5.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 5.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 289.71,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "hbar",
+          "field": "x1"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 469.71,
+            "easing": "linear"
+          },
+          {
+            "at": 0.25,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 1.25,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 130.29,
+            "easing": "linear"
+          },
+          {
+            "at": 1.75,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 2.25,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 2.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 2.75,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 469.71,
+            "easing": "linear"
+          },
+          {
+            "at": 3.25,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 3.75,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 4.25,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 4.5,
+            "value": 130.29,
+            "easing": "linear"
+          },
+          {
+            "at": 4.75,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 5.25,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 5.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 5.75,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 469.71,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "hbar",
+          "field": "x2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 469.71,
+            "easing": "linear"
+          },
+          {
+            "at": 0.25,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 1.25,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 130.29,
+            "easing": "linear"
+          },
+          {
+            "at": 1.75,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 2.25,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 2.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 2.75,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 469.71,
+            "easing": "linear"
+          },
+          {
+            "at": 3.25,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 3.75,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 4.25,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 4.5,
+            "value": 130.29,
+            "easing": "linear"
+          },
+          {
+            "at": 4.75,
+            "value": 149.06,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 208.16,
+            "easing": "linear"
+          },
+          {
+            "at": 5.25,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 5.5,
+            "value": 391.84,
+            "easing": "linear"
+          },
+          {
+            "at": 5.75,
+            "value": 450.94,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 469.71,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "hbar",
+          "field": "y1"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 0.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 1.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 1.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 2.25,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 2.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 2.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 3.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 3.75,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 4.25,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 4.5,
+            "value": 289.71,
+            "easing": "linear"
+          },
+          {
+            "at": 4.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 5.25,
+            "value": 360,
+            "easing": "linear"
+          },
+          {
+            "at": 5.5,
+            "value": 341.73,
+            "easing": "linear"
+          },
+          {
+            "at": 5.75,
+            "value": 306.59,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 289.71,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "pe",
+          "field": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 0.25,
+            "value": 272.45,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 402.43,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 470,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 402.43,
+            "easing": "linear"
+          },
+          {
+            "at": 1.25,
+            "value": 272.45,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 1.75,
+            "value": 272.45,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 402.43,
+            "easing": "linear"
+          },
+          {
+            "at": 2.25,
+            "value": 470,
+            "easing": "linear"
+          },
+          {
+            "at": 2.5,
+            "value": 402.43,
+            "easing": "linear"
+          },
+          {
+            "at": 2.75,
+            "value": 272.45,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 3.25,
+            "value": 272.45,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 402.43,
+            "easing": "linear"
+          },
+          {
+            "at": 3.75,
+            "value": 470,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 402.43,
+            "easing": "linear"
+          },
+          {
+            "at": 4.25,
+            "value": 272.45,
+            "easing": "linear"
+          },
+          {
+            "at": 4.5,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 4.75,
+            "value": 272.45,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 402.43,
+            "easing": "linear"
+          },
+          {
+            "at": 5.25,
+            "value": 470,
+            "easing": "linear"
+          },
+          {
+            "at": 5.5,
+            "value": 402.43,
+            "easing": "linear"
+          },
+          {
+            "at": 5.75,
+            "value": 272.45,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 210,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "pe",
+          "field": "height"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 260,
+            "easing": "linear"
+          },
+          {
+            "at": 0.25,
+            "value": 197.55,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 67.57,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 67.57,
+            "easing": "linear"
+          },
+          {
+            "at": 1.25,
+            "value": 197.55,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 260,
+            "easing": "linear"
+          },
+          {
+            "at": 1.75,
+            "value": 197.55,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 67.57,
+            "easing": "linear"
+          },
+          {
+            "at": 2.25,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.5,
+            "value": 67.57,
+            "easing": "linear"
+          },
+          {
+            "at": 2.75,
+            "value": 197.55,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 260,
+            "easing": "linear"
+          },
+          {
+            "at": 3.25,
+            "value": 197.55,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 67.57,
+            "easing": "linear"
+          },
+          {
+            "at": 3.75,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 67.57,
+            "easing": "linear"
+          },
+          {
+            "at": 4.25,
+            "value": 197.55,
+            "easing": "linear"
+          },
+          {
+            "at": 4.5,
+            "value": 260,
+            "easing": "linear"
+          },
+          {
+            "at": 4.75,
+            "value": 197.55,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 67.57,
+            "easing": "linear"
+          },
+          {
+            "at": 5.25,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 5.5,
+            "value": 67.57,
+            "easing": "linear"
+          },
+          {
+            "at": 5.75,
+            "value": 197.55,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 260,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "ke",
+          "field": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 0.25,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 1.25,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 1.75,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 2.25,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 2.5,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 2.75,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 3.25,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 3.75,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 4.25,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 4.5,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 4.75,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 5.25,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 5.5,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 5.75,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 210,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "ke",
+          "field": "height"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.25,
+            "value": 62.45,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 192.43,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 260,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 192.43,
+            "easing": "linear"
+          },
+          {
+            "at": 1.25,
+            "value": 62.45,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.75,
+            "value": 62.45,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 192.43,
+            "easing": "linear"
+          },
+          {
+            "at": 2.25,
+            "value": 260,
+            "easing": "linear"
+          },
+          {
+            "at": 2.5,
+            "value": 192.43,
+            "easing": "linear"
+          },
+          {
+            "at": 2.75,
+            "value": 62.45,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 3.25,
+            "value": 62.45,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 192.43,
+            "easing": "linear"
+          },
+          {
+            "at": 3.75,
+            "value": 260,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 192.43,
+            "easing": "linear"
+          },
+          {
+            "at": 4.25,
+            "value": 62.45,
+            "easing": "linear"
+          },
+          {
+            "at": 4.5,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4.75,
+            "value": 62.45,
+            "easing": "linear"
+          },
+          {
+            "at": 5,
+            "value": 192.43,
+            "easing": "linear"
+          },
+          {
+            "at": 5.25,
+            "value": 260,
+            "easing": "linear"
+          },
+          {
+            "at": 5.5,
+            "value": 192.43,
+            "easing": "linear"
+          },
+          {
+            "at": 5.75,
+            "value": 62.45,
+            "easing": "linear"
+          },
+          {
+            "at": 6,
+            "value": 0,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "amplitude",
+      "type": "slider",
+      "label": "Initial amplitude θ₀ (degrees)",
+      "property": "amplitude",
+      "min": 25,
+      "max": 55,
+      "step": 5
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": 0.55,
+      "prompt": "The bob is dropping. Where in the swing is kinetic energy largest?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 3.3,
+      "prompt": "Compare the stacked bar now with the start. Did the total height of the bar change?",
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.2,
+      "text": "Released from rest at the turning point: the height and the blue PE block are both at their maximum."
+    },
+    {
+      "at": 0.8,
+      "text": "At the bottom the height is zero, PE is zero and all of the energy is in red KE."
+    },
+    {
+      "at": 1.6,
+      "text": "Climbing to the far turning point, KE shrinks back into PE."
+    },
+    {
+      "at": 3.1,
+      "text": "The top of the stacked bar never moves: with no damping the total energy is constant."
+    }
+  ],
+  "fallback": {
+    "text": "Static energy diagram: four stills of the swing (both turning points and the bottom, twice) with the height marked and a stacked bar for each, showing PE = 100 % at the ends, KE = 100 % at the bottom, and an identical total bar height in all four stills."
+  },
+  "accessibility": {
+    "alt": "A pendulum bob swings between two turning points, with a red vertical bar showing its height above the lowest point. Beside it a stacked bar shows blue potential energy and red kinetic energy: blue is tallest at the turning points, red is tallest at the bottom, and the top of the stack never moves.",
+    "reducedMotion": "Show four static stills of the swing side by side (left turning point, bottom, right turning point, bottom) with their stacked energy bars, and annotate PE = max at the ends, KE = max at the bottom.",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    "case:v4-pendulum"
+  ]
+}

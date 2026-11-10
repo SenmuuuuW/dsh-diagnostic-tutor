@@ -1,0 +1,89 @@
+{
+  "version": "0.1",
+  "caseId": "v4s-bayes",
+  "needsScene": true,
+  "sceneFile": "v4s-bayes.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "whyScene": "The learning objective is a ratio that changes dramatically with a parameter the learner cannot see in a single worked example. A static 2 by 2 table can show one base rate, but it cannot show that the very same 99% sensitive and 99% specific test yields a 50% posterior at a 1% base rate and about 96% at a 20% base rate. Letting the learner move prevalence and sensitivity while a natural-frequency bar re-partitions 1,000 people makes the base-rate dependence, rather than the test label, the visible cause. The posterior gauge is a second, ratio-level view of the same counts, so the learner can compare the composition of positive tests with the resulting probability.",
+  "layout": "A single 620 by 110 natural-frequency bar at x = 60, y = 170 represents 1,000 people. Its grey background is true negatives; the pale-red left segment is everyone with the condition; the dark-red overlay is true positives; the amber segment immediately after the condition group is false positives. A legend below the bar names the four regions. The right-hand panel at x = 720 holds a 200-pixel posterior gauge from 0% to 100%, with its red fill computed from the same two properties. Two sliders control base rate in percent and sensitivity in percent; specificity is fixed at 99% and stated in the subtitle.",
+  "beats": [
+    {
+      "at": 0.8,
+      "beat": "Establish the 1,000-person bar and the colour grammar before any numbers move."
+    },
+    {
+      "at": 4.6,
+      "beat": "At 1% base rate the condition group is a sliver, yet true and false positives are about equal."
+    },
+    {
+      "at": 8.4,
+      "beat": "Raise base rate to 20%: the condition group grows, true positives dominate, and the posterior gauge jumps to about 96%."
+    },
+    {
+      "at": 13.2,
+      "beat": "Return the base rate to 1% and watch the posterior collapse back to 50%."
+    },
+    {
+      "at": 15.8,
+      "beat": "Lower sensitivity to 50%: dark red shrinks inside the condition group while amber barely moves."
+    },
+    {
+      "at": 17.5,
+      "beat": "Restore sensitivity and leave both controls open for exploration."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 2.4,
+      "kind": "answer",
+      "prompt": "With 99% sensitivity, 99% specificity and a 1% base rate, what share of positive tests are true positives: about 99%, about 50%, or about 2%?"
+    },
+    {
+      "at": 3.6,
+      "kind": "answer",
+      "prompt": "The base rate is about to rise from 1% to 20%. Predict whether the posterior gauge will stay near 50%, rise, or fall."
+    },
+    {
+      "at": 13.4,
+      "kind": "answer",
+      "prompt": "The base rate is back at 1%. Why did the dark-red block shrink back to a sliver while the amber block hardly changed?"
+    },
+    {
+      "at": 16.4,
+      "kind": "answer",
+      "prompt": "Sensitivity is now 50%, so true positives are fewer. At a 1% base rate and 99% specificity, can raising sensitivity to 100% push the posterior to 99%?"
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "A 99% sensitive test means a 99% probability of the condition after a positive result.",
+      "move": "The posterior gauge is never set directly. It is computed from the same counts that draw the bar, so at the starting values it reads 50%, not 99%, and the learner can see the two equal positive blocks that produce it."
+    },
+    {
+      "misconception": "The base rate is irrelevant once the test result is known.",
+      "move": "The base-rate slider changes only the width of the pale-red condition group, yet it moves the posterior from about 50% to about 96%. The false-positive amber block stays nearly constant, isolating prevalence as the cause of the change."
+    },
+    {
+      "misconception": "Sensitivity and posterior are the same quantity.",
+      "move": "The sensitivity slider changes the dark-red portion inside the pale-red condition group. At 1% base rate, lowering sensitivity from 99% to 50% lowers the posterior only from 50% to about 34%, and even 100% sensitivity cannot make the posterior 99%."
+    }
+  ],
+  "correctnessChecks": [
+    "The posterior is exactly true positives divided by all positive tests: prevalence times sensitivity divided by prevalence times sensitivity plus one minus prevalence times one minus specificity, with specificity fixed at 0.99.",
+    "At prevalence 1% and sensitivity 99%, the counts per 1,000 are 9.9 true positives and 9.9 false positives, giving a posterior of 50.0%.",
+    "At prevalence 20% and sensitivity 99%, the counts per 1,000 are 198 true positives and 8 false positives, giving a posterior of about 96.1%.",
+    "At prevalence 1% and sensitivity 50%, the counts per 1,000 are 5 true positives and 9.9 false positives, giving a posterior of about 33.6%.",
+    "All labels say condition or positive test, never diagnosis; the scene offers no screening or treatment advice."
+  ],
+  "constraints": {
+    "primitives": 16,
+    "properties": 2,
+    "tracks": 2,
+    "keyframes": 11,
+    "checkpoints": 4,
+    "usesStates": false
+  }
+}

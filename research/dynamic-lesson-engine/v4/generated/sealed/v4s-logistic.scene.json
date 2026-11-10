@@ -1,0 +1,349 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Logistic regression: a linear score, a probability, a boundary",
+    "subject": "AI/ML",
+    "topic": "Logistic Regression",
+    "objective": "Show a decision boundary and how predicted probability changes with a feature.",
+    "learner": "Knows linear functions and probability.",
+    "misconceptions": [
+      "Logistic regression predicts a class directly with a straight line",
+      "The predicted probability can exceed 1",
+      "The boundary is the same thing as the probability curve"
+    ],
+    "expectedUnderstanding": [
+      "The linear score s = w·x + b is the input; the sigmoid turns it into a probability strictly between 0 and 1.",
+      "At s = 0 the probability is 0.5, so the decision boundary is the score-0 line; on this one-feature plot that is the vertical line x = 0.",
+      "Moving the feature moves the point along the fixed logistic curve; the class label is produced only afterwards by a 0.5 threshold rule.",
+      "The curve approaches 0 and 1 but never reaches or passes them, so a predicted probability cannot exceed 1."
+    ]
+  },
+  "properties": [
+    {
+      "id": "x",
+      "label": "feature x (weight w = 1)",
+      "min": -4,
+      "max": 4,
+      "step": 0.05,
+      "default": 0.6
+    }
+  ],
+  "primitives": [
+    {
+      "id": "xaxis",
+      "type": "line",
+      "x1": 90,
+      "y1": 440,
+      "x2": 620,
+      "y2": 440,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "yaxis",
+      "type": "line",
+      "x1": 90,
+      "y1": 110,
+      "x2": 90,
+      "y2": 440,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "curve",
+      "type": "path",
+      "d": "M 90.00 435.27 C 92.94 435.04 95.89 434.81 98.83 434.57 C 101.78 434.31 104.72 434.04 107.67 433.77 C 110.61 433.47 113.56 433.16 116.50 432.86 C 119.44 432.51 122.39 432.16 125.33 431.81 C 128.28 431.42 131.22 431.02 134.17 430.62 C 137.11 430.17 140.06 429.71 143.00 429.26 C 145.94 428.74 148.89 428.22 151.83 427.71 C 154.78 427.12 157.72 426.53 160.67 425.94 C 163.61 425.27 166.56 424.60 169.50 423.93 C 172.44 423.17 175.39 422.41 178.33 421.66 C 181.28 420.80 184.22 419.94 187.17 419.08 C 190.11 418.11 193.06 417.14 196.00 416.17 C 198.94 415.08 201.89 413.99 204.83 412.89 C 207.78 411.67 210.72 410.44 213.67 409.21 C 216.61 407.84 219.56 406.46 222.50 405.09 C 225.44 403.56 228.39 402.02 231.33 400.49 C 234.28 398.79 237.22 397.08 240.17 395.38 C 243.11 393.50 246.06 391.61 249.00 389.73 C 251.94 387.66 254.89 385.58 257.83 383.51 C 260.78 381.24 263.72 378.97 266.67 376.70 C 269.61 374.23 272.56 371.76 275.50 369.29 C 278.44 366.62 281.39 363.95 284.33 361.28 C 287.28 358.41 290.22 355.54 293.17 352.67 C 296.11 349.62 299.06 346.56 302.00 343.51 C 304.94 340.28 307.89 337.05 310.83 333.82 C 313.78 330.43 316.72 327.05 319.67 323.66 C 322.61 320.15 325.56 316.63 328.50 313.11 C 331.44 309.49 334.39 305.87 337.33 302.25 C 340.28 298.56 343.22 294.87 346.17 291.18 C 349.11 287.45 352.06 283.73 355.00 280.00 C 357.94 276.27 360.89 272.55 363.83 268.82 C 366.78 265.13 369.72 261.44 372.67 257.75 C 375.61 254.13 378.56 250.51 381.50 246.89 C 384.44 243.37 387.39 239.85 390.33 236.34 C 393.28 232.95 396.22 229.57 399.17 226.18 C 402.11 222.95 405.06 219.72 408.00 216.49 C 410.94 213.44 413.89 210.38 416.83 207.33 C 419.78 204.46 422.72 201.59 425.67 198.72 C 428.61 196.05 431.56 193.38 434.50 190.71 C 437.44 188.24 440.39 185.77 443.33 183.30 C 446.28 181.03 449.22 178.76 452.17 176.49 C 455.11 174.42 458.06 172.34 461.00 170.27 C 463.94 168.39 466.89 166.50 469.83 164.62 C 472.78 162.92 475.72 161.21 478.67 159.51 C 481.61 157.98 484.56 156.44 487.50 154.91 C 490.44 153.54 493.39 152.16 496.33 150.79 C 499.28 149.56 502.22 148.33 505.17 147.11 C 508.11 146.01 511.06 144.92 514.00 143.83 C 516.94 142.86 519.89 141.89 522.83 140.92 C 525.78 140.06 528.72 139.20 531.67 138.34 C 534.61 137.59 537.56 136.83 540.50 136.07 C 543.44 135.40 546.39 134.73 549.33 134.06 C 552.28 133.47 555.22 132.88 558.17 132.29 C 561.11 131.78 564.06 131.26 567.00 130.74 C 569.94 130.29 572.89 129.83 575.83 129.38 C 578.78 128.98 581.72 128.58 584.67 128.19 C 587.61 127.84 590.56 127.49 593.50 127.14 C 596.44 126.84 599.39 126.53 602.33 126.23 C 605.28 125.96 608.22 125.69 611.17 125.43 C 614.11 125.19 617.06 124.96 620.00 124.73",
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2.5,
+      "opacity": 1
+    },
+    {
+      "id": "probBar",
+      "type": "rect",
+      "x": {
+        "expr": "90+(x+4.2)*(530/8.4)-9"
+      },
+      "y": {
+        "expr": "440-320/(1+2.718281828459045**(-x))"
+      },
+      "width": 18,
+      "height": {
+        "expr": "320/(1+2.718281828459045**(-x))"
+      },
+      "rx": 2,
+      "fill": "#93c5fd",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "halfLine",
+      "type": "line",
+      "x1": 90,
+      "y1": 280,
+      "x2": 620,
+      "y2": 280,
+      "fill": "none",
+      "stroke": "#6b7280",
+      "strokeWidth": 1.5,
+      "opacity": 1,
+      "dash": "6 6"
+    },
+    {
+      "id": "boundary",
+      "type": "line",
+      "x1": 355,
+      "y1": 112,
+      "x2": 355,
+      "y2": 440,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 2,
+      "opacity": 1,
+      "dash": "5 5"
+    },
+    {
+      "id": "pt1",
+      "type": "circle",
+      "cx": 159.40476190476193,
+      "cy": 440,
+      "r": 7,
+      "fill": "#93c5fd",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "pt2",
+      "type": "circle",
+      "cx": 241.42857142857144,
+      "cy": 440,
+      "r": 7,
+      "fill": "#93c5fd",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "pt3",
+      "type": "circle",
+      "cx": 468.57142857142856,
+      "cy": 120,
+      "r": 7,
+      "fill": "#fca5a5",
+      "stroke": "#dc2626",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "pt4",
+      "type": "circle",
+      "cx": 550.5952380952381,
+      "cy": 120,
+      "r": 7,
+      "fill": "#fca5a5",
+      "stroke": "#dc2626",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "xlab",
+      "type": "text",
+      "x": 355,
+      "y": 470,
+      "text": "feature x",
+      "fontSize": 14,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "ylab",
+      "type": "text",
+      "x": 90,
+      "y": 96,
+      "text": "P(y = 1)",
+      "fontSize": 13,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "halfLab",
+      "type": "text",
+      "x": 80,
+      "y": 284,
+      "text": "0.5",
+      "fontSize": 12,
+      "anchor": "end",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "note1",
+      "type": "text",
+      "x": 90,
+      "y": 505,
+      "text": "Score s = w·x + b, here w = 1 and b = 0. Probability p = 1/(1+e^-s), always between 0 and 1.",
+      "fontSize": 13,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "note2",
+      "type": "text",
+      "x": 90,
+      "y": 530,
+      "text": "The boundary is s = 0, so p = 0.5: predict class 1 above the line, class 0 below.",
+      "fontSize": 13,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 44,
+      "text": "Logistic regression: a linear score, a probability, a boundary",
+      "fontSize": 20,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    }
+  ],
+  "timeline": {
+    "duration": 12.0,
+    "tracks": [
+      {
+        "target": {
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": -2.6,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 3,
+            "value": -0.8,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 6,
+            "value": 0.4,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 9,
+            "value": 2.6,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 12,
+            "value": 2.6,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "featureControl",
+      "kind": "slider",
+      "propertyId": "x",
+      "label": "feature x"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-negative",
+      "at": 1.8,
+      "title": "Left of the boundary",
+      "body": "Pick a feature value to the left of the dashed boundary. Is the predicted probability above or below 0.5? Move the slider to check.",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-cross",
+      "at": 5.0,
+      "title": "Crossing x = 0",
+      "body": "Move the feature across the boundary. What changes at that exact point: the score, the predicted probability, or the class decision?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-near-one",
+      "at": 8.0,
+      "title": "Close to one",
+      "body": "At x = 3 the bar is close to the top. Why can the predicted probability never reach or exceed 1?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-class",
+      "at": 10.5,
+      "title": "Class or probability",
+      "body": "Does the model output the class directly, or does it output a probability that a separate 0.5 rule turns into a class?",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.9,
+      "text": "Blue points are class 0 and red points are class 1. The curve is the predicted probability that the label is 1, not the label itself."
+    },
+    {
+      "at": 3.6,
+      "text": "The score s = w·x + b is linear. The sigmoid maps that score to a probability between 0 and 1, so a larger score never means a probability above 1."
+    },
+    {
+      "at": 6.6,
+      "text": "At s = 0 the probability is exactly 0.5. That score is the decision boundary; on this plot it is the red dashed line at x = 0, where the prediction flips."
+    },
+    {
+      "at": 9.8,
+      "text": "Far to the right the curve approaches 1 from below, and far to the left it approaches 0 from above. The threshold at 0.5 turns the probability into a class after the fact."
+    }
+  ],
+  "fallback": {
+    "text": "Static plot of predicted probability against one feature. The horizontal axis runs from about minus 4 to 4 and the vertical axis from 0 to 1, with a dashed line at 0.5 and a red dashed vertical boundary at x = 0. The black S-curve is p = 1/(1+e^-x). Blue points at p = 0 sit at x = -3.1 and -1.8; red points at p = 1 sit at x = 1.8 and 3.1. A blue bar at x = 0.6 rises to about 0.65, showing the current prediction. As x moves from -2.6 through 0 to 2.6 the bar rises from about 0.07 through 0.5 to about 0.93, while the curve never crosses 0 or 1. Caption: the linear score is the input; the sigmoid gives a probability; the 0.5 threshold gives the class; the boundary is at score 0."
+  },
+  "accessibility": {
+    "alt": "A one-feature logistic regression plot. The horizontal axis is the feature from about -4 to 4; the vertical axis is the predicted probability from 0 to 1. A black sigmoid curve rises from near 0 on the left to near 1 on the right; a dashed horizontal line marks p = 0.5 and a red dashed vertical line marks the decision boundary at feature x = 0. Four data points are shown at probability 0 or 1, two blue class-0 points on the left and two red class-1 points on the right. A blue vertical bar at the current feature value rises from the baseline to the curve, and moving the feature slider moves the bar; near zero it passes 0.5, and at the far right it approaches but never reaches 1.",
+    "reducedMotion": "static",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    {
+      "sourceId": "case:v4s-logistic",
+      "locator": "objective; correctnessCriteria"
+    }
+  ]
+}

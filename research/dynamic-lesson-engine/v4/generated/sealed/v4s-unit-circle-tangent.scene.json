@@ -1,0 +1,396 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Tangent at a point of a circle: perpendicular to the radius",
+    "subject": "Mathematics",
+    "topic": "Unit Circle and Tangency",
+    "objective": "Show why the tangent at a point on a unit circle is perpendicular to the radius.",
+    "learner": "Knows circle geometry and basic sine and cosine.",
+    "misconceptions": [
+      "A tangent is a kind of radius",
+      "The perpendicularity is an accident of the point drawn"
+    ],
+    "expectedUnderstanding": [
+      "P is a point of the unit circle and OP is a radius of length 1.",
+      "The tangent is the line through P that meets the circle at P and nowhere else.",
+      "At every position of P the angle between OP and the tangent is 90 degrees, so the right angle is a consequence of what a tangent is, not a feature of one drawing.",
+      "The reason: the line through P perpendicular to OP is at distance exactly one radius from O, so it cannot cross the circle at a second point."
+    ]
+  },
+  "properties": [
+    {
+      "id": "s",
+      "label": "P along the circle (x of P, in radii)",
+      "min": -0.8,
+      "max": 0.8,
+      "step": 0.01,
+      "default": 0.8,
+      "unit": "x/r"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 50,
+      "text": "The tangent at a point of a circle is perpendicular to the radius",
+      "fontSize": 20,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "unitCircle",
+      "type": "circle",
+      "cx": 330.0,
+      "cy": 290.0,
+      "r": 165.0,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "centre",
+      "type": "circle",
+      "cx": 330.0,
+      "cy": 290.0,
+      "r": 3.5,
+      "fill": "#111827",
+      "stroke": "#111827",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "radius",
+      "type": "line",
+      "x1": 330.0,
+      "y1": 290.0,
+      "x2": {
+        "expr": "330.0+165.0*s"
+      },
+      "y2": {
+        "expr": "290.0-165.0*((1-s*s)**0.5)"
+      },
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 3,
+      "opacity": 1
+    },
+    {
+      "id": "pointP",
+      "type": "circle",
+      "cx": {
+        "expr": "330.0+165.0*s"
+      },
+      "cy": {
+        "expr": "290.0-165.0*((1-s*s)**0.5)"
+      },
+      "r": 6.5,
+      "fill": "#1d4ed8",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "tangent",
+      "type": "line",
+      "x1": {
+        "expr": "330.0+165.0*s+115*((1-s*s)**0.5)"
+      },
+      "y1": {
+        "expr": "290.0-165.0*((1-s*s)**0.5)+115*s"
+      },
+      "x2": {
+        "expr": "330.0+165.0*s-115*((1-s*s)**0.5)"
+      },
+      "y2": {
+        "expr": "290.0-165.0*((1-s*s)**0.5)-115*s"
+      },
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2.5,
+      "opacity": 1
+    },
+    {
+      "id": "markA",
+      "type": "line",
+      "x1": {
+        "expr": "330.0+150*s"
+      },
+      "y1": {
+        "expr": "290.0-150*((1-s*s)**0.5)"
+      },
+      "x2": {
+        "expr": "330.0+150*s+15*((1-s*s)**0.5)"
+      },
+      "y2": {
+        "expr": "290.0-150*((1-s*s)**0.5)+15*s"
+      },
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "markB",
+      "type": "line",
+      "x1": {
+        "expr": "330.0+165.0*s+15*((1-s*s)**0.5)"
+      },
+      "y1": {
+        "expr": "290.0-165.0*((1-s*s)**0.5)+15*s"
+      },
+      "x2": {
+        "expr": "330.0+150*s+15*((1-s*s)**0.5)"
+      },
+      "y2": {
+        "expr": "290.0-150*((1-s*s)**0.5)+15*s"
+      },
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "labelO",
+      "type": "text",
+      "x": 312,
+      "y": 308,
+      "text": "O",
+      "fontSize": 15,
+      "anchor": "end",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "labelP",
+      "type": "text",
+      "x": {
+        "expr": "330.0+200*s"
+      },
+      "y": {
+        "expr": "290.0-200*((1-s*s)**0.5)+5"
+      },
+      "text": "P",
+      "fontSize": 16,
+      "anchor": "middle",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "note1",
+      "type": "text",
+      "x": 556,
+      "y": 128,
+      "text": "The tangent meets the circle at P, and only at P.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "note2",
+      "type": "text",
+      "x": 556,
+      "y": 166,
+      "text": "The angle between OP and the tangent is 90 degrees.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "note3",
+      "type": "text",
+      "x": 556,
+      "y": 204,
+      "text": "Slide P: both lines turn, the square stays closed.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "note4",
+      "type": "text",
+      "x": 556,
+      "y": 242,
+      "text": "So the right angle is a rule, not luck of position.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "unitLabel",
+      "type": "text",
+      "x": 330,
+      "y": 428,
+      "text": "unit circle: radius 1",
+      "fontSize": 14,
+      "anchor": "middle",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "caption",
+      "type": "text",
+      "x": 36,
+      "y": 508,
+      "text": "A line through P at right angles to OP stays one radius from O, so it can meet the circle only at P.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    }
+  ],
+  "timeline": {
+    "duration": 17.0,
+    "tracks": [
+      {
+        "target": {
+          "property": "s"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0.8,
+            "easing": "linear"
+          },
+          {
+            "at": 3.0,
+            "value": 0.8,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 6.2,
+            "value": 0.0,
+            "easing": "linear"
+          },
+          {
+            "at": 8.0,
+            "value": 0.0,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 11.0,
+            "value": -0.8,
+            "easing": "linear"
+          },
+          {
+            "at": 17.0,
+            "value": -0.8,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "posSlider",
+      "kind": "slider",
+      "propertyId": "s",
+      "label": "Slide P round the circle"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-predict",
+      "at": 2.2,
+      "title": "Predict",
+      "body": "The blue segment is the radius, the black line is the tangent. Before anything moves: is the angle between them 90 degrees at this particular P only, or at every P?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-top",
+      "at": 7.0,
+      "title": "Read the angle",
+      "body": "P is now at the top of the circle: the radius points straight up and the tangent runs horizontally. What is the angle at P, and which line is doing the turning?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-moved",
+      "at": 12.0,
+      "title": "Check the move",
+      "body": "P slid to the far side and both lines turned. Did the red square open or close, and is the tangent still touching the circle at one point only?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-transfer",
+      "at": 15.5,
+      "title": "Push it further",
+      "body": "If a line through P were not perpendicular to OP, where else would it have to meet the circle? Answer with the distance from O to that line.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.8,
+      "text": "The circle has centre O and radius 1. The blue segment OP joins the centre to a chosen point P on the circle."
+    },
+    {
+      "at": 3.4,
+      "text": "The black line is the tangent at P: it touches the circle at P and meets it nowhere else."
+    },
+    {
+      "at": 6.6,
+      "text": "The red square marks the angle where the radius and the tangent meet. Here it is 90 degrees, at this particular P."
+    },
+    {
+      "at": 9.6,
+      "text": "Is that luck of position? Slide P and watch: the radius turns, the tangent turns with it, and the red square stays closed."
+    },
+    {
+      "at": 12.6,
+      "text": "The reason is a distance. Turn the radius by 90 degrees at P and you get a line that is exactly one radius away from O, so it can reach the circle only at P."
+    },
+    {
+      "at": 15.2,
+      "text": "Being the tangent and being perpendicular are the same condition, at every point of the circle. The tangent is a line, not a radius: the radius is the segment from O to P."
+    }
+  ],
+  "fallback": {
+    "text": "Static figure, three positions of P on a unit circle of radius 150 pixels, centre O. Position 1: P at 37 degrees above the horizontal, radius drawn from O to P, tangent drawn through P, and a small red square at P between the two lines. Position 2: P at 90 degrees, the radius vertical and the tangent horizontal, the same red square at P. Position 3: P at 143 degrees, radius and tangent both tilted the other way, the red square still closed. Caption: at each position the tangent touches the circle only at P and meets the radius at 90 degrees, because the line through P perpendicular to OP lies exactly one radius from O and so cannot cross the circle again."
+  },
+  "accessibility": {
+    "alt": "A unit circle of radius 1 with centre O. A blue radius runs from O to a point P on the circle, marked with a blue dot and the letter P. A black line passes through P, touches the circle there and extends both ways without crossing the circle again. A small red square sits at P in the corner between the radius and the black line. A slider moves P round the upper part of the circle: as P moves, the radius and the tangent both rotate and the red square stays a square, held at 90 degrees.",
+    "reducedMotion": "static",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    {
+      "sourceId": "case:v4s-unit-circle-tangent",
+      "locator": "objective; correctnessCriteria"
+    }
+  ]
+}

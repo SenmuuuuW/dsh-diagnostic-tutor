@@ -1,0 +1,86 @@
+{
+  "version": "0.1",
+  "caseId": "v4s-mergesort",
+  "needsScene": true,
+  "sceneFile": "v4s-mergesort.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "whyScene": "Merge sort's correctness is a claim about the order of operations: split before sorting, sort both halves, and only then merge by repeatedly taking the smaller front. A static array can show the final order or one intermediate row, but not the dependency between the steps; a picture of the final sorted array hides exactly the step learners skip, namely that the halves must be sorted before the merge. The scene keeps all six values visible and moves them, so the learner can check the merge output against the two fronts at each step and can see that nothing is copied to the output before its half is sorted.",
+  "layout": "Two baselines: the input row at y = 215 with tokens at y = 192, and the output row at y = 424 with moved tokens at y = 400. Six value tokens sit at x = 180, 300, 420, 540, 660, 780. A dashed divider appears at x = 480 after the split, with the labels left half and right half above the groups. The left half sorts 38 and 27 by swapping their slots; the right half sorts 82 and 3 by swapping theirs. During the merge each token moves to the next free output slot, one at a time, leaving the input row empty. The input and output rows are labelled at the far left; two notes under the output row state the split-before-sort rule and the extra-space fact.",
+  "beats": [
+    {
+      "at": 0.8,
+      "beat": "Six unsorted values; splitting changes no order."
+    },
+    {
+      "at": 3.2,
+      "beat": "Two halves, each sorted on its own."
+    },
+    {
+      "at": 6.6,
+      "beat": "Both halves sorted; the whole array is still not sorted."
+    },
+    {
+      "at": 9.4,
+      "beat": "Merge compares 27 and 3, takes 3, then 9, then 27."
+    },
+    {
+      "at": 15.4,
+      "beat": "Final order 3, 9, 27, 38, 43, 82; the extra output row is storage."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 2.2,
+      "kind": "answer",
+      "prompt": "Before the split: which three values will be in the left half?"
+    },
+    {
+      "at": 6.2,
+      "kind": "answer",
+      "prompt": "Both halves are sorted. Is the whole array sorted? What is missing?"
+    },
+    {
+      "at": 8.8,
+      "kind": "answer",
+      "prompt": "The fronts are 27 and 3. Which is written first, and why?"
+    },
+    {
+      "at": 15.2,
+      "kind": "answer",
+      "prompt": "Say the final sequence and explain why no value moved before its half was sorted."
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "Merge sort is in-place",
+      "move": "The output row is a second baseline with real tokens; each merge move copies a value down while its input position becomes empty. The note at the bottom and the final narration say this is extra space, so the picture cannot be read as in-place sorting."
+    },
+    {
+      "misconception": "Each split sorts immediately",
+      "move": "The divider and group labels appear at 2.8 s, but no token moves until 3.4 s, after the split labels are in place. The checkpoint before the split asks for the groups before any ordering, and the left and right swaps happen only after the divider exists."
+    },
+    {
+      "misconception": "The merge sorts again",
+      "move": "The merge never compares values within a half; it only compares the two fronts. The sequence of picks 3, 9, 27, 38, 43, 82 follows from those front comparisons, and the final checkpoint asks how many comparisons each step used."
+    }
+  ],
+  "correctnessChecks": [
+    "The input is 38, 27, 43, 82, 9, 3. The left half sorts to 27, 38, 43 and the right half to 3, 9, 82, so both halves are sorted before the merge begins.",
+    "The merge order is 3 (against 27), 9 (against 27), 27 (against 82), 38 (against 82), 43 (against 82), then 82; this is exactly the order the token keyframes encode.",
+    "No value leaves the input row before 9.0 s, which is after both halves have finished sorting at 4.8 s.",
+    "The scene states that the output row is extra storage and never claims constant memory or an in-place merge."
+  ],
+  "implementationNotes": "All motion is numeric keyframing of token x and y; the divider and group labels fade in with opacity keyframes. No expression is used, so the drawn state is exactly the keyframed state.",
+  "constraints": {
+    "primitives": 16,
+    "properties": 0,
+    "tracks": 15,
+    "keyframes": 66,
+    "checkpoints": 4,
+    "usesStates": false
+  }
+}

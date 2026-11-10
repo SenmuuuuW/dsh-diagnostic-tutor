@@ -1,0 +1,364 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "metadata": {
+    "title": "Central limit theorem: the means, not the raw data, turn bell-shaped",
+    "subject": "Statistics",
+    "topic": "Central Limit Theorem",
+    "objective": "Show sample means becoming more normal and less variable as sample size grows.",
+    "learner": "Knows mean and variance.",
+    "misconceptions": [
+      "The raw data becomes normal as n grows",
+      "A larger n increases the standard error"
+    ],
+    "expectedUnderstanding": "The left panel is the parent population and it never changes, however large n gets. The right panel is the distribution of the sample mean: as n grows its spread shrinks like sigma over the square root of n (so quadrupling n halves the standard error) and its shape approaches the normal curve. The approach is a limit: at finite n the drawn bars stay slightly skewed, and no exact normality is claimed."
+  },
+  "properties": [
+    {
+      "id": "n",
+      "label": "Sample size n",
+      "value": 3,
+      "min": 3,
+      "max": 60,
+      "step": 1
+    }
+  ],
+  "primitives": [
+    {
+      "id": "bg",
+      "type": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 960,
+      "height": 540,
+      "rx": 0,
+      "fill": "#ffffff",
+      "stroke": "#ffffff",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 54,
+      "text": "Central limit theorem: the means, not the raw data, turn bell-shaped",
+      "fontSize": 21,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "labelRaw",
+      "type": "text",
+      "x": 96,
+      "y": 104,
+      "text": "Raw data (parent): skewed, unchanged",
+      "fontSize": 16,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "raw1",
+      "type": "rect",
+      "x": 96,
+      "y": 270,
+      "width": 56,
+      "height": 200,
+      "rx": 2,
+      "fill": "#e5e7eb",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "raw2",
+      "type": "rect",
+      "x": 162,
+      "y": 338,
+      "width": 56,
+      "height": 132,
+      "rx": 2,
+      "fill": "#e5e7eb",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "raw3",
+      "type": "rect",
+      "x": 228,
+      "y": 386,
+      "width": 56,
+      "height": 84,
+      "rx": 2,
+      "fill": "#e5e7eb",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "raw4",
+      "type": "rect",
+      "x": 294,
+      "y": 418,
+      "width": 56,
+      "height": 52,
+      "rx": 2,
+      "fill": "#e5e7eb",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "labelMeans",
+      "type": "text",
+      "x": 540,
+      "y": 104,
+      "text": "Sample means (dashed: normal limit)",
+      "fontSize": 16,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "m1",
+      "type": "rect",
+      "x": 545,
+      "y": {
+        "expr": "419.39 + 2.66*n**0.5"
+      },
+      "width": 56,
+      "height": {
+        "expr": "50.61 - 2.66*n**0.5"
+      },
+      "rx": 2,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "m2",
+      "type": "rect",
+      "x": 613,
+      "y": {
+        "expr": "450.4 - 8.31*n**0.5"
+      },
+      "width": 56,
+      "height": {
+        "expr": "19.6 + 8.31*n**0.5"
+      },
+      "rx": 2,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "m3",
+      "type": "rect",
+      "x": 681,
+      "y": {
+        "expr": "469.4 - 16.96*n**0.5"
+      },
+      "width": 56,
+      "height": {
+        "expr": "0.6 + 16.96*n**0.5"
+      },
+      "rx": 2,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "m4",
+      "type": "rect",
+      "x": 749,
+      "y": {
+        "expr": "466.4 - 10.64*n**0.5"
+      },
+      "width": 56,
+      "height": {
+        "expr": "3.6 + 10.64*n**0.5"
+      },
+      "rx": 2,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "m5",
+      "type": "rect",
+      "x": 817,
+      "y": {
+        "expr": "461.18 - 2.99*n**0.5"
+      },
+      "width": 56,
+      "height": {
+        "expr": "8.82 + 2.99*n**0.5"
+      },
+      "rx": 2,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "bell",
+      "type": "path",
+      "d": "M 543 470 C 628 466 652 340 709 340 C 766 340 790 466 875 470",
+      "fill": "none",
+      "stroke": "#6b7280",
+      "strokeWidth": 2,
+      "opacity": 1,
+      "dash": "8 6"
+    },
+    {
+      "id": "seRuler",
+      "type": "line",
+      "x1": 545,
+      "y1": 504,
+      "x2": {
+        "expr": "545 + 260/(n**0.5)"
+      },
+      "y2": 504,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 6,
+      "opacity": 1
+    },
+    {
+      "id": "seLabel",
+      "type": "text",
+      "x": 545,
+      "y": 522,
+      "text": "standard error of the mean (red bar): shrinks as n grows",
+      "fontSize": 13,
+      "anchor": "start",
+      "fill": "#dc2626",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    }
+  ],
+  "timeline": {
+    "duration": 22.0,
+    "tracks": [
+      {
+        "target": {
+          "property": "n"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 3,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 3,
+            "easing": "linear"
+          },
+          {
+            "at": 9.5,
+            "value": 10,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 15.5,
+            "value": 30,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 22,
+            "value": 60,
+            "easing": "ease-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "nSlider",
+      "type": "slider",
+      "label": "Sample size n",
+      "property": "n",
+      "min": 3,
+      "max": 60,
+      "step": 1
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": 2.5,
+      "prompt": "Two panels are on screen. Which one shows the raw observations, and which one shows the distribution of the sample mean?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 11.0,
+      "prompt": "n is now 10. Compare the right-hand bars with the n = 3 start: did their spread grow or shrink?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 17.0,
+      "prompt": "Continue to n = 30 and watch the middle bars: does the shape get closer to the dashed curve?",
+      "learnerAction": "continue"
+    },
+    {
+      "at": 21.5,
+      "prompt": "At n = 60 the bars still sit slightly off the dashed curve. Is the distribution of means exactly normal at finite n, and if n goes from 9 to 36, what happens to sigma over the square root of n?",
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.8,
+      "text": "On the left are the raw observations: one skewed population, and it does not change however large the samples get."
+    },
+    {
+      "at": 3.6,
+      "text": "On the right is a different quantity, the sample mean. Each bar is the chance that a sample mean falls in that slice."
+    },
+    {
+      "at": 6.5,
+      "text": "Now raise n. Every mean is still drawn from that same skewed population on the left."
+    },
+    {
+      "at": 10.2,
+      "text": "At n = 10 the outer bars have already fallen toward the middle: the spread of the means is smaller than at n = 3."
+    },
+    {
+      "at": 16.0,
+      "text": "At n = 30 the shape tracks the dashed normal curve closely, and the standard error, sigma over the square root of n, has roughly halved since n = 3."
+    },
+    {
+      "at": 20.6,
+      "text": "At n = 60 the red standard-error bar is about a fifth of its starting length: quadrupling n halves the standard error, it never increases it."
+    }
+  ],
+  "fallback": {
+    "text": "Static two-panel figure. Left panel: the skewed parent population as four bars of height 200, 132, 84, 52 over a common baseline, labelled raw data and never redrawn. Right panel: five schematic bars for the distribution of the sample mean at three sample sizes, drawn as three stacked rows with the same horizontal bins. Row n = 3: heights 46, 34, 30, 22, 14 (flat and right-skewed, standard error 3 over the square root of 3 = 1.73). Row n = 10: 33, 41, 63, 62, 24 (standard error 0.95). Row n = 60: 30, 84, 132, 86, 32 (standard error 0.39, dot-dashed normal curve overlaid). A caption reads: the left panel is the fixed parent population, the right panel is the mean of n draws; the spread falls as 1 over the square root of n and the shape approaches normal as a limit, not exactly at any finite n."
+  },
+  "accessibility": {
+    "alt": "Two histograms on a shared baseline with no vertical axis. The left one, labelled raw data (parent), is skewed: four bars descending from tall on the left to short on the right, and it never moves. The right one, labelled sample means, has five blue bars under a dashed grey bell curve; as n rises from 3 to 60 the outer bars shrink, the middle bar grows, and the bar shape tightens onto the dashed curve. Under the right panel a red horizontal bar labelled standard error shrinks from about 150 to about 34 pixels as n rises.",
+    "reducedMotion": "Show three static rows of the right-hand histogram side by side, n = 3, n = 10 and n = 60, over the same bins and under the same dashed curve, with the standard-error values 1.73, 0.95 and 0.39 printed under each row and the unchanged left panel reproduced beside them.",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    "case:v4-clt"
+  ]
+}

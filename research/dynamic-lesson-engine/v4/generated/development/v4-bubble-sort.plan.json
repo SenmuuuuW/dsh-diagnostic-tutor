@@ -1,0 +1,92 @@
+{
+  "version": "0.1",
+  "caseId": "v4-bubble-sort",
+  "needsScene": true,
+  "sceneFile": "v4-bubble-sort.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "whyScene": "The objective is a sequence over neighbours plus a spatial accumulation on the right, and the two misconceptions are about exactly that sequence: whether one pass finishes the job, and whether a swap costs anything. Both claims are refuted by watching where the largest value ends up after pass 1 and by a swap tally that only grows when a swap really happens.",
+  "layout": "Title across the top. Five 120x120 cells from x=152 to x=808, y=216..336. Red comparison box is 266 wide and slides along adjacent pairs. Blue suffix band snaps to each pass's proven suffix. Swap counter label and 330 px bar at the lower left.",
+  "beats": [
+    {
+      "at": 1.9,
+      "beat": "First adjacent comparison: 3 and 5, no swap."
+    },
+    {
+      "at": 3.8,
+      "beat": "5 and 1 swap: 5 moves one cell right."
+    },
+    {
+      "at": 7.6,
+      "beat": "5 reaches the last cell through three more comparisons."
+    },
+    {
+      "at": 9.5,
+      "beat": "Pass 1 ends: suffix is 1 cell, so one pass is nowhere near sorted."
+    },
+    {
+      "at": 15.2,
+      "beat": "Pass 2 ends: suffix 2 cells."
+    },
+    {
+      "at": 19,
+      "beat": "Pass 3 ends: suffix 3 cells."
+    },
+    {
+      "at": 20.9,
+      "beat": "Pass 4 makes no swap: proof of sortedness; suffix becomes all five cells."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 3.9,
+      "kind": "answer",
+      "prompt": "The box is on 5 and 1. Which value will move right, and which cell will it end in?"
+    },
+    {
+      "at": 9.7,
+      "kind": "answer",
+      "prompt": "Pass 1 has finished. How many cells are guaranteed to be in their final position, and which ones?"
+    },
+    {
+      "at": 15.4,
+      "kind": "continue",
+      "prompt": "Two cells are settled. Continue to run pass 3 on the remaining three."
+    },
+    {
+      "at": 20.3,
+      "kind": "answer",
+      "prompt": "This pass compares 1 and 2 and swaps nothing. What does one swap-free pass prove?"
+    },
+    {
+      "at": 22.6,
+      "kind": "continue",
+      "prompt": "Continue for the final state and the swap count."
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "One pass always sorts everything",
+      "move": "After pass 1 only the last cell is shaded and the remaining four values are still [3, 1, 4, 2]; the band grows by one cell per pass, not five at once."
+    },
+    {
+      "misconception": "Swaps are free",
+      "move": "Each crossing of two cards increments the visible swap bar; the final count is 6 swaps for 10 comparisons."
+    }
+  ],
+  "correctnessChecks": [
+    "Every comparison is between cells j and j+1 of the current pass (the box never jumps).",
+    "Swapped values exchange cells exactly and the final row reads 1 2 3 4 5.",
+    "The scene makes no claim about efficiency or optimality; the closing line says correct, not optimal."
+  ],
+  "constraints": {
+    "primitives": 16,
+    "properties": 0,
+    "tracks": 16,
+    "keyframes": 138,
+    "checkpoints": 5,
+    "usesStates": false
+  }
+}

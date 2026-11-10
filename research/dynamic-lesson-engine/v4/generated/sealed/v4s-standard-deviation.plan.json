@@ -1,0 +1,97 @@
+{
+  "version": "0.1",
+  "caseId": "v4s-standard-deviation",
+  "needsScene": true,
+  "sceneFile": "v4s-standard-deviation.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "whyScene": "The objective has two parts that pull in opposite directions on a static page: spread is an average of distances, but the distances are squared first, and the squaring is invisible in any table of numbers. Drawing each deviation as an actual square makes the operation visible as area, and area is the one encoding that shows the quadratic weight without arithmetic: the outlier's square grows out of the row while its neighbours stay small. What makes this a scene rather than a diagram is that the same square has to be watched while its value changes, because the claim is a proportional one - the side grows with distance, the area with distance squared - and a single frozen picture cannot show a rate. The interaction also carries the second misconception: moving the red point to 10 makes one square hold about 68 percent of the total, which is what 'sensitive to outliers' means, while bringing it back to 5.3 makes it vanish, which is what 'a point at the mean adds nothing' means. The mean line moves during both moves, so the learner also sees that the centre is recomputed rather than fixed.",
+  "layout": "Data axis from x 70 to 900 at y 430, with 0 at x 100 and 10 at x 800, so one data unit is 70 px. Six squares sit in a stack above the axis, each with its bottom edge at its own row height (430, 416, 402, 388, 374, and 360 for the red one) and its left-right centre at its value, so overlap is limited to neighbours and smaller squares stay visible. Square side is 56 px per unit of deviation and the four numeric fields of each rect are the same expression, so the shape is always a true square. The mean is a dashed vertical line from y 184 to the axis, labelled at 178, and it slides between x 439 and x 510 as the red point moves. Three notes sit in the free top-left region, well clear of the mean line and of the red square even at its largest, and the caption sits under the axis.",
+  "beats": [
+    {
+      "at": 0.0,
+      "beat": "Red point at 6.5: five blue squares small, the red square largest but not dominant (24 percent of the total)."
+    },
+    {
+      "at": 3.0,
+      "beat": "Read the geometry: side is distance from the mean, area is the distance squared."
+    },
+    {
+      "at": 8.0,
+      "beat": "Red point reaches 9.9: its side grows 3.3 times, its area 10.9 times, and it now holds about 68 percent of the total squared deviation."
+    },
+    {
+      "at": 9.5,
+      "beat": "Hold on the outlier state: this is the sensitivity that an average absolute distance would not reproduce."
+    },
+    {
+      "at": 13.0,
+      "beat": "Red point returns to 5.3, almost on the mean: its square shrinks to a sliver and the mean slides back."
+    },
+    {
+      "at": 18.0,
+      "beat": "Red point out to 8.6 again: the square is large but no longer dominant, so the effect is graded, not a switch."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 0.0,
+      "kind": "slider",
+      "prompt": "Move the red point and watch the mean line and all six squares respond."
+    },
+    {
+      "at": 2.4,
+      "kind": "answer",
+      "prompt": "If the red point ends up twice as far from the mean, is its square twice as big or four times?"
+    },
+    {
+      "at": 9.0,
+      "kind": "answer",
+      "prompt": "What factor did the red area grow by, and how much of the total does it now hold?"
+    },
+    {
+      "at": 13.4,
+      "kind": "answer",
+      "prompt": "Near the mean, what is this point's squared deviation, and did the mean itself move?"
+    },
+    {
+      "at": 16.6,
+      "kind": "answer",
+      "prompt": "Would averaging unsigned distances make the far point dominate this much? Why or why not?"
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "Standard deviation is the average absolute deviation",
+      "move": "The visual unit is the square's area, not its side: the note and the caption say the area is the distance squared, and the checkpoint at 16.6 asks directly what summing squares does that summing distances does not. The numbers make it concrete: at m = 9.9 the red deviation is 4.07, so it would be 4.07 units of an absolute average but 16.5 units of squared deviation, and it holds about 68 percent of the total squared deviation while the four inner points hold almost nothing."
+    },
+    {
+      "misconception": "Standard deviation is unaffected by outliers",
+      "move": "Moving one point from 5.3 to 9.9 raises the total squared deviation from 4.59 to 24.37, a factor of 5.3 from a single observation, and the picture shows it as one square swallowing the others. The reverse move makes the square vanish, so the learner sees the effect in both directions rather than as an assertion."
+    },
+    {
+      "misconception": "The mean is a fixed centre the data is measured against",
+      "move": "The mean line is a moving primitive driven by the same property as the squares, so it slides by about 70 px during the sweep and every square changes size slightly. Checkpoint 3 asks whether the mean moved, and the narration says the centre is recomputed at each position."
+    }
+  ],
+  "correctnessChecks": [
+    "The mean line is drawn at x = 100 + 70 x (25.1 + m)/6, which is the mean of the five fixed values 3.6, 4.5, 5.0, 5.6, 6.4 plus m; at m = 6.5 that is 5.2667 and x = 468.7, matching the drawn line.",
+    "Every square is a true square because width and height are the same expression, 56 x |v - mean|, and the abs is computed as ((v - mean) squared) to the power 0.5, so no sign leaks into a side length.",
+    "Square area is therefore 56 squared x (deviation squared), so the ratio of two areas equals the ratio of squared deviations: at m = 9.9 the red side is 3.30 times its value at m = 6.5 and its area 10.87 times, the square of that.",
+    "The mean line and the squares use the same expression for the mean, so a point placed at the mean yields a zero side and the square collapses - the expected 'no contribution' case, not a rendering accident.",
+    "The claim in the caption is the standard one: SD is the square root of the mean of the squared deviations. No numeric SD value is asserted on screen, so no rounding claim is made; the units claim is carried by the square root returning to the original units, which the narration states.",
+    "The squares at m = 10 stay inside the frame: the largest side is 232.4 px, so the top edge is at y = 127.6 and the right edge at x = 916, both inside the 960 by 540 viewport."
+  ],
+  "implementationNotes": "One numeric property m drives the mean line, its label and all six square sizes, so nothing can disagree about where the centre is. The stacking rows (16 px apart) exist only to keep small squares from being hidden under large ones; they do not encode anything, and the note wording avoids suggesting that height is a second variable. Abs is spelled as a square root of a square because expressions admit only property ids, t, duration and arithmetic.",
+  "constraints": {
+    "primitives": 16,
+    "properties": 1,
+    "tracks": 1,
+    "keyframes": 7,
+    "checkpoints": 4,
+    "usesStates": false
+  }
+}

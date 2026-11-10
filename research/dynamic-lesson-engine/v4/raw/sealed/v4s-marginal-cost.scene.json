@@ -1,0 +1,384 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Cost of one more unit: marginal cost, average cost, and where to stop",
+    "subject": "Economics",
+    "topic": "Marginal Cost",
+    "objective": "Connect marginal cost to the cost of one more unit and to the decision about how many units to produce.",
+    "learner": "Knows total cost and can read a simple cost curve.",
+    "misconceptions": [
+      "Marginal cost is the same number as average cost",
+      "A unit whose marginal cost is above the price still adds profit"
+    ],
+    "expectedUnderstanding": [
+      "Marginal cost is the change in total cost when one more unit is made; on this cost curve MC = 4 + 0.3q, which rises with quantity.",
+      "Average cost is total cost divided by quantity, ATC = TC / q, which is a different number from MC at almost every quantity.",
+      "Adding a unit adds exactly its marginal cost to total cost and brings in the price, so the quantity rule is to keep adding while MC is below the price and stop where MC meets the price.",
+      "Stopping at MC equal to price is a quantity rule for a seller that takes the price as given; it is not a claim about how competitive the market is."
+    ]
+  },
+  "properties": [
+    {
+      "id": "q",
+      "label": "quantity produced",
+      "min": 6,
+      "max": 24,
+      "step": 0.5,
+      "default": 8,
+      "unit": "units"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 52,
+      "text": "Cost of one more unit: marginal cost, average cost, and where to stop",
+      "fontSize": 20,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "500",
+      "opacity": 1
+    },
+    {
+      "id": "yAxis",
+      "type": "line",
+      "x1": 182,
+      "y1": 450,
+      "x2": 182,
+      "y2": 150,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "xAxis",
+      "type": "line",
+      "x1": 182,
+      "y1": 450,
+      "x2": 614,
+      "y2": 450,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "xLabel",
+      "type": "text",
+      "x": 300,
+      "y": 474,
+      "text": "quantity q, units per period (the axis begins at 6)",
+      "fontSize": 14,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "atcPath",
+      "type": "path",
+      "d": "M182,252.4 L206,260.2 L230,265.2 L254,268.3 L278,270 L302,270.8 L315.2,270.9 L326,270.8 L374,269.3 L422,266.4 L470,262.5 L518,258 L566,253 L614,247.6",
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "dash": "6 5",
+      "opacity": 1
+    },
+    {
+      "id": "mcPath",
+      "type": "path",
+      "d": "M182,310.8 L614,181.2",
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 3,
+      "opacity": 1
+    },
+    {
+      "id": "priceLine",
+      "type": "line",
+      "x1": 182,
+      "y1": 222,
+      "x2": 614,
+      "y2": 222,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 2,
+      "dash": "8 6",
+      "opacity": 1
+    },
+    {
+      "id": "mcLabel",
+      "type": "text",
+      "x": 622,
+      "y": 177,
+      "text": "MC",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "500",
+      "opacity": 1
+    },
+    {
+      "id": "atcLabel",
+      "type": "text",
+      "x": 622,
+      "y": 251,
+      "text": "ATC",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "500",
+      "opacity": 1
+    },
+    {
+      "id": "priceLabel",
+      "type": "text",
+      "x": 620,
+      "y": 224,
+      "text": "price P = 9.50, so stop at q*",
+      "fontSize": 13,
+      "anchor": "start",
+      "fill": "#dc2626",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "crossingDot",
+      "type": "circle",
+      "cx": 478,
+      "cy": 222,
+      "r": 5,
+      "fill": "#dc2626",
+      "stroke": "#dc2626",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "qGuide",
+      "type": "line",
+      "x1": {
+        "expr": "182+(q-6)*24"
+      },
+      "y1": 450,
+      "x2": {
+        "expr": "182+(q-6)*24"
+      },
+      "y2": {
+        "expr": "450-24*(4+0.3*q)"
+      },
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1,
+      "dash": "3 4",
+      "opacity": 0.4
+    },
+    {
+      "id": "gapBar",
+      "type": "line",
+      "x1": {
+        "expr": "182+(q-6)*24"
+      },
+      "y1": {
+        "expr": "450-24*(4+0.3*q)"
+      },
+      "x2": {
+        "expr": "182+(q-6)*24"
+      },
+      "y2": {
+        "expr": "450-24*(20/q+4+0.15*q)"
+      },
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 5,
+      "opacity": 1
+    },
+    {
+      "id": "mcDot",
+      "type": "circle",
+      "cx": {
+        "expr": "182+(q-6)*24"
+      },
+      "cy": {
+        "expr": "450-24*(4+0.3*q)"
+      },
+      "r": 5.5,
+      "fill": "#1d4ed8",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "captionA",
+      "type": "text",
+      "x": 36,
+      "y": 508,
+      "text": "TC = 20 + 4q + 0.15q squared, so MC = 4 + 0.3q: MC is what the next unit costs, while ATC = TC / q averages over all units.",
+      "fontSize": 13,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "captionB",
+      "type": "text",
+      "x": 36,
+      "y": 530,
+      "text": "Past q* each extra unit costs more than it earns, even if total cost is covered. A price taker's quantity rule; no claim about market structure.",
+      "fontSize": 13,
+      "anchor": "start",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    }
+  ],
+  "timeline": {
+    "duration": 18.0,
+    "tracks": [
+      {
+        "target": {
+          "property": "q"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 8,
+            "easing": "linear"
+          },
+          {
+            "at": 3.0,
+            "value": 8,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 6.5,
+            "value": 11.55,
+            "easing": "linear"
+          },
+          {
+            "at": 8.0,
+            "value": 11.55,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 11.5,
+            "value": 18.33,
+            "easing": "linear"
+          },
+          {
+            "at": 13.5,
+            "value": 18.33,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 16.5,
+            "value": 22,
+            "easing": "linear"
+          },
+          {
+            "at": 18.0,
+            "value": 22,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "quantity-control",
+      "kind": "slider",
+      "propertyId": "q",
+      "label": "set the quantity produced"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-predict",
+      "at": 2.5,
+      "title": "Predict before it moves",
+      "body": "At 8 units the blue dot is below the grey dashed curve. Should the seller add a 9th unit? Name the number in the picture that decides it, and say what that number measures.",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-crossing",
+      "at": 7.6,
+      "title": "The red bar closes",
+      "body": "The red bar has shrunk to nothing at q of about 11.5, which is the lowest point of the average cost curve. What does it mean that MC and ATC are equal exactly there, and what was true just before it?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-flip",
+      "at": 12.6,
+      "title": "The bar runs the other way",
+      "body": "Past the low point the red bar points upward again and MC is now above ATC. Which number is larger, and why does the average start to rise as units are added?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-threshold",
+      "at": 15.0,
+      "title": "Past the price",
+      "body": "At q = 22 the next unit costs more than the price. Is the firm still covering its total cost per unit here, and should it produce that unit anyway? Separate those two questions.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.6,
+      "text": "Total cost is 20 plus 4q plus 0.15 q squared. The blue line is marginal cost, the change in total cost for one more unit: MC equals 4 plus 0.3q."
+    },
+    {
+      "at": 3.4,
+      "text": "The grey dashed line is average cost, total cost divided by every unit produced. At 8 units the next unit costs 6.40 while the average is 7.70, so they are not the same number."
+    },
+    {
+      "at": 6.9,
+      "text": "The red bar is the gap between the two at the quantity chosen. As units are added it shrinks, because each unit costing less than the average pulls the average down."
+    },
+    {
+      "at": 9.8,
+      "text": "At about 11.5 units the bar closes: the next unit costs exactly the average. That is the bottom of the average cost curve, and past it the bar runs the other way and the average rises."
+    },
+    {
+      "at": 12.8,
+      "text": "The dashed red line is the price the seller can get, 9.50 a unit. Each extra unit adds its marginal cost and brings in the price."
+    },
+    {
+      "at": 16.9,
+      "text": "Below q star the next unit costs less than the price, so it is worth making. Past q star the next unit costs more than it earns, so the seller stops there even when the average cost is still below the price."
+    }
+  ],
+  "fallback": {
+    "text": "A cost chart with quantity from 6 to 24 on the horizontal axis. A rising blue straight line is marginal cost, MC = 4 + 0.3q, running from 5.8 at q = 6 to 11.2 at q = 24. A grey dashed U shaped curve is average cost, ATC = TC/q, falling from 8.23 at q = 6 to a minimum of 7.46 at q of about 11.5 and rising again to 8.43 at q = 24; the two curves cross exactly at that minimum. A dashed red horizontal line marks the price, 9.50, and meets the MC line at q of about 18.3, marked with a red dot. At the chosen quantity a thin dotted vertical guide rises from the axis to the blue line, and a thick red bar spans from the blue line to the grey curve, showing the gap between marginal and average cost; the bar shrinks to nothing at the minimum of the average curve and reverses direction beyond it."
+  },
+  "accessibility": {
+    "alt": "A cost diagram with quantity per period on the horizontal axis, beginning at 6 units, and cost per unit on the vertical axis. A blue rising line is marginal cost; a grey dashed U shaped curve is average cost; they cross at the low point of the average curve, near 11.5 units. A dashed red price line at 9.50 crosses the blue marginal cost line at about 18.3 units, marked with a red dot and labelled as the quantity where production stops. At the current quantity a dotted vertical guide runs from the axis to the blue line, with a blue dot at marginal cost, and a thick red bar connects the blue dot to the average cost curve, so the gap between the next unit's cost and the average cost is visible. The learner changes quantity with a slider: the guide and dot move along the curve, the red bar shrinks to zero at the average cost minimum and then reverses, and the cost of the next unit can be compared with the fixed price line at every quantity.",
+    "reducedMotion": "static",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    {
+      "sourceId": "case:v4s-marginal-cost",
+      "locator": "objective; expectedBehavior; correctnessCriteria"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "version": "0.1",
+  "caseId": "v4-clt",
+  "needsScene": true,
+  "sceneFile": "v4-clt.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "whyScene": "The claim is a comparison across a parameter: as n grows, one and the same statistic gets less variable and more bell-shaped while the raw data does not change at all. A single static histogram of means has to pick one n; a side-by-side pair makes the learner remember the other case instead of seeing it. Driving n with one control and letting the bars morph, with the raw panel pinned and untouched beside it, keeps the means-versus-raw contrast and the 1 over square-root-of-n shrinkage on screen at the same moment.",
+  "layout": "Left half: four grey bars (heights 200, 132, 84, 52) on the baseline y = 470 spanning x 96 to 350, labelled raw data. Right half: five blue bars at x 545, 613, 681, 749, 817, width 56, on the same baseline, whose heights are arithmetic functions of the property n, so the whole panel is one function of one control. A dashed grey normal curve peaks at (709, 340) as the large-n limit. Below the right panel a red standard-error bar runs from 545 to 545 + 260 over the square root of n.",
+  "beats": [
+    {
+      "at": 0.8,
+      "beat": "Parent population, skewed, fixed."
+    },
+    {
+      "at": 3.6,
+      "beat": "Right panel introduced as the distribution of means."
+    },
+    {
+      "at": 9.5,
+      "beat": "n rises 3 to 10: outer means bars fall."
+    },
+    {
+      "at": 15.5,
+      "beat": "n rises to 30: shape approximates the dashed curve."
+    },
+    {
+      "at": 20.6,
+      "beat": "n = 60: standard error about a fifth of its start."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 2.5,
+      "kind": "answer",
+      "prompt": "Which panel is the sampling distribution: the left or the right?"
+    },
+    {
+      "at": 11.0,
+      "kind": "answer",
+      "prompt": "Did the spread of the means grow or shrink between n = 3 and n = 10?"
+    },
+    {
+      "at": 17.0,
+      "kind": "continue",
+      "prompt": "Continue to n = 30 and watch the middle bar rise."
+    },
+    {
+      "at": 21.5,
+      "kind": "answer",
+      "prompt": "Is the distribution of means exactly normal at n = 60, and what does sigma over the square root of n do when n goes 9 to 36?"
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "The raw data becomes normal",
+      "move": "The left-hand parent histogram is drawn once and has no track, so it is literally incapable of changing while n runs 3 to 60; only the right-hand panel, labelled sample means, moves."
+    },
+    {
+      "misconception": "A larger n increases the standard error",
+      "move": "The red standard-error bar is an explicit function of n, 260 over the square root of n, so it can only shorten as the slider rises; the narration converts the length change into the numbers 1.73, 0.95 and 0.39."
+    }
+  ],
+  "correctnessChecks": [
+    "Standard error falls monotonically with n: the red bar is 260 over the square root of n, from about 150 px at n = 3 to about 34 px at n = 60.",
+    "Every label and the narration name the right-hand panel as the distribution of the sample mean, never of the observations.",
+    "No exact normality claim: the dashed curve is labelled a limit, and the final checkpoint asks the learner to deny exactness at n = 60.",
+    "The bar heights are schematic densities, not simulated data, and the fallback text says so."
+  ],
+  "constraints": {
+    "primitives": 16,
+    "properties": 1,
+    "tracks": 1,
+    "keyframes": 5,
+    "checkpoints": 4,
+    "usesStates": false
+  }
+}

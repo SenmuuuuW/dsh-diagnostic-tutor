@@ -1,0 +1,761 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Merge sort: split, sort each half, then merge",
+    "subject": "Computer Science",
+    "topic": "Merge Sort",
+    "objective": "Show divide, sort halves and merge in order.",
+    "learner": "Can read recursion and arrays.",
+    "misconceptions": [
+      "Merge sort is in-place",
+      "Each split sorts its part immediately",
+      "The merge sorts the whole array again"
+    ],
+    "expectedUnderstanding": [
+      "The array is split in half before any sorting; splitting alone changes nothing about order.",
+      "Each half is sorted independently, and the merge may start only when both halves are sorted.",
+      "The merge repeatedly compares the two front elements and appends the smaller one, so it is linear in the two half-lengths.",
+      "The extra output row is real storage: merge sort is not in-place, and this scene does not claim constant memory."
+    ]
+  },
+  "properties": [],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 44,
+      "text": "Merge sort: split, sort each half, then merge",
+      "fontSize": 20,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "tok38",
+      "type": "text",
+      "x": 180,
+      "y": 192,
+      "text": "38",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "tok27",
+      "type": "text",
+      "x": 300,
+      "y": 192,
+      "text": "27",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "tok43",
+      "type": "text",
+      "x": 420,
+      "y": 192,
+      "text": "43",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "tok82",
+      "type": "text",
+      "x": 540,
+      "y": 192,
+      "text": "82",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "tok9",
+      "type": "text",
+      "x": 660,
+      "y": 192,
+      "text": "9",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "tok3",
+      "type": "text",
+      "x": 780,
+      "y": 192,
+      "text": "3",
+      "fontSize": 26,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "topBase",
+      "type": "line",
+      "x1": 120,
+      "y1": 215,
+      "x2": 840,
+      "y2": 215,
+      "fill": "none",
+      "stroke": "#9ca3af",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "botBase",
+      "type": "line",
+      "x1": 120,
+      "y1": 424,
+      "x2": 840,
+      "y2": 424,
+      "fill": "none",
+      "stroke": "#9ca3af",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "divider",
+      "type": "line",
+      "x1": 480,
+      "y1": 140,
+      "x2": 480,
+      "y2": 215,
+      "fill": "none",
+      "stroke": "#6b7280",
+      "strokeWidth": 1.5,
+      "opacity": 0,
+      "dash": "6 5"
+    },
+    {
+      "id": "leftLab",
+      "type": "text",
+      "x": 300,
+      "y": 128,
+      "text": "left half",
+      "fontSize": 14,
+      "anchor": "middle",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 0
+    },
+    {
+      "id": "rightLab",
+      "type": "text",
+      "x": 660,
+      "y": 128,
+      "text": "right half",
+      "fontSize": 14,
+      "anchor": "middle",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 0
+    },
+    {
+      "id": "inLab",
+      "type": "text",
+      "x": 36,
+      "y": 192,
+      "text": "input",
+      "fontSize": 12,
+      "anchor": "start",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "outLab",
+      "type": "text",
+      "x": 36,
+      "y": 400,
+      "text": "output",
+      "fontSize": 12,
+      "anchor": "start",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "noteSort",
+      "type": "text",
+      "x": 36,
+      "y": 480,
+      "text": "Split first: each half is sorted on its own before anything is merged.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "noteMerge",
+      "type": "text",
+      "x": 36,
+      "y": 512,
+      "text": "The merge compares only the two front values and takes the smaller; the output row is extra space, so this is not in-place.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    }
+  ],
+  "timeline": {
+    "duration": 18,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "tok38",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 180,
+            "easing": "linear"
+          },
+          {
+            "at": 3.4,
+            "value": 180,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4.4,
+            "value": 300,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 12,
+            "value": 300,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 12.9,
+            "value": 540,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 540,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tok38",
+          "property": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 192,
+            "easing": "linear"
+          },
+          {
+            "at": 12,
+            "value": 192,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 12.9,
+            "value": 400,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 400,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tok27",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 3.4,
+            "value": 300,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4.4,
+            "value": 180,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 11,
+            "value": 180,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 11.9,
+            "value": 420,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 420,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tok27",
+          "property": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 192,
+            "easing": "linear"
+          },
+          {
+            "at": 11,
+            "value": 192,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 11.9,
+            "value": 400,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 400,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tok43",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 420,
+            "easing": "linear"
+          },
+          {
+            "at": 13,
+            "value": 420,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 13.9,
+            "value": 660,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 660,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tok43",
+          "property": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 192,
+            "easing": "linear"
+          },
+          {
+            "at": 13,
+            "value": 192,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 13.9,
+            "value": 400,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 400,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tok82",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 540,
+            "easing": "linear"
+          },
+          {
+            "at": 3.8,
+            "value": 540,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4.8,
+            "value": 780,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 780,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tok82",
+          "property": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 192,
+            "easing": "linear"
+          },
+          {
+            "at": 14,
+            "value": 192,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 14.9,
+            "value": 400,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 400,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tok9",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 660,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 660,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 10.9,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 300,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tok9",
+          "property": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 192,
+            "easing": "linear"
+          },
+          {
+            "at": 10,
+            "value": 192,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 10.9,
+            "value": 400,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 400,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tok3",
+          "property": "x"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 780,
+            "easing": "linear"
+          },
+          {
+            "at": 3.8,
+            "value": 780,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4.8,
+            "value": 540,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 9,
+            "value": 540,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 9.9,
+            "value": 180,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 180,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tok3",
+          "property": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 192,
+            "easing": "linear"
+          },
+          {
+            "at": 9,
+            "value": 192,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 9.9,
+            "value": 400,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 400,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "divider",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "leftLab",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "rightLab",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [],
+  "checkpoints": [
+    {
+      "id": "cp-split",
+      "at": 2.2,
+      "title": "Before the split",
+      "body": "Nothing has been sorted yet. After the split, which three values are in the left half and which three in the right?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-halves",
+      "at": 6.2,
+      "title": "Both halves sorted",
+      "body": "The left half reads 27, 38, 43 and the right half 3, 9, 82. Is the whole array sorted now? What is still missing?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-first",
+      "at": 8.8,
+      "title": "Which front",
+      "body": "The merge is about to start. The two fronts are 27 and 3. Which value is written first, and which comparison decides it?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-end",
+      "at": 15.2,
+      "title": "The final order",
+      "body": "Say the final sequence out loud. How many values did each merge step compare, and did any value move before its half was sorted?",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.8,
+      "text": "Six values, unsorted. Merge sort splits the array before it sorts anything; splitting alone does not change the order."
+    },
+    {
+      "at": 3.2,
+      "text": "Two halves of three. Each half is now sorted on its own: 27, 38, 43 and 3, 9, 82."
+    },
+    {
+      "at": 6.6,
+      "text": "Both halves are sorted, but the array as a whole is not. The merge is the step that puts them together."
+    },
+    {
+      "at": 9.4,
+      "text": "The merge looks only at the two front values. 3 is smaller than 27, so 3 is written first, then 9, then 27, and so on."
+    },
+    {
+      "at": 15.4,
+      "text": "Each value is compared at most once per merge, so combining two sorted halves is linear. The extra output row is storage: merge sort is not in-place."
+    }
+  ],
+  "fallback": {
+    "text": "Static array diagram. Top row: 38, 27, 43, 82, 9, 3 with a divider after the third value, labelled left half and right half. Left half after sorting: 27, 38, 43. Right half after sorting: 3, 9, 82. The merge compares the fronts in this order: 3 against 27, then 9 against 27, then 27 against 82, then 38 against 82, then 43 against 82, then 82. Bottom output row: 3, 9, 27, 38, 43, 82. Arrows show each value moving to the output only after both halves are sorted. Caption: split, sort each half, then merge by repeatedly taking the smaller front; the output row is extra storage, so merge sort is not in-place."
+  },
+  "accessibility": {
+    "alt": "An array of six boxes, 38, 27, 43, 82, 9 and 3, first shown unsorted. A dashed divider then separates the left half 38, 27, 43 from the right half 82, 9, 3. The values in each half move into sorted order, giving 27, 38, 43 on the left and 3, 9, 82 on the right. Then the merge moves values one at a t",
+    "reducedMotion": "static",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    {
+      "sourceId": "case:v4s-mergesort",
+      "locator": "objective; correctnessCriteria"
+    }
+  ]
+}

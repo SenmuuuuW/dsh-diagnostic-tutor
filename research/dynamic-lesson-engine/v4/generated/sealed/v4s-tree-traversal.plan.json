@@ -1,0 +1,95 @@
+{
+  "version": "0.1",
+  "caseId": "v4s-tree-traversal",
+  "needsScene": true,
+  "sceneFile": "v4s-tree-traversal.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "whyScene": "Inorder is a rule about when a node may be emitted relative to its subtrees, so the teaching object is a sequence of states of one small tree: descend, emit a leaf, return, emit the parent, then take the right subtree. A static drawing can number the nodes after the fact, but then the learner sees the answer rather than the constraint that produced it. Here the red ring follows the current call, the thickened edges show the recursion stack, and the output row grows one letter at a time, so the learner can predict the next emission from the rule instead of reading it off a finished list.",
+  "layout": "Five labelled nodes: A at (480, 110), B at (320, 220), C at (640, 220), D at (220, 330), E at (420, 330). Edges A-B, A-C, B-D and B-E are trimmed 27 px from each node so the labels stay clear. A red ring of radius 26 moves along the call path; the edge on the current path thickens from 1.5 to 4. The output row sits at y = 492 with five blue letters at x = 300, 390, 480, 570, 660, revealed in visit order. Visited node labels dim to 0.45. No output label is needed because the title names the output row.",
+  "beats": [
+    {
+      "at": 0.9,
+      "beat": "Inorder is left subtree, node, right subtree; the ring marks the current node."
+    },
+    {
+      "at": 3.0,
+      "beat": "At A, descend to B before touching A; the thick path is the stack."
+    },
+    {
+      "at": 5.6,
+      "beat": "D has no left child, so D is emitted first."
+    },
+    {
+      "at": 8.0,
+      "beat": "B is emitted before its right child E."
+    },
+    {
+      "at": 10.4,
+      "beat": "The left subtree is done, so A is emitted, then C."
+    },
+    {
+      "at": 12.8,
+      "beat": "Every node once; sorted only if the tree is a BST."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 1.7,
+      "kind": "answer",
+      "prompt": "At A, what must be finished before A can be output?"
+    },
+    {
+      "at": 4.2,
+      "kind": "answer",
+      "prompt": "D has no left child. What is output now, and where next?"
+    },
+    {
+      "at": 6.2,
+      "kind": "answer",
+      "prompt": "B is output while E is untouched. Why is that still inorder?"
+    },
+    {
+      "at": 8.0,
+      "kind": "answer",
+      "prompt": "Name the first three outputs and say why A is not among them yet."
+    },
+    {
+      "at": 11.0,
+      "kind": "answer",
+      "prompt": "Predict the final output and explain why A is not first."
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "Inorder equals level order",
+      "move": "Level order would read A, B, C, D, E, while the output row builds D, B, E, A, C. The ring's descents to D and E before A make the depth-first order visible, and the first checkpoint asks what must precede A."
+    },
+    {
+      "misconception": "A node is visited before its left subtree",
+      "move": "The ring is on A at the start but A is not output until 9.3 s, after D, B and E. Both the output timing and the two checkpoints at 1.7 s and 4.2 s force the learner to state the left-subtree precedence."
+    },
+    {
+      "misconception": "Inorder traversal always produces sorted output",
+      "move": "The node labels are letters, not keys, and the narration says sorted output requires a binary search tree. The metadata repeats the restriction, and no text on the canvas calls the result sorted."
+    }
+  ],
+  "correctnessChecks": [
+    "The tree has A as root, B as left child, C as right child, and D and E as B's left and right children. The inorder sequence is exactly D, B, E, A, C.",
+    "Each output letter appears once and only after every node in its left subtree has been emitted: D before B, E after B, A after B's whole subtree, C last.",
+    "The thick edge set is always the current root-to-node path: A-B while at B, A-B and B-D while at D, A-B while at E, neither after A is visited, and A-C while at C.",
+    "No sorted claim is made: the labels are not keys and the narration limits sorted order to binary search trees."
+  ],
+  "implementationNotes": "Node labels are static text; only opacity, edge strokeWidth and the ring's cx, cy and opacity are keyframed, so the tree's shape and content never depend on interpolation.",
+  "constraints": {
+    "primitives": 16,
+    "properties": 0,
+    "tracks": 17,
+    "keyframes": 97,
+    "checkpoints": 5,
+    "usesStates": false
+  }
+}

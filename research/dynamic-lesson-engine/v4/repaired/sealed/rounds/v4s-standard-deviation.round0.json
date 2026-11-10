@@ -1,0 +1,379 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Why deviations are squared: the area of each square is what that point contributes to spread",
+    "subject": "Statistics",
+    "topic": "Standard Deviation",
+    "objective": "Show spread around the mean and why deviations are squared before they are averaged.",
+    "learner": "Knows how to compute a mean; has not yet connected spread to a formula.",
+    "misconceptions": [
+      "Standard deviation is the average absolute deviation",
+      "Standard deviation is unaffected by outliers"
+    ],
+    "expectedUnderstanding": [
+      "The mean is the balance point of the data and moves when a value moves.",
+      "A deviation is a signed distance from the mean, so the signed deviations cancel and cannot be averaged as they stand.",
+      "Squaring removes the sign and, more importantly, weights a distance by itself: a point twice as far from the mean contributes four times as much.",
+      "The standard deviation is the square root of the mean of the squared deviations, so one far point can dominate the total, which is what it means to be sensitive to outliers."
+    ]
+  },
+  "properties": [
+    {
+      "id": "m",
+      "label": "position of the red point (data value)",
+      "min": 4,
+      "max": 10,
+      "step": 0.1,
+      "default": 6.5,
+      "unit": "value"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 46,
+      "text": "Squared deviations: each square's area is what that point adds to spread",
+      "fontSize": 19,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "500",
+      "opacity": 1
+    },
+    {
+      "id": "axis",
+      "type": "line",
+      "x1": 70,
+      "y1": 430,
+      "x2": 900,
+      "y2": 430,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "lblZero",
+      "type": "text",
+      "x": 100,
+      "y": 452,
+      "text": "0",
+      "fontSize": 13,
+      "anchor": "middle",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "lblTen",
+      "type": "text",
+      "x": 800,
+      "y": 452,
+      "text": "10",
+      "fontSize": 13,
+      "anchor": "middle",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "meanLine",
+      "type": "line",
+      "x1": {
+        "expr": "100+70*((25.1+m)/6)"
+      },
+      "y1": 184,
+      "x2": {
+        "expr": "100+70*((25.1+m)/6)"
+      },
+      "y2": 432,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "dash": "5 4",
+      "opacity": 1
+    },
+    {
+      "id": "meanLabel",
+      "type": "text",
+      "x": {
+        "expr": "100+70*((25.1+m)/6)"
+      },
+      "y": 178,
+      "text": "mean",
+      "fontSize": 14,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "500",
+      "opacity": 1
+    },
+    {
+      "id": "sqPoint1",
+      "type": "rect",
+      "x": {
+        "expr": "352-28*(((3.6-((25.1+m)/6))^2)^0.5)"
+      },
+      "y": {
+        "expr": "430-56*(((3.6-((25.1+m)/6))^2)^0.5)"
+      },
+      "width": {
+        "expr": "56*(((3.6-((25.1+m)/6))^2)^0.5)"
+      },
+      "height": {
+        "expr": "56*(((3.6-((25.1+m)/6))^2)^0.5)"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "sqPoint2",
+      "type": "rect",
+      "x": {
+        "expr": "415-28*(((4.5-((25.1+m)/6))^2)^0.5)"
+      },
+      "y": {
+        "expr": "416-56*(((4.5-((25.1+m)/6))^2)^0.5)"
+      },
+      "width": {
+        "expr": "56*(((4.5-((25.1+m)/6))^2)^0.5)"
+      },
+      "height": {
+        "expr": "56*(((4.5-((25.1+m)/6))^2)^0.5)"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "sqPoint3",
+      "type": "rect",
+      "x": {
+        "expr": "450-28*(((5.0-((25.1+m)/6))^2)^0.5)"
+      },
+      "y": {
+        "expr": "402-56*(((5.0-((25.1+m)/6))^2)^0.5)"
+      },
+      "width": {
+        "expr": "56*(((5.0-((25.1+m)/6))^2)^0.5)"
+      },
+      "height": {
+        "expr": "56*(((5.0-((25.1+m)/6))^2)^0.5)"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "sqPoint4",
+      "type": "rect",
+      "x": {
+        "expr": "492-28*(((5.6-((25.1+m)/6))^2)^0.5)"
+      },
+      "y": {
+        "expr": "388-56*(((5.6-((25.1+m)/6))^2)^0.5)"
+      },
+      "width": {
+        "expr": "56*(((5.6-((25.1+m)/6))^2)^0.5)"
+      },
+      "height": {
+        "expr": "56*(((5.6-((25.1+m)/6))^2)^0.5)"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "sqPoint5",
+      "type": "rect",
+      "x": {
+        "expr": "548-28*(((6.4-((25.1+m)/6))^2)^0.5)"
+      },
+      "y": {
+        "expr": "374-56*(((6.4-((25.1+m)/6))^2)^0.5)"
+      },
+      "width": {
+        "expr": "56*(((6.4-((25.1+m)/6))^2)^0.5)"
+      },
+      "height": {
+        "expr": "56*(((6.4-((25.1+m)/6))^2)^0.5)"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "sqRedPoint",
+      "type": "rect",
+      "x": {
+        "expr": "100+70*m-28*(((m-((25.1+m)/6))^2)^0.5)"
+      },
+      "y": {
+        "expr": "360-56*(((m-((25.1+m)/6))^2)^0.5)"
+      },
+      "width": {
+        "expr": "56*(((m-((25.1+m)/6))^2)^0.5)"
+      },
+      "height": {
+        "expr": "56*(((m-((25.1+m)/6))^2)^0.5)"
+      },
+      "fill": "#fee2e2",
+      "stroke": "#dc2626",
+      "strokeWidth": 2.5,
+      "opacity": 1
+    },
+    {
+      "id": "noteDistance",
+      "type": "text",
+      "x": 100,
+      "y": 96,
+      "text": "Each square's side is that point's distance from the mean.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "noteSquared",
+      "type": "text",
+      "x": 100,
+      "y": 122,
+      "text": "So its area is the distance squared, not the distance.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "noteAbsolute",
+      "type": "text",
+      "x": 100,
+      "y": 148,
+      "text": "Averaging unsigned distances would grow only in proportion.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "caption",
+      "type": "text",
+      "x": 36,
+      "y": 516,
+      "text": "SD is the square root of the mean squared deviation. Move the red point: the mean shifts, and its square grows with the square of the distance.",
+      "fontSize": 13,
+      "anchor": "start",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    }
+  ],
+  "timeline": {
+    "duration": 18,
+    "tracks": []
+  },
+  "controls": [
+    {
+      "id": "redpoint-control",
+      "kind": "slider",
+      "propertyId": "m",
+      "label": "move the red point along the axis"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-double",
+      "at": 2.4,
+      "title": "Predict the area",
+      "body": "Before it moves: the red point is about one unit from the mean and its square is small. If it ends up twice as far from the mean, what happens to the area of its square - twice as big, or four times?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-dominates",
+      "at": 9,
+      "title": "One point dominates",
+      "body": "The red square now dwarfs the five blue ones. Roughly what factor did its own area grow by, and how much of the total spread now comes from this single point?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-at-mean",
+      "at": 13.4,
+      "title": "Almost at the mean",
+      "body": "The red point is close to the mean, so its square has almost vanished. Did the mean itself move while the point travelled, and what is this point's squared deviation now?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-absolute",
+      "at": 16.6,
+      "title": "Why not just average the distances",
+      "body": "If we averaged the unsigned distances instead of the squares, would the far point still dominate this much? Say what summing squares does that summing distances does not, and why that matters for outliers.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.6,
+      "text": "Six values on one axis. The dashed line is the mean, the balance point of the data, and each square starts at its own value and grows by that value's distance from the mean."
+    },
+    {
+      "at": 3.4,
+      "text": "The square can only grow, because a square's side is a length, so squaring is what removes the plus and minus signs that make the raw deviations cancel out."
+    },
+    {
+      "at": 6.5,
+      "text": "Now the red point moves to the right. Watch the mean slide with it, and watch the red square: the side grows in step with the distance, but the area grows with the square of the distance, so it outruns the side at every step."
+    },
+    {
+      "at": 9.8,
+      "text": "This is why the standard deviation is sensitive to outliers. A point four units from the mean adds sixteen times as much as a point one unit away, and here the single red square now holds more than two thirds of the whole total."
+    },
+    {
+      "at": 13.6,
+      "text": "Brought back near the mean, the red square almost disappears - a point sitting at the mean adds nothing to spread - while the other five shift slightly because the mean itself has moved."
+    },
+    {
+      "at": 16.8,
+      "text": "So the standard deviation is the square root of the average of these areas, which returns the answer to the original units. It is not the average absolute distance, and it is not unaffected by outliers."
+    }
+  ],
+  "fallback": {
+    "text": "A horizontal data axis from 0 to 10, with five blue squares at the values 3.6, 4.5, 5.0, 5.6 and 6.4, plus one red square that can be moved. Each square sits above its value on the axis and is drawn with side length proportional to that value's distance from the mean, so the square's area is that deviation squared. A dashed vertical line marks the mean, about 5.3 with the red point at 6.5, and it slides as the red point moves. With the red point near 10, its square is roughly four times taller than it is when the point sits at 6.5, so its area is about sixteen times larger and it dominates the picture; with the red point near the mean, its square shrinks almost to nothing. Caption: the standard deviation is the square root of the average of these squared distances, not the average of the unsigned distances."
+  },
+  "accessibility": {
+    "alt": "A data axis labelled 0 to 10 with a dashed vertical line marking the mean. Five blue squares sit above the values 3.6, 4.5, 5.0, 5.6 and 6.4, and one red square sits above a movable value. Each square's side equals that value's distance from the mean, so the square's area is the squared deviation. A",
+    "reducedMotion": "static",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    {
+      "sourceId": "case:v4s-standard-deviation",
+      "locator": "objective; expectedBehavior; correctnessCriteria"
+    }
+  ]
+}

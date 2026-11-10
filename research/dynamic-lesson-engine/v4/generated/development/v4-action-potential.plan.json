@@ -1,0 +1,84 @@
+{
+  "version": "0.1",
+  "caseId": "v4-action-potential",
+  "needsScene": true,
+  "sceneFile": "v4-action-potential.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "whyScene": "The target is a causal ordering in time: permeability changes cause potential changes, and the sequence only exists along a time axis. Revealing the trace left to right while a probe line can be parked at any level lets the learner ask what the membrane is doing at a given millivoltage and answer it from the same frame, which a single labelled spike diagram cannot support.",
+  "layout": "Vertical axis at x = 110 from y = 120 to 470; time axis at y = 470. Rest level y = 400, threshold y = 368.5, peak y = 190, undershoot y = 421, with the millivolt map y = 400 - 2.1 (vm + 70). The trace is five segments revealed in order by step opacity tracks. A dashed grey threshold line spans the graph; a red dashed probe line and a dot on the voltage axis follow the property vm.",
+  "beats": [
+    {
+      "at": 1.5,
+      "beat": "Rest at about -70 mV."
+    },
+    {
+      "at": 3.8,
+      "beat": "Stimulus depolarizes toward threshold."
+    },
+    {
+      "at": 6.6,
+      "beat": "Threshold crossed; Na+ enters; upstroke to +30 mV."
+    },
+    {
+      "at": 13.4,
+      "beat": "Na+ inactivates; K+ leaves; downstroke."
+    },
+    {
+      "at": 16.6,
+      "beat": "Undershoot from slow K+ closure."
+    },
+    {
+      "at": 20.8,
+      "beat": "Return to rest."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 3.2,
+      "kind": "answer",
+      "prompt": "Which ion crosses first to start a depolarization, and which way?"
+    },
+    {
+      "at": 6.8,
+      "kind": "answer",
+      "prompt": "At threshold, are Na+ channels opening or closing?"
+    },
+    {
+      "at": 11.5,
+      "kind": "answer",
+      "prompt": "During the downstroke, is Na+ entering or leaving?"
+    },
+    {
+      "at": 17.5,
+      "kind": "answer",
+      "prompt": "In the undershoot, which ion's permeability is still elevated?"
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "Na+ leaves the cell during depolarization",
+      "move": "The upstroke carries the label Na+ influx and the narration states that positive charge enters and makes the inside positive; the K+ efflux label is attached only to the falling edge, so the two directions are never swapped."
+    },
+    {
+      "misconception": "Repolarization is only passive decay",
+      "move": "The falling edge is explained as voltage-gated K+ channels opening with K+ leaving down its gradient, and the undershoot is attributed to their slow closure; nothing in the scene calls the return a passive discharge of a capacitor."
+    }
+  ],
+  "correctnessChecks": [
+    "Na+ influx is attached to the rising phase and K+ efflux to the falling phase, matching the electrochemical gradients.",
+    "Threshold (about -55 mV), rest (about -70 mV) and peak (about +30 mV) are each labelled, so the levels are checkable.",
+    "No clinical, diagnostic or treatment content appears anywhere in the scene, narration or fallback.",
+    "The undershoot is explained by slow K+ channel closure, keeping the repolarization claim active rather than passive."
+  ],
+  "constraints": {
+    "primitives": 16,
+    "properties": 1,
+    "tracks": 5,
+    "keyframes": 16,
+    "checkpoints": 4,
+    "usesStates": false
+  }
+}

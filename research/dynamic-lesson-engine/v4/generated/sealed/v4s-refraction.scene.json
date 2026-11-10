@@ -1,0 +1,378 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Snell's law: a denser medium bends the ray toward the normal",
+    "subject": "Physics",
+    "topic": "Snell's Law",
+    "objective": "Show how a ray bends when entering a denser medium and why the normal is the reference.",
+    "learner": "Knows angles and waves.",
+    "misconceptions": [
+      "Light always bends toward the normal, whichever way it crosses the surface",
+      "The angle of incidence is measured from the surface, not from the normal"
+    ],
+    "expectedUnderstanding": [
+      "The angles are measured between each ray and the dashed normal at the point of incidence, not between the ray and the surface.",
+      "With n = 1.00 on both sides the ray is undeflected: the red ray coincides with the unbent grey dashed path.",
+      "Raising n in the second medium reduces the refracted angle monotonically: sin i = n sin r with n1 = 1, so 45 degrees in air becomes 32, 28 and 21 degrees.",
+      "The ray bends toward the normal only because the second medium is denser; crossing in the other direction the same rule bends it away from the normal."
+    ]
+  },
+  "properties": [
+    {
+      "id": "n2",
+      "label": "Refractive index of medium 2 (n)",
+      "min": 1.0,
+      "max": 2.0,
+      "step": 0.01,
+      "default": 1.0
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 50,
+      "text": "Snell's law: entering a denser medium bends the ray toward the normal",
+      "fontSize": 20,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "surface",
+      "type": "line",
+      "x1": 70,
+      "y1": 300.0,
+      "x2": 890,
+      "y2": 300.0,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "normal",
+      "type": "line",
+      "x1": 400.0,
+      "y1": 96,
+      "x2": 400.0,
+      "y2": 505,
+      "fill": "none",
+      "stroke": "#6b7280",
+      "strokeWidth": 1.5,
+      "opacity": 1,
+      "dash": "7 6"
+    },
+    {
+      "id": "incidentRay",
+      "type": "arrow",
+      "x1": 286.86,
+      "y1": 186.86,
+      "x2": 400.0,
+      "y2": 300.0,
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 2.5,
+      "opacity": 1
+    },
+    {
+      "id": "unbent",
+      "type": "line",
+      "x1": 400.0,
+      "y1": 300.0,
+      "x2": 541.42,
+      "y2": 441.41999999999996,
+      "fill": "none",
+      "stroke": "#6b7280",
+      "strokeWidth": 1.5,
+      "opacity": 1,
+      "dash": "6 6"
+    },
+    {
+      "id": "refractedRay",
+      "type": "arrow",
+      "x1": 400.0,
+      "y1": 300.0,
+      "x2": {
+        "expr": "400.0+165.0*(0.70711/n2)"
+      },
+      "y2": {
+        "expr": "300.0+165.0*((1-(0.70711/n2)**2)**0.5)"
+      },
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 2.5,
+      "opacity": 1
+    },
+    {
+      "id": "sqH",
+      "type": "line",
+      "x1": 414.0,
+      "y1": 300.0,
+      "x2": 414.0,
+      "y2": 286.0,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "sqV",
+      "type": "line",
+      "x1": 400.0,
+      "y1": 286.0,
+      "x2": 414.0,
+      "y2": 286.0,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "arcI",
+      "type": "path",
+      "d": "M 400 248 C 386.2 248 372.9 253.5 363.2 263.2",
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "iLabel",
+      "type": "text",
+      "x": 330,
+      "y": 256,
+      "text": "i = 45 degrees from the normal",
+      "fontSize": 14,
+      "anchor": "end",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "medium1",
+      "type": "text",
+      "x": 76,
+      "y": 150,
+      "text": "medium 1: air, n = 1.00",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "medium2",
+      "type": "text",
+      "x": 76,
+      "y": 344,
+      "text": "medium 2: the slider sets n, 1.00 to 2.00",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "rLabel",
+      "type": "text",
+      "x": {
+        "expr": "400.0+130*(0.70711/n2)-16*((1-(0.70711/n2)**2)**0.5)"
+      },
+      "y": {
+        "expr": "300.0+130*((1-(0.70711/n2)**2)**0.5)+16*(0.70711/n2)+5"
+      },
+      "text": "r",
+      "fontSize": 15,
+      "anchor": "middle",
+      "fill": "#dc2626",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "note1",
+      "type": "text",
+      "x": 600,
+      "y": 128,
+      "text": "The dashed normal is perpendicular to the surface.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "note2",
+      "type": "text",
+      "x": 600,
+      "y": 170,
+      "text": "Both angles are measured from it, not from the surface.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "note3",
+      "type": "text",
+      "x": 600,
+      "y": 212,
+      "text": "Grey dashes: the unbent path. Red ray: the deviation.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    }
+  ],
+  "timeline": {
+    "duration": 19.0,
+    "tracks": [
+      {
+        "target": {
+          "property": "n2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1.0,
+            "easing": "linear"
+          },
+          {
+            "at": 3.0,
+            "value": 1.0,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 7.0,
+            "value": 1.33,
+            "easing": "linear"
+          },
+          {
+            "at": 9.0,
+            "value": 1.33,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 11.5,
+            "value": 1.5,
+            "easing": "linear"
+          },
+          {
+            "at": 13.5,
+            "value": 1.5,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 17.0,
+            "value": 2.0,
+            "easing": "linear"
+          },
+          {
+            "at": 19.0,
+            "value": 2.0,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "indexSlider",
+      "kind": "slider",
+      "propertyId": "n2",
+      "label": "Refractive index n of medium 2"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-reference",
+      "at": 2.0,
+      "title": "Which line",
+      "body": "The ray arrives at 45 degrees. Is that angle measured from the surface line or from the dashed normal, and how do you know from the drawing?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-water",
+      "at": 7.4,
+      "title": "Water",
+      "body": "n is now 1.33. The refracted ray has moved: did it swing toward the normal or toward the surface? Name the line you are comparing against.",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-glass",
+      "at": 11.2,
+      "title": "Conserved quantity",
+      "body": "At n = 1.50 the refracted angle is about 28 degrees against an incident 45. Which quantity is the same on both sides of the surface: the angle, or sin i over sin r?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-reverse",
+      "at": 16.0,
+      "title": "Reverse it",
+      "body": "n = 2.00 gives about 21 degrees. If this same ray travelled from the dense medium out into air, would it bend toward the normal or away from it?",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.8,
+      "text": "The ray arrives from air at 45 degrees to the dashed normal and meets the surface at one point. The normal is the line perpendicular to the surface there."
+    },
+    {
+      "at": 3.6,
+      "text": "With n = 1.00 on both sides nothing bends: the red ray lies on the pale grey dashed path, the straight continuation of the incident ray."
+    },
+    {
+      "at": 7.2,
+      "text": "Water, n = 1.33. The ray inside the water makes about 32 degrees with the normal, less than the 45 degrees it came in at."
+    },
+    {
+      "at": 11.0,
+      "text": "Glass, n = 1.50, and the refracted angle is 28 degrees. A larger n pulls the ray closer to the normal, never away from it."
+    },
+    {
+      "at": 14.4,
+      "text": "At n = 2.00 the angle is 21 degrees. The rule is sin i = n sin r, so as n grows the refracted angle shrinks."
+    },
+    {
+      "at": 17.2,
+      "text": "The bending is toward the normal because the normal is the direction in which the medium changes. Going the other way, from dense to less dense, the same rule bends the ray away from the normal."
+    }
+  ],
+  "fallback": {
+    "text": "Static ray diagram. A horizontal surface at mid height, a dashed vertical normal through the point of incidence, and an incident ray arriving from the upper left at 45 degrees to the normal, with a small blue arc marking that 45 degrees against the normal. Below the surface, drawn at the same scale: with n = 1.00 the transmitted ray continues straight (45 degrees); with n = 1.33 it makes 32 degrees with the normal; with n = 1.50, 28 degrees; with n = 2.00, 21 degrees. A grey dashed line marks the unbent 45 degree continuation so the deviation can be seen. Caption: angles are measured from the normal; higher n means a smaller refracted angle, that is, bending toward the normal."
+  },
+  "accessibility": {
+    "alt": "A horizontal line marks the surface between two media. A dashed vertical line, the normal, crosses it at the point of incidence. A blue ray arrives from the upper left at 45 degrees to the normal, with a small blue arc marking that angle. A grey dashed line continues the same 45 degree direction below the surface, showing where the ray would go if it were not bent. A red refracted ray leaves the same point below the surface and swings toward the dashed normal as the index slider rises from 1.00 to 2.00; at 1.00 the red ray lies on the grey dashed line.",
+    "reducedMotion": "static",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    {
+      "sourceId": "case:v4s-refraction",
+      "locator": "objective; correctnessCriteria"
+    }
+  ]
+}

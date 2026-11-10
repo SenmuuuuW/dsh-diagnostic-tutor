@@ -1,0 +1,434 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "metadata": {
+    "title": "Action potential: Na+ influx depolarizes, K+ efflux repolarizes",
+    "subject": "Biology",
+    "topic": "Action Potential",
+    "objective": "Connect ion permeability changes to depolarization and repolarization.",
+    "learner": "Knows membrane potential basics.",
+    "misconceptions": [
+      "Na+ leaves the cell during depolarization",
+      "Repolarization is only passive decay"
+    ],
+    "expectedUnderstanding": "Resting potential is about -70 mV inside relative to outside. A stimulus depolarizes the membrane to threshold, about -55 mV. At threshold voltage-gated Na+ channels open and Na+ enters, so the inside becomes positive (peak about +30 mV): depolarization is Na+ influx. Na+ channels then inactivate while voltage-gated K+ channels open and K+ leaves, driving the potential back down: repolarization is an active K+ efflux, not passive decay. Slow K+ channel closure overshoots below rest (the undershoot), and the membrane then returns to rest."
+  },
+  "properties": [
+    {
+      "id": "vm",
+      "label": "Probe level (mV)",
+      "value": -70,
+      "min": -88,
+      "max": 35,
+      "step": 1
+    }
+  ],
+  "primitives": [
+    {
+      "id": "bg",
+      "type": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 960,
+      "height": 540,
+      "rx": 0,
+      "fill": "#ffffff",
+      "stroke": "#ffffff",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 54,
+      "text": "Action potential: Na+ influx depolarizes, K+ efflux repolarizes",
+      "fontSize": 21,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "yaxis",
+      "type": "line",
+      "x1": 110,
+      "y1": 120,
+      "x2": 110,
+      "y2": 470,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "xaxis",
+      "type": "line",
+      "x1": 110,
+      "y1": 470,
+      "x2": 900,
+      "y2": 470,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "s1",
+      "type": "line",
+      "x1": 130,
+      "y1": 400,
+      "x2": 210,
+      "y2": 400,
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 3,
+      "opacity": 1
+    },
+    {
+      "id": "s2",
+      "type": "line",
+      "x1": 210,
+      "y1": 400,
+      "x2": 250,
+      "y2": 368.5,
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 3,
+      "opacity": 0
+    },
+    {
+      "id": "s3",
+      "type": "line",
+      "x1": 250,
+      "y1": 368.5,
+      "x2": 290,
+      "y2": 190,
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 3,
+      "opacity": 0
+    },
+    {
+      "id": "s4",
+      "type": "line",
+      "x1": 290,
+      "y1": 190,
+      "x2": 350,
+      "y2": 421,
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 3,
+      "opacity": 0
+    },
+    {
+      "id": "s5",
+      "type": "line",
+      "x1": 350,
+      "y1": 421,
+      "x2": 440,
+      "y2": 400,
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 3,
+      "opacity": 0
+    },
+    {
+      "id": "thresh",
+      "type": "line",
+      "x1": 118,
+      "y1": 368.5,
+      "x2": 452,
+      "y2": 368.5,
+      "fill": "none",
+      "stroke": "#6b7280",
+      "strokeWidth": 2,
+      "opacity": 1,
+      "dash": "9 6"
+    },
+    {
+      "id": "probe",
+      "type": "line",
+      "x1": 110,
+      "y1": {
+        "expr": "400 - 2.1*(vm + 70)"
+      },
+      "x2": 452,
+      "y2": {
+        "expr": "400 - 2.1*(vm + 70)"
+      },
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 1.5,
+      "opacity": 1,
+      "dash": "4 5"
+    },
+    {
+      "id": "marker",
+      "type": "circle",
+      "cx": 110,
+      "cy": {
+        "expr": "400 - 2.1*(vm + 70)"
+      },
+      "r": 6,
+      "fill": "#dc2626",
+      "stroke": "#dc2626",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "labRest",
+      "type": "text",
+      "x": 130,
+      "y": 458,
+      "text": "rest, about -70 mV",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 1
+    },
+    {
+      "id": "labThresh",
+      "type": "text",
+      "x": 470,
+      "y": 374,
+      "text": "threshold, about -55 mV",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#6b7280",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "labNa",
+      "type": "text",
+      "x": 300,
+      "y": 168,
+      "text": "Na+ influx: the upstroke",
+      "fontSize": 15,
+      "anchor": "start",
+      "fill": "#dc2626",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "labK",
+      "type": "text",
+      "x": 470,
+      "y": 300,
+      "text": "K+ efflux: the downstroke",
+      "fontSize": 15,
+      "anchor": "start",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    }
+  ],
+  "timeline": {
+    "duration": 24.0,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "s2",
+          "field": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "step"
+          },
+          {
+            "at": 3.4,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "s3",
+          "field": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "step"
+          },
+          {
+            "at": 5.8,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "s4",
+          "field": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "step"
+          },
+          {
+            "at": 10.2,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "s5",
+          "field": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "step"
+          },
+          {
+            "at": 15.2,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "property": "vm"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": -70,
+            "easing": "linear"
+          },
+          {
+            "at": 3.4,
+            "value": -70,
+            "easing": "ease-in"
+          },
+          {
+            "at": 6.0,
+            "value": -55,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 9.8,
+            "value": 30,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 13.4,
+            "value": -70,
+            "easing": "ease-out"
+          },
+          {
+            "at": 16.6,
+            "value": -80,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 20.5,
+            "value": -70,
+            "easing": "ease-out"
+          },
+          {
+            "at": 24,
+            "value": -70,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "vmSlider",
+      "type": "slider",
+      "label": "Probe level (mV)",
+      "property": "vm",
+      "min": -88,
+      "max": 35,
+      "step": 1
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": 3.2,
+      "prompt": "The membrane is at rest and the trace is about to leave the baseline. Which ion must cross the membrane first, and in which direction, to start a depolarization?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 6.8,
+      "prompt": "The probe is parked at the threshold line while the upstroke begins. Are voltage-gated Na+ channels opening or closing there?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 11.5,
+      "prompt": "During the downstroke, is Na+ entering the cell or leaving it?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 17.5,
+      "prompt": "The trace is below rest. Which ion's permeability is still above its resting value, and what would happen if it stayed there?",
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 1.5,
+      "text": "At rest the inside of the cell is about -70 mV relative to the outside, and most Na+ channels are closed."
+    },
+    {
+      "at": 3.8,
+      "text": "A stimulus depolarizes the membrane: the potential moves up toward the dashed threshold line at about -55 mV."
+    },
+    {
+      "at": 6.6,
+      "text": "At threshold, voltage-gated Na+ channels open. Na+ enters the cell and positive charge flows in, so the potential climbs steeply to about +30 mV."
+    },
+    {
+      "at": 10.1,
+      "text": "Depolarization is Na+ influx, not efflux: the ions move in the direction their electrochemical gradient pushes them."
+    },
+    {
+      "at": 13.4,
+      "text": "Na+ channels inactivate, and voltage-gated K+ channels open. K+ leaves the cell, carrying positive charge out and pulling the potential back down."
+    },
+    {
+      "at": 16.6,
+      "text": "K+ channels close slowly, so efflux continues past the resting level: the trace dips below rest, and that undershoot is also active K+ efflux, not a passive decay."
+    },
+    {
+      "at": 20.8,
+      "text": "With permeability back near resting values the potential settles at about -70 mV, while the ion gradients themselves are restored by the pumps."
+    }
+  ],
+  "fallback": {
+    "text": "A single static voltage-versus-time trace. Horizontal axis is time; the resting level is about -70 mV, a dashed horizontal line marks threshold at about -55 mV, and the peak is about +30 mV. The trace runs: flat at -70, a short rise to the threshold line, a steep upstroke to +30 labelled Na+ influx, a steep fall through rest to about -80 labelled K+ efflux, then a return to -70. A table beside it lists the phases in order with the ion that drives each one: resting (K+ leak), threshold (Na+ channels opening), upstroke (Na+ in), downstroke (K+ out), undershoot (slow K+ channel closure), recovery (pumps restore gradients). A note adds that the K+ efflux during the downstroke is an active conductance change, not passive decay, and that nothing here is medical advice."
+  },
+  "accessibility": {
+    "alt": "A voltage against time trace for one action potential, drawn left to right. It starts flat at rest near -70 mV, rises to a dashed threshold line near -55 mV, climbs steeply to a peak near +30 mV labelled Na+ influx, falls steeply through rest to a trough below -70 mV labelled K+ efflux, then returns to rest. A red dashed horizontal probe line with a dot on the voltage axis can be moved from -88 to +35 mV, so the learner can park it at rest, at threshold, at the peak or in the trough.",
+    "reducedMotion": "Show the finished trace in one frame with the five phases numbered left to right and each phase's ion written on it, plus a small table of resting, threshold and peak values (-70, -55, +30 mV), so the whole causal order is readable without motion.",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    "case:v4-action-potential"
+  ]
+}

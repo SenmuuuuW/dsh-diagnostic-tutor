@@ -1,0 +1,611 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "metadata": {
+    "title": "Depth-first search: stack, deep dive and backtracking",
+    "subject": "Computer Science",
+    "topic": "Depth-First Search",
+    "objective": "Show DFS visiting a branch deeply before backtracking.",
+    "learner": "Knows stacks/graphs.",
+    "misconceptions": [
+      "DFS visits level by level",
+      "Backtracking is a new search"
+    ],
+    "expectedUnderstanding": "DFS keeps the current path on a stack, pushes a node when it moves to it, and only pops when every neighbour is already visited; the pops are backtracking along the same search, and the first route found can be much longer than the shortest one."
+  },
+  "properties": [],
+  "primitives": [
+    {
+      "id": "bg",
+      "type": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 960,
+      "height": 540,
+      "rx": 0,
+      "fill": "#ffffff",
+      "stroke": "#ffffff",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 54,
+      "text": "Depth-first search: dive one branch, then backtrack (stack, right)",
+      "fontSize": 20,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "edges",
+      "type": "path",
+      "d": "M480 112 L300 244 M480 112 L700 252 M300 244 L480 400 M480 400 L700 252",
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "nA",
+      "type": "circle",
+      "cx": 480,
+      "cy": 112,
+      "r": 30,
+      "fill": "#ffffff",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "nB",
+      "type": "circle",
+      "cx": 300,
+      "cy": 244,
+      "r": 30,
+      "fill": "#ffffff",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "nC",
+      "type": "circle",
+      "cx": 700,
+      "cy": 252,
+      "r": 30,
+      "fill": "#ffffff",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "nD",
+      "type": "circle",
+      "cx": 480,
+      "cy": 400,
+      "r": 30,
+      "fill": "#ffffff",
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "opacity": 1
+    },
+    {
+      "id": "lA",
+      "type": "text",
+      "x": 480,
+      "y": 120,
+      "text": "A",
+      "fontSize": 22,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700"
+    },
+    {
+      "id": "lB",
+      "type": "text",
+      "x": 300,
+      "y": 252,
+      "text": "B",
+      "fontSize": 22,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700"
+    },
+    {
+      "id": "lC",
+      "type": "text",
+      "x": 700,
+      "y": 260,
+      "text": "C",
+      "fontSize": 22,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700"
+    },
+    {
+      "id": "lD",
+      "type": "text",
+      "x": 480,
+      "y": 408,
+      "text": "D",
+      "fontSize": 22,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700"
+    },
+    {
+      "id": "stack",
+      "type": "rect",
+      "x": 800,
+      "y": 150,
+      "width": 120,
+      "height": 320,
+      "rx": 10,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "sA",
+      "type": "text",
+      "x": 860,
+      "y": 432,
+      "text": "A",
+      "fontSize": 24,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700"
+    },
+    {
+      "id": "sB",
+      "type": "text",
+      "x": 860,
+      "y": 362,
+      "text": "B",
+      "fontSize": 24,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700"
+    },
+    {
+      "id": "sD",
+      "type": "text",
+      "x": 860,
+      "y": 292,
+      "text": "D",
+      "fontSize": 24,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700"
+    },
+    {
+      "id": "sC",
+      "type": "text",
+      "x": 860,
+      "y": 222,
+      "text": "C",
+      "fontSize": 24,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700"
+    }
+  ],
+  "timeline": {
+    "duration": 24.0,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "nA",
+          "field": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2,
+            "easing": "step"
+          },
+          {
+            "at": 1.6,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 15.6,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 15.7,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 18,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 18.3,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 18.6,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 18.7,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 24,
+            "value": 4
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "nB",
+          "field": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2,
+            "easing": "step"
+          },
+          {
+            "at": 3.6,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 13.2,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 13.3,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 18.6,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 18.9,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 19.2,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 19.3,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 24,
+            "value": 4
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "nD",
+          "field": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2,
+            "easing": "step"
+          },
+          {
+            "at": 5.6,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 12.2,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 12.3,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 19.2,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 19.5,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 19.8,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 19.9,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 24,
+            "value": 4
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "nC",
+          "field": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2,
+            "easing": "step"
+          },
+          {
+            "at": 7.6,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 11.2,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 11.3,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 19.8,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 20.1,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 20.4,
+            "value": 7,
+            "easing": "step"
+          },
+          {
+            "at": 20.5,
+            "value": 4,
+            "easing": "step"
+          },
+          {
+            "at": 24,
+            "value": 4
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "sA",
+          "field": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "step"
+          },
+          {
+            "at": 2.6,
+            "value": 1,
+            "easing": "step"
+          },
+          {
+            "at": 15.6,
+            "value": 1,
+            "easing": "step"
+          },
+          {
+            "at": 15.75,
+            "value": 0
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "sB",
+          "field": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "step"
+          },
+          {
+            "at": 4.6,
+            "value": 1,
+            "easing": "step"
+          },
+          {
+            "at": 13.2,
+            "value": 1,
+            "easing": "step"
+          },
+          {
+            "at": 13.35,
+            "value": 0
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "sD",
+          "field": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "step"
+          },
+          {
+            "at": 6.6,
+            "value": 1,
+            "easing": "step"
+          },
+          {
+            "at": 12.2,
+            "value": 1,
+            "easing": "step"
+          },
+          {
+            "at": 12.35,
+            "value": 0
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "sC",
+          "field": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "step"
+          },
+          {
+            "at": 8.6,
+            "value": 1,
+            "easing": "step"
+          },
+          {
+            "at": 11.2,
+            "value": 1,
+            "easing": "step"
+          },
+          {
+            "at": 11.35,
+            "value": 0
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [],
+  "checkpoints": [
+    {
+      "at": 3.0,
+      "prompt": "A is on the stack. Continue to follow one branch.",
+      "learnerAction": "continue"
+    },
+    {
+      "at": 6.4,
+      "prompt": "Depth three: A, B, D. Will DFS open C next, or backtrack to A first?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 10.0,
+      "prompt": "At C, both neighbours are already on the path. What should DFS do instead of pushing a node twice?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 13.8,
+      "prompt": "The stack has shrunk back to A. Does that undo the visits to B and D?",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 17.0,
+      "prompt": "Continue to replay the visit order.",
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.6,
+      "text": "Four nodes, four edges. DFS starts at A and always follows one neighbour as deep as it can."
+    },
+    {
+      "at": 2.2,
+      "text": "Visit A and push it: the stack holds the path you are currently standing on."
+    },
+    {
+      "at": 4.2,
+      "text": "From A it takes B rather than C. The top of the stack is always the node you are at."
+    },
+    {
+      "at": 6.2,
+      "text": "B takes D. Three pushes deep, and nothing has been finished yet."
+    },
+    {
+      "at": 8.2,
+      "text": "D takes C. Depth four, with every step downward and none sideways."
+    },
+    {
+      "at": 10.4,
+      "text": "At C both neighbours are already on the path, so the visited check stops a second push."
+    },
+    {
+      "at": 11.6,
+      "text": "Then the pops: C leaves the stack, then D, then B. That is backtracking, not a new search."
+    },
+    {
+      "at": 15.2,
+      "text": "Back at A, the last neighbour C is already visited, so A pops too and the search ends."
+    },
+    {
+      "at": 17.8,
+      "text": "Replay of the visit order: A, then B, then D, then C. C is adjacent to A, yet DFS reached it the long way round."
+    },
+    {
+      "at": 21.4,
+      "text": "Depth first, not nearest first: that is why DFS is not a shortest-path search."
+    }
+  ],
+  "fallback": {
+    "text": "Static graph figure with nodes A, B, C, D and edges A-B, A-C, B-D, D-C, each node numbered in visit order: A=1, B=2, D=3, C=4. Beside it, the four stack snapshots as a table: [A], [A B], [A B D], [A B D C], then the unwind [A B D], [A B], [A], and empty. The table makes the two facts explicit: the frontier is last-in-first-out, and backtracking only pops the stack, it never unvisits a node."
+  },
+  "accessibility": {
+    "alt": "A graph of four nodes A, B, C, D. The node being visited is drawn with a heavy outline, nodes already visited keep a medium outline. A tall box on the right is the stack, and letters fade into it as nodes are pushed, then fade out from the top as the search backtracks; at the end the four nodes flash in visit order A, B, D, C.",
+    "reducedMotion": "Show four static panels: the graph after each push with the current path drawn thick, the stack contents beside each panel, and a final panel listing visit order A, B, D, C with the backtrack path marked as a dashed retrace.",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    "case:v4-dfs"
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "base": "http://127.0.0.1:8391",
+  "exceptions": [],
+  "results": [
+    {
+      "folder": "sealed",
+      "name": "v4s-acid.scene.json",
+      "screenshot": "sealed-v4s-acid.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 12.00s · nodes 17 · render 0.20ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "sealed",
+      "name": "v4s-eigenvectors.scene.json",
+      "screenshot": "sealed-v4s-eigenvectors.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 14,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 20.00s · nodes 21 · render 0.20ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "sealed",
+      "name": "v4s-ideal-gas.scene.json",
+      "screenshot": "sealed-v4s-ideal-gas.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 20.00s · nodes 17 · render 0.20ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "sealed",
+      "name": "v4s-logistic.scene.json",
+      "screenshot": "sealed-v4s-logistic.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 12.00s · nodes 17 · render 0.20ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "sealed",
+      "name": "v4s-marginal-cost.scene.json",
+      "screenshot": "sealed-v4s-marginal-cost.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 18.00s · nodes 17 · render 0.10ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "sealed",
+      "name": "v4s-memory-hierarchy.scene.json",
+      "screenshot": "sealed-v4s-memory-hierarchy.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 14,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 18.00s · nodes 21 · render 0.10ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "sealed",
+      "name": "v4s-mergesort.scene.json",
+      "screenshot": "sealed-v4s-mergesort.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 18.00s · nodes 17 · render 0.10ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "sealed",
+      "name": "v4s-refraction.scene.json",
+      "screenshot": "sealed-v4s-refraction.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 14,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 19.00s · nodes 21 · render 0.20ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "sealed",
+      "name": "v4s-standard-deviation.scene.json",
+      "screenshot": "sealed-v4s-standard-deviation.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 18.00s · nodes 17 · render 0.10ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "sealed",
+      "name": "v4s-tree-traversal.scene.json",
+      "screenshot": "sealed-v4s-tree-traversal.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 14.00s · nodes 17 · render 0.10ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "sealed",
+      "name": "v4s-unit-circle-tangent.scene.json",
+      "screenshot": "sealed-v4s-unit-circle-tangent.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 17.00s · nodes 17 · render 0.20ms · paused",
+      "status": "rendered"
+    }
+  ]
+}

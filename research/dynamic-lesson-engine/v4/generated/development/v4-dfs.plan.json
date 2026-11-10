@@ -1,0 +1,96 @@
+{
+  "version": "0.1",
+  "caseId": "v4-dfs",
+  "needsScene": true,
+  "sceneFile": "v4-dfs.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "whyScene": "The objective is a traversal order and a stack that grows then shrinks. The order and the LIFO discipline exist only over time, and the misconception that backtracking is a fresh search is refuted by showing the same stack popping while the visited marks stay put.",
+  "layout": "Graph on the left two thirds: A(480,112), B(300,244), C(700,252), D(480,400), edges A-B, A-C, B-D, D-C drawn behind white node discs so labels stay legible. Stack box at x=800..920, four slots, bottom slot A, top slot C.",
+  "beats": [
+    {
+      "at": 1.6,
+      "beat": "Visit A, push A."
+    },
+    {
+      "at": 3.6,
+      "beat": "Move to B, push B."
+    },
+    {
+      "at": 5.6,
+      "beat": "Move to D, push D."
+    },
+    {
+      "at": 7.6,
+      "beat": "Move to C, push C: depth four."
+    },
+    {
+      "at": 11.2,
+      "beat": "C pops: both its neighbours are already on the path."
+    },
+    {
+      "at": 13.2,
+      "beat": "B pops after D; the visited marks stay."
+    },
+    {
+      "at": 15.6,
+      "beat": "A pops: its remaining neighbour C is already visited."
+    },
+    {
+      "at": 18,
+      "beat": "Visit-order replay A, B, D, C."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 3.0,
+      "kind": "continue",
+      "prompt": "A is on the stack. Continue to follow one branch."
+    },
+    {
+      "at": 6.4,
+      "kind": "answer",
+      "prompt": "Depth three: A, B, D. Will DFS open C next, or backtrack to A first?"
+    },
+    {
+      "at": 10.0,
+      "kind": "answer",
+      "prompt": "At C, both neighbours are already on the path. What should DFS do instead of pushing a node twice?"
+    },
+    {
+      "at": 13.8,
+      "kind": "answer",
+      "prompt": "The stack has shrunk back to A. Does that undo the visits to B and D?"
+    },
+    {
+      "at": 17.0,
+      "kind": "continue",
+      "prompt": "Continue to replay the visit order."
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "DFS visits level by level",
+      "move": "The stack reaches depth four (A, B, D, C) while C, a neighbour of the start, is only reached at the end; the visit order is A, B, D, C, not A, B, C, D."
+    },
+    {
+      "misconception": "Backtracking is a new search",
+      "move": "Pops 11.2 to 15.6 shrink the same stack and leave every visited mark in place; no node is re-explored."
+    }
+  ],
+  "correctnessChecks": [
+    "Frontier is LIFO: the most recently pushed node is the one expanded next (B before C at A; D before C at B).",
+    "The visited/path test blocks a repeat at C, whose neighbours A and D are both already visited.",
+    "No shortest-path claim: the closing line says DFS is not a shortest-path search, and C is reached at depth four though adjacent to A."
+  ],
+  "constraints": {
+    "primitives": 16,
+    "properties": 0,
+    "tracks": 8,
+    "keyframes": 52,
+    "checkpoints": 5,
+    "usesStates": false
+  }
+}

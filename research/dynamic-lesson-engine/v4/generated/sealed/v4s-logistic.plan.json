@@ -1,0 +1,82 @@
+{
+  "version": "0.1",
+  "caseId": "v4s-logistic",
+  "needsScene": true,
+  "sceneFile": "v4s-logistic.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "whyScene": "The objective is one relation among three things at once: a linear score, a probability, and the threshold where the decision flips. Text can state the formula and a static plot can show one curve, but only a movable feature value lets the learner watch the same fixed curve return a different probability and see that the class decision changes where the curve crosses 0.5, not where the curve ends. The slider is the point of the scene: the learner makes the probability move rather than reading a caption saying that it does. The bar touching the curve at every x also makes the mapping checkable rather than asserted.",
+  "layout": "Plot from x = 90 to 620 and y = 110 (p = 1) to 440 (p = 0). The horizontal axis is at y = 440 and the vertical axis at x = 90. The feature maps to 90 + (x + 4.2)(530/8.4), so x = 0 is the vertical dashed boundary at px 355. Probability maps to 440 - 320p. The sigmoid is drawn as a 60-segment path from x = -4.2 to 4.2. A blue 18 px bar at the current feature rises from the baseline to the curve; its top edge is the current predicted probability. Class-0 points sit on the baseline at x = -3.1 and -1.8; class-1 points sit at p = 1 at x = 1.8 and 3.1. A dashed line marks p = 0.5 and the red dashed vertical line marks the boundary. Two notes under the plot name the score, the sigmoid and the threshold rule; the right side of the plot is left empty so the curve is not crowded.",
+  "beats": [
+    {
+      "at": 0.9,
+      "beat": "Points are class labels; the curve is probability, not the class."
+    },
+    {
+      "at": 3.6,
+      "beat": "The score is linear; the sigmoid squashes it into (0, 1)."
+    },
+    {
+      "at": 6.6,
+      "beat": "At s = 0, p = 0.5: the boundary is the score-0 line."
+    },
+    {
+      "at": 9.8,
+      "beat": "The curve approaches 0 and 1 but never reaches them; the 0.5 rule makes the class."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 1.8,
+      "kind": "answer",
+      "prompt": "Left of the boundary, is the probability above or below 0.5?"
+    },
+    {
+      "at": 5.0,
+      "kind": "answer",
+      "prompt": "What changes exactly at x = 0: the score, the probability, or the class decision?"
+    },
+    {
+      "at": 8.0,
+      "kind": "answer",
+      "prompt": "Why can the probability never reach or exceed 1?"
+    },
+    {
+      "at": 10.5,
+      "kind": "answer",
+      "prompt": "Does the model output a class directly, or a probability that a rule thresholds?"
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "Logistic regression predicts a class directly with a straight line",
+      "move": "The only straight line on the canvas is the threshold marker at x = 0, labelled as the boundary, not as the model's output. The model's output is the black S-curve; the class appears only after the 0.5 rule. The first checkpoint makes the learner separate the curve from the decision."
+    },
+    {
+      "misconception": "Probability can exceed 1",
+      "move": "The vertical axis stops at 1, the curve is asymptotic to 1, and the bar's height is 320p, which cannot exceed 320 px for any finite x. The checkpoint at 8 s asks why the curve never reaches the top, and the narration says it approaches 1 from below."
+    },
+    {
+      "misconception": "A bigger score changes the shape of the curve",
+      "move": "The curve is fixed; only the probed feature value moves. This isolates 'the curve is the model' from 'the point is the query', and prevents the common picture in which the sigmoid itself slides with the data."
+    }
+  ],
+  "correctnessChecks": [
+    "The curve is p = 1/(1+e^-x), sampled at 61 points and mapped to 90 + (x + 4.2)(530/8.4) and 440 - 320p; at x = 0 it passes through (355, 280), which is exactly p = 0.5.",
+    "The bar's height expression is 320/(1+e^-x), so its top edge coincides with the curve at every slider value; it cannot render above p = 1.",
+    "The four data points are drawn at p = 0 and p = 1 as observed labels, not as model outputs; the note and narration call the curve the predicted probability.",
+    "The boundary is drawn at s = 0, and nothing claims a causal effect: the narration says predicted probability and the metadata states association only."
+  ],
+  "implementationNotes": "Every expression uses only the declared property x, t and duration, with no function calls; the slider and the timeline therefore drive exactly the same geometry.",
+  "constraints": {
+    "primitives": 16,
+    "properties": 1,
+    "tracks": 1,
+    "keyframes": 5,
+    "checkpoints": 4,
+    "usesStates": false
+  }
+}

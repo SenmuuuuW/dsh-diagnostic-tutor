@@ -1,0 +1,92 @@
+{
+  "version": "0.1",
+  "caseId": "v4s-marginal-cost",
+  "needsScene": true,
+  "sceneFile": "v4s-marginal-cost.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "whyScene": "The learning target is a relation between two curves and one moving threshold. Marginal cost is not a place on a curve; it is the size of a step, and the number that makes it matter is a second curve (average cost) that the step pushes up or down. Static panels can print three quantities side by side, but the case's hardest claim - that MC and ATC are different numbers that meet at exactly one quantity, and that the meeting point is where the average stops falling - is a relation between positions, and it is read most directly when one quantity slider sweeps and both markers travel with it. The red bar between the curves is the argument: it is the gap between the next unit's cost and the average, it closes at the minimum of ATC, and it reverses. Then the fixed price line turns the same sweep into a decision: the endpoint of the bar crosses the price line at one quantity, and the learner can stop there, push past it, and see that the extra unit still costs more than it earns while total cost per unit is still covered. That pair of facts - still profitable overall, not worth producing at the margin - is precisely the misconception, and it needs the sweep to be seen as one picture.",
+  "layout": "Cost chart from x 182 to 614, price scale y 150 to 450. Blue MC is a straight rising line, MC = 4 + 0.3q, from 5.8 at q = 6 to 11.2 at q = 24. Grey dashed ATC is U shaped, ATC = 20/q + 4 + 0.15q, from 8.23 at q = 6 down to 7.46 at q of 11.55 and back up to 8.43 at q = 24; it crosses MC exactly at its own minimum. The dashed red price line sits at 9.50 and meets MC at q of 18.33, marked with a red dot. Three labels sit outside the plot at x 620 or more (MC at 177, price at 224, ATC at 251) so no moving element can cross them: the quantity guide and the red gap bar travel the full width of the plot, so all in-plot text was removed and only the axis label below the axis remains. Two caption lines carry the cost formulas and the market-structure caveat.",
+  "beats": [
+    {
+      "at": 0.0,
+      "beat": "Chart at q = 8: blue MC at 6.40, grey ATC at 7.70, and a red bar of about 31 px between them."
+    },
+    {
+      "at": 3.0,
+      "beat": "The bar is the difference between the next unit's cost and the average; the learner predicts whether the next unit lowers the average."
+    },
+    {
+      "at": 6.5,
+      "beat": "q reaches 11.55: the bar closes to nothing, MC equals ATC at the lowest point of the average curve."
+    },
+    {
+      "at": 9.5,
+      "beat": "Past the minimum the bar reverses: the next unit costs more than the average, so the average rises."
+    },
+    {
+      "at": 11.5,
+      "beat": "q reaches 18.33: the blue dot crosses the price line, which is the quantity rule's stopping point."
+    },
+    {
+      "at": 16.5,
+      "beat": "q = 22: the next unit costs 10.60 against a price of 9.50, while ATC is 8.21, so the firm is still covering cost per unit and still should not make this unit."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 0.0,
+      "kind": "slider",
+      "prompt": "Set quantity and read the two costs off the dots at that quantity."
+    },
+    {
+      "at": 2.5,
+      "kind": "answer",
+      "prompt": "Should the seller add a 9th unit at q = 8? Which number decides it?"
+    },
+    {
+      "at": 7.6,
+      "kind": "answer",
+      "prompt": "What does it mean that MC and ATC are equal at the bottom of the average curve?"
+    },
+    {
+      "at": 12.6,
+      "kind": "answer",
+      "prompt": "Which is larger past the minimum, and why does the average start to rise?"
+    },
+    {
+      "at": 15.0,
+      "kind": "answer",
+      "prompt": "At q = 22, is total cost per unit still covered, and should the extra unit be made?"
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "Marginal cost is average cost",
+      "move": "The two are separate curves with separate labels, and the red bar between them is the visible difference at every quantity: 1.30 apart at q = 8, zero at q = 11.55, and reversed at q = 22. The caption states MC as a change (4 + 0.3q) and ATC as a division (TC / q), and checkpoint 2 asks what equality means at the single point where it happens."
+    },
+    {
+      "misconception": "A unit whose cost is above the price still adds profit",
+      "move": "The price line is fixed and the marginal dot crosses it exactly once. At q = 22 the dot is above the price line while the ATC curve is still below it, so the scene holds both facts at once and the last checkpoint asks the learner to separate 'we are covering cost per unit' from 'this unit is worth making'. The caption says the extra unit costs more than it earns."
+    }
+  ],
+  "correctnessChecks": [
+    "MC is the derivative of TC = 20 + 4q + 0.15q squared, so MC = 4 + 0.3q; the plotted blue line is exactly that function, from 5.8 at q = 6 to 11.2 at q = 24. The increment reading agrees with the derivative reading: TC(8) - TC(7) = 61.6 - 55.35 = 6.25, which is exactly MC at the midpoint, 4 + 0.3 x 7.5 = 6.25, so 'cost of one more unit' and 'MC = 4 + 0.3q' are the same statement measured against a one-unit step.",
+    "ATC = TC/q = 20/q + 4 + 0.15q and is minimised where its derivative is zero, at q = sqrt(20/0.15) = 11.55; at that q, MC = 4 + 3.465 = 7.465 equals ATC = 1.732 + 4 + 1.732 = 7.464, so the crossing of the curves and the minimum of ATC coincide exactly, as drawn.",
+    "The price line at 9.50 meets MC at q = (9.50 - 4)/0.3 = 18.33, which is the x position of the red dot (478 px); the dot is drawn on the intersection, not near it.",
+    "The closing claim is a quantity rule for a seller that takes price as given: the caption and the expected understanding both say it is not a claim about how competitive the market is, so no perfect-competition assertion is made.",
+    "At q = 8 the numeric values quoted in the narration (MC 6.40, ATC 7.70) match the formulas and the plotted positions: y = 450 - 24 x 6.4 = 296.4 and y = 450 - 24 x 7.7 = 265.2."
+  ],
+  "implementationNotes": "One numeric property q drives every moving primitive: the guide, the gap bar, the marginal dot and the axis label express the same x(q) = 182 + (q - 6) * 24, and the vertical positions use the same two cost functions as the static path geometry, so the dot cannot drift off its own curve. All expressions are pure arithmetic of q; no conditionals are needed because the bar's endpoints are computed from the two cost functions and reverse direction on their own when MC passes ATC.",
+  "constraints": {
+    "primitives": 16,
+    "properties": 1,
+    "tracks": 1,
+    "keyframes": 8,
+    "checkpoints": 4,
+    "usesStates": false
+  }
+}

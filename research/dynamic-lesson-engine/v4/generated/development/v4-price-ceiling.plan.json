@@ -1,0 +1,83 @@
+{
+  "version": "0.1",
+  "caseId": "v4-price-ceiling",
+  "needsScene": true,
+  "sceneFile": "v4-price-ceiling.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "whyScene": "The core claim is about what does not move while something else does. An interactive cap sliding down a fixed pair of curves shows, in one continuous view, that the shortage is read at the cap and that S and D never shift, which is exactly what the two misconceptions get wrong.",
+  "layout": "Price on the vertical axis (y = 470 - 24P), quantity on the horizontal (x = 140 + 12Q). Demand from (140,110) to (860,470); supply from (140,470) to (500,110); equilibrium at (380,230). Ceiling is a red dashed horizontal line whose height is the slider property; shortage arrow runs between the two curves at that height.",
+  "beats": [
+    {
+      "at": 0.7,
+      "beat": "Equilibrium where demand and supply cross."
+    },
+    {
+      "at": 2.6,
+      "beat": "Cap imposed at 8, below equilibrium: binding."
+    },
+    {
+      "at": 5.8,
+      "beat": "At 8: Qs 16, Qd 28, shortage 12."
+    },
+    {
+      "at": 12.5,
+      "beat": "At 6: Qs 12, Qd 36, shortage 24."
+    },
+    {
+      "at": 15.5,
+      "beat": "Cap at 5: shortage 30, curves unmoved."
+    },
+    {
+      "at": 17,
+      "beat": "A cap at or above equilibrium is not binding."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 4.0,
+      "kind": "answer",
+      "prompt": "The cap is at 8, below the equilibrium price. Did the demand curve move when the cap was imposed?"
+    },
+    {
+      "at": 6.4,
+      "kind": "continue",
+      "prompt": "Continue to lower the cap and watch where the two quantities go."
+    },
+    {
+      "at": 10.0,
+      "kind": "answer",
+      "prompt": "At the capped price, which is larger: quantity demanded or quantity supplied?"
+    },
+    {
+      "at": 16.8,
+      "kind": "answer",
+      "prompt": "If the cap were 11, above the equilibrium, what shortage would it create?"
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "A ceiling shifts demand",
+      "move": "The demand line is drawn once and never animates; only the red cap and the arrow endpoints move along it."
+    },
+    {
+      "misconception": "Ceiling creates surplus",
+      "move": "The arrow points from quantity supplied to quantity demanded and is labelled shortage; it is an excess demand, and a surplus would appear only from a price floor."
+    }
+  ],
+  "correctnessChecks": [
+    "Binding ceiling is below the equilibrium price (8 and 5 are below P* = 10).",
+    "Shortage not surplus: Qd exceeds Qs at every cap shown (28 vs 16, 36 vs 12, 40 vs 10).",
+    "No welfare or deadweight-loss claim is made; the scene stays inside the supply-demand model."
+  ],
+  "constraints": {
+    "primitives": 16,
+    "properties": 1,
+    "tracks": 1,
+    "keyframes": 4,
+    "checkpoints": 4,
+    "usesStates": false
+  }
+}

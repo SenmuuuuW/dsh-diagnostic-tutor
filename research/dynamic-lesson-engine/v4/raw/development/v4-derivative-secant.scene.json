@@ -1,0 +1,326 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "metadata": {
+    "title": "Derivative as the limit of a secant slope",
+    "subject": "Mathematics",
+    "topic": "Derivative as a Secant Limit",
+    "objective": "Show how the slope of a secant line approaches the tangent slope as h shrinks.",
+    "learner": "Can compute slopes but not interpret a point derivative.",
+    "misconceptions": [
+      "Slope at a point needs two points",
+      "A small h is zero"
+    ],
+    "expectedUnderstanding": "The secant through P and Q has slope 2 + h because f(x)=x²; as h shrinks toward zero but never reaches it, the secant rotates onto the tangent and its slope tends to 2, the derivative at x = 1."
+  },
+  "properties": [
+    {
+      "id": "h",
+      "label": "Step h",
+      "value": 1.2,
+      "min": 0.05,
+      "max": 1.2,
+      "step": 0.05
+    }
+  ],
+  "primitives": [
+    {
+      "id": "bg",
+      "type": "rect",
+      "x": 0,
+      "y": 0,
+      "width": 960,
+      "height": 540,
+      "rx": 0,
+      "fill": "#ffffff",
+      "stroke": "#ffffff",
+      "strokeWidth": 1,
+      "opacity": 1
+    },
+    {
+      "id": "xaxis",
+      "type": "line",
+      "x1": 455,
+      "y1": 480,
+      "x2": 930,
+      "y2": 480,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "yaxis",
+      "type": "line",
+      "x1": 526.25,
+      "y1": 480,
+      "x2": 526.25,
+      "y2": 88,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "curve",
+      "type": "path",
+      "d": "M470 472.3 L477 474.1 L484.1 475.7 L491.1 477 L498.1 478.1 L505.2 478.9 L512.2 479.5 L519.2 479.9 L526.2 480 L533.3 479.9 L540.3 479.5 L547.3 478.9 L554.4 478.1 L561.4 477 L568.4 475.7 L575.5 474.1 L582.5 472.3 L589.5 470.3 L596.6 468 L603.6 465.5 L610.6 462.7 L617.7 459.7 L624.7 456.5 L631.7 453 L638.8 449.3 L645.8 445.3 L652.8 441.1 L659.8 436.7 L666.9 432 L673.9 427.1 L680.9 421.9 L688 416.5 L695 410.9 L702 405 L709.1 398.9 L716.1 392.5 L723.1 385.9 L730.2 379.1 L737.2 372 L744.2 364.7 L751.3 357.1 L758.3 349.3 L765.3 341.3 L772.3 333 L779.4 324.5 L786.4 315.7 L793.4 306.7 L800.5 297.5 L807.5 288 L814.5 278.3 L821.6 268.3 L828.6 258.1 L835.6 247.7 L842.7 237 L849.7 226.1 L856.7 214.9 L863.7 203.5 L870.8 191.9 L877.8 180 L884.8 167.9 L891.9 155.5 L898.9 142.9 L905.9 130.1 L913 117 L920 103.7",
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2.5,
+      "opacity": 1
+    },
+    {
+      "id": "tangent",
+      "type": "line",
+      "x1": 596.6,
+      "y1": 480,
+      "x2": 793.4,
+      "y2": 345.6,
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 2,
+      "dash": "7 6",
+      "opacity": 1
+    },
+    {
+      "id": "secant",
+      "type": "line",
+      "x1": 666.88,
+      "y1": 432,
+      "x2": {
+        "expr": "666.88 + 140.63*h"
+      },
+      "y2": {
+        "expr": "432 - 96*h - 48*h*h"
+      },
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 3,
+      "opacity": 1
+    },
+    {
+      "id": "run",
+      "type": "line",
+      "x1": 666.88,
+      "y1": 432,
+      "x2": {
+        "expr": "666.88 + 140.63*h"
+      },
+      "y2": 432,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 1.5,
+      "dash": "4 4",
+      "opacity": 1
+    },
+    {
+      "id": "rise",
+      "type": "line",
+      "x1": {
+        "expr": "666.88 + 140.63*h"
+      },
+      "y1": 432,
+      "x2": {
+        "expr": "666.88 + 140.63*h"
+      },
+      "y2": {
+        "expr": "432 - 96*h - 48*h*h"
+      },
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 1.5,
+      "dash": "4 4",
+      "opacity": 1
+    },
+    {
+      "id": "ptP",
+      "type": "circle",
+      "cx": 666.88,
+      "cy": 432,
+      "r": 6.5,
+      "fill": "#1d4ed8",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "ptQ",
+      "type": "circle",
+      "cx": {
+        "expr": "666.88 + 140.63*h"
+      },
+      "cy": {
+        "expr": "432 - 96*h - 48*h*h"
+      },
+      "r": 6.5,
+      "fill": "#dc2626",
+      "stroke": "#111827",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "labP",
+      "type": "text",
+      "x": 654,
+      "y": 424,
+      "text": "P",
+      "fontSize": 16,
+      "anchor": "end",
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "fontWeight": "700"
+    },
+    {
+      "id": "labQ",
+      "type": "text",
+      "x": {
+        "expr": "678 + 140.63*h"
+      },
+      "y": {
+        "expr": "420 - 96*h - 48*h*h"
+      },
+      "text": "Q",
+      "fontSize": 16,
+      "anchor": "start",
+      "fill": "#dc2626",
+      "stroke": "none",
+      "fontWeight": "700"
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 30,
+      "y": 46,
+      "text": "The derivative as a secant limit",
+      "fontSize": 22,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "ftext",
+      "type": "text",
+      "x": 30,
+      "y": 104,
+      "text": "f(x) = x²    P = (1, 1)    Q = (1+h, (1+h)²)",
+      "fontSize": 15,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "slopetext",
+      "type": "text",
+      "x": 30,
+      "y": 150,
+      "text": "secant slope = ( f(1+h) − f(1) ) / h = 2 + h",
+      "fontSize": 16,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    },
+    {
+      "id": "hint",
+      "type": "text",
+      "x": 30,
+      "y": 200,
+      "text": "h → 0: secant → tangent (slope 2); h stays above 0",
+      "fontSize": 15,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400"
+    }
+  ],
+  "timeline": {
+    "duration": 14,
+    "tracks": [
+      {
+        "target": {
+          "property": "h"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 1.2,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 1.2,
+            "easing": "linear"
+          },
+          {
+            "at": 11,
+            "value": 0.05,
+            "easing": "ease-out"
+          },
+          {
+            "at": 14,
+            "value": 0.05,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "step",
+      "type": "slider",
+      "label": "Step h",
+      "property": "h",
+      "min": 0.05,
+      "max": 1.2,
+      "step": 0.05
+    }
+  ],
+  "checkpoints": [
+    {
+      "at": 5.5,
+      "prompt": "The secant is still clearly steeper than the tangent. Predict its slope from the on-screen relation slope = 2 + h.",
+      "learnerAction": "answer"
+    },
+    {
+      "at": 12.5,
+      "prompt": "Predict the value the secant slope approaches as h → 0.",
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.4,
+      "text": "P is fixed at (1, 1). Q sits at x = 1 + h, so the two points are always distinct."
+    },
+    {
+      "at": 4.0,
+      "text": "The rise is f(1+h) − f(1) and the run is h, giving a secant slope of 2 + h."
+    },
+    {
+      "at": 9.0,
+      "text": "As h shrinks the secant keeps pivoting about P toward the blue tangent."
+    },
+    {
+      "at": 12.0,
+      "text": "h never becomes zero, so the slope is always defined; the limit it approaches is 2, the slope at the single point P."
+    }
+  ],
+  "fallback": {
+    "text": "Static formula sheet: for f(x) = x², P = (1, 1), Q = (1 + h, (1 + h)²). Secant slope = ((1+h)² − 1)/h = (2h + h²)/h = 2 + h. Tabulate h = 1, 0.5, 0.1, 0.01 giving slopes 3, 2.5, 2.1, 2.01, and mark that h is never 0, so the limiting tangent slope is 2."
+  },
+  "accessibility": {
+    "alt": "The parabola f(x) = x² with a fixed point P at (1,1) and a movable point Q further along the curve. A red secant line joins P and Q with a dashed rise-and-run triangle, while a dashed blue tangent sits at P. As Q slides back toward P the red line rotates onto the blue tangent.",
+    "reducedMotion": "Show three static snapshots of the same figure side by side for h = 1, 0.5 and 0.1 with their slopes labelled, ending on the tangent at slope 2.",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    "case:v4-derivative-secant"
+  ]
+}

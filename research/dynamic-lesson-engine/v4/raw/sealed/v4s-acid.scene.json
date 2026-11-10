@@ -1,0 +1,386 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Atomicity: a 100 transfer is all or nothing",
+    "subject": "Computer Science",
+    "topic": "Database Transactions",
+    "objective": "Show why atomicity and rollback keep a transaction's partial writes invisible.",
+    "learner": "Knows tables and commits.",
+    "misconceptions": [
+      "A failed transaction leaves partial writes behind",
+      "Atomic means fast",
+      "Other sessions can read uncommitted rows"
+    ],
+    "expectedUnderstanding": [
+      "The buffer holds a staged debit of 100 on A while B has not yet been credited; that is a partial write.",
+      "The committed table is what every other session reads, and it stays at 200 and 50 while the buffer is private.",
+      "Commit applies both staged writes as one unit: A becomes 100 and B becomes 150 at the same moment.",
+      "Rollback discards the buffer and the committed values never move, so no partial state can survive."
+    ]
+  },
+  "properties": [
+    {
+      "id": "d",
+      "label": "Outcome: abort (-1), in flight (0), commit (+1)",
+      "min": -1,
+      "max": 1,
+      "step": 1,
+      "default": 0
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 36,
+      "y": 46,
+      "text": "Atomicity: a 100 transfer is all or nothing",
+      "fontSize": 21,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": 0
+    },
+    {
+      "id": "headerRule",
+      "type": "line",
+      "x1": 60,
+      "y1": 172,
+      "x2": 900,
+      "y2": 172,
+      "fill": "none",
+      "stroke": "#d1d5db",
+      "strokeWidth": 1.5,
+      "opacity": 1
+    },
+    {
+      "id": "headCommitted",
+      "type": "text",
+      "x": 100,
+      "y": 150,
+      "text": "Committed table (every session)",
+      "fontSize": 15,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "headBuffer",
+      "type": "text",
+      "x": 560,
+      "y": 150,
+      "text": "Private buffer (this transaction)",
+      "fontSize": 15,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": {
+        "expr": "1-(d*d)**0.5"
+      }
+    },
+    {
+      "id": "rowA",
+      "type": "text",
+      "x": 100,
+      "y": 282,
+      "text": "A",
+      "fontSize": 28,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "rowB",
+      "type": "text",
+      "x": 100,
+      "y": 360,
+      "text": "B",
+      "fontSize": 28,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": 1
+    },
+    {
+      "id": "valAold",
+      "type": "text",
+      "x": 380,
+      "y": 282,
+      "text": "200",
+      "fontSize": 40,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": {
+        "expr": "1-(d+(d*d)**0.5)/2"
+      }
+    },
+    {
+      "id": "valAnew",
+      "type": "text",
+      "x": 380,
+      "y": 282,
+      "text": "100",
+      "fontSize": 40,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": {
+        "expr": "(d+(d*d)**0.5)/2"
+      }
+    },
+    {
+      "id": "valBold",
+      "type": "text",
+      "x": 380,
+      "y": 360,
+      "text": "50",
+      "fontSize": 40,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": {
+        "expr": "1-(d+(d*d)**0.5)/2"
+      }
+    },
+    {
+      "id": "valBnew",
+      "type": "text",
+      "x": 380,
+      "y": 360,
+      "text": "150",
+      "fontSize": 40,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": {
+        "expr": "(d+(d*d)**0.5)/2"
+      }
+    },
+    {
+      "id": "bufA",
+      "type": "text",
+      "x": 740,
+      "y": 282,
+      "text": "100",
+      "fontSize": 40,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": {
+        "expr": "1-(d*d)**0.5"
+      }
+    },
+    {
+      "id": "bufB",
+      "type": "text",
+      "x": 740,
+      "y": 360,
+      "text": "50",
+      "fontSize": 40,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": {
+        "expr": "1-(d*d)**0.5"
+      }
+    },
+    {
+      "id": "noteStage",
+      "type": "text",
+      "x": 60,
+      "y": 440,
+      "text": "In flight: A is debited to 100 in the buffer; B is not yet credited.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": {
+        "expr": "1-(d*d)**0.5"
+      }
+    },
+    {
+      "id": "noteRead",
+      "type": "text",
+      "x": 60,
+      "y": 472,
+      "text": "Other sessions read only the committed column: 200 and 50.",
+      "fontSize": 14,
+      "anchor": "start",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "400",
+      "opacity": {
+        "expr": "1-(d*d)**0.5"
+      }
+    },
+    {
+      "id": "bannerCommit",
+      "type": "text",
+      "x": 480,
+      "y": 514,
+      "text": "COMMIT: both writes become visible together.",
+      "fontSize": 17,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": {
+        "expr": "(d+(d*d)**0.5)/2"
+      }
+    },
+    {
+      "id": "bannerAbort",
+      "type": "text",
+      "x": 480,
+      "y": 514,
+      "text": "ROLLBACK: the buffer is discarded; 200 and 50 remain.",
+      "fontSize": 17,
+      "anchor": "middle",
+      "fill": "#111827",
+      "stroke": "none",
+      "fontWeight": "700",
+      "opacity": {
+        "expr": "((d*d)**0.5-d)/2"
+      }
+    }
+  ],
+  "timeline": {
+    "duration": 12.0,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "title",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.2,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.8,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "at": 12,
+            "value": 1,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "outcomeControl",
+      "kind": "slider",
+      "propertyId": "d",
+      "label": "outcome (abort, in flight, commit)"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-inflight",
+      "at": 1.4,
+      "title": "In flight",
+      "body": "The buffer has a staged debit on A. What does another session read for A at this moment, and why?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-commit",
+      "at": 4.4,
+      "title": "Commit",
+      "body": "Move the outcome slider fully right. What changes, and does B's credit appear before, after, or with A's debit?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-partial",
+      "at": 6.6,
+      "title": "The impossible read",
+      "body": "Could any reader ever see A = 100 while B still reads 50? Say what the all-or-nothing rule forbids.",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-abort",
+      "at": 9.0,
+      "title": "Abort",
+      "body": "Move the slider fully left. What happens to the staged 100, and what do A and B read now?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-meaning",
+      "at": 10.8,
+      "title": "Not speed",
+      "body": "In one sentence: is atomic about how fast the transfer runs, or about which states other sessions are allowed to see?",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.8,
+      "text": "Account A holds 200 and B holds 50. The transaction stages a debit of 100 on A and a credit of 100 on B."
+    },
+    {
+      "at": 3.2,
+      "text": "The buffer is private. The committed table, which other sessions read, still shows 200 and 50."
+    },
+    {
+      "at": 6.0,
+      "text": "Commit applies both staged writes as one unit: A becomes 100 and B becomes 150, with no readable moment in between."
+    },
+    {
+      "at": 9.8,
+      "text": "Rollback discards the buffer instead. The committed values never moved, so no partial debit can survive."
+    },
+    {
+      "at": 11.2,
+      "text": "Atomicity is all-or-nothing, not speed: it is a rule about which states other sessions can ever observe."
+    }
+  ],
+  "fallback": {
+    "text": "Static two-column table. The committed column shows A = 200 and B = 50, which is what every other session reads. The private buffer shows a staged debit A = 100 and B = 50, not yet credited. If the transaction commits, both committed values change together to A = 100 and B = 150; if it aborts, the buffer is discarded and the committed values stay 200 and 50. No reader ever sees A = 100 together with B = 50. Caption: atomicity means the two writes are one unit; it is not a claim about speed."
+  },
+  "accessibility": {
+    "alt": "A table with two columns and two rows. The left column is the committed table visible to every session, with A = 200 and B = 50. The right column is the transaction's private buffer, holding a staged debit A = 100 and B = 50 before the credit is written. A three-position outcome slider moves from abort through in flight to commit: moving it right changes both committed values together to A = 100 and B = 150, while the buffer disappears; moving it left discards the buffer and leaves A = 200 and B = 50. A banner names the chosen outcome, and notes explain that other sessions read only the committed column.",
+    "reducedMotion": "static",
+    "keyboard": true
+  },
+  "sourceRefs": [
+    {
+      "sourceId": "case:v4s-acid",
+      "locator": "objective; correctnessCriteria"
+    }
+  ]
+}

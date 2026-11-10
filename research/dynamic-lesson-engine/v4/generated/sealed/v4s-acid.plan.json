@@ -1,0 +1,91 @@
+{
+  "version": "0.1",
+  "caseId": "v4s-acid",
+  "needsScene": true,
+  "sceneFile": "v4s-acid.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "whyScene": "Atomicity is about what other sessions can see while a transaction is half done, and that is a comparison of two views at the same moment, not a story about a sequence. A single table showing 200 and 50 after a crash would not show that the staged 100 existed; a single table showing 100 and 50 would falsely suggest the transfer happened. The scene keeps the committed column and the private buffer side by side, and one outcome slider commits or aborts, so the learner can watch the buffer look real and then see it either land in both rows at once or vanish. That side-by-side is the argument: no reader ever sees the partial pair.",
+  "layout": "Two columns share the page: the committed table at x = 380 and the private buffer at x = 740, with column headers at y = 150 and a rule at y = 172. Rows A and B sit at y = 282 and 360, with 40 px values. The committed column crossfades 200 to 100 and 50 to 150 as the outcome slider moves right; the buffer values and their headers are visible only in the in-flight position. A staged note at y = 440 and a visibility note at y = 472 sit under the table, and the commit or rollback banner appears at y = 514. The title fades in over the first 0.8 s; everything else is driven by the slider.",
+  "beats": [
+    {
+      "at": 0.8,
+      "beat": "A holds 200 and B holds 50; the transfer stages a debit and a credit."
+    },
+    {
+      "at": 3.2,
+      "beat": "The buffer is private; the committed table stays at 200 and 50."
+    },
+    {
+      "at": 6.0,
+      "beat": "Commit applies both writes at once: 100 and 150."
+    },
+    {
+      "at": 9.8,
+      "beat": "Rollback discards the buffer; the committed values never moved."
+    },
+    {
+      "at": 11.2,
+      "beat": "Atomic is all-or-nothing, not speed."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 1.4,
+      "kind": "answer",
+      "prompt": "In flight, what does another session read for A?"
+    },
+    {
+      "at": 4.4,
+      "kind": "answer",
+      "prompt": "Move the slider right to commit. When does B's credit become visible?"
+    },
+    {
+      "at": 6.6,
+      "kind": "answer",
+      "prompt": "Could a reader ever see A = 100 while B still reads 50?"
+    },
+    {
+      "at": 9.0,
+      "kind": "answer",
+      "prompt": "Move the slider left to abort. What happens to the staged 100?"
+    },
+    {
+      "at": 10.8,
+      "kind": "answer",
+      "prompt": "Is atomic about speed or about visible states?"
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "A failed transaction leaves partial writes",
+      "move": "The buffer is a separate column, and the abort position removes both buffer values while the committed column stays at 200 and 50. There is no moment in the drawing where the committed A shows 100 without B showing 150, and the checkpoint at 6.6 s asks the learner to confirm that no such read exists."
+    },
+    {
+      "misconception": "Atomic means fast",
+      "move": "The scene has no clock or timing claim about the transfer; the only time is the learner's own slider movement. The final checkpoint and narration say atomicity is a constraint on which states are observable, not a speed."
+    },
+    {
+      "misconception": "Other sessions can read uncommitted rows",
+      "move": "The committed column is labelled as what every session reads, and it does not change while the buffer is populated. The visibility note repeats this, and the committed values move only when the outcome slider reaches commit."
+    }
+  ],
+  "correctnessChecks": [
+    "The buffer shows a staged debit of 100 on A while B has not yet been credited, so the buffer's contents sum to 150, not the 250 held in the committed table; this is exactly the partial state the rule forbids exposing.",
+    "At commit the committed column changes to A = 100 and B = 150 together; at abort it stays at A = 200 and B = 50 and the buffer disappears.",
+    "No isolation-level detail is claimed: the scene labels only committed versus private, with no locks, levels or timing guarantees.",
+    "The crossfade expressions use only d and arithmetic, so at d = 1 only the new committed values are visible and at d = -1 only the old ones."
+  ],
+  "implementationNotes": "The outcome property drives every state through three arithmetic gates: positive part (d + |d|)/2, negative part (|d| - d)/2 and in-flight 1 - |d|, with |d| written as (d*d)**0.5 so no function call is needed. Only the title opacity is keyframed, leaving the slider in sole control of the transaction state.",
+  "constraints": {
+    "primitives": 16,
+    "properties": 1,
+    "tracks": 1,
+    "keyframes": 4,
+    "checkpoints": 5,
+    "usesStates": false
+  }
+}

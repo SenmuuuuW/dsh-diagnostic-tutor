@@ -271,7 +271,7 @@ function checkKeys(value, allowed, path, errors) {
   for (const key of Object.keys(value)) if (!allowed.includes(key)) errors.push(fail(`${path}.${key}`, 'unknown-key', 'unsupported field'))
 }
 
-function validatePrimitive(raw, index, propertyIds, errors) {
+function validatePrimitive(raw, index, propertyIds, errors, normalizeAliases = true) {
   const path = `primitives[${index}]`
   if (!isRecord(raw)) { errors.push(fail(path, 'object', 'must be an object')); return }
   if (!stringField(raw.id, 64) || !ID_RE.test(raw.id)) errors.push(fail(`${path}.id`, 'id', 'must match [A-Za-z][A-Za-z0-9_-]{0,63}'))
@@ -279,7 +279,7 @@ function validatePrimitive(raw, index, propertyIds, errors) {
   const allowedVars = [...propertyIds, 't', 'duration']
   const numeric = NUMERIC_PROPS[raw.type]
   // v3 compatibility: SVG's natural textAnchor spelling is normalized to anchor.
-  if (raw.textAnchor !== undefined && raw.anchor === undefined) { raw.anchor = raw.textAnchor; delete raw.textAnchor }
+  if (normalizeAliases && raw.textAnchor !== undefined && raw.anchor === undefined) { raw.anchor = raw.textAnchor; delete raw.textAnchor }
   const allowedKeys = ['id', 'type', ...numeric, ...COLOR_PROPS, 'd', 'dash', 'text', 'fontSize', 'anchor', 'fontWeight']
   checkKeys(raw, allowedKeys, path, errors)
   for (const key of numeric) {
@@ -327,7 +327,8 @@ function validateTrackTarget(target, primitiveById, errors, path) {
 }
 
 /** Validate a raw value and return a structured result. No execution occurs. */
-export function validateSceneSpec(raw) {
+export function validateSceneSpec(raw, options = {}) {
+  const normalizeAliases = options.normalizeAliases !== false
   const errors = []
   if (!isRecord(raw)) return { ok: false, errors: [fail('$', 'object', 'SceneSpec must be an object')] }
   checkKeys(raw, ['version', 'viewport', 'metadata', 'properties', 'primitives', 'timeline', 'controls', 'checkpoints', 'narration', 'states', 'stateTimeline', 'fallback', 'accessibility', 'sourceRefs'], '$', errors)
@@ -347,10 +348,7 @@ export function validateSceneSpec(raw) {
   else {
     checkKeys(raw.metadata, ['title', 'subject', 'topic', 'objective', 'learner', 'misconceptions', 'expectedUnderstanding'], 'metadata', errors)
     for (const key of ['title', 'subject', 'objective', 'learner']) if (!stringField(raw.metadata[key], LIMITS.metadataChars)) errors.push(fail(`metadata.${key}`, 'string', 'required short string'))
-    if (raw.metadata.topic !== undefined) {
-      if (!stringField(raw.metadata.topic, LIMITS.metadataChars)) errors.push(fail('metadata.topic', 'string', 'short string'))
-      else delete raw.metadata.topic
-    }
+    if (raw.metadata.topic !== undefined && !stringField(raw.metadata.topic, LIMITS.metadataChars)) errors.push(fail('metadata.topic', 'string', 'short string'))
     for (const key of ['misconceptions', 'expectedUnderstanding']) {
       if (raw.metadata[key] !== undefined) {
         if (!Array.isArray(raw.metadata[key]) || raw.metadata[key].length > 8 || !raw.metadata[key].every((entry) => stringField(entry, 400))) errors.push(fail(`metadata.${key}`, 'array', 'array of up to 8 short strings'))
@@ -386,7 +384,7 @@ export function validateSceneSpec(raw) {
   if (!Array.isArray(raw.primitives) || raw.primitives.length === 0 || raw.primitives.length > LIMITS.primitives) errors.push(fail('primitives', 'array', `1-${LIMITS.primitives} primitives required`))
   else {
     raw.primitives.forEach((primitive, index) => {
-      validatePrimitive(primitive, index, propertyIds, errors)
+      validatePrimitive(primitive, index, propertyIds, errors, normalizeAliases)
       if (isRecord(primitive) && typeof primitive.id === 'string') {
         if (primitiveById.has(primitive.id)) errors.push(fail(`primitives[${index}].id`, 'duplicate', 'duplicate primitive id'))
         else primitiveById.set(primitive.id, primitive)

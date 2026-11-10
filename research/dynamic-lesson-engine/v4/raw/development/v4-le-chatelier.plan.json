@@ -1,0 +1,84 @@
+{
+  "version": "0.1",
+  "caseId": "v4-le-chatelier",
+  "needsScene": true,
+  "sceneFile": "v4-le-chatelier.scene.json",
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "whyScene": "The content is a feedback loop in time: a disturbance pushes Q away from K, the two directions become unequal, and the system's own reaction carries Q back to K. Only a time axis can show the marker leaving K and returning while the K tick stays put; a before-and-after pair shows two positions but hides the mechanism, and it invites the reading that K itself moved.",
+  "layout": "Left: bars for [A] at x = 140 and [B] at x = 270, width 80, heights 45 times cA and 45 times cB on the baseline y = 470. Right: a Q scale along y = 300 from x = 500 to 900, with the K tick fixed at x = 680 (Q = 1) and the dot at 500 + 180 Q. Forward arrow above the scale at y = 170 pointing right, reverse arrow at y = 215 pointing left; both arrow opacities are functions of Q, so the pair is balanced exactly when Q equals K.",
+  "beats": [
+    {
+      "at": 1.2,
+      "beat": "Equilibrium: equal arrows, Q on K."
+    },
+    {
+      "at": 6.9,
+      "beat": "Add A: A bar jumps, Q falls below K."
+    },
+    {
+      "at": 9.8,
+      "beat": "Forward reaction dominates; shift to the right."
+    },
+    {
+      "at": 13.4,
+      "beat": "Q returns to K; K tick unchanged."
+    },
+    {
+      "at": 18.8,
+      "beat": "Second addition buys a smaller rise in B."
+    },
+    {
+      "at": 23.2,
+      "beat": "Never complete conversion."
+    }
+  ],
+  "interaction": [
+    {
+      "at": 3.8,
+      "kind": "answer",
+      "prompt": "At equilibrium both arrows are equal. Are the reactions stopped?"
+    },
+    {
+      "at": 8.2,
+      "kind": "answer",
+      "prompt": "Q is below K after the addition. Which way must the system shift?"
+    },
+    {
+      "at": 16.8,
+      "kind": "continue",
+      "prompt": "Continue and watch whether the K tick or the Q dot is the one that moves."
+    },
+    {
+      "at": 23.5,
+      "kind": "answer",
+      "prompt": "Why does the second equal addition of A produce less extra B?"
+    }
+  ],
+  "misconceptionMoves": [
+    {
+      "misconception": "Adding reactant increases product yield indefinitely",
+      "move": "The timeline adds A twice, by the same amount, and the second addition moves [B] from 2 to 2.5 instead of by a full unit; the closing narration states that conversion is never complete."
+    },
+    {
+      "misconception": "The equilibrium position is the rate",
+      "move": "Two separate readouts are kept apart: the dot is a position on the Q scale and the arrows are relative direction strengths. At equilibrium the arrows are equal, and the narration says both reactions continue at equal rates rather than stopping."
+    }
+  ],
+  "correctnessChecks": [
+    "Shift opposes the disturbance: adding A lowers Q, and the forward direction is the one that consumes A.",
+    "K is drawn as a fixed tick with no track and the narration says it depends only on temperature, so K is never a ratio of the two arrow lengths.",
+    "Concentrations settle at balanced values (2 and 2, then 2.5 and 2.5), so no step claims complete conversion.",
+    "Arrows are described as relative direction strength, not calibrated rates."
+  ],
+  "constraints": {
+    "primitives": 16,
+    "properties": 2,
+    "tracks": 2,
+    "keyframes": 16,
+    "checkpoints": 4,
+    "usesStates": false
+  }
+}
