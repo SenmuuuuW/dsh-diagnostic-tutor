@@ -1,0 +1,5 @@
+{
+  "needsScene": false,
+  "reason": "Proof validity depends on the logical form of a derivation, not on motion or spatial change. A static proof ladder keeps every step inspectable, comparable and re-readable, while animation would serialize the steps and hide earlier ones. The required reorder/reveal interaction is a card-sort and fold-to-reveal activity, not an animation, and the stated accessibility preference is text plus a static proof tree.",
+  "staticAlternative": "A two-column proof ladder on paper or a static HTML card: assumption, algebraic consequences, the parity contradiction, and the conclusion, with the contradiction step behind a fold-to-reveal card. Learners reorder shuffled step cards, name the rule that licenses each link, and annotate why the contradiction is a clash with a proved fact rather than an arithmetic slip."
+}

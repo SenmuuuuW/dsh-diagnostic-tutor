@@ -1,0 +1,409 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 1000,
+    "height": 620,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Photosynthesis: Inputs, Stages and Outputs",
+    "subject": "Biology",
+    "objective": "Connect light, water and carbon dioxide inputs to glucose and oxygen outputs and distinguish the light-dependent reactions from the Calvin cycle.",
+    "learner": "Knows cells and basic chemistry.",
+    "misconceptions": [
+      "Plants get most of their mass from soil",
+      "Photosynthesis is the reverse of breathing in every detail",
+      "Light is a material input like water and carbon dioxide"
+    ],
+    "expectedUnderstanding": [
+      "Water and carbon dioxide are material inputs; light is energy",
+      "The light-dependent reactions split water and release oxygen",
+      "The Calvin cycle fixes carbon dioxide into glucose using ATP and NADPH",
+      "Plants also respire, so the two processes are not simple reverses"
+    ]
+  },
+  "primitives": [
+    {
+      "id": "cell",
+      "type": "rect",
+      "x": 190,
+      "y": 110,
+      "width": 620,
+      "height": 430,
+      "fill": "#f0fdf4",
+      "stroke": "#065f46",
+      "strokeWidth": 3
+    },
+    {
+      "id": "cell-label",
+      "type": "text",
+      "x": 250,
+      "y": 146,
+      "text": "chloroplast",
+      "fontSize": 15,
+      "fill": "#065f46",
+      "stroke": "none"
+    },
+    {
+      "id": "stage-light",
+      "type": "rect",
+      "x": 300,
+      "y": 210,
+      "width": 340,
+      "height": 100,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "stage-calvin",
+      "type": "rect",
+      "x": 300,
+      "y": 360,
+      "width": 340,
+      "height": 100,
+      "fill": "#fef3c7",
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "arrow-light",
+      "type": "line",
+      "x1": 470,
+      "y1": 50,
+      "x2": 470,
+      "y2": 90,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 3
+    },
+    {
+      "id": "arrow-water",
+      "type": "line",
+      "x1": 70,
+      "y1": 260,
+      "x2": 110,
+      "y2": 260,
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 3
+    },
+    {
+      "id": "arrow-co2",
+      "type": "line",
+      "x1": 70,
+      "y1": 410,
+      "x2": 110,
+      "y2": 410,
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 3
+    },
+    {
+      "id": "arrow-o2",
+      "type": "line",
+      "x1": 640,
+      "y1": 260,
+      "x2": 680,
+      "y2": 260,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 3
+    },
+    {
+      "id": "arrow-glucose",
+      "type": "line",
+      "x1": 640,
+      "y1": 410,
+      "x2": 680,
+      "y2": 410,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 3
+    },
+    {
+      "id": "label-light",
+      "type": "text",
+      "x": 485,
+      "y": 80,
+      "text": "light (energy, not matter)",
+      "fontSize": 14,
+      "fill": "#111827",
+      "stroke": "none"
+    },
+    {
+      "id": "label-water",
+      "type": "text",
+      "x": 70,
+      "y": 242,
+      "text": "water",
+      "fontSize": 15,
+      "fill": "#111827",
+      "stroke": "none"
+    },
+    {
+      "id": "label-co2",
+      "type": "text",
+      "x": 70,
+      "y": 392,
+      "text": "carbon dioxide",
+      "fontSize": 15,
+      "fill": "#111827",
+      "stroke": "none"
+    },
+    {
+      "id": "label-o2",
+      "type": "text",
+      "x": 915,
+      "y": 266,
+      "text": "oxygen",
+      "fontSize": 15,
+      "fill": "#111827",
+      "stroke": "none"
+    },
+    {
+      "id": "label-glucose",
+      "type": "text",
+      "x": 915,
+      "y": 416,
+      "text": "glucose",
+      "fontSize": 15,
+      "fill": "#111827",
+      "stroke": "none"
+    },
+    {
+      "id": "stage-light-label",
+      "type": "text",
+      "x": 470,
+      "y": 265,
+      "text": "Light-dependent reactions",
+      "fontSize": 17,
+      "textAnchor": "middle",
+      "fill": "#111827",
+      "stroke": "none"
+    },
+    {
+      "id": "stage-calvin-label",
+      "type": "text",
+      "x": 470,
+      "y": 415,
+      "text": "Calvin cycle (stroma)",
+      "fontSize": 17,
+      "textAnchor": "middle",
+      "fill": "#111827",
+      "stroke": "none"
+    }
+  ],
+  "timeline": {
+    "duration": 18,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "arrow-light",
+          "property": "y2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 90,
+            "easing": "linear"
+          },
+          {
+            "at": 0.5,
+            "value": 90,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 2.5,
+            "value": 210,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 210,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "arrow-water",
+          "property": "x2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 110,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 110,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 300,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "arrow-co2",
+          "property": "x2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 110,
+            "easing": "linear"
+          },
+          {
+            "at": 3.5,
+            "value": 110,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 5.5,
+            "value": 300,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 300,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "arrow-o2",
+          "property": "x2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 680,
+            "easing": "linear"
+          },
+          {
+            "at": 8,
+            "value": 680,
+            "easing": "ease-out"
+          },
+          {
+            "at": 10,
+            "value": 900,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 900,
+            "easing": "linear"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "arrow-glucose",
+          "property": "x2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 680,
+            "easing": "linear"
+          },
+          {
+            "at": 11,
+            "value": 680,
+            "easing": "ease-out"
+          },
+          {
+            "at": 13,
+            "value": 900,
+            "easing": "linear"
+          },
+          {
+            "at": 18,
+            "value": 900,
+            "easing": "linear"
+          }
+        ]
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "id": "cp-inputs",
+      "at": 0.5,
+      "title": "Three arrivals",
+      "body": "Light, water and carbon dioxide converge on the chloroplast. Light is an energy source; only water and carbon dioxide are material inputs.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-light-stage",
+      "at": 5.5,
+      "title": "Stage 1: light-dependent reactions",
+      "body": "In the thylakoid membranes, light energy splits water. Oxygen leaves, and ATP and NADPH carry energy to the next stage.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-calvin",
+      "at": 12.5,
+      "title": "Stage 2: the Calvin cycle",
+      "body": "In the stroma, the Calvin cycle uses ATP and NADPH to turn carbon dioxide into glucose. It does not absorb light directly, but if light stops, its ATP and NADPH supply soon runs out.",
+      "pause": false
+    },
+    {
+      "id": "cp-outputs",
+      "at": 16,
+      "title": "Outputs and the mass question",
+      "body": "Oxygen and glucose leave. The carbon in glucose comes from carbon dioxide, not soil, and plants also respire, so photosynthesis is not breathing run backwards.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.5,
+      "text": "Light arrives first. It is energy, not a material input."
+    },
+    {
+      "at": 3.5,
+      "text": "Water enters the chloroplast and reaches the light-dependent reactions."
+    },
+    {
+      "at": 6.5,
+      "text": "Light energy splits water; oxygen leaves as a by-product."
+    },
+    {
+      "at": 9.5,
+      "text": "ATP and NADPH carry energy from the thylakoid stage to the Calvin cycle."
+    },
+    {
+      "at": 12.5,
+      "text": "Carbon dioxide is fixed into glucose in the stroma. No light is absorbed directly there."
+    },
+    {
+      "at": 16,
+      "text": "Most of the plant's dry mass is carbon from carbon dioxide, not soil, and plants also respire."
+    }
+  ],
+  "fallback": {
+    "text": "Light, water and carbon dioxide enter the chloroplast. Light is energy, not matter. In the thylakoid membranes the light-dependent reactions split water, release oxygen and pass ATP and NADPH to the Calvin cycle. In the stroma the Calvin cycle uses that energy to fix carbon dioxide into glucose. Oxygen and glucose leave the chloroplast. The carbon in glucose comes from carbon dioxide, not soil, and plants also respire, so photosynthesis is not respiration reversed."
+  },
+  "accessibility": {
+    "alt": "Chloroplast diagram: light, water and carbon dioxide enter; the light-dependent reactions release oxygen; the Calvin cycle uses ATP and NADPH to make glucose, which leaves. Light is energy, not matter.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

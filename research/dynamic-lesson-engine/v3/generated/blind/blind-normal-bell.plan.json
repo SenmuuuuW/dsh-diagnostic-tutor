@@ -1,0 +1,61 @@
+{
+  "id": "blind-normal-bell",
+  "subject": "Statistics",
+  "topic": "Normal Distribution",
+  "mediumDecision": "scene",
+  "whyScene": "The learning target is a relationship between two parameters and a whole shape, plus an invariant (area) that must be seen to be believed. When the learner drags the mean, the entire density must translate; when the learner drags the standard deviation, width and height must move in opposite directions while the total area stays put. That is a continuous, two-parameter spatial response. A static figure can only show three frozen curves and asks the learner to imagine the in-between states, which is exactly where the area misconception lives.",
+  "objective": "Show how mean and standard deviation move a normal density without changing its total area.",
+  "learner": "Knows mean and variation informally.",
+  "misconceptions": [
+    {
+      "claim": "The density at a point is the probability of that point.",
+      "counter": "The scene separates height from area in words and in geometry: strip height is density, strip area is probability mass, and a single value has zero width, so P(X = x) = 0. The caption and the last checkpoint both state this, so density is never read as a probability."
+    },
+    {
+      "claim": "A larger standard deviation means a larger total area.",
+      "counter": "On screen the strips widen by the factor sigma while every height divides by the same sigma, so the area sum is unchanged. The learner can drag sigma from 0.7 to 1.6 and watch the shape flatten without gaining area."
+    }
+  ],
+  "teachingSequence": [
+    {
+      "phase": "orient",
+      "teacher": "Name the horizontal axis as the value of X and the vertical axis as density. Point out that the picture is a staircase of thin strips standing on the axis.",
+      "learner": "Says which strip is tallest and where it sits.",
+      "evidence": "Learner identifies the peak as the mean and says taller means more density, not more probability."
+    },
+    {
+      "phase": "perturb mean",
+      "teacher": "Move the mean slider across its range and hold the standard deviation fixed.",
+      "learner": "Predicts what stays the same before dragging; checks that only the horizontal position changes.",
+      "evidence": "Learner says the shape and the area did not change, only the location."
+    },
+    {
+      "phase": "perturb spread",
+      "teacher": "Move the standard deviation slider and draw attention to the two red ticks at mu plus and minus one sigma.",
+      "learner": "Watches width grow while the peak drops; estimates whether the area grew.",
+      "evidence": "Learner rejects the area-grows reading and explains the trade-off between width and height."
+    },
+    {
+      "phase": "formalize",
+      "teacher": "State that density is height, probability is area under the density, and that a normal density integrates to one for every mu and sigma.",
+      "learner": "Restates why a point has probability zero but a nonzero density.",
+      "evidence": "Learner distinguishes f(x) from P(X = x) without prompting."
+    }
+  ],
+  "interactionDesign": "Two sliders. Mean runs from -1.5 to 1.5 data units and translates the whole staircase and the mean line. Standard deviation runs from 0.7 to 1.6 and changes the width of every strip in proportion to sigma while every height divides by sigma. Because each strip is an exact normal bin mass for bins of width 0.8 sigma, the drawn area is conserved exactly under both sliders. The timeline only pulses the mean line and the one-sigma ticks; the substantive motion is the learner's dragging, so no animation competes with the manipulative.",
+  "sceneBrief": {
+    "view": "A density plot on a white background: horizontal axis from about 60 to 940 pixels, vertical axis for density, nine adjacent strips standing on the axis.",
+    "marks": "Blue strips with dark outlines, a red vertical mean line, two short red ticks at mu plus and minus one sigma, a red mu label under the axis.",
+    "motion": "Sliders translate or reshape the strips; the mean line and the ticks travel with the corresponding statistic.",
+    "labels": "Only mu is labelled on the axis; a caption names height as density, area as one, and the red ticks as one sigma.",
+    "reading": "At sigma 0.7 the staircase is tall and narrow; at 1.6 it is short and wide; the area sum is identical."
+  },
+  "accessibility": "The alt text states the shape, the two parameters and the area invariant. Every adjustment is possible from the keyboard because both controls are sliders, and reducedMotion is static, so the scene is fully readable as a frozen frame with sliders. The caption, checkpoints and narration carry the same claims as the picture, so no colour or animation is the only signal.",
+  "fidelityChecks": [
+    "Strip heights equal normal bin mass divided by bin width, so height falls as one over sigma.",
+    "Strip widths equal bin width in data units, so width rises in proportion to sigma.",
+    "The sum of the nine drawn bin masses is 0.9997; the omitted tails beyond 3.6 sigma carry about 0.03 percent, so the drawn area is constant to within a rounding error.",
+    "The mean of the drawn staircase is exactly mu because the nine bins are symmetric about zero.",
+    "No claim is made that the density value at a point is a probability."
+  ]
+}

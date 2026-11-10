@@ -1,0 +1,61 @@
+{
+  "id": "blind-sql-join",
+  "subject": "Computer Science",
+  "topic": "SQL INNER JOIN",
+  "mediumDecision": "scene",
+  "whyScene": "An inner join is a row-level matching operation: the result is not a property of either table but of the key comparison between them. The teaching job is to make visible which rows pair up, which rows are silently discarded, and that the output has strictly fewer rows than a stacking would produce. That is a mapping between two sets, and tracking a specific key across the mapping is far easier when the pairing is drawn than when it is described in prose.",
+  "objective": "Show why an inner join returns only matching key pairs and how unmatched rows disappear.",
+  "learner": "Knows tables and rows.",
+  "misconceptions": [
+    {
+      "claim": "JOIN just stacks the two tables side by side.",
+      "counter": "Stacking would keep all six rows. Here three rows from A and three from B produce exactly two output rows, and the unmatched id 1 and id 4 slide out of the picture instead of appearing in the result."
+    },
+    {
+      "claim": "INNER JOIN keeps all rows.",
+      "counter": "The result box is labelled with the row count and holds only the two matched rows. The two unmatched rows physically leave their tables and land in a dropped zone, so the loss is visible rather than asserted."
+    }
+  ],
+  "teachingSequence": [
+    {
+      "phase": "orient",
+      "teacher": "Name the two tables, the key column in each, and the fact that the key is the only thing linking them.",
+      "learner": "Reads the id values in both tables and spots which values occur on both sides.",
+      "evidence": "Learner lists 2 and 3 as shared and 1 and 4 as single-sided."
+    },
+    {
+      "phase": "trace",
+      "teacher": "Trace id 2 across the gap and then id 3, one connector at a time.",
+      "learner": "Checks that the connectors join equal key values, not equal row positions.",
+      "evidence": "Learner notes that id 2 is the first row of A but the first row of B is also id 2, while id 3 sits at different row positions."
+    },
+    {
+      "phase": "resolve",
+      "teacher": "Show the result box fill with the two combined rows and show ids 1 and 4 dropping out.",
+      "learner": "Explains why the result has two rows, not six and not nine.",
+      "evidence": "Learner says only matching pairs survive, so unmatched rows cannot contribute a row."
+    },
+    {
+      "phase": "formalize",
+      "teacher": "State the rule: a pair contributes a result row exactly when the join condition is true for that pair; otherwise the pair contributes nothing.",
+      "learner": "Applies the rule to a new key value and predicts whether it appears.",
+      "evidence": "Learner predicts an empty result for a key that exists on only one side."
+    }
+  ],
+  "interactionDesign": "The animation is the manipulative: the learner advances through four checkpoints that trace one key at a time, then watches the matched rows assemble in the result box and the unmatched rows drop away. Because the connectors are drawn between equal key values at different vertical positions, the scene directly contradicts the idea that rows are matched by position or stacked. A paused prediction checkpoint asks the learner to commit to an output row count before the result box fills.",
+  "sceneBrief": {
+    "view": "Three columns on white: table A on the left with ids 1, 2 and 3, table B in the middle with ids 2, 3 and 4 plus scores, and a result box on the right.",
+    "marks": "Dark text rows, two black connector arrows from equal keys, a boxed result area, and a caption about dropped rows.",
+    "motion": "Connectors grow from the A rows to their matching B rows, matched rows slide into the result box from the right, and unmatched rows fall to a dropped zone at the bottom.",
+    "labels": "Each column has a header naming the table and its columns; the result header gives the row count.",
+    "reading": "Ids 2 and 3 have a partner; ids 1 and 4 do not, so only two combined rows are produced."
+  },
+  "accessibility": "The alt text carries the full row content, and the caption states the dropped ids in words, so the table can be read without seeing the connectors. The timeline has pause points and every checkpoint is advanceable from the keyboard. Reduced motion freezes the final state, which is itself the complete answer: two result rows and two dropped rows.",
+  "fidelityChecks": [
+    "Rows 2 and 3 are the only shared ids, so the inner join on id returns exactly those two pairs.",
+    "The result columns combine fields from both tables, which is what a join produces, not a stack.",
+    "No ordering is asserted: nothing claims the result is sorted, and id 2 and id 3 are traced independently.",
+    "NULL behaviour is not claimed by the example; the caption only says a missing partner produces no row.",
+    "The row count claim of two out of a possible nine pairs is arithmetically correct for three rows by three rows."
+  ]
+}

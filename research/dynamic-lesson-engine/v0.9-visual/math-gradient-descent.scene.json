@@ -1,0 +1,1600 @@
+{
+  "id": "math-gradient-descent.scene",
+  "specPath": "research/dynamic-lesson-engine/v2/generated/regression/math-gradient-descent.scene.json",
+  "static": {
+    "ok": false,
+    "diagnostics": [
+      {
+        "code": "VISUAL_MISSING_STROKE",
+        "severity": "error",
+        "primitiveId": "c1",
+        "propertyPath": "primitives.c1.stroke",
+        "message": "Line-like primitive \"c1\" has no visible stroke.",
+        "suggestedFix": "Set an explicit stroke color and strokeWidth.",
+        "context": null
+      },
+      {
+        "code": "VISUAL_MISSING_STROKE",
+        "severity": "error",
+        "primitiveId": "c2",
+        "propertyPath": "primitives.c2.stroke",
+        "message": "Line-like primitive \"c2\" has no visible stroke.",
+        "suggestedFix": "Set an explicit stroke color and strokeWidth.",
+        "context": null
+      },
+      {
+        "code": "VISUAL_MISSING_STROKE",
+        "severity": "error",
+        "primitiveId": "c3",
+        "propertyPath": "primitives.c3.stroke",
+        "message": "Line-like primitive \"c3\" has no visible stroke.",
+        "suggestedFix": "Set an explicit stroke color and strokeWidth.",
+        "context": null
+      },
+      {
+        "code": "VISUAL_MISSING_STROKE",
+        "severity": "error",
+        "primitiveId": "c4",
+        "propertyPath": "primitives.c4.stroke",
+        "message": "Line-like primitive \"c4\" has no visible stroke.",
+        "suggestedFix": "Set an explicit stroke color and strokeWidth.",
+        "context": null
+      },
+      {
+        "code": "VISUAL_MISSING_STROKE",
+        "severity": "error",
+        "primitiveId": "c5",
+        "propertyPath": "primitives.c5.stroke",
+        "message": "Line-like primitive \"c5\" has no visible stroke.",
+        "suggestedFix": "Set an explicit stroke color and strokeWidth.",
+        "context": null
+      },
+      {
+        "code": "VISUAL_MISSING_STROKE",
+        "severity": "error",
+        "primitiveId": "c6",
+        "propertyPath": "primitives.c6.stroke",
+        "message": "Line-like primitive \"c6\" has no visible stroke.",
+        "suggestedFix": "Set an explicit stroke color and strokeWidth.",
+        "context": null
+      },
+      {
+        "code": "VISUAL_MISSING_STROKE",
+        "severity": "error",
+        "primitiveId": "c7",
+        "propertyPath": "primitives.c7.stroke",
+        "message": "Line-like primitive \"c7\" has no visible stroke.",
+        "suggestedFix": "Set an explicit stroke color and strokeWidth.",
+        "context": null
+      },
+      {
+        "code": "VISUAL_MISSING_STROKE",
+        "severity": "error",
+        "primitiveId": "c8",
+        "propertyPath": "primitives.c8.stroke",
+        "message": "Line-like primitive \"c8\" has no visible stroke.",
+        "suggestedFix": "Set an explicit stroke color and strokeWidth.",
+        "context": null
+      },
+      {
+        "code": "VISUAL_MISSING_STROKE",
+        "severity": "error",
+        "primitiveId": "xAxis",
+        "propertyPath": "primitives.xAxis.stroke",
+        "message": "Line-like primitive \"xAxis\" has no visible stroke.",
+        "suggestedFix": "Set an explicit stroke color and strokeWidth.",
+        "context": null
+      },
+      {
+        "code": "VISUAL_MISSING_STROKE",
+        "severity": "error",
+        "primitiveId": "yAxis",
+        "propertyPath": "primitives.yAxis.stroke",
+        "message": "Line-like primitive \"yAxis\" has no visible stroke.",
+        "suggestedFix": "Set an explicit stroke color and strokeWidth.",
+        "context": null
+      },
+      {
+        "code": "VISUAL_MISSING_STROKE",
+        "severity": "error",
+        "primitiveId": "stepArrow",
+        "propertyPath": "primitives.stepArrow.stroke",
+        "message": "Line-like primitive \"stepArrow\" has no visible stroke.",
+        "suggestedFix": "Set an explicit stroke color and strokeWidth.",
+        "context": null
+      },
+      {
+        "code": "VISUAL_IMPLICIT_FILL",
+        "severity": "warning",
+        "primitiveId": "dot",
+        "propertyPath": "primitives.dot.fill",
+        "message": "Primitive \"dot\" omits fill; SVG defaults to black fill.",
+        "suggestedFix": "Set an explicit fill (use \"none\" for an outline).",
+        "context": null
+      },
+      {
+        "code": "VISUAL_IMPLICIT_FILL",
+        "severity": "warning",
+        "primitiveId": "labelFn",
+        "propertyPath": "primitives.labelFn.fill",
+        "message": "Primitive \"labelFn\" omits fill; SVG defaults to black fill.",
+        "suggestedFix": "Set an explicit fill (use \"none\" for an outline).",
+        "context": null
+      },
+      {
+        "code": "VISUAL_IMPLICIT_FILL",
+        "severity": "warning",
+        "primitiveId": "labelMin",
+        "propertyPath": "primitives.labelMin.fill",
+        "message": "Primitive \"labelMin\" omits fill; SVG defaults to black fill.",
+        "suggestedFix": "Set an explicit fill (use \"none\" for an outline).",
+        "context": null
+      },
+      {
+        "code": "VISUAL_IMPLICIT_FILL",
+        "severity": "warning",
+        "primitiveId": "labelRule",
+        "propertyPath": "primitives.labelRule.fill",
+        "message": "Primitive \"labelRule\" omits fill; SVG defaults to black fill.",
+        "suggestedFix": "Set an explicit fill (use \"none\" for an outline).",
+        "context": null
+      }
+    ],
+    "stats": {
+      "primitiveCount": 15,
+      "frames": 33,
+      "errors": 11,
+      "warnings": 4
+    }
+  },
+  "exceptions": [],
+  "contexts": [
+    {
+      "label": "t=0.00",
+      "time": 0,
+      "params": {},
+      "file": "math-gradient-descent.scene-t=0.00.png",
+      "dom": {
+        "svg": true,
+        "stage": {
+          "x": 611.390625,
+          "y": 207.375,
+          "width": 783.609375,
+          "height": 460
+        },
+        "nodes": [
+          {
+            "id": "c1",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 855.338134765625,
+            "y": 351.125
+          },
+          {
+            "id": "c2",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 892.302490234375,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c3",
+            "width": 36.96429443359375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 929.2667236328125,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c4",
+            "width": 36.96429443359375,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 966.2310180664062,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c5",
+            "width": 36.96435546875,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 1003.1953125,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c6",
+            "width": 36.9642333984375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 1040.15966796875,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c7",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 1077.1239013671875,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c8",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 351.125
+          },
+          {
+            "id": "xAxis",
+            "width": 336.78570556640625,
+            "height": 0,
+            "visible": false,
+            "x": 838.9096069335938,
+            "y": 535.9464111328125
+          },
+          {
+            "id": "yAxis",
+            "width": 0,
+            "height": 230,
+            "visible": false,
+            "x": 1003.1953125,
+            "y": 330.58929443359375
+          },
+          {
+            "id": "dot",
+            "width": 14.7857666015625,
+            "height": 14.785736083984375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 410.2678527832031
+          },
+          {
+            "id": "labelFn",
+            "width": 54.75,
+            "height": 15,
+            "visible": true,
+            "x": 1081.23095703125,
+            "y": 326.8035583496094
+          },
+          {
+            "id": "labelMin",
+            "width": 93.59375,
+            "height": 13.021484375,
+            "visible": true,
+            "x": 1019.6239013671875,
+            "y": 551.2321166992188
+          },
+          {
+            "id": "labelRule",
+            "width": 126.859375,
+            "height": 15,
+            "visible": true,
+            "x": 830.6953125,
+            "y": 622.5178833007812
+          }
+        ],
+        "visible": 12,
+        "total": 14
+      }
+    },
+    {
+      "label": "t=4.50",
+      "time": 4.5,
+      "params": {},
+      "file": "math-gradient-descent.scene-t=4.50.png",
+      "dom": {
+        "svg": true,
+        "stage": {
+          "x": 611.390625,
+          "y": 207.375,
+          "width": 783.609375,
+          "height": 460
+        },
+        "nodes": [
+          {
+            "id": "c1",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 855.338134765625,
+            "y": 351.125
+          },
+          {
+            "id": "c2",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 892.302490234375,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c3",
+            "width": 36.96429443359375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 929.2667236328125,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c4",
+            "width": 36.96429443359375,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 966.2310180664062,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c5",
+            "width": 36.96435546875,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 1003.1953125,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c6",
+            "width": 36.9642333984375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 1040.15966796875,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c7",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 1077.1239013671875,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c8",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 351.125
+          },
+          {
+            "id": "xAxis",
+            "width": 336.78570556640625,
+            "height": 0,
+            "visible": false,
+            "x": 838.9096069335938,
+            "y": 535.9464111328125
+          },
+          {
+            "id": "yAxis",
+            "width": 0,
+            "height": 230,
+            "visible": false,
+            "x": 1003.1953125,
+            "y": 330.58929443359375
+          },
+          {
+            "id": "dot",
+            "width": 14.7857666015625,
+            "height": 14.78570556640625,
+            "visible": true,
+            "x": 1011.8892822265625,
+            "y": 526.161376953125
+          },
+          {
+            "id": "labelFn",
+            "width": 54.75,
+            "height": 15,
+            "visible": true,
+            "x": 1081.23095703125,
+            "y": 326.8035583496094
+          },
+          {
+            "id": "labelMin",
+            "width": 93.59375,
+            "height": 13.021484375,
+            "visible": true,
+            "x": 1019.6239013671875,
+            "y": 551.2321166992188
+          },
+          {
+            "id": "labelRule",
+            "width": 126.859375,
+            "height": 15,
+            "visible": true,
+            "x": 830.6953125,
+            "y": 622.5178833007812
+          }
+        ],
+        "visible": 12,
+        "total": 14
+      }
+    },
+    {
+      "label": "t=9.00",
+      "time": 9,
+      "params": {},
+      "file": "math-gradient-descent.scene-t=9.00.png",
+      "dom": {
+        "svg": true,
+        "stage": {
+          "x": 611.390625,
+          "y": 207.375,
+          "width": 783.609375,
+          "height": 460
+        },
+        "nodes": [
+          {
+            "id": "c1",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 855.338134765625,
+            "y": 351.125
+          },
+          {
+            "id": "c2",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 892.302490234375,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c3",
+            "width": 36.96429443359375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 929.2667236328125,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c4",
+            "width": 36.96429443359375,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 966.2310180664062,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c5",
+            "width": 36.96435546875,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 1003.1953125,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c6",
+            "width": 36.9642333984375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 1040.15966796875,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c7",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 1077.1239013671875,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c8",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 351.125
+          },
+          {
+            "id": "xAxis",
+            "width": 336.78570556640625,
+            "height": 0,
+            "visible": false,
+            "x": 838.9096069335938,
+            "y": 535.9464111328125
+          },
+          {
+            "id": "yAxis",
+            "width": 0,
+            "height": 230,
+            "visible": false,
+            "x": 1003.1953125,
+            "y": 330.58929443359375
+          },
+          {
+            "id": "dot",
+            "width": 14.78570556640625,
+            "height": 14.78570556640625,
+            "visible": true,
+            "x": 1003.3727416992188,
+            "y": 528.069091796875
+          },
+          {
+            "id": "labelFn",
+            "width": 54.75,
+            "height": 15,
+            "visible": true,
+            "x": 1081.23095703125,
+            "y": 326.8035583496094
+          },
+          {
+            "id": "labelMin",
+            "width": 93.59375,
+            "height": 13.021484375,
+            "visible": true,
+            "x": 1019.6239013671875,
+            "y": 551.2321166992188
+          },
+          {
+            "id": "labelRule",
+            "width": 126.859375,
+            "height": 15,
+            "visible": true,
+            "x": 830.6953125,
+            "y": 622.5178833007812
+          }
+        ],
+        "visible": 12,
+        "total": 14
+      }
+    },
+    {
+      "label": "t=0.05",
+      "time": 0.05,
+      "params": {},
+      "file": "math-gradient-descent.scene-t=0.05.png",
+      "dom": {
+        "svg": true,
+        "stage": {
+          "x": 611.390625,
+          "y": 207.375,
+          "width": 783.609375,
+          "height": 460
+        },
+        "nodes": [
+          {
+            "id": "c1",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 855.338134765625,
+            "y": 351.125
+          },
+          {
+            "id": "c2",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 892.302490234375,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c3",
+            "width": 36.96429443359375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 929.2667236328125,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c4",
+            "width": 36.96429443359375,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 966.2310180664062,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c5",
+            "width": 36.96435546875,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 1003.1953125,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c6",
+            "width": 36.9642333984375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 1040.15966796875,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c7",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 1077.1239013671875,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c8",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 351.125
+          },
+          {
+            "id": "xAxis",
+            "width": 336.78570556640625,
+            "height": 0,
+            "visible": false,
+            "x": 838.9096069335938,
+            "y": 535.9464111328125
+          },
+          {
+            "id": "yAxis",
+            "width": 0,
+            "height": 230,
+            "visible": false,
+            "x": 1003.1953125,
+            "y": 330.58929443359375
+          },
+          {
+            "id": "dot",
+            "width": 14.7857666015625,
+            "height": 14.78570556640625,
+            "visible": true,
+            "x": 1112.4913330078125,
+            "y": 412.5034484863281
+          },
+          {
+            "id": "labelFn",
+            "width": 54.75,
+            "height": 15,
+            "visible": true,
+            "x": 1081.23095703125,
+            "y": 326.8035583496094
+          },
+          {
+            "id": "labelMin",
+            "width": 93.59375,
+            "height": 13.021484375,
+            "visible": true,
+            "x": 1019.6239013671875,
+            "y": 551.2321166992188
+          },
+          {
+            "id": "labelRule",
+            "width": 126.859375,
+            "height": 15,
+            "visible": true,
+            "x": 830.6953125,
+            "y": 622.5178833007812
+          }
+        ],
+        "visible": 12,
+        "total": 14
+      }
+    },
+    {
+      "label": "t=2.05",
+      "time": 2.05,
+      "params": {},
+      "file": "math-gradient-descent.scene-t=2.05.png",
+      "dom": {
+        "svg": true,
+        "stage": {
+          "x": 611.390625,
+          "y": 207.375,
+          "width": 783.609375,
+          "height": 460
+        },
+        "nodes": [
+          {
+            "id": "c1",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 855.338134765625,
+            "y": 351.125
+          },
+          {
+            "id": "c2",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 892.302490234375,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c3",
+            "width": 36.96429443359375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 929.2667236328125,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c4",
+            "width": 36.96429443359375,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 966.2310180664062,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c5",
+            "width": 36.96435546875,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 1003.1953125,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c6",
+            "width": 36.9642333984375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 1040.15966796875,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c7",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 1077.1239013671875,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c8",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 351.125
+          },
+          {
+            "id": "xAxis",
+            "width": 336.78570556640625,
+            "height": 0,
+            "visible": false,
+            "x": 838.9096069335938,
+            "y": 535.9464111328125
+          },
+          {
+            "id": "yAxis",
+            "width": 0,
+            "height": 230,
+            "visible": false,
+            "x": 1003.1953125,
+            "y": 330.58929443359375
+          },
+          {
+            "id": "dot",
+            "width": 14.78564453125,
+            "height": 14.785675048828125,
+            "visible": true,
+            "x": 1042.1231689453125,
+            "y": 510.1842956542969
+          },
+          {
+            "id": "labelFn",
+            "width": 54.75,
+            "height": 15,
+            "visible": true,
+            "x": 1081.23095703125,
+            "y": 326.8035583496094
+          },
+          {
+            "id": "labelMin",
+            "width": 93.59375,
+            "height": 13.021484375,
+            "visible": true,
+            "x": 1019.6239013671875,
+            "y": 551.2321166992188
+          },
+          {
+            "id": "labelRule",
+            "width": 126.859375,
+            "height": 15,
+            "visible": true,
+            "x": 830.6953125,
+            "y": 622.5178833007812
+          }
+        ],
+        "visible": 12,
+        "total": 14
+      }
+    },
+    {
+      "label": "t=4.05",
+      "time": 4.05,
+      "params": {},
+      "file": "math-gradient-descent.scene-t=4.05.png",
+      "dom": {
+        "svg": true,
+        "stage": {
+          "x": 611.390625,
+          "y": 207.375,
+          "width": 783.609375,
+          "height": 460
+        },
+        "nodes": [
+          {
+            "id": "c1",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 855.338134765625,
+            "y": 351.125
+          },
+          {
+            "id": "c2",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 892.302490234375,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c3",
+            "width": 36.96429443359375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 929.2667236328125,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c4",
+            "width": 36.96429443359375,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 966.2310180664062,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c5",
+            "width": 36.96435546875,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 1003.1953125,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c6",
+            "width": 36.9642333984375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 1040.15966796875,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c7",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 1077.1239013671875,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c8",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 351.125
+          },
+          {
+            "id": "xAxis",
+            "width": 336.78570556640625,
+            "height": 0,
+            "visible": false,
+            "x": 838.9096069335938,
+            "y": 535.9464111328125
+          },
+          {
+            "id": "yAxis",
+            "width": 0,
+            "height": 230,
+            "visible": false,
+            "x": 1003.1953125,
+            "y": 330.58929443359375
+          },
+          {
+            "id": "dot",
+            "width": 14.78570556640625,
+            "height": 14.78570556640625,
+            "visible": true,
+            "x": 1014.4442749023438,
+            "y": 525.5890502929688
+          },
+          {
+            "id": "labelFn",
+            "width": 54.75,
+            "height": 15,
+            "visible": true,
+            "x": 1081.23095703125,
+            "y": 326.8035583496094
+          },
+          {
+            "id": "labelMin",
+            "width": 93.59375,
+            "height": 13.021484375,
+            "visible": true,
+            "x": 1019.6239013671875,
+            "y": 551.2321166992188
+          },
+          {
+            "id": "labelRule",
+            "width": 126.859375,
+            "height": 15,
+            "visible": true,
+            "x": 830.6953125,
+            "y": 622.5178833007812
+          }
+        ],
+        "visible": 12,
+        "total": 14
+      }
+    },
+    {
+      "label": "t=6.05",
+      "time": 6.05,
+      "params": {},
+      "file": "math-gradient-descent.scene-t=6.05.png",
+      "dom": {
+        "svg": true,
+        "stage": {
+          "x": 611.390625,
+          "y": 207.375,
+          "width": 783.609375,
+          "height": 460
+        },
+        "nodes": [
+          {
+            "id": "c1",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 855.338134765625,
+            "y": 351.125
+          },
+          {
+            "id": "c2",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 892.302490234375,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c3",
+            "width": 36.96429443359375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 929.2667236328125,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c4",
+            "width": 36.96429443359375,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 966.2310180664062,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c5",
+            "width": 36.96435546875,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 1003.1953125,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c6",
+            "width": 36.9642333984375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 1040.15966796875,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c7",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 1077.1239013671875,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c8",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 351.125
+          },
+          {
+            "id": "xAxis",
+            "width": 336.78570556640625,
+            "height": 0,
+            "visible": false,
+            "x": 838.9096069335938,
+            "y": 535.9464111328125
+          },
+          {
+            "id": "yAxis",
+            "width": 0,
+            "height": 230,
+            "visible": false,
+            "x": 1003.1953125,
+            "y": 330.58929443359375
+          },
+          {
+            "id": "dot",
+            "width": 14.78570556640625,
+            "height": 14.78570556640625,
+            "visible": true,
+            "x": 1003.3727416992188,
+            "y": 528.069091796875
+          },
+          {
+            "id": "labelFn",
+            "width": 54.75,
+            "height": 15,
+            "visible": true,
+            "x": 1081.23095703125,
+            "y": 326.8035583496094
+          },
+          {
+            "id": "labelMin",
+            "width": 93.59375,
+            "height": 13.021484375,
+            "visible": true,
+            "x": 1019.6239013671875,
+            "y": 551.2321166992188
+          },
+          {
+            "id": "labelRule",
+            "width": 126.859375,
+            "height": 15,
+            "visible": true,
+            "x": 830.6953125,
+            "y": 622.5178833007812
+          }
+        ],
+        "visible": 12,
+        "total": 14
+      }
+    },
+    {
+      "label": "t=8.40",
+      "time": 8.4,
+      "params": {},
+      "file": "math-gradient-descent.scene-t=8.40.png",
+      "dom": {
+        "svg": true,
+        "stage": {
+          "x": 611.390625,
+          "y": 207.375,
+          "width": 783.609375,
+          "height": 460
+        },
+        "nodes": [
+          {
+            "id": "c1",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 855.338134765625,
+            "y": 351.125
+          },
+          {
+            "id": "c2",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 892.302490234375,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c3",
+            "width": 36.96429443359375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 929.2667236328125,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c4",
+            "width": 36.96429443359375,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 966.2310180664062,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c5",
+            "width": 36.96435546875,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 1003.1953125,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c6",
+            "width": 36.9642333984375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 1040.15966796875,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c7",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 1077.1239013671875,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c8",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 351.125
+          },
+          {
+            "id": "xAxis",
+            "width": 336.78570556640625,
+            "height": 0,
+            "visible": false,
+            "x": 838.9096069335938,
+            "y": 535.9464111328125
+          },
+          {
+            "id": "yAxis",
+            "width": 0,
+            "height": 230,
+            "visible": false,
+            "x": 1003.1953125,
+            "y": 330.58929443359375
+          },
+          {
+            "id": "dot",
+            "width": 14.78570556640625,
+            "height": 14.78570556640625,
+            "visible": true,
+            "x": 1003.3727416992188,
+            "y": 528.069091796875
+          },
+          {
+            "id": "labelFn",
+            "width": 54.75,
+            "height": 15,
+            "visible": true,
+            "x": 1081.23095703125,
+            "y": 326.8035583496094
+          },
+          {
+            "id": "labelMin",
+            "width": 93.59375,
+            "height": 13.021484375,
+            "visible": true,
+            "x": 1019.6239013671875,
+            "y": 551.2321166992188
+          },
+          {
+            "id": "labelRule",
+            "width": 126.859375,
+            "height": 15,
+            "visible": true,
+            "x": 830.6953125,
+            "y": 622.5178833007812
+          }
+        ],
+        "visible": 12,
+        "total": 14
+      }
+    },
+    {
+      "label": "lr=min",
+      "time": 0,
+      "params": {
+        "lr": 0.05
+      },
+      "file": "math-gradient-descent.scene-lr=min.png",
+      "dom": {
+        "svg": true,
+        "stage": {
+          "x": 611.390625,
+          "y": 207.375,
+          "width": 783.609375,
+          "height": 460
+        },
+        "nodes": [
+          {
+            "id": "c1",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 855.338134765625,
+            "y": 351.125
+          },
+          {
+            "id": "c2",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 892.302490234375,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c3",
+            "width": 36.96429443359375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 929.2667236328125,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c4",
+            "width": 36.96429443359375,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 966.2310180664062,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c5",
+            "width": 36.96435546875,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 1003.1953125,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c6",
+            "width": 36.9642333984375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 1040.15966796875,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c7",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 1077.1239013671875,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c8",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 351.125
+          },
+          {
+            "id": "xAxis",
+            "width": 336.78570556640625,
+            "height": 0,
+            "visible": false,
+            "x": 838.9096069335938,
+            "y": 535.9464111328125
+          },
+          {
+            "id": "yAxis",
+            "width": 0,
+            "height": 230,
+            "visible": false,
+            "x": 1003.1953125,
+            "y": 330.58929443359375
+          },
+          {
+            "id": "dot",
+            "width": 14.7857666015625,
+            "height": 14.785736083984375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 410.2678527832031
+          },
+          {
+            "id": "labelFn",
+            "width": 54.75,
+            "height": 15,
+            "visible": true,
+            "x": 1081.23095703125,
+            "y": 326.8035583496094
+          },
+          {
+            "id": "labelMin",
+            "width": 93.59375,
+            "height": 13.021484375,
+            "visible": true,
+            "x": 1019.6239013671875,
+            "y": 551.2321166992188
+          },
+          {
+            "id": "labelRule",
+            "width": 126.859375,
+            "height": 15,
+            "visible": true,
+            "x": 830.6953125,
+            "y": 622.5178833007812
+          }
+        ],
+        "visible": 12,
+        "total": 14
+      }
+    },
+    {
+      "label": "lr=mid",
+      "time": 0,
+      "params": {
+        "lr": 0.47500000000000003
+      },
+      "file": "math-gradient-descent.scene-lr=mid.png",
+      "dom": {
+        "svg": true,
+        "stage": {
+          "x": 611.390625,
+          "y": 207.375,
+          "width": 783.609375,
+          "height": 460
+        },
+        "nodes": [
+          {
+            "id": "c1",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 855.338134765625,
+            "y": 351.125
+          },
+          {
+            "id": "c2",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 892.302490234375,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c3",
+            "width": 36.96429443359375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 929.2667236328125,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c4",
+            "width": 36.96429443359375,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 966.2310180664062,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c5",
+            "width": 36.96435546875,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 1003.1953125,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c6",
+            "width": 36.9642333984375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 1040.15966796875,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c7",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 1077.1239013671875,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c8",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 351.125
+          },
+          {
+            "id": "xAxis",
+            "width": 336.78570556640625,
+            "height": 0,
+            "visible": false,
+            "x": 838.9096069335938,
+            "y": 535.9464111328125
+          },
+          {
+            "id": "yAxis",
+            "width": 0,
+            "height": 230,
+            "visible": false,
+            "x": 1003.1953125,
+            "y": 330.58929443359375
+          },
+          {
+            "id": "dot",
+            "width": 14.7857666015625,
+            "height": 14.785736083984375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 410.2678527832031
+          },
+          {
+            "id": "labelFn",
+            "width": 54.75,
+            "height": 15,
+            "visible": true,
+            "x": 1081.23095703125,
+            "y": 326.8035583496094
+          },
+          {
+            "id": "labelMin",
+            "width": 93.59375,
+            "height": 13.021484375,
+            "visible": true,
+            "x": 1019.6239013671875,
+            "y": 551.2321166992188
+          },
+          {
+            "id": "labelRule",
+            "width": 126.859375,
+            "height": 15,
+            "visible": true,
+            "x": 830.6953125,
+            "y": 622.5178833007812
+          }
+        ],
+        "visible": 12,
+        "total": 14
+      }
+    },
+    {
+      "label": "lr=max",
+      "time": 0,
+      "params": {
+        "lr": 0.9
+      },
+      "file": "math-gradient-descent.scene-lr=max.png",
+      "dom": {
+        "svg": true,
+        "stage": {
+          "x": 611.390625,
+          "y": 207.375,
+          "width": 783.609375,
+          "height": 460
+        },
+        "nodes": [
+          {
+            "id": "c1",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 855.338134765625,
+            "y": 351.125
+          },
+          {
+            "id": "c2",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 892.302490234375,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c3",
+            "width": 36.96429443359375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 929.2667236328125,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c4",
+            "width": 36.96429443359375,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 966.2310180664062,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c5",
+            "width": 36.96435546875,
+            "height": 11.5821533203125,
+            "visible": true,
+            "x": 1003.1953125,
+            "y": 524.3642578125
+          },
+          {
+            "id": "c6",
+            "width": 36.9642333984375,
+            "height": 34.582122802734375,
+            "visible": true,
+            "x": 1040.15966796875,
+            "y": 489.7821350097656
+          },
+          {
+            "id": "c7",
+            "width": 36.9642333984375,
+            "height": 57.828582763671875,
+            "visible": true,
+            "x": 1077.1239013671875,
+            "y": 431.95355224609375
+          },
+          {
+            "id": "c8",
+            "width": 36.96435546875,
+            "height": 80.82855224609375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 351.125
+          },
+          {
+            "id": "xAxis",
+            "width": 336.78570556640625,
+            "height": 0,
+            "visible": false,
+            "x": 838.9096069335938,
+            "y": 535.9464111328125
+          },
+          {
+            "id": "yAxis",
+            "width": 0,
+            "height": 230,
+            "visible": false,
+            "x": 1003.1953125,
+            "y": 330.58929443359375
+          },
+          {
+            "id": "dot",
+            "width": 14.7857666015625,
+            "height": 14.785736083984375,
+            "visible": true,
+            "x": 1114.088134765625,
+            "y": 410.2678527832031
+          },
+          {
+            "id": "labelFn",
+            "width": 54.75,
+            "height": 15,
+            "visible": true,
+            "x": 1081.23095703125,
+            "y": 326.8035583496094
+          },
+          {
+            "id": "labelMin",
+            "width": 93.59375,
+            "height": 13.021484375,
+            "visible": true,
+            "x": 1019.6239013671875,
+            "y": 551.2321166992188
+          },
+          {
+            "id": "labelRule",
+            "width": 126.859375,
+            "height": 15,
+            "visible": true,
+            "x": 830.6953125,
+            "y": 622.5178833007812
+          }
+        ],
+        "visible": 12,
+        "total": 14
+      }
+    }
+  ]
+}

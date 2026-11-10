@@ -1,0 +1,459 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 1000,
+    "height": 620,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Normal Density: Mean Moves It, Sigma Stretches It",
+    "subject": "Statistics",
+    "objective": "Show how mean and standard deviation move a normal density without changing its total area.",
+    "learner": "Knows mean and variation informally.",
+    "misconceptions": [
+      "The density at a point is the probability of that point",
+      "A larger standard deviation means a larger total area"
+    ],
+    "expectedUnderstanding": [
+      "The mean sets the horizontal centre of the density",
+      "The standard deviation sets the spread, with width up and height down",
+      "Total area under a normal density is 1 for every mean and standard deviation",
+      "Height is density, area is probability"
+    ]
+  },
+  "properties": [
+    {
+      "id": "mu",
+      "label": "Mean mu",
+      "min": -1.5,
+      "max": 1.5,
+      "step": 0.1,
+      "default": 0
+    },
+    {
+      "id": "sigma",
+      "label": "Standard deviation sigma",
+      "min": 0.7,
+      "max": 1.6,
+      "step": 0.05,
+      "default": 1
+    }
+  ],
+  "primitives": [
+    {
+      "id": "axis-x",
+      "type": "line",
+      "x1": 60,
+      "y1": 520,
+      "x2": 940,
+      "y2": 520,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "axis-y",
+      "type": "line",
+      "x1": 75,
+      "y1": 520,
+      "x2": 75,
+      "y2": 150,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "strip-0",
+      "type": "rect",
+      "x": {
+        "expr": "500 + 58*mu - 208.8*sigma"
+      },
+      "y": {
+        "expr": "520 - 1.92/sigma"
+      },
+      "width": {
+        "expr": "46.4*sigma"
+      },
+      "height": {
+        "expr": "1.92/sigma"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1
+    },
+    {
+      "id": "strip-1",
+      "type": "rect",
+      "x": {
+        "expr": "500 + 58*mu - 162.4*sigma"
+      },
+      "y": {
+        "expr": "520 - 16.16/sigma"
+      },
+      "width": {
+        "expr": "46.4*sigma"
+      },
+      "height": {
+        "expr": "16.16/sigma"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1
+    },
+    {
+      "id": "strip-2",
+      "type": "rect",
+      "x": {
+        "expr": "500 + 58*mu - 116*sigma"
+      },
+      "y": {
+        "expr": "520 - 73.86/sigma"
+      },
+      "width": {
+        "expr": "46.4*sigma"
+      },
+      "height": {
+        "expr": "73.86/sigma"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1
+    },
+    {
+      "id": "strip-3",
+      "type": "rect",
+      "x": {
+        "expr": "500 + 58*mu - 69.6*sigma"
+      },
+      "y": {
+        "expr": "520 - 183.61/sigma"
+      },
+      "width": {
+        "expr": "46.4*sigma"
+      },
+      "height": {
+        "expr": "183.61/sigma"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1
+    },
+    {
+      "id": "strip-4",
+      "type": "rect",
+      "x": {
+        "expr": "500 + 58*mu - 23.2*sigma"
+      },
+      "y": {
+        "expr": "520 - 248.67/sigma"
+      },
+      "width": {
+        "expr": "46.4*sigma"
+      },
+      "height": {
+        "expr": "248.67/sigma"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1
+    },
+    {
+      "id": "strip-5",
+      "type": "rect",
+      "x": {
+        "expr": "500 + 58*mu + 23.2*sigma"
+      },
+      "y": {
+        "expr": "520 - 183.61/sigma"
+      },
+      "width": {
+        "expr": "46.4*sigma"
+      },
+      "height": {
+        "expr": "183.61/sigma"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1
+    },
+    {
+      "id": "strip-6",
+      "type": "rect",
+      "x": {
+        "expr": "500 + 58*mu + 69.6*sigma"
+      },
+      "y": {
+        "expr": "520 - 73.86/sigma"
+      },
+      "width": {
+        "expr": "46.4*sigma"
+      },
+      "height": {
+        "expr": "73.86/sigma"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1
+    },
+    {
+      "id": "strip-7",
+      "type": "rect",
+      "x": {
+        "expr": "500 + 58*mu + 116*sigma"
+      },
+      "y": {
+        "expr": "520 - 16.16/sigma"
+      },
+      "width": {
+        "expr": "46.4*sigma"
+      },
+      "height": {
+        "expr": "16.16/sigma"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1
+    },
+    {
+      "id": "strip-8",
+      "type": "rect",
+      "x": {
+        "expr": "500 + 58*mu + 162.4*sigma"
+      },
+      "y": {
+        "expr": "520 - 1.92/sigma"
+      },
+      "width": {
+        "expr": "46.4*sigma"
+      },
+      "height": {
+        "expr": "1.92/sigma"
+      },
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 1
+    },
+    {
+      "id": "mean-line",
+      "type": "line",
+      "x1": {
+        "expr": "500 + 58*mu"
+      },
+      "y1": 150,
+      "x2": {
+        "expr": "500 + 58*mu"
+      },
+      "y2": 520,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 2.5
+    },
+    {
+      "id": "tick-left",
+      "type": "line",
+      "x1": {
+        "expr": "500 + 58*mu - 58*sigma"
+      },
+      "y1": 528,
+      "x2": {
+        "expr": "500 + 58*mu - 58*sigma"
+      },
+      "y2": 544,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 3
+    },
+    {
+      "id": "tick-right",
+      "type": "line",
+      "x1": {
+        "expr": "500 + 58*mu + 58*sigma"
+      },
+      "y1": 528,
+      "x2": {
+        "expr": "500 + 58*mu + 58*sigma"
+      },
+      "y2": 544,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 3
+    },
+    {
+      "id": "label-mu",
+      "type": "text",
+      "x": {
+        "expr": "500 + 58*mu"
+      },
+      "y": 566,
+      "text": "mu",
+      "fontSize": 16,
+      "fill": "#dc2626",
+      "stroke": "none",
+      "anchor": "middle"
+    },
+    {
+      "id": "caption",
+      "type": "text",
+      "x": 60,
+      "y": 598,
+      "text": "Height = density. Area = 1 for every mu and sigma. Red ticks mark mu plus or minus 1 sigma.",
+      "fontSize": 15,
+      "fill": "#111827",
+      "stroke": "none",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 12,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "mean-line",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2.5,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 2.5,
+            "easing": "linear"
+          },
+          {
+            "at": 3.2,
+            "value": 5.5,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4.8,
+            "value": 2.5,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tick-left",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 3,
+            "easing": "linear"
+          },
+          {
+            "at": 5.6,
+            "value": 3,
+            "easing": "linear"
+          },
+          {
+            "at": 6.6,
+            "value": 6,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 7.8,
+            "value": 3,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "tick-right",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 3,
+            "easing": "linear"
+          },
+          {
+            "at": 5.6,
+            "value": 3,
+            "easing": "linear"
+          },
+          {
+            "at": 6.6,
+            "value": 6,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 7.8,
+            "value": 3,
+            "easing": "ease-in-out"
+          }
+        ]
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "id": "cp-orient",
+      "at": 1,
+      "title": "A staircase of density",
+      "body": "Each strip is a thin slice of the density, drawn as density times slice width. The tallest strips sit at the mean. Height is how dense the variable is there; it is not the probability of that exact value.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-mean",
+      "at": 4,
+      "title": "Drag the mean",
+      "body": "Move the mean slider. The whole staircase and the red mean line slide sideways, but no strip changes shape or size. The mean is the centre, not a measure of spread.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-sigma",
+      "at": 7.6,
+      "title": "Drag the standard deviation",
+      "body": "Move the sigma slider. Every strip gets wider by the same factor and every height divides by that factor, so the red one-sigma ticks spread apart while the peak drops. Predict first: does the total area grow?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-area",
+      "at": 10.5,
+      "title": "Area is the invariant",
+      "body": "The area is still 1. A wider normal is not a bigger normal; it trades height for width. A single value has zero width, so its area and its probability are both zero even though its density is not zero.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.5,
+      "text": "A normal density drawn as thin strips. Taller means denser, not more likely at a point."
+    },
+    {
+      "at": 3.2,
+      "text": "Slide the mean: the whole staircase translates and the red centre line goes with it."
+    },
+    {
+      "at": 6.2,
+      "text": "Slide the standard deviation: the strips widen and shorten together, and the one-sigma ticks move apart."
+    },
+    {
+      "at": 9.2,
+      "text": "Width up, height down, by the same factor. That is why the area, the actual probability, does not change."
+    },
+    {
+      "at": 11.2,
+      "text": "So the total area stays one. Density is a height; probability is an area under it."
+    }
+  ],
+  "fallback": {
+    "text": "A normal density is a bell-shaped curve whose total area is 1. Raising the mean slides the whole curve to the right without changing its shape. Raising the standard deviation makes the curve wider and lower by the same factor, so the area stays 1: the spread is not extra probability. At any single value x the density f(x) is a height, not a probability, because a point has no width and therefore zero area; probability only appears when you take the area under the curve over an interval."
+  },
+  "accessibility": {
+    "alt": "A normal density as nine strips on an axis, tallest at the mean with a red mean line and red one-sigma ticks. Moving the mean slides it; increasing sigma widens and shortens it while total area stays one.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "blind-photosynthesis",
+  "subject": "Biology",
+  "topic": "Photosynthesis Inputs and Outputs",
+  "mediumDecision": "scene",
+  "whyScene": "The learning target is a set of spatial and causal connections: which molecules enter, which stage uses light, which stage fixes carbon, and what leaves. A labelled diagram carries the layout better than prose, and staged arrival of the molecules shows the order of dependency without claiming that light is a material ingredient.",
+  "objective": "Connect light, water and carbon dioxide inputs to glucose and oxygen outputs and distinguish the light-dependent reactions from the Calvin cycle.",
+  "learner": "Knows cells and basic chemistry.",
+  "misconceptions": [
+    {
+      "claim": "Plants get most of their mass from soil.",
+      "counter": "The carbon in glucose is traced to carbon dioxide entering the chloroplast; the checkpoint states that soil supplies water and minerals, not the bulk of dry mass."
+    },
+    {
+      "claim": "Photosynthesis is the reverse of breathing in every detail.",
+      "counter": "The scene separates the two stages and the closing checkpoint notes that plants also respire, so the two processes share materials but are not simple reverses."
+    },
+    {
+      "claim": "Light is a material input like water and carbon dioxide.",
+      "counter": "Light is drawn as a separate energy arrow and labelled 'energy, not matter'; the mass balance uses only CO2 and H2O on the input side."
+    }
+  ],
+  "teachingSequence": [
+    {
+      "phase": "orient",
+      "teacher": "Point to the chloroplast boundary and name the three arrivals: light, water, carbon dioxide.",
+      "learner": "Sorts the three arrivals into energy versus matter.",
+      "evidence": "Learner says light is energy and does not add it to the mass balance."
+    },
+    {
+      "phase": "stage-one",
+      "teacher": "Trace water into the light-dependent reactions and oxygen out.",
+      "learner": "Explains that water is split and oxygen leaves as a by-product.",
+      "evidence": "Learner locates oxygen production in the thylakoid stage, not the Calvin cycle."
+    },
+    {
+      "phase": "stage-two",
+      "teacher": "Trace carbon dioxide into the Calvin cycle and glucose out, noting ATP and NADPH as the energy carriers between stages.",
+      "learner": "Explains that carbon fixation happens without direct light absorption.",
+      "evidence": "Learner distinguishes where light is absorbed from where sugar is built."
+    },
+    {
+      "phase": "consolidate",
+      "teacher": "Ask where the plant's dry mass comes from and whether plants respire.",
+      "learner": "Traces mass to CO2 and states that respiration continues in plants.",
+      "evidence": "Learner rejects both 'mass from soil' and 'photosynthesis replaces respiration'."
+    }
+  ],
+  "interactionDesign": "A single diagram with staged reveals. Inputs arrive first, then oxygen leaves the light-dependent stage, then glucose leaves the Calvin cycle. Four checkpoints pause for prediction: classify light as energy or matter, name the stage that releases oxygen, name the stage that fixes carbon, and explain where the mass comes from. Keyboard-accessible continue actions and a static reduced-motion rendering keep it usable without animation.",
+  "sceneBrief": {
+    "view": "A chloroplast enclosing two labelled stages, with outside molecules on the left and products on the right.",
+    "marks": "Light arrow from above into the thylakoid stage; water and carbon dioxide arrows entering from the left; oxygen and glucose arrows leaving to the right.",
+    "motion": "Arrows extend in dependency order: light, then water and carbon dioxide, then oxygen, then glucose.",
+    "labels": "Every arrow is labelled at its outer end; the light label states that it is energy, not matter.",
+    "reading": "Water and light feed the upper stage, which releases oxygen; carbon dioxide feeds the lower stage, which releases glucose."
+  },
+  "accessibility": "Colour is backed by direct labels and by position. The fallback text and alt text carry the full input/output map, the checkpoint bodies restate each causal link, and reducedMotion is static.",
+  "fidelityChecks": [
+    "Inputs are light, water and carbon dioxide; outputs are oxygen and glucose.",
+    "Light is not counted as a material input.",
+    "The light-dependent reactions and the Calvin cycle are distinguished.",
+    "No claim that plants do not respire and no claim that photosynthesis is respiration reversed.",
+    "No claim that soil supplies the carbon mass."
+  ]
+}

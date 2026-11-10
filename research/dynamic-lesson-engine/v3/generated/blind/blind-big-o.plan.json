@@ -1,0 +1,60 @@
+{
+  "id": "blind-big-o",
+  "subject": "Computer Science",
+  "topic": "Big-O Growth",
+  "mediumDecision": "scene",
+  "whyScene": "The core idea is a comparison of shapes across a range of n. A log-log plot makes growth classes visible as slopes, and a moving curve lets the learner see that a constant multiplier translates a line without rotating it. Text alone would force the learner to imagine the chart and would hide the crossover.",
+  "objective": "Compare n, n log n and n squared growth, and explain why constant factors are secondary asymptotically.",
+  "learner": "Can read functions and small tables; new to asymptotic notation.",
+  "misconceptions": [
+    {
+      "claim": "Big-O is runtime in seconds.",
+      "counter": "The vertical axis is operation count as a function of n. The scene never converts to time; the final checkpoint says Big-O names a class, not a stopwatch reading."
+    },
+    {
+      "claim": "A larger constant always dominates.",
+      "counter": "The 1000n line lifts three decades but stays parallel to n. It still meets n squared at n = 1000 and is overtaken afterwards, so the constant delays the crossover without changing the class."
+    }
+  ],
+  "teachingSequence": [
+    {
+      "phase": "orient",
+      "teacher": "Name the two axes and the three curves; point out that both axes are logarithmic, so slope is the growth class.",
+      "learner": "Locates n, n log n and n squared and says which is flattest and which is steepest.",
+      "evidence": "Learner states the ordering n < n log n < n squared before any number is computed."
+    },
+    {
+      "phase": "perturb",
+      "teacher": "Introduce a constant multiplier of 1000 and slide the 1000n line up three decades.",
+      "learner": "Predicts whether the lifted line changes class; checks that it stays parallel to n.",
+      "evidence": "Learner says the slope is unchanged, so the class is unchanged."
+    },
+    {
+      "phase": "resolve",
+      "teacher": "Hold at n = 1000, where 1000n and n squared both equal one million, then look to the right of the crossover.",
+      "learner": "Explains why a big constant can win for small n but cannot win asymptotically.",
+      "evidence": "Learner distinguishes 'wins for a while' from 'belongs to a slower class'."
+    },
+    {
+      "phase": "formalize",
+      "teacher": "State that Big-O discards constant factors and lower-order terms and describes an upper bound as n grows.",
+      "learner": "Restates the definition without a timing claim.",
+      "evidence": "Learner avoids seconds and avoids saying the constant is irrelevant at every n."
+    }
+  ],
+  "interactionDesign": "The learner advances through four checkpoints. The key manipulative is the constant multiplier: the 1000n line animates from the n line (factor 1) to its lifted position (factor 1000), so the invariant slope is visible during the change. Narration supplies the numerical readings at n = 10, 100 and 1000 that the logarithmic axes cannot show as tick labels.",
+  "sceneBrief": {
+    "view": "Log-log chart from n = 1 to n = 10,000 and from 1 to 10^8 operations.",
+    "marks": "Blue n line, black n log n polyline, red n squared line, and a blue 1000n line that starts on top of n and lifts.",
+    "motion": "The 1000n line and its endpoint label rise by three decades between t = 2 and t = 8 while remaining parallel to n.",
+    "labels": "Each curve is labelled at its right end; the constant line is labelled at its moving left end.",
+    "reading": "At n = 1000 the 1000n line crosses n squared; to the right, n squared is above it."
+  },
+  "accessibility": "All information is also in the narration, checkpoint bodies and fallback text; colour is never the only signal because every curve is directly labelled. reducedMotion is static, keyboard is true, and the chart is described in alt text.",
+  "fidelityChecks": [
+    "Asymptotic order n < n log n < n squared is correct.",
+    "Multiplying by 1000 changes the intercept, not the slope or the class.",
+    "No claim about seconds, hardware or measured runtime.",
+    "The crossover at n = 1000 is arithmetically correct: 1000n = n squared = 1,000,000."
+  ]
+}

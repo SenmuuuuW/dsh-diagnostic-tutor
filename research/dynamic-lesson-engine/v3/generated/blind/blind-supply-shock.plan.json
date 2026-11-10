@@ -1,0 +1,60 @@
+{
+  "id": "blind-supply-shock",
+  "subject": "Economics",
+  "topic": "Supply Shock",
+  "mediumDecision": "scene",
+  "whyScene": "The distinction the learner must make is precisely a visual one: a shift of the whole supply curve versus a movement along a curve. Animating the supply line left while the demand curve stays fixed, and letting the equilibrium slide along demand, makes the shift/movement distinction directly observable rather than verbally asserted.",
+  "objective": "Show that a leftward supply shift raises equilibrium price and lowers equilibrium quantity, and distinguish a curve shift from a movement along a curve.",
+  "learner": "Knows supply and demand basics.",
+  "misconceptions": [
+    {
+      "claim": "A supply shock is a movement along the supply curve.",
+      "counter": "The scene draws the whole supply line moving left, with the original S left in place as a grey ghost. The only movement along a curve is the equilibrium sliding along the unchanged demand curve."
+    },
+    {
+      "claim": "Price always rises when demand shifts.",
+      "counter": "The closing checkpoint notes that demand shifts can move price either way depending on direction, and that the scene itself is a supply shift, not a demand shift."
+    }
+  ],
+  "teachingSequence": [
+    {
+      "phase": "read",
+      "teacher": "Identify D, S, and the initial crossing; name P1 and Q1.",
+      "learner": "Reads the initial equilibrium from the axes.",
+      "evidence": "Learner points to the crossing and states both coordinates."
+    },
+    {
+      "phase": "shock",
+      "teacher": "Shift the whole supply curve left to S-prime, holding demand fixed.",
+      "learner": "Predicts the direction of the price and quantity changes before the equilibrium moves.",
+      "evidence": "Learner predicts higher price and lower quantity."
+    },
+    {
+      "phase": "trace",
+      "teacher": "Move the equilibrium dot along D from the old crossing to the new one.",
+      "learner": "Separates the two events: the supply curve shifted, and the equilibrium moved along demand.",
+      "evidence": "Learner says the demand curve did not move."
+    },
+    {
+      "phase": "bound",
+      "teacher": "State the limits of the comparative-statics model and contrast with a demand shift.",
+      "learner": "Avoids a welfare or magnitude claim and does not generalise about demand.",
+      "evidence": "Learner says the model gives direction only."
+    }
+  ],
+  "interactionDesign": "The learner advances through four checkpoints. The supply shock is the manipulative: S slides left while D stays fixed, and the equilibrium dot traces the demand curve to the new crossing. P1, P2, Q1 and Q2 sit on the axes so the direction of each change can be read off directly; the grey ghost of S keeps the 'before' state available for comparison.",
+  "sceneBrief": {
+    "view": "A price-quantity plane with downward demand D and upward supply S.",
+    "marks": "Initial equilibrium with P1 and Q1; red shifted supply S-prime; moving equilibrium dot; new P2 and Q2 on the axes.",
+    "motion": "Supply slides left between t = 3 and t = 9; the equilibrium dot moves with it along the demand curve.",
+    "labels": "Both supply curves and the demand curve are labelled; the four axis labels carry the before and after readings.",
+    "reading": "New crossing is higher and further left: price up, quantity down."
+  },
+  "accessibility": "Direct labels on every curve, axis readouts for both equilibria, alt and fallback text, keyboard checkpoints, and a static reduced-motion rendering. Colour is backed by labels and by position.",
+  "fidelityChecks": [
+    "A leftward supply shift raises price and lowers quantity in this model.",
+    "The supply curve shifts while demand stays fixed; only the equilibrium moves along demand.",
+    "No welfare, magnitude or real-world-timing claim is made.",
+    "No claim that a demand shift always moves price in one direction."
+  ]
+}

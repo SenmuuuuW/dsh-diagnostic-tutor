@@ -1,0 +1,61 @@
+{
+  "id": "blind-newton-third",
+  "subject": "Physics",
+  "topic": "Newton's Third Law",
+  "mediumDecision": "scene",
+  "whyScene": "The misconception is spatial before it is verbal: learners see two equal arrows head to head and read them as cancelling. Only a picture that keeps the two arrows attached to two separate bodies, with two separate free-body summaries, can show that equal magnitudes on different objects do not add to zero. The mass dependence is also a ratio that has to be seen: the force arrows stay the same length while the acceleration arrows change, which is a comparison a static diagram can only freeze at one mass pair.",
+  "objective": "Show equal and opposite forces on two interacting objects and why they do not cancel because they act on different bodies.",
+  "learner": "Knows force as push/pull.",
+  "misconceptions": [
+    {
+      "claim": "Action and reaction cancel because they are equal and opposite.",
+      "counter": "The two arrows are drawn on opposite sides of the contact line, each inside a different body, and each body has its own acceleration arrow. A cancelling pair would have to act on the same body; here neither body has a second horizontal force, so each net force is 60 N and each accelerates."
+    },
+    {
+      "claim": "The larger object exerts the larger force.",
+      "counter": "The force arrows are fixed at 60 N and do not respond to the mass sliders. Only the acceleration arrows change, in inverse proportion to mass, so the learner sees mass altering a = F/m and never the force pair."
+    }
+  ],
+  "teachingSequence": [
+    {
+      "phase": "orient",
+      "teacher": "Name the two bodies, the contact line, and the fact that the red arrow is the force of A on B while the blue arrow is the force of B on A.",
+      "learner": "States which object each arrow belongs to.",
+      "evidence": "Learner assigns each arrow to a body rather than to the pair."
+    },
+    {
+      "phase": "perturb",
+      "teacher": "Invite a prediction: if B is much heavier, which arrow is longer? Then hold the force arrows still and move the mass sliders.",
+      "learner": "Predicts a longer arrow for the heavier body, then observes no force arrow changing.",
+      "evidence": "Learner withdraws the larger-force claim and says the forces stay equal."
+    },
+    {
+      "phase": "resolve",
+      "teacher": "Point to the separate acceleration arrows: A is pushed left, B is pushed right, both at 60 N, and their accelerations differ by mass.",
+      "learner": "Explains why the pair cannot cancel and why the lighter body accelerates more.",
+      "evidence": "Learner says the forces act on different bodies, so they are never added together."
+    },
+    {
+      "phase": "formalize",
+      "teacher": "State the third law as a statement about a pair of forces on two bodies, and derive a = F/m for each body separately.",
+      "learner": "Restates the law with the two-body condition included.",
+      "evidence": "Learner's statement mentions both magnitude, direction, and the two different bodies."
+    }
+  ],
+  "interactionDesign": "Two mass sliders, 20 to 90 kilograms each. The 60 N force pair never changes with mass. The acceleration arrows above each body are driven by 1800 divided by that body's mass, so arrow length is exactly proportional to a = 60/m at 30 pixels per metre per second squared. The learner can make one body light and the other heavy and watch the acceleration arrows diverge while the force arrows stay equal. The timeline pulses the two force arrows so the eye locks onto their equal length.",
+  "sceneBrief": {
+    "view": "Two blocks in contact on a floor line, drawn large; acceleration arrows float above each block; force arrows sit inside each block at the contact face.",
+    "marks": "Blue block A, amber block B, a red arrow pointing right inside B labelled A on B, a blue arrow pointing left inside A labelled B on A, both 60 N.",
+    "motion": "Force arrows pulse in width but keep equal length; acceleration arrows grow and shrink with the mass sliders.",
+    "labels": "Every arrow is labelled with the body it acts on; each block carries its name.",
+    "reading": "Light B with heavy A gives a long right acceleration arrow and a short left one, with both force arrows unchanged."
+  },
+  "accessibility": "Both interactions are sliders, so keyboard-only use is complete. Arrows are direct-labelled with text, so colour is never the only cue, and each label names the body the force acts on. Alt text describes the two force arrows and the two acceleration arrows. With reducedMotion as static, the pulse disappears and the geometry still carries the whole argument.",
+  "fidelityChecks": [
+    "Force magnitudes are equal at 60 N and opposite in direction, consistent with the third law.",
+    "Each force is attached to the body that feels it, not to the pair, so no cancellation is implied.",
+    "Acceleration arrow length equals 1800 divided by mass, which is proportional to 60 divided by mass.",
+    "Default masses of 40 and 60 kilograms give accelerations of 1.5 and 1.0 metres per second squared, matching the 1.5 to 1 arrow ratio.",
+    "No claim is made about the interaction duration or about deformation."
+  ]
+}

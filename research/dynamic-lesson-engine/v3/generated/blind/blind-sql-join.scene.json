@@ -1,0 +1,456 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 1000,
+    "height": 620,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "SQL INNER JOIN: Only Matching Keys Produce a Row",
+    "subject": "Computer Science",
+    "topic": "SQL INNER JOIN",
+    "objective": "Show why an inner join returns only matching key pairs and how unmatched rows disappear.",
+    "learner": "Knows tables and rows.",
+    "misconceptions": [
+      "JOIN is just stacking the two tables",
+      "INNER JOIN keeps all rows"
+    ],
+    "expectedUnderstanding": [
+      "A pair of rows contributes to the result only when the join condition is true",
+      "The output combines columns from both tables",
+      "Rows without a partner on the other side are dropped",
+      "Matching is by key value, not by row position"
+    ]
+  },
+  "properties": [],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 60,
+      "y": 56,
+      "text": "INNER JOIN: only matching keys produce a row",
+      "fontSize": 23,
+      "fill": "#111827",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "header-a",
+      "type": "text",
+      "x": 70,
+      "y": 124,
+      "text": "table A (id, name)",
+      "fontSize": 17,
+      "fill": "#111827",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "header-b",
+      "type": "text",
+      "x": 400,
+      "y": 124,
+      "text": "table B (id, name, score)",
+      "fontSize": 17,
+      "fill": "#111827",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "header-r",
+      "type": "text",
+      "x": 748,
+      "y": 124,
+      "text": "result (2 rows)",
+      "fontSize": 17,
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "row-a1",
+      "type": "text",
+      "x": 80,
+      "y": 200,
+      "text": "1 · Ana",
+      "fontSize": 20,
+      "fill": "#111827",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "row-a2",
+      "type": "text",
+      "x": 80,
+      "y": 272,
+      "text": "2 · Ben",
+      "fontSize": 20,
+      "fill": "#111827",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "row-a3",
+      "type": "text",
+      "x": 80,
+      "y": 344,
+      "text": "3 · Cara",
+      "fontSize": 20,
+      "fill": "#111827",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "row-b1",
+      "type": "text",
+      "x": 410,
+      "y": 200,
+      "text": "2 · Ben · 88",
+      "fontSize": 20,
+      "fill": "#111827",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "row-b2",
+      "type": "text",
+      "x": 410,
+      "y": 272,
+      "text": "3 · Cara · 91",
+      "fontSize": 20,
+      "fill": "#111827",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "row-b3",
+      "type": "text",
+      "x": 410,
+      "y": 344,
+      "text": "4 · Dan · 79",
+      "fontSize": 20,
+      "fill": "#111827",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "result-frame",
+      "type": "rect",
+      "x": 735,
+      "y": 232,
+      "width": 245,
+      "height": 140,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "row-r1",
+      "type": "text",
+      "x": 750,
+      "y": 420,
+      "text": "2 · Ben · 88",
+      "fontSize": 20,
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "row-r2",
+      "type": "text",
+      "x": 750,
+      "y": 452,
+      "text": "3 · Cara · 91",
+      "fontSize": 20,
+      "fill": "#1d4ed8",
+      "stroke": "none",
+      "anchor": "start"
+    },
+    {
+      "id": "join-2",
+      "type": "arrow",
+      "x1": 162,
+      "y1": 265,
+      "x2": 162,
+      "y2": 265,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "join-3",
+      "type": "arrow",
+      "x1": 162,
+      "y1": 337,
+      "x2": 162,
+      "y2": 337,
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "note",
+      "type": "text",
+      "x": 70,
+      "y": 540,
+      "text": "No partner means no output row: ids 1 and 4 drop out, so two rows come out, not nine.",
+      "fontSize": 16,
+      "fill": "#111827",
+      "stroke": "none",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 12,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "join-2",
+          "property": "x2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 162,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 162,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4,
+            "value": 398,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "join-2",
+          "property": "y2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 265,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 265,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4,
+            "value": 193,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "join-3",
+          "property": "x2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 162,
+            "easing": "linear"
+          },
+          {
+            "at": 4.4,
+            "value": 162,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 6.2,
+            "value": 398,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "join-3",
+          "property": "y2"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 337,
+            "easing": "linear"
+          },
+          {
+            "at": 4.4,
+            "value": 337,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 6.2,
+            "value": 265,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "row-r1",
+          "property": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 420,
+            "easing": "linear"
+          },
+          {
+            "at": 6.4,
+            "value": 420,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 8,
+            "value": 272,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "row-r2",
+          "property": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 452,
+            "easing": "linear"
+          },
+          {
+            "at": 6.6,
+            "value": 452,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 8.2,
+            "value": 344,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "row-a1",
+          "property": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 200,
+            "easing": "linear"
+          },
+          {
+            "at": 9,
+            "value": 200,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 10.4,
+            "value": 470,
+            "easing": "ease-in-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "row-b3",
+          "property": "y"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 344,
+            "easing": "linear"
+          },
+          {
+            "at": 9,
+            "value": 344,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 10.4,
+            "value": 470,
+            "easing": "ease-in-out"
+          }
+        ]
+      }
+    ]
+  },
+  "checkpoints": [
+    {
+      "id": "cp-key",
+      "at": 1,
+      "title": "The key is the only link",
+      "body": "Table A holds ids 1, 2 and 3. Table B holds ids 2, 3 and 4. Nothing else connects the tables, so a row from A can only meet a row from B when their id values are equal.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-trace",
+      "at": 3.6,
+      "title": "Trace id 2",
+      "body": "Follow the arrow: A's id 2 points at B's id 2. The arrow slants, because the matching row is not at the same vertical position. Position is irrelevant; only the key value matters.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-count",
+      "at": 7.2,
+      "title": "Predict the row count",
+      "body": "Before the result box fills: three rows times three rows gives nine possible pairs. How many pairs have equal ids? Only id 2 with id 2 and id 3 with id 3, so the answer is two rows, each combining columns from both tables.",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-dropped",
+      "at": 10.6,
+      "title": "Where the unmatched rows go",
+      "body": "Ids 1 and 4 have no partner, so no pair exists for them and no output row is created. They fall out of the tables. A left join would keep them with empty right-hand columns, but an inner join does not.",
+      "pause": false
+    }
+  ],
+  "narration": [
+    {
+      "at": 0.6,
+      "text": "Two tables. A holds ids one, two and three. B holds ids two, three and four. The shared key is id."
+    },
+    {
+      "at": 3,
+      "text": "A pair joins when the key values are equal, so id two meets id two, and id three meets id three."
+    },
+    {
+      "at": 5.6,
+      "text": "Each matching pair becomes one row that carries columns from both tables."
+    },
+    {
+      "at": 8.2,
+      "text": "Ids one and four have no partner, so they never enter the result. They drop out entirely."
+    },
+    {
+      "at": 10.8,
+      "text": "Two rows out, not six, and not nine. An inner join filters on the key; it does not stack the tables."
+    }
+  ],
+  "fallback": {
+    "text": "Table A has ids 1, 2 and 3. Table B has ids 2, 3 and 4. An inner join on id creates one output row for every pair of rows whose id values are equal: id 2 with id 2, and id 3 with id 3. Each output row contains the columns of both contributing rows. Rows whose id never appears on the other side, here 1 and 4, match nothing and therefore produce no output row at all. The result has two rows, not the six that stacking would give, and not the nine pairings that a cross join would give. Matching depends on key values, never on row position, and no ordering of the result is implied."
+  },
+  "accessibility": {
+    "alt": "Table A has ids 1, 2, 3; table B has ids 2, 3, 4. Arrows join equal ids 2 and 3 into two combined result rows, while ids 1 and 4 slide away unmatched.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

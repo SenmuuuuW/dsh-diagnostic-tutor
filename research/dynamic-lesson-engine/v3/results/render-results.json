@@ -1,0 +1,78 @@
+{
+  "base": "http://127.0.0.1:8391",
+  "exceptions": [],
+  "results": [
+    {
+      "folder": "blind",
+      "name": "blind-big-o.scene.json",
+      "screenshot": "blind-blind-big-o.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 12.00s · nodes 17 · render 0.20ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "blind",
+      "name": "blind-newton-third.scene.json",
+      "screenshot": "blind-blind-newton-third.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 12,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 11.00s · nodes 25 · render 0.20ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "blind",
+      "name": "blind-normal-bell.scene.json",
+      "screenshot": "blind-blind-normal-bell.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 12.00s · nodes 17 · render 0.40ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "blind",
+      "name": "blind-photosynthesis.scene.json",
+      "screenshot": "blind-blind-photosynthesis.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 18.00s · nodes 17 · render 0.00ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "blind",
+      "name": "blind-sql-join.scene.json",
+      "screenshot": "blind-blind-sql-join.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 14,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 12.00s · nodes 21 · render 0.10ms · paused",
+      "status": "rendered"
+    },
+    {
+      "folder": "blind",
+      "name": "blind-supply-shock.scene.json",
+      "screenshot": "blind-blind-supply-shock.png",
+      "validation": "Valid SceneSpec.",
+      "bad": false,
+      "svg": true,
+      "primitives": 16,
+      "stateLabel": "",
+      "metrics": "time 0.00 / 14.00s · nodes 17 · render 0.10ms · paused",
+      "status": "rendered"
+    }
+  ]
+}

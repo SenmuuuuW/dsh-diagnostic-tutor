@@ -278,6 +278,8 @@ function validatePrimitive(raw, index, propertyIds, errors) {
   if (!PRIMITIVE_TYPES.has(raw.type)) { errors.push(fail(`${path}.type`, 'type', 'rect|circle|line|path|text|arrow')); return }
   const allowedVars = [...propertyIds, 't', 'duration']
   const numeric = NUMERIC_PROPS[raw.type]
+  // v3 compatibility: SVG's natural textAnchor spelling is normalized to anchor.
+  if (raw.textAnchor !== undefined && raw.anchor === undefined) { raw.anchor = raw.textAnchor; delete raw.textAnchor }
   const allowedKeys = ['id', 'type', ...numeric, ...COLOR_PROPS, 'd', 'dash', 'text', 'fontSize', 'anchor', 'fontWeight']
   checkKeys(raw, allowedKeys, path, errors)
   for (const key of numeric) {
@@ -343,8 +345,12 @@ export function validateSceneSpec(raw) {
   // Metadata
   if (!isRecord(raw.metadata)) errors.push(fail('metadata', 'object', 'required'))
   else {
-    checkKeys(raw.metadata, ['title', 'subject', 'objective', 'learner', 'misconceptions', 'expectedUnderstanding'], 'metadata', errors)
+    checkKeys(raw.metadata, ['title', 'subject', 'topic', 'objective', 'learner', 'misconceptions', 'expectedUnderstanding'], 'metadata', errors)
     for (const key of ['title', 'subject', 'objective', 'learner']) if (!stringField(raw.metadata[key], LIMITS.metadataChars)) errors.push(fail(`metadata.${key}`, 'string', 'required short string'))
+    if (raw.metadata.topic !== undefined) {
+      if (!stringField(raw.metadata.topic, LIMITS.metadataChars)) errors.push(fail('metadata.topic', 'string', 'short string'))
+      else delete raw.metadata.topic
+    }
     for (const key of ['misconceptions', 'expectedUnderstanding']) {
       if (raw.metadata[key] !== undefined) {
         if (!Array.isArray(raw.metadata[key]) || raw.metadata[key].length > 8 || !raw.metadata[key].every((entry) => stringField(entry, 400))) errors.push(fail(`metadata.${key}`, 'array', 'array of up to 8 short strings'))
@@ -355,6 +361,8 @@ export function validateSceneSpec(raw) {
   // Properties
   const propertyIds = new Set()
   const properties = []
+  // v3 compatibility: a scene with no controls may omit the array.
+  if (raw.properties === undefined) raw.properties = []
   if (!Array.isArray(raw.properties) || raw.properties.length > LIMITS.properties) errors.push(fail('properties', 'array', `up to ${LIMITS.properties} numeric properties`))
   else {
     raw.properties.forEach((property, index) => {
