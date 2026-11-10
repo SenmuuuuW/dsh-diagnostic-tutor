@@ -19,7 +19,7 @@ Status: local development candidate on `feat/v0.9.0-scene-quality`.
 | --- | --- |
 | typecheck | pass |
 | tests | **744 / 67 files** |
-| Node 22.19 | 744 pass (final run pending in notes if not repeated) |
+| Node 22.19 | 744 pass |
 | Node 24.16 | 744 pass |
 | build | pass |
 | browser path-check | 31 / 31 |
