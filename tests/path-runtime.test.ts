@@ -20,6 +20,7 @@ import { newNode, openUdState, UDT_DOMAIN_VERSION } from '../src/state.js'
 import type { Evidence, UdState } from '../src/state.js'
 import { createHarness } from './harness.js'
 import { addSource, sourceDraftFromText } from '../src/sources.js'
+import { APPROVED_SCENES } from '../src/scene/approved.js'
 
 const NOW = '2026-10-18T12:00:00.000Z'
 const COURSE = 'linear-algebra'
@@ -336,6 +337,26 @@ describe('planning runtime with temporary DSH storage', () => {
       expect(state.readPath(COURSE)?.revision).toBe(pathRevision)
       await fixture.reopen()
       expect(pathView(fixture.state, COURSE, SESSION).run?.attempts[0]?.study).toMatchObject({ blockId: 'two', stepIndex: 1, fullscreen: true })
+    })
+
+    it('persists additive scene presentation state and drops unknown scene block IDs', async () => {
+      await prepare(state)
+      const started = await beginCourseItem(state, beginInput(state))
+      await bindCourseNode(state, COURSE, SESSION, started.attempt.id, NODE)
+      const approved = APPROVED_SCENES[0]!
+      const sceneLesson: LessonRecord = { ...lesson(), blocks: [
+        { id: 'scene-one', type: 'scene', content: { sceneVersion: '1', spec: approved.spec, fallback: approved.fallback } },
+        { id: 'after', type: 'text', content: { md: 'After.' } },
+      ] }
+      await recordCourseTeaching(state, COURSE, SESSION, started.attempt.id, sceneLesson)
+      const progress = { blockId: 'scene-one', stepIndex: 0, scrollRatio: 0.1, fullscreen: false, finished: false,
+        scenes: {
+          'scene-one': { blockId: 'scene-one', sceneHash: 'fnv1a64-1111111111111111', time: 2.4, params: { angle: 2 }, playing: true, reached: ['cp-pi'] },
+          'not-in-lesson': { blockId: 'not-in-lesson', sceneHash: 'fnv1a64-2222222222222222', time: 1, params: {}, playing: false, reached: [] },
+        } }
+      const saved = await saveStudyProgress(state, { courseId: COURSE, sessionId: SESSION, attemptId: started.attempt.id, progress })
+      expect(saved.run?.attempts[0]?.study?.scenes?.['scene-one']).toMatchObject({ time: 2.4, params: { angle: 2 }, playing: true })
+      expect(saved.run?.attempts[0]?.study?.scenes?.['not-in-lesson']).toBeUndefined()
     })
 
     it('rejects an out-of-order Study save but accepts the latest position', async () => {

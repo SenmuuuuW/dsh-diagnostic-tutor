@@ -80,6 +80,11 @@ export function blocksMarkdown(blocks: readonly StoredBlock[]): string {
       case 'image':
         parts.push(`**Image:** ${block.content.alt}${block.content.caption === undefined ? '' : ` — ${block.content.caption}`} (local asset ${block.content.assetId})`)
         break
+      case 'scene': {
+        const spec = block.content.spec as { metadata?: { title?: string } } | undefined
+        parts.push(`**Interactive scene:** ${spec?.metadata?.title ?? 'reviewed scene'}\n\n${block.content.fallback}`)
+        break
+      }
       case 'step-through':
         parts.push([
           `### ${block.content.title ?? 'Step through'}`,

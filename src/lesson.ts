@@ -29,6 +29,7 @@ import { z } from 'zod'
 
 import { KNOWN_BLOCK_TYPE_NAMES } from './block-types.js'
 import { MAX_PDF_PAGES } from './source-schema.js'
+import { SceneBlockContentSchema } from './scene/block.js'
 import { isValidExpression, MAX_EXPRESSION_CHARS } from './expression.js'
 
 import type { CourseRecord, NodeRecord } from './state.js'
@@ -321,6 +322,20 @@ export const ImageBlockSchema = z.object({
   }).strict(),
 })
 
+/**
+ * A reviewed, declarative interactive teaching scene.
+ *
+ * The envelope is intentionally small: the scene contract has its own version,
+ * a statically displayed fallback is mandatory, and the spec is validated by
+ * the bounded SceneSpec runtime. Approval is NOT encoded here; the tool write
+ * boundary and the renderer check the code-reviewed registry separately.
+ */
+export const SceneBlockSchema = z.object({
+  ...blockBase,
+  type: z.literal('scene'),
+  content: SceneBlockContentSchema,
+})
+
 const KNOWN_BLOCK_SCHEMAS = [
   TextBlockSchema,
   ExampleBlockSchema,
@@ -336,6 +351,7 @@ const KNOWN_BLOCK_SCHEMAS = [
   StepThroughBlockSchema,
   FigureBlockSchema,
   ImageBlockSchema,
+  SceneBlockSchema,
 ] as const
 
 /** Every block type this version understands. */
@@ -356,6 +372,7 @@ export const KnownBlockSchema = z.discriminatedUnion('type', [
   StepThroughBlockSchema,
   FigureBlockSchema,
   ImageBlockSchema,
+  SceneBlockSchema,
 ])
 
 const KNOWN_BLOCK_TYPES = new Set<string>(KNOWN_BLOCK_TYPE_NAMES)
@@ -393,6 +410,7 @@ export type SliderBlock = z.infer<typeof SliderBlockSchema>
 export type StepThroughBlock = z.infer<typeof StepThroughBlockSchema>
 export type FigureBlock = z.infer<typeof FigureBlockSchema>
 export type ImageBlock = z.infer<typeof ImageBlockSchema>
+export type SceneBlock = z.infer<typeof SceneBlockSchema>
 export type KnownBlock = z.infer<typeof KnownBlockSchema>
 export type UnknownBlock = z.infer<typeof UnknownBlockSchema>
 /** A block this build can render. Kept as the default `Block` name for callers. */

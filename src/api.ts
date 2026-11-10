@@ -48,6 +48,7 @@ import type { AssetStore } from './assets.js'
 import { MAX_ASSET_BYTES } from './asset-schema.js'
 import type { ReviewCard } from './review.js'
 import type { ReviewCardView } from './contract.js'
+import { dynamicSceneRenderingEnabled } from './scene/feature.js'
 
 /** The slice of `webServer` this module uses, declared structurally. */
 export interface WebServerLike {
@@ -686,6 +687,12 @@ export function createApiHandler(deps: ApiDeps) {
     const url = new URL(req.url ?? '/', 'http://localhost')
     const route = url.pathname.slice(API_PREFIX.length) || '/'
     if (await handlePathApi(route, req, res, deps, url)) return
+    // Feature flags are same-origin, read-only and deliberately small. The
+    // browser uses this to decide whether an approved scene may render; AI
+    // generation has no production flag and is not represented here.
+    if (method === 'GET' && route === '/scene-config') {
+      return sendJson(res, 200, { ok: true, dynamicScenes: { enabled: dynamicSceneRenderingEnabled() } })
+    }
     // Read per request, not once: a conversation's project is its own, and the
     // route that changes it must not be answered from a value captured before.
     const asker = url.searchParams.get('sessionId') ?? undefined

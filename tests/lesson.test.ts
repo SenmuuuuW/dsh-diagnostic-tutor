@@ -7,6 +7,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
+import { APPROVED_SCENES } from '../src/scene/approved.js'
 
 import {
   BLOCK_SCHEMAS,
@@ -62,9 +63,9 @@ function map(): NodeRecord[] {
 }
 
 describe('block schema', () => {
-  it('supports the fourteen known block types', () => {
-    expect([...SUPPORTED_BLOCK_TYPES].sort()).toEqual(['check', 'code', 'comparison', 'diagram', 'example', 'figure', 'flashcard', 'formula', 'image', 'quiz', 'resource', 'slider', 'step-through', 'text'])
-    expect(BLOCK_SCHEMAS).toHaveLength(14)
+  it('supports the fifteen known block types', () => {
+    expect([...SUPPORTED_BLOCK_TYPES].sort()).toEqual(['check', 'code', 'comparison', 'diagram', 'example', 'figure', 'flashcard', 'formula', 'image', 'quiz', 'resource', 'scene', 'slider', 'step-through', 'text'])
+    expect(BLOCK_SCHEMAS).toHaveLength(15)
   })
 
   it('accepts a well-formed block of each type', () => {
@@ -83,6 +84,7 @@ describe('block schema', () => {
       { id: 'l', type: 'step-through', content: { frames: [{ body: 'first' }, { body: 'second' }] } },
       { id: 'm', type: 'figure', content: { alt: 'A shape', svg: '<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4"/></svg>' } },
       { id: 'n', type: 'image', content: { assetId: 'asset-1', alt: 'A local image' } },
+      { id: 'o', type: 'scene', content: { sceneVersion: '1', spec: APPROVED_SCENES[0]!.spec, fallback: APPROVED_SCENES[0]!.fallback } },
     ]
     for (const sample of samples) {
       expect(BlockSchema.safeParse(sample).success).toBe(true)

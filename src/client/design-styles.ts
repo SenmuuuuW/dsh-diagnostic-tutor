@@ -1029,4 +1029,37 @@ textarea.dtx-input { resize:vertical; min-height:78px; line-height:1.6; }
   .dtx-project-row { min-height:58px; }
   .dtx-project-action { width:auto; margin-left:0; }
 }
+/* ---------- production scene player (research-informed, not Scene Lab) ---------- */
+.dt-scene { border:1px solid var(--dt-border,#e5e7eb); border-radius:12px; background:var(--dt-bg,#fff); overflow:hidden; }
+.dt-scene-head { display:flex; align-items:baseline; gap:9px; padding:11px 13px 8px; }
+.dt-scene-eyebrow { font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--dt-muted,#6b7280); }
+.dt-scene-title { font-size:13px; font-weight:650; color:var(--dt-text,#111827); }
+.dt-scene-stage { background:#fbfcff; padding:8px 10px; }
+.dt-scene-svg { display:block; width:100%; height:auto; max-height:430px; }
+.dt-scene-controls { display:flex; align-items:center; gap:6px; padding:8px 12px; border-top:1px solid var(--dt-border,#eef0f4); flex-wrap:wrap; }
+.dt-scene-controls button { font:inherit; font-size:11px; border:1px solid var(--dt-border,#dfe3ea); border-radius:7px; background:var(--dt-bg,#fff); color:var(--dt-text,#111827); padding:5px 8px; cursor:pointer; }
+.dt-scene-controls button:hover { background:var(--dt-surface,#f7f8fa); }
+.dt-scene button:focus-visible, .dt-scene input:focus-visible { outline:2px solid var(--dt-brand,#2563eb); outline-offset:2px; }
+.dt-scene-icon { min-width:32px; font-size:13px !important; }
+.dt-scene-small { white-space:nowrap; }
+.dt-scene-range { flex:1; min-width:120px; accent-color:var(--dt-brand,#2563eb); }
+.dt-scene-time { font-size:10px; color:var(--dt-muted,#6b7280); min-width:45px; text-align:right; font-variant-numeric:tabular-nums; }
+.dt-scene-params { display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:8px 12px; border-top:1px solid var(--dt-border,#eef0f4); }
+.dt-scene-label { font-size:10px; font-weight:650; color:var(--dt-muted,#6b7280); text-transform:uppercase; letter-spacing:.04em; }
+.dt-scene-param { display:inline-flex; align-items:center; gap:7px; font-size:11px; color:var(--dt-text,#111827); }
+.dt-scene-param input { width:115px; accent-color:var(--dt-brand,#2563eb); }
+.dt-scene-param output { min-width:44px; text-align:right; color:var(--dt-brand-ink,#1d4ed8); font-size:10px; font-variant-numeric:tabular-nums; }
+.dt-scene-narration { padding:8px 12px; font-size:11.5px; line-height:1.55; color:var(--dt-muted,#4b5563); border-top:1px solid var(--dt-border,#eef0f4); }
+.dt-scene-checkpoints { display:flex; flex-wrap:wrap; gap:5px; align-items:center; padding:8px 12px; border-top:1px solid var(--dt-border,#eef0f4); }
+.dt-scene-checkpoint { font:inherit; font-size:10px; border:1px solid var(--dt-border,#e5e7eb); border-radius:999px; background:var(--dt-bg,#fff); padding:4px 8px; color:var(--dt-muted,#4b5563); cursor:pointer; }
+.dt-scene-checkpoint.is-active { border-color:var(--dt-brand,#2563eb); color:var(--dt-brand-ink,#1d4ed8); background:#eff6ff; }
+.dt-scene-checkpoint-card { margin:0 12px 10px; padding:9px 11px; border:1px solid #bfdbfe; border-radius:9px; background:#eff6ff; font-size:11.5px; }
+.dt-scene-checkpoint-card strong { display:block; margin-bottom:3px; color:#1e3a8a; }
+.dt-scene-checkpoint-card p { margin:0 0 7px; color:#1e40af; line-height:1.5; }
+.dt-scene-reduced-hint { margin:0; padding:0 12px 9px; font-size:10px; color:var(--dt-muted,#6b7280); }
+.dt-scene-fallback { margin:0; padding:14px; border:1px dashed var(--dt-border-strong,#fca5a5); border-radius:10px; background:#fff7f7; color:#7f1d1d; font-size:12px; line-height:1.6; }
+.dt-scene-fallback p { margin:0 0 7px; }
+.dt-scene-fallback p:last-child { margin-bottom:0; color:#4b5563; }
+.dt-scene-loading { padding:14px; color:var(--dt-muted,#6b7280); font-size:12px; }
+@media (max-width:520px) { .dt-scene-param { width:100%; } .dt-scene-param input { flex:1; width:auto; } }
 `

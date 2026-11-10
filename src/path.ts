@@ -134,6 +134,23 @@ export const BlockResponseSchema = z.object({
 }).strict()
 export type BlockResponse = z.infer<typeof BlockResponseSchema>
 
+/**
+ * One scene's presentation position. This is not evidence, mastery or a stage
+ * completion: it is only where the learner stopped looking.
+ */
+export const SceneProgressSchema = z.object({
+  blockId: z.string().min(1).max(200),
+  /** Fingerprint of the exact spec + fallback; a changed scene invalidates this. */
+  sceneHash: z.string().min(1).max(128),
+  time: z.number().finite().min(0).max(120),
+  params: z.record(z.string().min(1).max(80), z.number().finite()).default({}),
+  /** Persisted for display, but a restored player always starts paused. */
+  playing: z.boolean(),
+  checkpointId: z.string().min(1).max(120).optional(),
+  reached: z.array(z.string().min(1).max(120)).max(12).default([]),
+}).strict()
+export type SceneProgress = z.infer<typeof SceneProgressSchema>
+
 /** Where the learner left the focused Study surface. Presentation state only. */
 export const StudyProgressSchema = z.object({
   blockId: z.string().min(1).max(200),
@@ -141,6 +158,8 @@ export const StudyProgressSchema = z.object({
   scrollRatio: z.number().min(0).max(1),
   fullscreen: z.boolean(),
   finished: z.boolean(),
+  /** Additive scene positions keyed by stable block id. */
+  scenes: z.record(z.string().min(1).max(200), SceneProgressSchema).optional(),
   updatedAt: z.string(),
 }).strict()
 export type StudyProgress = z.infer<typeof StudyProgressSchema>

@@ -210,12 +210,20 @@ export async function saveStudyProgress(state: UdState, input: SaveStudyProgress
     const blockIndex = blocks.findIndex((block) => block.id === input.progress.blockId)
     if (blockIndex < 0) throw new Error('no-such-block: refresh the lesson before saving progress')
     const stepIndex = Math.min(Math.max(input.progress.stepIndex, 0), blocks.length - 1)
+    // Scene positions are presentation-only and may only name an actual scene
+    // block in this lesson. Unknown block IDs from an older/newer client are
+    // dropped rather than persisted as orphaned progress.
+    const sceneIds = new Set(blocks.filter((block) => block.type === 'scene').map((block) => block.id))
+    const scenes = input.progress.scenes === undefined ? undefined : Object.fromEntries(
+      Object.entries(input.progress.scenes).filter(([blockId]) => sceneIds.has(blockId)),
+    )
     const study = {
       blockId: blocks[stepIndex]?.id ?? blocks[blockIndex]!.id,
       stepIndex,
       scrollRatio: Math.min(1, Math.max(0, input.progress.scrollRatio)),
       fullscreen: input.progress.fullscreen,
       finished: input.progress.finished,
+      ...(scenes === undefined ? {} : { scenes }),
       updatedAt: now,
     }
     return {

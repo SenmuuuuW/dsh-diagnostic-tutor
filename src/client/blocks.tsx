@@ -17,10 +17,12 @@
 import { createElement, useMemo, useState, type ReactNode } from 'react'
 
 import { MathMLView } from './mathml.jsx'
+import { ScenePlayer } from './scene-player.jsx'
 import { compileExpression } from '../expression.js'
 import { sanitizeSvg } from './sanitize-svg.js'
 
 import type { Block, HandoffView, KnownBlock, NextStepView, StoredBlock } from '../contract.js'
+import type { SceneProgress } from '../path.js'
 import { isKnownBlock } from '../block-types.js'
 import { useLang } from './i18n.js'
 import { useLearningText } from './learning-text.js'
@@ -31,6 +33,12 @@ import { continuationLabel, formatDuration } from './model.js'
 /** Props every renderer receives. */
 export interface BlockInteraction {
   attemptId: string
+  /** Feature flag supplied by the host/Study surface; scene player falls back when false. */
+  sceneEnabled?: boolean | undefined
+  /** Last presentation position for one scene block. Never evidence. */
+  sceneInitial?(blockId: string): SceneProgress | undefined
+  /** Presentation progress from one scene block. Never evidence or completion. */
+  sceneProgress?(blockId: string, progress: SceneProgress): void
   loadSource?(sourceId: string): Promise<{ id: string; title: string; locator: string; content?: string }>
   responses: readonly {
     blockId: string
@@ -749,6 +757,11 @@ function ComparisonBlockView({ block }: BlockRenderProps): ReactNode {
  * Deliberately a plain object rather than a switch: a `Map`/record makes the
  * extension point visible and keeps the fallback impossible to forget.
  */
+function SceneBlockView({ block, interaction }: BlockRenderProps): ReactNode {
+  if (block.type !== 'scene') return null
+  return <ScenePlayer block={block} interaction={interaction} />
+}
+
 export const BLOCK_RENDERERS: Record<string, Renderer> = {
   text: TextBlockView,
   example: ExampleBlockView,
@@ -764,6 +777,7 @@ export const BLOCK_RENDERERS: Record<string, Renderer> = {
   'step-through': StepThroughBlockView,
   figure: FigureBlockView,
   image: ImageBlockView,
+  scene: SceneBlockView,
 }
 
 /** Shown for a block type this build does not know. Never throws. */

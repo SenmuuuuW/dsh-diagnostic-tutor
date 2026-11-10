@@ -279,6 +279,38 @@ describe('the plugin mounts its browser API', () => {
 /* -------------------------------------------------------------------------- */
 
 describe('API over real persisted state', () => {
+  it('reports the dynamic-scene feature flag as disabled by default', async () => {
+    const harness = await createHarness()
+    const previous = process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES
+    delete process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES
+    try {
+      const state = await openState(harness)
+      const { status, json } = await call(state, { path: '/scene-config' })
+      expect(status).toBe(200)
+      expect(json).toEqual({ ok: true, dynamicScenes: { enabled: false } })
+    } finally {
+      if (previous === undefined) delete process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES
+      else process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES = previous
+      await harness.close()
+    }
+  })
+
+  it('reports the dynamic-scene feature flag when enabled', async () => {
+    const harness = await createHarness()
+    const previous = process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES
+    process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES = '1'
+    try {
+      const state = await openState(harness)
+      const { status, json } = await call(state, { path: '/scene-config' })
+      expect(status).toBe(200)
+      expect(json).toEqual({ ok: true, dynamicScenes: { enabled: true } })
+    } finally {
+      if (previous === undefined) delete process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES
+      else process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES = previous
+      await harness.close()
+    }
+  })
+
   it('reports an empty runtime as a normal state, not an error', async () => {
     const harness = await createHarness()
     try {

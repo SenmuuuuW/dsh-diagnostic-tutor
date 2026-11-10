@@ -54,6 +54,7 @@ import { reviewTools } from './review-tools.js'
 import { syncLessonFlashcards } from './review-sync.js'
 import { activeAttempt } from './path.js'
 import { appendCourseTeachingBlock, requireAttempt, writeCourseTeaching } from './path-runtime.js'
+import { assertSceneWriteAllowed } from './scene/approval.js'
 
 /**
  * The slice of `ctx` this module needs.
@@ -1158,6 +1159,24 @@ const BLOCK_PARAM_SPEC = {
         },
       },
     },
+    {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        id: { type: 'string', required: true },
+        sourceRefs: SOURCE_REF_PARAM_SPEC,
+        type: { type: 'string', required: true, enum: ['scene'] },
+        content: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            sceneVersion: { type: 'string', required: true, enum: ['1'], description: 'Scene interpretation contract version.' },
+            spec: { type: 'object', required: true, additionalProperties: true, description: 'Reviewed declarative SceneSpec; the runtime validates it strictly and checks the approved digest.' },
+            fallback: { type: 'string', required: true, description: 'Static explanation shown when scenes are disabled, unavailable or invalid.' },
+          },
+        },
+      },
+    },
   ],
 } as const
 
@@ -1204,6 +1223,11 @@ function prepareMath(candidate: unknown, index: number): unknown {
  * their shape, so the write boundary checks that every cited source exists.
  * A dangling citation is refused rather than rendered as a broken footnote.
  */
+/** The code-reviewed approval gate for the one block type that needs it. */
+function assertSceneWrite(block: KnownBlock): void {
+  if (block.type === 'scene') assertSceneWriteAllowed(block.content)
+}
+
 function assertSources(state: UdState, block: KnownBlock, index: number): void {
   const references = block.sourceRefs ?? []
   for (const reference of references) {
@@ -1346,7 +1370,7 @@ function udtLessonUpdateTool(state: UdState): ToolDefinition {
         return result.data
       })
 
-      parsed.forEach((block, index) => assertSources(state, block, index))
+      parsed.forEach((block, index) => { assertSources(state, block, index); assertSceneWrite(block) })
       if (Buffer.byteLength(JSON.stringify(parsed), 'utf8') > MAX_LESSON_BYTES) {
         throw new Error(`blocks are too large; the whole unit must stay under ${MAX_LESSON_BYTES} bytes`)
       }
@@ -1496,6 +1520,7 @@ function udtLessonAppendBlockTool(state: UdState): ToolDefinition {
       }
       const block = parsed.data
       assertSources(state, block, 0)
+      assertSceneWrite(block)
       if (Buffer.byteLength(JSON.stringify(block), 'utf8') > MAX_LESSON_BYTES) throw new Error('append-invalid-block: block is too large')
 
       let lesson: LessonRecord

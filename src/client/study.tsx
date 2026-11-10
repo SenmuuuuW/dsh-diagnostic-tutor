@@ -9,7 +9,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { StoredBlock } from '../contract.js'
-import type { StudyProgress, StudyProgressInput } from '../path.js'
+import type { SceneProgress, StudyProgress, StudyProgressInput } from '../path.js'
 import { isKnownBlock } from '../block-types.js'
 import { LessonBody } from './blocks.jsx'
 import type { BlockInteraction } from './blocks.jsx'
@@ -49,6 +49,7 @@ const TYPE_LABELS = {
   'step-through': { zh: '分步演示', en: 'Step through' },
   figure: { zh: '图示', en: 'Figure' },
   image: { zh: '图片', en: 'Image' },
+  scene: { zh: '动态场景', en: 'Interactive scene' },
 } as const
 
 /** Interactive blocks cannot be skipped until their answer is recorded. */
@@ -73,12 +74,14 @@ export function StudySession({ title, courseTitle, moduleTitle, code, blocks, in
   const [step, setStep] = useState(initialIndex)
   const [finished, setFinished] = useState(initialStudy?.finished === true)
   const [recorded, setRecorded] = useState<Set<string>>(() => new Set((interaction?.responses ?? []).map((response) => response.blockId)))
+  /** Presentation-only scene positions; never sent as evidence. */
+  const sceneStates = useRef<Record<string, SceneProgress>>({ ...(initialStudy?.scenes ?? {}) })
   const current = blocks[step]
   const rootRef = useRef<HTMLDivElement>(null)
   const onProgressRef = useRef(onProgress)
   onProgressRef.current = onProgress
-  const live = useRef({ step, finished, fullscreen })
-  live.current = { step, finished, fullscreen }
+  const live = useRef({ step, finished, fullscreen, scenes: sceneStates.current })
+  live.current = { step, finished, fullscreen, scenes: sceneStates.current }
   const restored = useRef(false)
   const scrollReady = useRef(false)
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -101,8 +104,11 @@ export function StudySession({ title, courseTitle, moduleTitle, code, blocks, in
       scrollRatio: scrollRatio(),
       fullscreen: state.fullscreen,
       finished: state.finished,
+      ...(Object.keys(state.scenes).length === 0 ? {} : { scenes: state.scenes }),
     })
   }
+  const reportRef = useRef<(() => void) | undefined>(undefined)
+  reportRef.current = report
   useEffect(() => {
     // Mark the surface live synchronously so the first progress report is not
     // lost in tests or in a hidden tab; restore the scroll position on the frame.
@@ -143,6 +149,11 @@ export function StudySession({ title, courseTitle, moduleTitle, code, blocks, in
         next.add(blockId)
         return next
       })
+    },
+    sceneInitial: (blockId: string) => sceneStates.current[blockId],
+    sceneProgress: (blockId: string, progress: SceneProgress) => {
+      sceneStates.current[blockId] = progress
+      reportRef.current?.()
     },
   }, [interaction])
 

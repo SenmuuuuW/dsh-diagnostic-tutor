@@ -5,6 +5,7 @@ import { activeAttempt } from '../src/path.js'
 import type { CurriculumInput, GoalBrief } from '../src/path.js'
 import { acceptCurriculum, beginCourseItem } from '../src/path-runtime.js'
 import { newNode, openUdState } from '../src/state.js'
+import { APPROVED_SCENES } from '../src/scene/approved.js'
 import type { UdState } from '../src/state.js'
 import { registerTools } from '../src/tools.js'
 import { createHarness } from './harness.js'
@@ -121,6 +122,28 @@ describe('native planning tool integration', () => {
     const statusWithRun = await native('udt_status', {})
     expect(JSON.parse(statusWithRun.learningPathContext)).toMatchObject({ activeAttempt: { id: attemptId, nodeId: null } })
     expect(statusWithRun).not.toHaveProperty('focus')
+  })
+
+  it('does not let a model write a scene without the feature flag or reviewed approval', async () => {
+    const approved = APPROVED_SCENES[0]!
+    const block = (spec: unknown, fallback: string) => ({ id: 'scene-model', type: 'scene', content: { sceneVersion: '1', spec, fallback } })
+    const previous = process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES
+    delete process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES
+    try {
+      await expect(native('udt_lesson_update', { nodeId: NODE, blocks: [block(approved.spec, approved.fallback)] }))
+        .rejects.toThrow(/dynamic-scenes-disabled/)
+    } finally {
+      process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES = '1'
+    }
+    try {
+      await expect(native('udt_lesson_update', { nodeId: NODE, blocks: [block(approved.spec, 'changed fallback')] }))
+        .rejects.toThrow(/scene-not-approved/)
+      const written = await native('udt_lesson_update', { nodeId: NODE, blocks: [block(approved.spec, approved.fallback)] })
+      expect(written).toMatchObject({ nodeId: NODE, blockCount: 1 })
+    } finally {
+      if (previous === undefined) delete process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES
+      else process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES = previous
+    }
   })
 
   it('rejects model-only skip, stale revisions, missing conversation, and unrelated nodes', async () => {

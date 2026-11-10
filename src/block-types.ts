@@ -23,6 +23,7 @@ export const KNOWN_BLOCK_TYPE_NAMES = [
   'step-through',
   'figure',
   'image',
+  'scene',
 ] as const
 
 const KNOWN = new Set<string>(KNOWN_BLOCK_TYPE_NAMES)
