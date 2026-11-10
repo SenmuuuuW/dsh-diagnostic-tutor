@@ -49,6 +49,13 @@ is in [`docs/planning/V0.5.0-E2E.md`](docs/planning/V0.5.0-E2E.md); the pending
 release checklist is in [`docs/planning/RELEASE-0.5.0.md`](docs/planning/RELEASE-0.5.0.md).
 
 
+
+`v0.9.0` (development, not published) adds a shared Visual Quality Gate, a
+human-only local Scene review/approval CLI with digest and audit records, a
+read-only browser review page, and real-model Generation v3 experiments with
+honest no-scene decisions. Production still renders only reviewed scenes and AI
+auto-generation remains closed.
+
 `v0.8.0` (development, **not published**) adds the first conservative production
 Dynamic Lesson playback surface: an additive `scene` block, a bounded
 approved-scene player inside existing Study, presentation-only scene progress, and

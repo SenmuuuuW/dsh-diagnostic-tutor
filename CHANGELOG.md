@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.9.0] — 2026-11-10
+
+Development release. Not published, tagged or pushed.
+
+### Added — Visual Quality Gate
+
+- Shared static Scene visual linter: missing stroke, invisible paint, implicit
+  black fill, low contrast, viewport overflow, invalid geometry, text overflow,
+  text overlap, duplicate labels, non-finite expressions and animation/parameter
+  boundary sampling.
+- State-aware false-positive handling for research named-state scenes.
+- Browser frame inspector for initial/mid/end/checkpoint and parameter
+  min/mid/max screenshots, SVG bounds and renderer exceptions.
+- Visual gate integrated into production/local approval and model-write gate.
+
+### Added — Local human Review & Approval
+
+- Read-only browser Review page at `/preview/scene-review/`.
+- Interactive-only CLI `scripts/scene-review.mjs` (approve/list/verify/revoke)
+  with canonical SHA-256 digest, audit log, warning acknowledgement and
+  non-TTY refusal.
+- Local registry extends the compiled approved catalog; `/scene-config` is
+  read-only and the client verifies the exact canonical content.
+- No Approve HTTP API.
+
+### Added — Generation v3 (research only)
+
+- 10 new blind cases including explicit `needsScene:false` decisions, 6 scene
+  candidates and 4 no-scene decisions.
+- Explicit visual style contract; strict schema + visual gate + browser render;
+  no automatic approval.
+- Results: 9/10 decision accuracy, 6/6 scene schema/visual/browser under the
+  documented v3.1 compatibility, 0/6 under the strict pre-compatibility shape.
+  No production approval of AI output.
+
+### Verification
+
+- 744 tests / 67 files; Node 22.19 and Node 24.16; build; browser path-check.
+- DSH 0.2.2-rc.1 package smoke and scene E2E.
+- v0.6.0 release gate remains Pass; v0.8.0 remains a development branch.
+
 ## [0.8.0] — 2026-11-09
 
 Development release. Not published or tagged.

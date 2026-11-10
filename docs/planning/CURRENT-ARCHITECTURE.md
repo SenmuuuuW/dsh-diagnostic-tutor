@@ -1,6 +1,6 @@
 # UDT 当前框架总览（以代码为准）
 
-状态：现行架构说明，已并入 v0.8.0 生产 Scene 播放、批准边界与 Presentation-only 场景进度（2026-11-09）。
+状态：现行架构说明，已并入 v0.9.0 Visual Quality Gate、本地人工审核/批准与 Generation v3 研究（2026-11-10）。
 这份文档只描述代码里真实存在的东西；每节都标注了对应文件，便于核对。
 产品设计背景见 [`LEARNING-PATH-ARCHITECTURE.md`](./LEARNING-PATH-ARCHITECTURE.md)。
 
@@ -85,7 +85,7 @@ DSH Runtime
 
 ## 6. 模型工具（21 个）
 
-The v0.8 `scene` block is renderable production content but is **not a model generation feature**. Scene writes are rejected unless the default-off feature flag is enabled and the exact `{spec, fallback}` matches the code-reviewed approved registry; AI generation remains under `research/dynamic-lesson-engine/v2/`.
+The v0.9 `scene` boundary adds a shared static visual gate, a human-only local CLI approval registry with SHA-256 digests, and a read-only review page. HTTP cannot approve scenes. The v0.8 `scene` block is renderable production content but is **not a model generation feature**. Scene writes are rejected unless the default-off feature flag is enabled and the exact `{spec, fallback}` matches the code-reviewed approved registry; AI generation remains under `research/dynamic-lesson-engine/v2/`.
 
 | 组 | 工具 | 作用 |
 | --- | --- | --- |
