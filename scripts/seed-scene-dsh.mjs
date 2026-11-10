@@ -12,6 +12,7 @@ import * as storageDomain from '@deepseek-ai/dsh-storage-domain'
 import { openUdState, newNode } from '../lib/state.js'
 import { saveAssessment, saveBrief, proposeCurriculum, acceptCurriculum, beginCourseItem, bindCourseNode, recordCourseTeaching, saveStudyProgress } from '../lib/path-runtime.js'
 import { APPROVED_SCENES } from '../lib/scene/approved.js'
+import { readFileSync } from 'node:fs'
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((all, value, index, list) => {
   if (value.startsWith('--')) all.push([value.slice(2), list[index + 1]])
@@ -62,12 +63,14 @@ await acceptCurriculum(state, course, session, proposed.revision, 1)
 const started = await beginCourseItem(state, { courseId: course, sessionId: session, expectedRevision: state.readPath(course).revision, version: 1, itemId: 'unit-circle', operationId: 'seed-scene-e2e' })
 const attempt = started.attempt
 await bindCourseNode(state, course, session, attempt.id, node)
-const approved = APPROVED_SCENES[0]
+const sceneFile = args.scene
+const approved = sceneFile ? (() => { const raw = JSON.parse(readFileSync(sceneFile, 'utf8')); const spec = raw.spec ?? raw; const fallback = raw.fallback?.text ?? raw.fallback; if (typeof fallback !== 'string') throw new Error('scene file must contain a fallback string'); return { id: raw.id ?? 'local-scene', spec, fallback } })() : APPROVED_SCENES[0]
 const lesson = {
   id: `${node}:lesson`, courseId: course, nodeId: node, title: 'Unit circle and sine', origin: 'tutor', createdAt: now, updatedAt: now,
   blocks: [
     { id: 'scene-unit', type: 'scene', content: { sceneVersion: '1', spec: approved.spec, fallback: approved.fallback } },
     { id: 'after-scene', type: 'text', content: { md: 'The vertical coordinate is the sine. Continue when you can explain why.' } },
+    { id: 'scene-quiz', type: 'quiz', content: { title: 'Check the idea', questions: [{ id: 'q1', kind: 'mcq', prompt: 'At the point where the tangent is horizontal, what is the angle of the radius?', options: ['0 or 180 degrees', '90 degrees', '45 degrees'] }] } },
   ],
 }
 await recordCourseTeaching(state, course, session, attempt.id, lesson)

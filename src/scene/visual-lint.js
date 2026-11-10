@@ -140,8 +140,10 @@ function lintPrimitive(primitive, spec, contexts, background, diagnostics) {
   if (primitive.opacity !== undefined && typeof primitive.opacity === 'number' && primitive.opacity <= 0.05) {
     // Research state snapshots can reveal a primitive later. Do not call a
     // deliberately hidden element invisible when a named state makes it visible.
-    const revealed = (spec.states ?? []).some((state) => (state.overrides ?? []).some((override) => override.primitive === primitive.id && override.property === 'opacity' && Number(override.value) > 0.05))
-    diagnostics.push(fail('VISUAL_INVISIBLE', revealed ? 'warning' : 'error', revealed ? `Primitive "${primitive.id}" starts hidden but is revealed by a named state.` : `Primitive "${primitive.id}" is effectively transparent (opacity ${primitive.opacity}).`,{primitiveId:primitive.id,propertyPath:`${pathBase}.opacity`,suggestedFix:revealed ? 'Confirm the state timeline reveals it when intended.' : 'Use opacity above 0.05 or remove the primitive.'}))
+    const revealedByState = (spec.states ?? []).some((state) => (state.overrides ?? []).some((override) => override.primitive === primitive.id && override.property === 'opacity' && Number(override.value) > 0.05))
+    const revealedByTrack = (spec.timeline?.tracks ?? []).some((track) => track.target?.primitive === primitive.id && track.target?.property === 'opacity' && (track.keyframes ?? []).some((frame) => Number(frame.value) > 0.05))
+    const revealed = revealedByState || revealedByTrack
+    diagnostics.push(fail('VISUAL_INVISIBLE', revealed ? 'warning' : 'error', revealed ? `Primitive "${primitive.id}" starts hidden but is revealed by a state or animation.` : `Primitive "${primitive.id}" is effectively transparent (opacity ${primitive.opacity}).`,{primitiveId:primitive.id,propertyPath:`${pathBase}.opacity`,suggestedFix:revealed ? 'Confirm the state/animation timeline reveals it when intended.' : 'Use opacity above 0.05 or remove the primitive.'}))
   }
 
   const boxes = []
