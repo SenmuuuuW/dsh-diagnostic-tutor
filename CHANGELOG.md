@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.10.0] — 2026-11-10
+
+Development release. Not published, tagged or pushed.
+
+### Added — Canonical Contract & Repair
+
+- Single canonical SceneSpec contract metadata, prompt summary, strict/normalized
+  separation, and explicit deprecated-alias policy (`textAnchor` only in
+  normalization).
+- Official optional `properties` and `metadata.topic` fields in both production
+  and research validators.
+- Structured error contract, deterministic contract-drift repair, bounded
+  model repair runner, attempt IDs, hashes and repair histories.
+- Limited semantic verifier: point-on-circle coordinate consistency with
+  UNVERIFIED coverage reported separately from PASS.
+
+### Research — Generation v4
+
+- 15 new sealed teaching cases, including no-scene decisions and difficult
+  math/algorithm cases.
+- Real-model run: 11 scene candidates, strict first-pass **0/11**; deterministic
+  contract repair 11/11 schema+visual valid; one separate semantic model repair
+  succeeded 1/1; browser render 11/11.
+- No AI scene auto-approved; local approval remains human-CLI gated.
+
+### Verification
+
+- 756 tests / 70 files; typecheck, build, browser path-check, DSH E2E and final
+  package smoke pending final report.
+
 ## [0.9.0] — 2026-11-10
 
 Development release. Not published, tagged or pushed.

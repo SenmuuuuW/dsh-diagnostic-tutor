@@ -50,6 +50,12 @@ release checklist is in [`docs/planning/RELEASE-0.5.0.md`](docs/planning/RELEASE
 
 
 
+
+`v0.10.0` (development, not published) focuses on contract alignment, bounded
+structured repair and limited semantic verification. It does not enable
+AI auto-generation; the latest sealed benchmark still shows strict contract
+drift and requires human/local review.
+
 `v0.9.0` (development, not published) adds a shared Visual Quality Gate, a
 human-only local Scene review/approval CLI with digest and audit records, a
 read-only browser review page, and real-model Generation v3 experiments with
