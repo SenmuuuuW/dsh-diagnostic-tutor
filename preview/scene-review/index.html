@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scene Review — local, read-only</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header>
+    <div><p class="eyebrow">v0.9 local review · approval is CLI-only</p><h1>Scene Review</h1>
+      <p class="sub">Inspect a candidate SceneSpec, schema result, visual lint and fallback. This page has no approval endpoint and cannot write the registry.</p></div>
+    <a href="/preview/scene-lab/index.html">Open Scene Lab →</a>
+  </header>
+  <main>
+    <section class="panel">
+      <h2>Candidate files</h2>
+      <input id="files" type="file" accept=".json,application/json" multiple />
+      <p class="hint">Load a raw SceneSpec, a <code>{spec, fallback}</code> candidate, or a <code>scene</code> block. Files stay in this browser.</p>
+      <ul id="candidates"></ul>
+    </section>
+    <section class="panel" id="detail-panel" hidden>
+      <div class="detail-head"><h2 id="detail-title">Candidate</h2><span id="detail-digest" class="digest"></span></div>
+      <div class="grid">
+        <div><h3>Validation</h3><div id="validation" class="result"></div></div>
+        <div><h3>Visual lint</h3><div id="visual" class="result"></div></div>
+      </div>
+      <h3>Fallback</h3><p id="fallback" class="fallback"></p>
+      <h3>SceneSpec</h3><pre id="spec"></pre>
+      <div class="approve-note"><strong>Approval is not available here.</strong> A human must run the local CLI in a terminal; non-interactive approval is refused.</div>
+      <pre id="command" class="command"></pre>
+    </section>
+  </main>
+  <footer>No network writes · no model approval · warnings require explicit human acknowledgement</footer>
+  <script type="module" src="./app.mjs"></script>
+</body>
+</html>

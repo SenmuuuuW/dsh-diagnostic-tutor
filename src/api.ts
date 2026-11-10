@@ -49,6 +49,7 @@ import { MAX_ASSET_BYTES } from './asset-schema.js'
 import type { ReviewCard } from './review.js'
 import type { ReviewCardView } from './contract.js'
 import { dynamicSceneRenderingEnabled } from './scene/feature.js'
+import { combinedApprovedScenes } from './scene/local-registry.js'
 
 /** The slice of `webServer` this module uses, declared structurally. */
 export interface WebServerLike {
@@ -691,7 +692,10 @@ export function createApiHandler(deps: ApiDeps) {
     // browser uses this to decide whether an approved scene may render; AI
     // generation has no production flag and is not represented here.
     if (method === 'GET' && route === '/scene-config') {
-      return sendJson(res, 200, { ok: true, dynamicScenes: { enabled: dynamicSceneRenderingEnabled() } })
+      // Read-only projection for the renderer. Approval is a local CLI action;
+      // there is deliberately no approve/revoke route behind the trust fence.
+      const approved = combinedApprovedScenes().map((scene) => ({ id: scene.id, title: scene.title, spec: scene.spec, fallback: scene.fallback }))
+      return sendJson(res, 200, { ok: true, dynamicScenes: { enabled: dynamicSceneRenderingEnabled(), approved } })
     }
     // Read per request, not once: a conversation's project is its own, and the
     // route that changes it must not be answered from a value captured before.

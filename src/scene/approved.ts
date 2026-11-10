@@ -8,6 +8,7 @@
  */
 import { canonicalSceneKey } from './canonical.js'
 import { validateSceneSpec } from './spec.js'
+import { visualLintScene } from './visual-lint.js'
 
 export interface ApprovedScene {
   readonly id: string
@@ -57,6 +58,8 @@ const approvedSource = {
 
 const validated = validateSceneSpec(approvedSource.spec)
 if (!validated.ok) throw new Error('approved scene is invalid: ' + validated.errors.map((entry) => `${entry.path}: ${entry.message}`).join('; '))
+const approvedVisual = visualLintScene(validated.spec)
+if (!approvedVisual.ok) throw new Error('approved scene fails visual lint: ' + approvedVisual.diagnostics.filter((entry) => entry.severity === 'error').map((entry) => entry.code).join(', '))
 
 export const APPROVED_SCENES: readonly ApprovedScene[] = [
   { id: approvedSource.id, title: approvedSource.title, spec: validated.spec, fallback: approvedSource.fallback },

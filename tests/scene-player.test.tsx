@@ -86,6 +86,39 @@ describe('production scene block', () => {
   })
 })
 
+
+  it('renders a locally approved scene only after the read-only config endpoint supplies it', async () => {
+    const spec = structuredClone(approved.spec) as any
+    spec.metadata.title = 'Local review variant'
+    const fallback = approved.fallback + ' (local review)'
+    const block: KnownBlock = { id: 'scene-local', type: 'scene', content: { sceneVersion: '1', spec, fallback } } as KnownBlock
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ ok: true, dynamicScenes: { enabled: true, approved: [{ spec, fallback }] } }) }))
+    vi.stubGlobal('fetch', fetchMock)
+    try {
+      await act(async () => { root.render(createElement(BlockView, { block, interaction: { attemptId: 'attempt-1', responses: [], submit: vi.fn(async () => {}) } })); await Promise.resolve(); await Promise.resolve() })
+      expect(fetchMock).toHaveBeenCalledWith('/diagnostic-tutor/api/scene-config', { cache: 'no-store' })
+      expect(container.querySelector('.dt-scene-svg')).not.toBeNull()
+    } finally { vi.unstubAllGlobals() }
+  })
+
+
+  it('does not auto-submit a quiz or advance after a scene; the learner must answer explicitly', async () => {
+    const scene = sceneBlock()
+    const quiz: KnownBlock = { id: 'quiz-1', type: 'quiz', content: { questions: [{ id: 'q1', kind: 'mcq', prompt: 'What is sine at pi?', options: ['0', '1'] }] } } as KnownBlock
+    const submit = vi.fn(async () => {})
+    const onProgress = vi.fn()
+    await act(async () => { root.render(createElement(StudySession, { title: 'Scene then check', blocks: [scene, quiz], interaction: interaction({ submit }), onExit: vi.fn(), onProgress })); await Promise.resolve() })
+    expect(container.textContent).toContain('Step 1 of 2')
+    expect(submit).not.toHaveBeenCalled()
+    await act(async () => { button('Continue').click(); await Promise.resolve() })
+    expect(container.textContent).toContain('What is sine at pi?')
+    expect(submit).not.toHaveBeenCalled()
+    expect(onProgress.mock.calls.at(-1)?.[0].scenes).toBeDefined()
+    await act(async () => { container.querySelector<HTMLInputElement>('input[value="0"]')!.click(); await Promise.resolve() })
+    await act(async () => { button('Record my answer').click(); await Promise.resolve() })
+    expect(submit).toHaveBeenCalledWith('quiz-1', [{ questionId: 'q1', value: '0' }])
+  })
+
 describe('Study scene persistence', () => {
   it('restores time/params paused and continues to the next block only by learner action', async () => {
     const scene = sceneBlock()

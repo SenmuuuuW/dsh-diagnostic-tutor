@@ -10,7 +10,7 @@ import { createElement, useCallback, useEffect, useMemo, useRef, useState, type 
 
 import type { SceneBlock } from '../lesson.js'
 import type { SceneProgress } from '../path.js'
-import { isApprovedScene } from '../scene/approved.js'
+import { isApprovedScene, sceneApprovalKey } from '../scene/approved.js'
 import { sceneFingerprint } from '../scene/canonical.js'
 import { evaluateNumeric, validateSceneSpec } from '../scene/spec.js'
 import { useLang } from './i18n.js'
@@ -119,8 +119,14 @@ export function ScenePlayer({ block, interaction }: ScenePlayerProps): ReactNode
   }
   const reducedMotion = typeof globalThis.matchMedia === 'function' && globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches
   const [remoteEnabled, setRemoteEnabled] = useState<boolean | undefined>(interaction?.sceneEnabled)
+  const [remoteApproved, setRemoteApproved] = useState<readonly { spec: unknown; fallback: string }[] | undefined>(undefined)
   const validation = useMemo(() => validateSceneSpec(block.content.spec), [block.content.spec])
-  const approved = useMemo(() => validation.ok && isApprovedScene(block.content.spec, block.content.fallback), [validation, block.content.spec, block.content.fallback])
+  const approved = useMemo(() => {
+    if (!validation.ok) return false
+    if (remoteApproved === undefined) return isApprovedScene(block.content.spec, block.content.fallback)
+    const key = sceneApprovalKey(validation.spec, block.content.fallback)
+    return key !== null && remoteApproved.some((entry) => sceneApprovalKey(entry.spec, entry.fallback) === key)
+  }, [validation, block.content.spec, block.content.fallback, remoteApproved])
   const spec = validation.ok ? validation.spec as Spec : null
   const duration = spec === null ? 0 : Number(spec.timeline.duration)
   const fingerprint = useMemo(() => spec === null ? '' : sceneFingerprint(spec, block.content.fallback), [spec, block.content.fallback])
@@ -153,7 +159,11 @@ export function ScenePlayer({ block, interaction }: ScenePlayerProps): ReactNode
     let cancelled = false
     fetch('/diagnostic-tutor/api/scene-config', { cache: 'no-store' })
       .then((response) => response.ok ? response.json() : Promise.reject(new Error('scene-config')))
-      .then((body: any) => { if (!cancelled) setRemoteEnabled(body?.dynamicScenes?.enabled === true) })
+      .then((body: any) => {
+        if (cancelled) return
+        setRemoteEnabled(body?.dynamicScenes?.enabled === true)
+        setRemoteApproved(Array.isArray(body?.dynamicScenes?.approved) ? body.dynamicScenes.approved : [])
+      })
       .catch(() => { if (!cancelled) setRemoteEnabled(false) })
     return () => { cancelled = true }
   }, [interaction?.sceneEnabled])

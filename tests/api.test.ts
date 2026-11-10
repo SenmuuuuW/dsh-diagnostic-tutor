@@ -287,7 +287,7 @@ describe('API over real persisted state', () => {
       const state = await openState(harness)
       const { status, json } = await call(state, { path: '/scene-config' })
       expect(status).toBe(200)
-      expect(json).toEqual({ ok: true, dynamicScenes: { enabled: false } })
+      expect(json).toMatchObject({ ok: true, dynamicScenes: { enabled: false } }); expect(Array.isArray((json.dynamicScenes as any).approved)).toBe(true)
     } finally {
       if (previous === undefined) delete process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES
       else process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES = previous
@@ -303,7 +303,7 @@ describe('API over real persisted state', () => {
       const state = await openState(harness)
       const { status, json } = await call(state, { path: '/scene-config' })
       expect(status).toBe(200)
-      expect(json).toEqual({ ok: true, dynamicScenes: { enabled: true } })
+      expect(json).toMatchObject({ ok: true, dynamicScenes: { enabled: true } }); expect((json.dynamicScenes as any).approved).toEqual(expect.arrayContaining([expect.objectContaining({ id: 'approved-unit-circle' })]))
     } finally {
       if (previous === undefined) delete process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES
       else process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES = previous
@@ -637,6 +637,7 @@ describe('API over real persisted state', () => {
     try {
       const state = await openState(harness)
       expect((await call(state, { path: '/nope' })).status).toBe(404)
+      expect((await call(state, { method: 'POST', path: '/scene-config', body: '{}' })).status).toBe(404)
       expect((await call(state, { method: 'DELETE', path: '/overview' })).status).toBe(405)
     } finally {
       await harness.close()
