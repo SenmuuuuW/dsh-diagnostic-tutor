@@ -1,0 +1,306 @@
+{
+  "version": "0.1",
+  "viewport": {"width": 760, "height": 440, "background": "#f8fafc"},
+  "metadata": {
+    "title": "Recursion: Call Stack Descent and Unwind",
+    "subject": "Computer Science",
+    "objective": "Show the call stack growing and unwinding for a recursive function.",
+    "learner": "Can read a simple function.",
+    "misconceptions": ["Recursion runs all calls simultaneously", "The base case is executed first"],
+    "expectedUnderstanding": [
+      "Each recursive call pauses its caller and adds one unfinished frame.",
+      "The base case is reached after the descent, then returns immediately.",
+      "Return values unwind in reverse call order, from the newest frame to the oldest."
+    ]
+  },
+  "properties": [],
+  "primitives": [
+    {"id": "r1", "type": "rect", "x": 210, "y": 84, "width": 340, "height": 46, "fill": "#eef2ff", "stroke": "#3730a3", "strokeWidth": 2, "opacity": 0},
+    {"id": "r2", "type": "rect", "x": 210, "y": 138, "width": 340, "height": 46, "fill": "#eef2ff", "stroke": "#3730a3", "strokeWidth": 2, "opacity": 0},
+    {"id": "r3", "type": "rect", "x": 210, "y": 192, "width": 340, "height": 46, "fill": "#eef2ff", "stroke": "#3730a3", "strokeWidth": 2, "opacity": 0},
+    {"id": "r4", "type": "rect", "x": 210, "y": 246, "width": 340, "height": 46, "fill": "#eef2ff", "stroke": "#3730a3", "strokeWidth": 2, "opacity": 0},
+    {"id": "r5", "type": "rect", "x": 210, "y": 300, "width": 340, "height": 46, "fill": "#eef2ff", "stroke": "#3730a3", "strokeWidth": 2, "opacity": 0},
+    {"id": "t1", "type": "text", "x": 230, "y": 114, "text": "f(4)  n=4", "fontSize": 16, "fill": "#1e1b4b", "opacity": 0},
+    {"id": "t2", "type": "text", "x": 230, "y": 168, "text": "f(3)  n=3", "fontSize": 16, "fill": "#1e1b4b", "opacity": 0},
+    {"id": "t3", "type": "text", "x": 230, "y": 222, "text": "f(2)  n=2", "fontSize": 16, "fill": "#1e1b4b", "opacity": 0},
+    {"id": "t4", "type": "text", "x": 230, "y": 276, "text": "f(1)  n=1", "fontSize": 16, "fill": "#1e1b4b", "opacity": 0},
+    {"id": "t5", "type": "text", "x": 230, "y": 330, "text": "f(0)  base case", "fontSize": 16, "fill": "#1e1b4b", "opacity": 0},
+    {"id": "topTag", "type": "text", "x": 570, "y": 110, "text": "TOP", "fontSize": 14, "fill": "#b45309", "opacity": 0},
+    {"id": "status", "type": "text", "x": 60, "y": 55, "text": "Call f(4). The base case is not first; calls descend until n = 0.", "fontSize": 15, "fill": "#0f172a"},
+    {"id": "result", "type": "text", "x": 60, "y": 380, "text": "Return value: —", "fontSize": 16, "fill": "#0f172a"},
+    {"id": "note", "type": "text", "x": 60, "y": 414, "text": "LIFO: the last call pushed is the first to return. Calls do not run at once.", "fontSize": 13, "fill": "#475569"},
+    {"id": "code", "type": "text", "x": 60, "y": 28, "text": "factorial(n) = n * factorial(n - 1), base n = 0 → 1", "fontSize": 13, "fill": "#334155"},
+    {"id": "stackLabel", "type": "text", "x": 210, "y": 74, "text": "CALL STACK", "fontSize": 14, "fill": "#3730a3"}
+  ],
+  "timeline": {
+    "duration": 22,
+    "tracks": [
+      {
+        "target": {"primitive": "topTag", "property": "fontSize"},
+        "keyframes": [
+          {"at": 0, "value": 14},
+          {"at": 2, "value": 18},
+          {"at": 4, "value": 14},
+          {"at": 6, "value": 18},
+          {"at": 8, "value": 14},
+          {"at": 10, "value": 18},
+          {"at": 12, "value": 14},
+          {"at": 14, "value": 18},
+          {"at": 16, "value": 14},
+          {"at": 18, "value": 18},
+          {"at": 20, "value": 14},
+          {"at": 22, "value": 14}
+        ]
+      }
+    ]
+  },
+  "controls": [],
+  "checkpoints": [
+    {"id": "cp0", "at": 1, "title": "Descent is sequential", "body": "Only f(4) is active at first. It pauses while f(3) runs, and so on, so the stack holds unfinished calls; it does not contain copies running at the same time.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp1", "at": 9, "title": "Base case stops the descent", "body": "f(0) is reached last, after f(4), f(3), f(2) and f(1). It returns 1 immediately. Without a base case the calls would keep descending instead of stopping.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp2", "at": 15, "title": "Unwinding is LIFO", "body": "f(0) returns first, then f(1), f(2), f(3), f(4). Each caller multiplies its own n by the value returned by the call it was waiting on. The newest frame always leaves first.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp3", "at": 21, "title": "Final result", "body": "24 = 4 * 3 * 2 * 1. The stack is empty and every return happened in reverse call order. Check the base case: it was reached at the bottom of the descent, not before the recursive calls.", "pause": true, "learnerAction": "continue"}
+  ],
+  "narration": [
+    {"at": 0, "text": "A recursive call pushes one frame and then waits for the next call."},
+    {"at": 6, "text": "The stack grows downward until the base case f(0) is reached."},
+    {"at": 10, "text": "The base case returns 1 without making another call."},
+    {"at": 18, "text": "Returns pop the stack in reverse order and produce 24."}
+  ],
+  "states": [
+    {
+      "id": "s0",
+      "label": "Empty stack",
+      "overrides": [
+        {"primitive": "topTag", "property": "opacity", "value": 0},
+        {"primitive": "status", "property": "text", "value": "Call f(4). The base case is not first; calls descend until n = 0."},
+        {"primitive": "result", "property": "text", "value": "Return value: —"}
+      ]
+    },
+    {
+      "id": "s1",
+      "label": "Push f(4)",
+      "overrides": [
+        {"primitive": "r1", "property": "opacity", "value": 1},
+        {"primitive": "t1", "property": "opacity", "value": 1},
+        {"primitive": "r2", "property": "opacity", "value": 0},
+        {"primitive": "t2", "property": "opacity", "value": 0},
+        {"primitive": "r3", "property": "opacity", "value": 0},
+        {"primitive": "t3", "property": "opacity", "value": 0},
+        {"primitive": "r4", "property": "opacity", "value": 0},
+        {"primitive": "t4", "property": "opacity", "value": 0},
+        {"primitive": "r5", "property": "opacity", "value": 0},
+        {"primitive": "t5", "property": "opacity", "value": 0},
+        {"primitive": "topTag", "property": "y", "value": 110},
+        {"primitive": "topTag", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "Push f(4). It calls f(3) and waits; f(4) is not finished."},
+        {"primitive": "result", "property": "text", "value": "Return value: —"}
+      ]
+    },
+    {
+      "id": "s2",
+      "label": "Push f(3)",
+      "overrides": [
+        {"primitive": "r1", "property": "opacity", "value": 1},
+        {"primitive": "t1", "property": "opacity", "value": 1},
+        {"primitive": "r2", "property": "opacity", "value": 1},
+        {"primitive": "t2", "property": "opacity", "value": 1},
+        {"primitive": "r3", "property": "opacity", "value": 0},
+        {"primitive": "t3", "property": "opacity", "value": 0},
+        {"primitive": "r4", "property": "opacity", "value": 0},
+        {"primitive": "t4", "property": "opacity", "value": 0},
+        {"primitive": "r5", "property": "opacity", "value": 0},
+        {"primitive": "t5", "property": "opacity", "value": 0},
+        {"primitive": "topTag", "property": "y", "value": 164},
+        {"primitive": "topTag", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "Push f(3). Two unfinished calls are stacked; the newest is on top."},
+        {"primitive": "result", "property": "text", "value": "Return value: —"}
+      ]
+    },
+    {
+      "id": "s3",
+      "label": "Push f(2)",
+      "overrides": [
+        {"primitive": "r1", "property": "opacity", "value": 1},
+        {"primitive": "t1", "property": "opacity", "value": 1},
+        {"primitive": "r2", "property": "opacity", "value": 1},
+        {"primitive": "t2", "property": "opacity", "value": 1},
+        {"primitive": "r3", "property": "opacity", "value": 1},
+        {"primitive": "t3", "property": "opacity", "value": 1},
+        {"primitive": "r4", "property": "opacity", "value": 0},
+        {"primitive": "t4", "property": "opacity", "value": 0},
+        {"primitive": "r5", "property": "opacity", "value": 0},
+        {"primitive": "t5", "property": "opacity", "value": 0},
+        {"primitive": "topTag", "property": "y", "value": 218},
+        {"primitive": "topTag", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "Push f(2). The stack grows in call order; no caller has returned yet."},
+        {"primitive": "result", "property": "text", "value": "Return value: —"}
+      ]
+    },
+    {
+      "id": "s4",
+      "label": "Push f(1)",
+      "overrides": [
+        {"primitive": "r1", "property": "opacity", "value": 1},
+        {"primitive": "t1", "property": "opacity", "value": 1},
+        {"primitive": "r2", "property": "opacity", "value": 1},
+        {"primitive": "t2", "property": "opacity", "value": 1},
+        {"primitive": "r3", "property": "opacity", "value": 1},
+        {"primitive": "t3", "property": "opacity", "value": 1},
+        {"primitive": "r4", "property": "opacity", "value": 1},
+        {"primitive": "t4", "property": "opacity", "value": 1},
+        {"primitive": "r5", "property": "opacity", "value": 0},
+        {"primitive": "t5", "property": "opacity", "value": 0},
+        {"primitive": "topTag", "property": "y", "value": 272},
+        {"primitive": "topTag", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "Push f(1). Every caller is waiting for the next call to finish."},
+        {"primitive": "result", "property": "text", "value": "Return value: —"}
+      ]
+    },
+    {
+      "id": "s5",
+      "label": "Base case f(0)",
+      "overrides": [
+        {"primitive": "r1", "property": "opacity", "value": 1},
+        {"primitive": "t1", "property": "opacity", "value": 1},
+        {"primitive": "r2", "property": "opacity", "value": 1},
+        {"primitive": "t2", "property": "opacity", "value": 1},
+        {"primitive": "r3", "property": "opacity", "value": 1},
+        {"primitive": "t3", "property": "opacity", "value": 1},
+        {"primitive": "r4", "property": "opacity", "value": 1},
+        {"primitive": "t4", "property": "opacity", "value": 1},
+        {"primitive": "r5", "property": "opacity", "value": 1},
+        {"primitive": "t5", "property": "opacity", "value": 1},
+        {"primitive": "t5", "property": "text", "value": "f(0) base → 1"},
+        {"primitive": "topTag", "property": "y", "value": 326},
+        {"primitive": "topTag", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "Push f(0). Base case reached; it returns 1 without calling again."},
+        {"primitive": "result", "property": "text", "value": "Return value: 1"}
+      ]
+    },
+    {
+      "id": "s6",
+      "label": "Return from f(0)",
+      "overrides": [
+        {"primitive": "r1", "property": "opacity", "value": 1},
+        {"primitive": "t1", "property": "opacity", "value": 1},
+        {"primitive": "r2", "property": "opacity", "value": 1},
+        {"primitive": "t2", "property": "opacity", "value": 1},
+        {"primitive": "r3", "property": "opacity", "value": 1},
+        {"primitive": "t3", "property": "opacity", "value": 1},
+        {"primitive": "r4", "property": "opacity", "value": 1},
+        {"primitive": "t4", "property": "opacity", "value": 1},
+        {"primitive": "t4", "property": "text", "value": "f(1) → 1"},
+        {"primitive": "r5", "property": "opacity", "value": 0},
+        {"primitive": "t5", "property": "opacity", "value": 0},
+        {"primitive": "topTag", "property": "y", "value": 272},
+        {"primitive": "topTag", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "Pop f(0). f(1) returns 1 * 1 = 1."},
+        {"primitive": "result", "property": "text", "value": "Returning: 1"}
+      ]
+    },
+    {
+      "id": "s7",
+      "label": "Return from f(1)",
+      "overrides": [
+        {"primitive": "r1", "property": "opacity", "value": 1},
+        {"primitive": "t1", "property": "opacity", "value": 1},
+        {"primitive": "r2", "property": "opacity", "value": 1},
+        {"primitive": "t2", "property": "opacity", "value": 1},
+        {"primitive": "r3", "property": "opacity", "value": 1},
+        {"primitive": "t3", "property": "opacity", "value": 1},
+        {"primitive": "t3", "property": "text", "value": "f(2) → 2"},
+        {"primitive": "r4", "property": "opacity", "value": 0},
+        {"primitive": "t4", "property": "opacity", "value": 0},
+        {"primitive": "r5", "property": "opacity", "value": 0},
+        {"primitive": "t5", "property": "opacity", "value": 0},
+        {"primitive": "topTag", "property": "y", "value": 218},
+        {"primitive": "topTag", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "Pop f(1). f(2) returns 2 * 1 = 2."},
+        {"primitive": "result", "property": "text", "value": "Returning: 2"}
+      ]
+    },
+    {
+      "id": "s8",
+      "label": "Return from f(2)",
+      "overrides": [
+        {"primitive": "r1", "property": "opacity", "value": 1},
+        {"primitive": "t1", "property": "opacity", "value": 1},
+        {"primitive": "r2", "property": "opacity", "value": 1},
+        {"primitive": "t2", "property": "opacity", "value": 1},
+        {"primitive": "t2", "property": "text", "value": "f(3) → 6"},
+        {"primitive": "r3", "property": "opacity", "value": 0},
+        {"primitive": "t3", "property": "opacity", "value": 0},
+        {"primitive": "r4", "property": "opacity", "value": 0},
+        {"primitive": "t4", "property": "opacity", "value": 0},
+        {"primitive": "r5", "property": "opacity", "value": 0},
+        {"primitive": "t5", "property": "opacity", "value": 0},
+        {"primitive": "topTag", "property": "y", "value": 164},
+        {"primitive": "topTag", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "Pop f(2). f(3) returns 3 * 2 = 6."},
+        {"primitive": "result", "property": "text", "value": "Returning: 6"}
+      ]
+    },
+    {
+      "id": "s9",
+      "label": "Return from f(3)",
+      "overrides": [
+        {"primitive": "r1", "property": "opacity", "value": 1},
+        {"primitive": "t1", "property": "opacity", "value": 1},
+        {"primitive": "t1", "property": "text", "value": "f(4) → 24"},
+        {"primitive": "r2", "property": "opacity", "value": 0},
+        {"primitive": "t2", "property": "opacity", "value": 0},
+        {"primitive": "r3", "property": "opacity", "value": 0},
+        {"primitive": "t3", "property": "opacity", "value": 0},
+        {"primitive": "r4", "property": "opacity", "value": 0},
+        {"primitive": "t4", "property": "opacity", "value": 0},
+        {"primitive": "r5", "property": "opacity", "value": 0},
+        {"primitive": "t5", "property": "opacity", "value": 0},
+        {"primitive": "topTag", "property": "y", "value": 110},
+        {"primitive": "topTag", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "Pop f(3). f(4) returns 4 * 6 = 24."},
+        {"primitive": "result", "property": "text", "value": "Returning: 24"}
+      ]
+    },
+    {
+      "id": "s10",
+      "label": "Stack empty",
+      "overrides": [
+        {"primitive": "r1", "property": "opacity", "value": 0},
+        {"primitive": "t1", "property": "opacity", "value": 0},
+        {"primitive": "r2", "property": "opacity", "value": 0},
+        {"primitive": "t2", "property": "opacity", "value": 0},
+        {"primitive": "r3", "property": "opacity", "value": 0},
+        {"primitive": "t3", "property": "opacity", "value": 0},
+        {"primitive": "r4", "property": "opacity", "value": 0},
+        {"primitive": "t4", "property": "opacity", "value": 0},
+        {"primitive": "r5", "property": "opacity", "value": 0},
+        {"primitive": "t5", "property": "opacity", "value": 0},
+        {"primitive": "topTag", "property": "opacity", "value": 0},
+        {"primitive": "status", "property": "text", "value": "Stack empty. f(4) = 24; the last call pushed was the first to return."},
+        {"primitive": "result", "property": "text", "value": "Final result: 24"}
+      ]
+    }
+  ],
+  "stateTimeline": [
+    {"at": 0, "state": "s0"},
+    {"at": 2, "state": "s1"},
+    {"at": 4, "state": "s2"},
+    {"at": 6, "state": "s3"},
+    {"at": 8, "state": "s4"},
+    {"at": 10, "state": "s5"},
+    {"at": 12, "state": "s6"},
+    {"at": 14, "state": "s7"},
+    {"at": 16, "state": "s8"},
+    {"at": 18, "state": "s9"},
+    {"at": 20, "state": "s10"}
+  ],
+  "fallback": {
+    "text": "The recursive call factorial(4) is not finished immediately. It calls factorial(3) and waits; that call calls factorial(2), which calls factorial(1), which calls factorial(0). These unfinished calls form a stack, with the newest call on top. Only the top call is active, so the calls run one after another, not all at once. At n = 0 the base case returns 1 without calling again. Then the stack unwinds: factorial(1) returns 1, factorial(2) returns 2, factorial(3) returns 6, and factorial(4) returns 24. The base case is reached last in the descent and returns first in the unwind, which is LIFO order."
+  },
+  "accessibility": {
+    "alt": "Call stack with frames f(4) through f(0) pushed top to bottom, then popped one at a time. Each frame records its return value; the final result is 24.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

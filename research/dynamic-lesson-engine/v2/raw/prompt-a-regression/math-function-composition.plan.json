@@ -1,0 +1,9 @@
+{
+  "representation": "Two composition lanes from one input: g then f on top, f then g below, with intermediate and final markers.",
+  "entities": ["shared input", "g intermediate", "f(g(x)) final", "f intermediate", "g(f(x)) final", "stage arrows"],
+  "motion": "The x slider moves all five markers; the two final markers separate whenever the orders differ.",
+  "controls": ["x slider from -0.3 to 1.5"],
+  "checkpoints": ["x = 0 intermediate and final values", "x = 1 compares both orders", "x = 1.5 shows order matters"],
+  "misconceptionTest": "f(g(x)) is substitution, not multiplication, and it need not equal g(f(x)).",
+  "accessibility": "Alt text, keyboard-operable slider, textual formulas, circles versus squares distinguish lanes."
+}

@@ -1,0 +1,29 @@
+{
+  "representation": "A reversible A to B reaction shown as a balance beam, paired forward/reverse rate bars, composition bars for A and B, and a K bar that responds only to temperature.",
+  "entities": [
+    "balance beam and pivot",
+    "forward and reverse rate bars",
+    "A and B composition bars",
+    "K = [B]/[A] bar",
+    "reactant-added slider",
+    "temperature slider"
+  ],
+  "motion": [
+    "adding A tilts the beam and raises the forward rate",
+    "the composition shifts right as B builds",
+    "rates converge and the beam levels at the new equilibrium",
+    "temperature changes K and the equilibrium composition"
+  ],
+  "controls": [
+    "reactant A added from 0 to 1 mol",
+    "temperature from 300 to 500 K"
+  ],
+  "checkpoints": [
+    "equilibrium is dynamic, not stopped",
+    "adding A shifts the balance but not K",
+    "rates converge at a new equilibrium",
+    "heating changes K itself"
+  ],
+  "misconceptionTest": "The K bar is driven only by temperature, so adding A shifts the balance while K stays fixed. The rate bars remain nonzero when they become equal, so equilibrium is not reaction stopped. Raising temperature changes the K bar and the final composition, showing that temperature can change K while concentration cannot at fixed T.",
+  "accessibility": "The beam, rate bars, composition bars and K bar are all text-labeled, both sliders are keyboard accessible, and alt text states that rates equalize and that K responds to temperature."
+}

@@ -1,0 +1,242 @@
+{
+  "version": "0.1",
+  "viewport": {"width": 760, "height": 440, "background": "#f8fafc"},
+  "metadata": {
+    "title": "Graph Traversal: BFS and DFS",
+    "subject": "Computer Science",
+    "objective": "Show BFS/DFS visiting order and frontier differences.",
+    "learner": "Knows nodes and edges.",
+    "misconceptions": ["DFS always finds the shortest path in an unweighted graph", "Visited nodes can be revisited forever"],
+    "expectedUnderstanding": [
+      "BFS uses a queue, so it visits nodes in nondecreasing distance from the start.",
+      "DFS uses a stack, so it follows one branch deeply before returning to other neighbors.",
+      "A visited set prevents a node from being processed or revisited again."
+    ]
+  },
+  "properties": [],
+  "primitives": [
+    {"id": "eAB", "type": "line", "x1": 120, "y1": 230, "x2": 290, "y2": 120, "stroke": "#94a3b8", "strokeWidth": 2.5},
+    {"id": "eAC", "type": "line", "x1": 120, "y1": 230, "x2": 290, "y2": 340, "stroke": "#94a3b8", "strokeWidth": 2.5},
+    {"id": "eBD", "type": "line", "x1": 290, "y1": 120, "x2": 470, "y2": 230, "stroke": "#94a3b8", "strokeWidth": 2.5},
+    {"id": "eCD", "type": "line", "x1": 290, "y1": 340, "x2": 470, "y2": 230, "stroke": "#94a3b8", "strokeWidth": 2.5},
+    {"id": "eDE", "type": "line", "x1": 470, "y1": 230, "x2": 650, "y2": 230, "stroke": "#94a3b8", "strokeWidth": 2.5},
+    {"id": "nA", "type": "circle", "cx": 120, "cy": 230, "r": 22, "fill": "#ffffff", "stroke": "#334155", "strokeWidth": 2},
+    {"id": "nB", "type": "circle", "cx": 290, "cy": 120, "r": 22, "fill": "#ffffff", "stroke": "#334155", "strokeWidth": 2},
+    {"id": "nC", "type": "circle", "cx": 290, "cy": 340, "r": 22, "fill": "#ffffff", "stroke": "#334155", "strokeWidth": 2},
+    {"id": "nD", "type": "circle", "cx": 470, "cy": 230, "r": 22, "fill": "#ffffff", "stroke": "#334155", "strokeWidth": 2},
+    {"id": "nE", "type": "circle", "cx": 650, "cy": 230, "r": 22, "fill": "#ffffff", "stroke": "#334155", "strokeWidth": 2},
+    {"id": "tA", "type": "text", "x": 113, "y": 237, "text": "A", "fontSize": 20, "fill": "#0f172a"},
+    {"id": "tB", "type": "text", "x": 283, "y": 127, "text": "B", "fontSize": 20, "fill": "#0f172a"},
+    {"id": "tC", "type": "text", "x": 283, "y": 347, "text": "C", "fontSize": 20, "fill": "#0f172a"},
+    {"id": "tD", "type": "text", "x": 463, "y": 237, "text": "D", "fontSize": 20, "fill": "#0f172a"},
+    {"id": "tE", "type": "text", "x": 643, "y": 237, "text": "E", "fontSize": 20, "fill": "#0f172a"},
+    {"id": "status", "type": "text", "x": 50, "y": 50, "text": "BFS start at A. Queue: A. Visited: none. Frontier: A.", "fontSize": 14, "fill": "#0f172a"}
+  ],
+  "timeline": {
+    "duration": 26,
+    "tracks": [
+      {
+        "target": {"primitive": "status", "property": "fontSize"},
+        "keyframes": [
+          {"at": 0, "value": 14},
+          {"at": 13, "value": 16},
+          {"at": 26, "value": 14}
+        ]
+      }
+    ]
+  },
+  "controls": [],
+  "checkpoints": [
+    {"id": "cp0", "at": 1, "title": "BFS keeps a queue", "body": "Start at A. Its neighbors B and C enter the queue. The larger circles are the frontier, the nodes discovered but not yet visited; the visited set contains only A.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp1", "at": 11, "title": "BFS distances", "body": "BFS visits A, B, C, D, E. At unweighted distances: A=0, B=1, C=1, D=2, E=3. The queue order is why D and E wait behind C.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp2", "at": 16.5, "title": "DFS switches to a stack", "body": "Restart at A with DFS. A pushes B and C, then follows B to D and E before C. The status names the stack and its top. DFS order is A, B, D, E, C, so the path to E is longer than BFS's distance-3 route.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp3", "at": 25.5, "title": "Visited prevents repeats", "body": "At C, the edge to D is skipped because D is already visited. Every node is processed once. BFS order A,B,C,D,E differs from DFS order A,B,D,E,C; only BFS guarantees the shortest unweighted distances shown.", "pause": true, "learnerAction": "continue"}
+  ],
+  "narration": [
+    {"at": 0, "text": "BFS starts at A and keeps discovered nodes in a queue."},
+    {"at": 8, "text": "The queue visits B and C before D and E, giving shortest unweighted distances."},
+    {"at": 13, "text": "Now restart with DFS, which keeps its frontier in a stack."},
+    {"at": 23, "text": "DFS reaches E before C and skips already visited D; the orders differ."}
+  ],
+  "states": [
+    {
+      "id": "s0",
+      "label": "BFS start",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 27},
+        {"primitive": "nB", "property": "r", "value": 20},
+        {"primitive": "nC", "property": "r", "value": 20},
+        {"primitive": "nD", "property": "r", "value": 20},
+        {"primitive": "nE", "property": "r", "value": 20},
+        {"primitive": "status", "property": "text", "value": "BFS start at A. Queue: A. Visited: none. Frontier: A."}
+      ]
+    },
+    {
+      "id": "s1",
+      "label": "BFS visit A",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 32},
+        {"primitive": "nB", "property": "r", "value": 27},
+        {"primitive": "nC", "property": "r", "value": 27},
+        {"primitive": "nD", "property": "r", "value": 20},
+        {"primitive": "nE", "property": "r", "value": 20},
+        {"primitive": "status", "property": "text", "value": "BFS visit A. Queue: B, C. Visited: A. Distances: B=1, C=1."}
+      ]
+    },
+    {
+      "id": "s2",
+      "label": "BFS visit B",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 24},
+        {"primitive": "nB", "property": "r", "value": 32},
+        {"primitive": "nC", "property": "r", "value": 27},
+        {"primitive": "nD", "property": "r", "value": 27},
+        {"primitive": "nE", "property": "r", "value": 20},
+        {"primitive": "status", "property": "text", "value": "BFS visit B. Queue: C, D. Visited: A, B. D distance 2."}
+      ]
+    },
+    {
+      "id": "s3",
+      "label": "BFS visit C",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 24},
+        {"primitive": "nB", "property": "r", "value": 24},
+        {"primitive": "nC", "property": "r", "value": 32},
+        {"primitive": "nD", "property": "r", "value": 27},
+        {"primitive": "nE", "property": "r", "value": 20},
+        {"primitive": "status", "property": "text", "value": "BFS visit C. Queue: D. Visited: A, B, C. D already discovered."}
+      ]
+    },
+    {
+      "id": "s4",
+      "label": "BFS visit D",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 24},
+        {"primitive": "nB", "property": "r", "value": 24},
+        {"primitive": "nC", "property": "r", "value": 24},
+        {"primitive": "nD", "property": "r", "value": 32},
+        {"primitive": "nE", "property": "r", "value": 27},
+        {"primitive": "status", "property": "text", "value": "BFS visit D. Queue: E. Visited: A, B, C, D. E distance 3."}
+      ]
+    },
+    {
+      "id": "s5",
+      "label": "BFS complete",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 24},
+        {"primitive": "nB", "property": "r", "value": 24},
+        {"primitive": "nC", "property": "r", "value": 24},
+        {"primitive": "nD", "property": "r", "value": 24},
+        {"primitive": "nE", "property": "r", "value": 32},
+        {"primitive": "status", "property": "text", "value": "BFS done: A, B, C, D, E. Shortest distances: D=2, E=3."}
+      ]
+    },
+    {
+      "id": "s6",
+      "label": "DFS start",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 27},
+        {"primitive": "nB", "property": "r", "value": 20},
+        {"primitive": "nC", "property": "r", "value": 20},
+        {"primitive": "nD", "property": "r", "value": 20},
+        {"primitive": "nE", "property": "r", "value": 20},
+        {"primitive": "status", "property": "text", "value": "Switch to DFS at A. Stack: A. Visited: none. Frontier: A."}
+      ]
+    },
+    {
+      "id": "s7",
+      "label": "DFS visit A",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 32},
+        {"primitive": "nB", "property": "r", "value": 27},
+        {"primitive": "nC", "property": "r", "value": 27},
+        {"primitive": "nD", "property": "r", "value": 20},
+        {"primitive": "nE", "property": "r", "value": 20},
+        {"primitive": "status", "property": "text", "value": "DFS visit A. Stack: C, B (top B). Visited: A."}
+      ]
+    },
+    {
+      "id": "s8",
+      "label": "DFS visit B",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 24},
+        {"primitive": "nB", "property": "r", "value": 32},
+        {"primitive": "nC", "property": "r", "value": 27},
+        {"primitive": "nD", "property": "r", "value": 27},
+        {"primitive": "nE", "property": "r", "value": 20},
+        {"primitive": "status", "property": "text", "value": "DFS visit B. Stack: C, D (top D). Visited: A, B."}
+      ]
+    },
+    {
+      "id": "s9",
+      "label": "DFS visit D",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 24},
+        {"primitive": "nB", "property": "r", "value": 24},
+        {"primitive": "nC", "property": "r", "value": 27},
+        {"primitive": "nD", "property": "r", "value": 32},
+        {"primitive": "nE", "property": "r", "value": 27},
+        {"primitive": "status", "property": "text", "value": "DFS visit D. Stack: C, E (top E). Visited: A, B, D."}
+      ]
+    },
+    {
+      "id": "s10",
+      "label": "DFS reaches E",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 24},
+        {"primitive": "nB", "property": "r", "value": 24},
+        {"primitive": "nC", "property": "r", "value": 27},
+        {"primitive": "nD", "property": "r", "value": 24},
+        {"primitive": "nE", "property": "r", "value": 32},
+        {"primitive": "status", "property": "text", "value": "DFS visit E. Stack: C. Visited: A, B, D, E. E reached before C."}
+      ]
+    },
+    {
+      "id": "s11",
+      "label": "DFS visit C",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 24},
+        {"primitive": "nB", "property": "r", "value": 24},
+        {"primitive": "nC", "property": "r", "value": 32},
+        {"primitive": "nD", "property": "r", "value": 24},
+        {"primitive": "nE", "property": "r", "value": 24},
+        {"primitive": "status", "property": "text", "value": "DFS visit C. Neighbor D already visited, so skip. Order: A, B, D, E, C."}
+      ]
+    },
+    {
+      "id": "s12",
+      "label": "Compare orders",
+      "overrides": [
+        {"primitive": "nA", "property": "r", "value": 24},
+        {"primitive": "nB", "property": "r", "value": 24},
+        {"primitive": "nC", "property": "r", "value": 24},
+        {"primitive": "nD", "property": "r", "value": 24},
+        {"primitive": "nE", "property": "r", "value": 24},
+        {"primitive": "status", "property": "text", "value": "BFS: A, B, C, D, E. DFS: A, B, D, E, C. BFS gives shortest unweighted distances."}
+      ]
+    }
+  ],
+  "stateTimeline": [
+    {"at": 0, "state": "s0"},
+    {"at": 2, "state": "s1"},
+    {"at": 4, "state": "s2"},
+    {"at": 6, "state": "s3"},
+    {"at": 8, "state": "s4"},
+    {"at": 10, "state": "s5"},
+    {"at": 13, "state": "s6"},
+    {"at": 15, "state": "s7"},
+    {"at": 17, "state": "s8"},
+    {"at": 19, "state": "s9"},
+    {"at": 21, "state": "s10"},
+    {"at": 23, "state": "s11"},
+    {"at": 25, "state": "s12"}
+  ],
+  "fallback": {
+    "text": "Both traversals start at A and mark each visited node so it is never processed again. BFS keeps discovered nodes in a FIFO queue. It visits A, then B and C, then D, then E. Because nodes are visited in queue order, BFS gives shortest unweighted distances: A=0, B=1, C=1, D=2, E=3. DFS keeps its frontier in a LIFO stack. From A it goes to B, then D, then E, and only afterward returns to C. Its order is A, B, D, E, C. When C considers its edge to D, D is already visited and is skipped. DFS is not guaranteed to find a shortest path in an unweighted graph; BFS is."
+  },
+  "accessibility": {
+    "alt": "Five-node graph labeled A to E. BFS grows the frontier in queue order A,B,C,D,E; DFS follows A,B,D,E,C before returning to C. Node size changes mark frontier and visited, and text names each set.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

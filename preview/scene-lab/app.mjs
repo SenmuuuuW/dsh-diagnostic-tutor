@@ -58,6 +58,7 @@ function render() {
       $('metrics').textContent = `time ${frame.time.toFixed(2)} / ${frame.duration.toFixed(2)}s · nodes ${frame.nodes} · render ${frame.renderMs.toFixed(2)}ms · ${frame.playing ? 'playing' : 'paused'}`
     },
     onNarration(text) { $('narration').textContent = text ?? '—' },
+    onState(label) { const node = document.getElementById('scene-state'); if (node) node.textContent = label ?? '' },
     onCheckpoint(checkpoint) { status(`checkpoint: ${checkpoint.title}`); $('narration').textContent = checkpoint.body },
     onError(error) { showFallback(`Renderer fallback: ${error}`); status('renderer error') },
     onEnd() { status('ended'); updatePlayButton(false) },

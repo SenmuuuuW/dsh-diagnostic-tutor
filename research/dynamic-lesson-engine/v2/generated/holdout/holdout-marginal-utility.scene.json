@@ -1,0 +1,280 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 720,
+    "height": 520,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Marginal Utility: Extra Satisfaction per Unit",
+    "subject": "Economics",
+    "objective": "Show total utility and diminishing marginal utility as consumption increases.",
+    "learner": "Can read a bar/line graph.",
+    "misconceptions": [
+      "Total utility falls when marginal utility falls",
+      "Marginal utility is the total"
+    ],
+    "expectedUnderstanding": [
+      "Marginal utility is the change in total utility for one more unit",
+      "Marginal utility diminishes as consumption rises",
+      "Total utility can keep rising while marginal utility falls"
+    ]
+  },
+  "properties": [
+    {
+      "id": "q",
+      "label": "Consumption level",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 3,
+      "unit": "units"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 42,
+      "text": "Marginal utility: the extra utility from one more unit",
+      "fontSize": 22,
+      "fill": "#111827"
+    },
+    {
+      "id": "topAxes",
+      "type": "path",
+      "d": "M 110 70 L 110 250 L 640 250",
+      "fill": "none",
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "bottomAxes",
+      "type": "path",
+      "d": "M 110 290 L 110 430 L 640 430",
+      "fill": "none",
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "totalCurve",
+      "type": "path",
+      "d": "M 160 204 L 240 166 L 320 136 L 400 114 L 480 100 L 560 94",
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 4
+    },
+    {
+      "id": "mu1",
+      "type": "rect",
+      "x": 138,
+      "y": 329.2,
+      "width": 44,
+      "height": 100.8,
+      "fill": "#f59e0b",
+      "stroke": "#b45309",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "mu2",
+      "type": "rect",
+      "x": 218,
+      "y": 348.4,
+      "width": 44,
+      "height": 81.6,
+      "fill": "#f59e0b",
+      "stroke": "#b45309",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "mu3",
+      "type": "rect",
+      "x": 298,
+      "y": 367.6,
+      "width": 44,
+      "height": 62.4,
+      "fill": "#f59e0b",
+      "stroke": "#b45309",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "mu4",
+      "type": "rect",
+      "x": 378,
+      "y": 386.8,
+      "width": 44,
+      "height": 43.2,
+      "fill": "#f59e0b",
+      "stroke": "#b45309",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "mu5",
+      "type": "rect",
+      "x": 458,
+      "y": 406,
+      "width": 44,
+      "height": 24,
+      "fill": "#f59e0b",
+      "stroke": "#b45309",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "mu6",
+      "type": "rect",
+      "x": 538,
+      "y": 425.2,
+      "width": 44,
+      "height": 4.8,
+      "fill": "#f59e0b",
+      "stroke": "#b45309",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "totalLabel",
+      "type": "text",
+      "x": 420,
+      "y": 84,
+      "text": "Total utility U",
+      "fontSize": 15,
+      "fill": "#1d4ed8"
+    },
+    {
+      "id": "marginalLabel",
+      "type": "text",
+      "x": 350,
+      "y": 312,
+      "text": "Marginal utility MU; dashed line = 2",
+      "fontSize": 15,
+      "fill": "#b45309"
+    },
+    {
+      "id": "threshold",
+      "type": "line",
+      "x1": 110,
+      "y1": 406,
+      "x2": 640,
+      "y2": 406,
+      "stroke": "#dc2626",
+      "strokeWidth": 2,
+      "dash": "6 5"
+    },
+    {
+      "id": "marker",
+      "type": "line",
+      "x1": {
+        "expr": "160 + (q - 1) * 80"
+      },
+      "y1": 70,
+      "x2": {
+        "expr": "160 + (q - 1) * 80"
+      },
+      "y2": 430,
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "formula",
+      "type": "text",
+      "x": 40,
+      "y": 462,
+      "text": "MU(q) = U(q) - U(q-1): marginal utility is the change in total, not total utility.",
+      "fontSize": 14,
+      "fill": "#111827"
+    },
+    {
+      "id": "note",
+      "type": "text",
+      "x": 40,
+      "y": 492,
+      "text": "The bars shrink while total keeps rising. Consume while MU >= 2; total need not fall.",
+      "fontSize": 14,
+      "fill": "#b91c1c"
+    }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "marker",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4,
+            "value": 4,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 8,
+            "value": 2,
+            "easing": "ease-in-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "qControl",
+      "kind": "slider",
+      "propertyId": "q",
+      "label": "Change consumption q"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-two-series",
+      "at": 1,
+      "title": "Two different series",
+      "body": "The blue line is total utility U(q). The bars are marginal utility MU(q), the extra utility from one more unit. The bars are not the total, and the line is not the marginal value.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-diminishing",
+      "at": 3,
+      "title": "Diminishing marginal utility",
+      "body": "Drag q to the right. MU falls from 8.4 at q=1 toward 0.4 at q=6, while total utility keeps rising and only flattens. Falling marginal utility does not make total utility fall.",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-threshold",
+      "at": 5.5,
+      "title": "A decision threshold",
+      "body": "The dashed line marks MU=2, a possible stopping rule: consume while the next unit adds at least 2. It is a decision rule, not a law. At q=6 the next unit adds only 0.4, yet total utility is still rising.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The blue line is total utility; the bars are the extra utility from each additional unit."
+    },
+    {
+      "at": 3,
+      "text": "As consumption rises, the marginal bars shrink while total utility continues to rise."
+    },
+    {
+      "at": 6,
+      "text": "The dashed line is a possible stopping rule at marginal utility 2, not a claim that total utility must fall."
+    }
+  ],
+  "fallback": {
+    "text": "The upper panel plots total utility U(q) for q = 1 to 6. It rises from 9.2 to 31.2 and gradually flattens. The lower panel plots marginal utility MU(q) = U(q) - U(q-1): 8.4, 6.8, 5.2, 3.6, 2.0 and 0.4. Marginal utility is the change in total utility for one more unit, not total utility itself. The bars diminish, but total utility never falls in this example. A dashed line at MU = 2 marks a possible stopping rule: consume while the next unit adds at least 2. That is a decision threshold, not a law. Diminishing marginal utility and falling total utility are different claims."
+  },
+  "accessibility": {
+    "alt": "Upper panel: total utility line rises and flattens. Lower panel: marginal utility bars shrink from 8.4 at q=1 to 0.4 at q=6. A movable q marker and a dashed MU=2 threshold show the stopping rule.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

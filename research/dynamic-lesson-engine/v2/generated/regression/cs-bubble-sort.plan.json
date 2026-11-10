@@ -1,0 +1,9 @@
+{
+  "representation": "A five-cell array with a moving pair outline, value labels that swap in place, and a suffix strip that grows from the right after each pass.",
+  "entities": ["five array cells", "five value labels", "comparison pair outline", "sorted suffix strip", "status line", "pass counter"],
+  "motion": "The pair outline steps one adjacent gap at a time; out-of-order labels swap at the comparison, and the suffix strip extends after each pass.",
+  "controls": ["state timeline with pause/continue checkpoints; no numeric slider"],
+  "checkpoints": ["adjacent inversion 5 and 1", "largest value 8 fixed after pass 1", "suffix grows to 5 and 8 after pass 2", "a no-swap pass confirms order"],
+  "misconceptionTest": "The scene stops pass 1 with only 8 fixed, showing one pass did not sort the whole array. It always starts at the leftmost pair, never the middle. The final checkpoint states the early-stop rule.",
+  "accessibility": "Alt text; keyboard-controllable play/pause and checkpoints; values, pair position and sorted suffix are all stated in text, not by color alone."
+}

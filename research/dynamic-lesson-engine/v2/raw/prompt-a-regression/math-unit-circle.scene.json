@@ -1,0 +1,74 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 640, "height": 360 },
+  "metadata": {
+    "title": "Unit Circle and Sine Height",
+    "subject": "Mathematics",
+    "objective": "Connect a point on the unit circle to the height of the sine curve.",
+    "learner": "Knows right-triangle ratios; has not connected circular motion to sine.",
+    "misconceptions": [
+      "Sine is only a triangle ratio",
+      "The sine value is the x-coordinate"
+    ],
+    "expectedUnderstanding": [
+      "The y-coordinate of the unit-circle point is sin(theta)",
+      "The sine curve records the same height as the angle turns",
+      "Height is zero at 0 and 180 degrees and maximal at 90 degrees"
+    ]
+  },
+  "properties": [
+    { "id": "angle", "label": "Angle", "min": 0, "max": 360, "step": 5, "default": 0, "unit": "deg" }
+  ],
+  "primitives": [
+    { "id": "unitCircle", "type": "circle", "cx": 160, "cy": 180, "r": 90 },
+    { "id": "xAxis", "type": "line", "x1": 40, "y1": 180, "x2": 620, "y2": 180 },
+    { "id": "yAxis", "type": "line", "x1": 160, "y1": 40, "x2": 160, "y2": 320 },
+    { "id": "radius", "type": "line", "x1": 160, "y1": 180, "x2": { "expr": "160+90*cos(angle*3.14159265/180)" }, "y2": { "expr": "180-90*sin(angle*3.14159265/180)" } },
+    { "id": "circlePoint", "type": "circle", "cx": { "expr": "160+90*cos(angle*3.14159265/180)" }, "cy": { "expr": "180-90*sin(angle*3.14159265/180)" }, "r": 7 },
+    { "id": "heightDrop", "type": "line", "x1": { "expr": "160+90*cos(angle*3.14159265/180)" }, "y1": { "expr": "180-90*sin(angle*3.14159265/180)" }, "x2": { "expr": "160+90*cos(angle*3.14159265/180)" }, "y2": 180 },
+    { "id": "guide", "type": "line", "x1": { "expr": "160+90*cos(angle*3.14159265/180)" }, "y1": { "expr": "180-90*sin(angle*3.14159265/180)" }, "x2": { "expr": "300+angle*0.8333333333" }, "y2": { "expr": "180-90*sin(angle*3.14159265/180)" } },
+    { "id": "sineCurve", "type": "path", "d": "M 300 180 L 325 135 L 350 102 L 375 90 L 400 102 L 425 135 L 450 180 L 475 225 L 500 258 L 525 270 L 550 258 L 575 225 L 600 180" },
+    { "id": "sinePoint", "type": "circle", "cx": { "expr": "300+angle*0.8333333333" }, "cy": { "expr": "180-90*sin(angle*3.14159265/180)" }, "r": 7 },
+    { "id": "sineDrop", "type": "line", "x1": { "expr": "300+angle*0.8333333333" }, "y1": { "expr": "180-90*sin(angle*3.14159265/180)" }, "x2": { "expr": "300+angle*0.8333333333" }, "y2": 180 },
+    { "id": "title", "type": "text", "x": 40, "y": 30, "text": "Unit circle and sine", "fontSize": 18 },
+    { "id": "sinLabel", "type": "text", "x": 330, "y": 70, "text": "sin theta = height", "fontSize": 13 },
+    { "id": "zeroLabel", "type": "text", "x": 250, "y": 200, "text": "0 deg", "fontSize": 12 },
+    { "id": "ninetyLabel", "type": "text", "x": 148, "y": 62, "text": "90 deg", "fontSize": 12 },
+    { "id": "oneEightyLabel", "type": "text", "x": 45, "y": 200, "text": "180 deg", "fontSize": 12 },
+    { "id": "sineLabel", "type": "text", "x": 468, "y": 330, "text": "sine curve", "fontSize": 12 }
+  ],
+  "timeline": {
+    "duration": 12,
+    "tracks": [
+      {
+        "target": { "primitive": "circlePoint", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 7 },
+          { "at": 6, "value": 9 },
+          { "at": 12, "value": 7 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "angleControl", "kind": "slider", "propertyId": "angle", "label": "Angle in degrees" }
+  ],
+  "checkpoints": [
+    { "id": "uc-zero", "at": 0.5, "title": "Height at 0 degrees", "body": "Set the angle to 0 degrees. The point sits on the positive x-axis, so its y-coordinate and sine are 0.", "pause": true, "learnerAction": "Set angle to 0 degrees." },
+    { "id": "uc-max", "at": 6, "title": "Height at 90 degrees", "body": "Set the angle to 90 degrees. The point is at the top of the circle; its y-coordinate and sine are 1.", "pause": true, "learnerAction": "Set angle to 90 degrees." },
+    { "id": "uc-pi", "at": 11.5, "title": "Height at 180 degrees", "body": "Set the angle to 180 degrees. The point is on the negative x-axis; its height and sine are 0 again.", "pause": true, "learnerAction": "Set angle to 180 degrees." }
+  ],
+  "narration": [
+    { "at": 0, "text": "Drag the angle slider. Watch the horizontal guide tie the circle's height to the sine curve." },
+    { "at": 6, "text": "At 90 degrees the point is at the top of the circle; its height is 1." },
+    { "at": 11.5, "text": "At 180 degrees the point returns to the axis; the sine height is 0." }
+  ],
+  "fallback": {
+    "text": "A point on the unit circle has height sin(theta). At 0 and 180 degrees the height is 0; at 90 degrees it is 1. The sine curve at right plots that same height as the angle increases."
+  },
+  "accessibility": {
+    "alt": "Unit circle at left with a radius to a movable angle point, a horizontal guide to a sine curve at right, and matching vertical height lines. A slider changes the angle from 0 to 360 degrees.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

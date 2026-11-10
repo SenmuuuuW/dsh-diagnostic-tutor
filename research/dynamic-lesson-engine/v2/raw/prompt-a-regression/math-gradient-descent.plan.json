@@ -1,0 +1,9 @@
+{
+  "representation": "Parabola with a fixed current point, its tangent, a horizontal step arrow, and the projected next point.",
+  "entities": ["parabola", "current point", "tangent line", "step arrow", "vertical projection", "next point"],
+  "motion": "The learning-rate slider changes the leftward step length and the next point on the curve.",
+  "controls": ["learning-rate slider from 0.05 to 1.2"],
+  "checkpoints": ["small rate stays short of the minimum", "rate 0.5 lands at the minimum", "rate 1.2 overshoots and raises the cost"],
+  "misconceptionTest": "The gradient points uphill to the right; the step goes left. A larger rate can overshoot rather than always improve.",
+  "accessibility": "Alt text, keyboard-operable slider, direction shown by an arrow and text, reduced-motion support."
+}

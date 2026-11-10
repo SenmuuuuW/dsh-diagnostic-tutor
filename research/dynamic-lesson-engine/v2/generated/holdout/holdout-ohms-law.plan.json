@@ -1,0 +1,25 @@
+{
+  "representation": "A simple series circuit with a voltage source, one resistor, connecting wires and a current arrow whose length is proportional to I = V/R.",
+  "entities": [
+    "voltage source labeled in volts",
+    "resistor labeled in ohms",
+    "series wires",
+    "current arrow labeled in amps",
+    "formula and proportion notes"
+  ],
+  "motion": [
+    "the voltage source outline pulses gently",
+    "the current arrow length updates continuously from V/R"
+  ],
+  "controls": [
+    "voltage slider from 1 to 12 volts",
+    "resistance slider from 1 to 10 ohms"
+  ],
+  "checkpoints": [
+    "read the circuit",
+    "change voltage at fixed resistance",
+    "change resistance at fixed voltage"
+  ],
+  "misconceptionTest": "The arrow has the same length everywhere in the series loop, so current is not consumed by the resistor; separate V and I labels with different units show that voltage and current are different quantities.",
+  "accessibility": "Every quantity has a text label and unit, the arrow length has a text counterpart, sliders are keyboard accessible, alt text describes the circuit, and reduced motion stops the source pulse."
+}

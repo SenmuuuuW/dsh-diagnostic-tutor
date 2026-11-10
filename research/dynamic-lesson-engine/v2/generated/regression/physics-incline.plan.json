@@ -1,0 +1,9 @@
+{
+  "representation": "A block on an adjustable incline with the vertical weight vector resolved into a down-slope component and a perpendicular component, plus the outward normal force.",
+  "entities": ["ground", "incline surface", "vertical rise line", "block", "weight arrow", "along-plane arrow", "normal arrow", "force labels", "angle marker"],
+  "motion": "The incline, block and all three arrows recompute directly from the angle slider; the vertex marker pulses during replay.",
+  "controls": ["incline-angle slider"],
+  "checkpoints": ["weight stays vertical", "along-plane component grows with sin theta", "normal force follows cos theta and is less than weight when tilted", "friction is not the weight"],
+  "misconceptionTest": "At a steep angle the normal arrow becomes visibly shorter than the weight arrow; text states that N equals mg only at zero degrees. No friction arrow is drawn, and a checkpoint says friction is a separate force, not equal to weight.",
+  "accessibility": "Alt text; keyboard angle slider; each arrow has a text label and a distinct direction, so meaning is not carried by color."
+}

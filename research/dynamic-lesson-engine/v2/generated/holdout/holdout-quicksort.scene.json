@@ -1,0 +1,493 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 720,
+    "height": 520,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Quicksort: One Partition Step",
+    "subject": "Computer Science",
+    "objective": "Show a partition step around a pivot and the resulting left and right parts.",
+    "learner": "Can read array indices.",
+    "misconceptions": [
+      "Quicksort always divides the array in half",
+      "Partitioning sorts the whole array immediately"
+    ],
+    "expectedUnderstanding": [
+      "Elements left of the pivot are at most the pivot and elements right are at least the pivot",
+      "The pivot reaches its final sorted index",
+      "The recursive parts exclude the pivot and may be very unequal"
+    ]
+  },
+  "properties": [],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 42,
+      "text": "Quicksort partition around pivot 5",
+      "fontSize": 22,
+      "fill": "#111827"
+    },
+    {
+      "id": "instruction",
+      "type": "text",
+      "x": 40,
+      "y": 76,
+      "text": "Initial array. The arrow marks the pivot.",
+      "fontSize": 16,
+      "fill": "#374151"
+    },
+    {
+      "id": "bar5",
+      "type": "rect",
+      "x": 130,
+      "y": 190,
+      "width": 60,
+      "height": 80,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "bar3",
+      "type": "rect",
+      "x": 230,
+      "y": 222,
+      "width": 60,
+      "height": 48,
+      "fill": "#e5e7eb",
+      "stroke": "#4b5563",
+      "strokeWidth": 2
+    },
+    {
+      "id": "bar8",
+      "type": "rect",
+      "x": 330,
+      "y": 142,
+      "width": 60,
+      "height": 128,
+      "fill": "#e5e7eb",
+      "stroke": "#4b5563",
+      "strokeWidth": 2
+    },
+    {
+      "id": "bar1",
+      "type": "rect",
+      "x": 430,
+      "y": 254,
+      "width": 60,
+      "height": 16,
+      "fill": "#e5e7eb",
+      "stroke": "#4b5563",
+      "strokeWidth": 2
+    },
+    {
+      "id": "bar2",
+      "type": "rect",
+      "x": 530,
+      "y": 238,
+      "width": 60,
+      "height": 32,
+      "fill": "#e5e7eb",
+      "stroke": "#4b5563",
+      "strokeWidth": 2
+    },
+    {
+      "id": "label5",
+      "type": "text",
+      "x": 152,
+      "y": 292,
+      "text": "5",
+      "fontSize": 16,
+      "fill": "#111827"
+    },
+    {
+      "id": "label3",
+      "type": "text",
+      "x": 252,
+      "y": 292,
+      "text": "3",
+      "fontSize": 16,
+      "fill": "#111827"
+    },
+    {
+      "id": "label8",
+      "type": "text",
+      "x": 352,
+      "y": 292,
+      "text": "8",
+      "fontSize": 16,
+      "fill": "#111827"
+    },
+    {
+      "id": "label1",
+      "type": "text",
+      "x": 452,
+      "y": 292,
+      "text": "1",
+      "fontSize": 16,
+      "fill": "#111827"
+    },
+    {
+      "id": "label2",
+      "type": "text",
+      "x": 552,
+      "y": 292,
+      "text": "2",
+      "fontSize": 16,
+      "fill": "#111827"
+    },
+    {
+      "id": "pivotArrow",
+      "type": "arrow",
+      "x1": 160,
+      "y1": 110,
+      "x2": 160,
+      "y2": 178,
+      "stroke": "#b91c1c",
+      "strokeWidth": 3
+    },
+    {
+      "id": "leftPart",
+      "type": "text",
+      "x": 120,
+      "y": 350,
+      "text": "left part: ?",
+      "fontSize": 15,
+      "fill": "#1d4ed8"
+    },
+    {
+      "id": "rightPart",
+      "type": "text",
+      "x": 470,
+      "y": 350,
+      "text": "right part: ?",
+      "fontSize": 15,
+      "fill": "#1d4ed8"
+    },
+    {
+      "id": "note",
+      "type": "text",
+      "x": 40,
+      "y": 410,
+      "text": "Split 3 | 1, not half; the array is not fully sorted.",
+      "fontSize": 15,
+      "fill": "#b91c1c"
+    }
+  ],
+  "timeline": {
+    "duration": 10,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "pivotArrow",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0.65,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 5,
+            "value": 1,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 10,
+            "value": 0.65,
+            "easing": "ease-in-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [],
+  "checkpoints": [
+    {
+      "id": "cp-pivot",
+      "at": 1,
+      "title": "Pivot chosen",
+      "body": "The pivot is the value 5. Everything smaller than 5 will go to its left; everything larger will go to its right.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-scan",
+      "at": 3,
+      "title": "Scan the other values",
+      "body": "Compare each value with 5. The values 3, 1 and 2 are smaller, so they belong on the left. The value 8 is larger, so it belongs on the right.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-partition",
+      "at": 5,
+      "title": "Partition complete",
+      "body": "The array is now [3, 1, 2, 5, 8]. The pivot 5 is at its final sorted index. The left part is [3, 1, 2] and the right part is [8].",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-recurse",
+      "at": 7,
+      "title": "Recurse on the parts",
+      "body": "Quicksort now sorts [3, 1, 2] and [8] separately. The pivot 5 is excluded from both recursive calls. This split is 3 | 1, not half.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-not-sorted",
+      "at": 9,
+      "title": "Partition is not a full sort",
+      "body": "The pivot is fixed, but [3, 1, 2] is still unsorted. Partitioning alone does not finish the array; the recursive calls must do the rest.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "Start with the array 5, 3, 8, 1, 2 and choose 5 as the pivot."
+    },
+    {
+      "at": 4,
+      "text": "Move smaller values to the left and larger values to the right of the pivot."
+    },
+    {
+      "at": 8,
+      "text": "The pivot is in place. Recurse on the left part and the right part, excluding the pivot."
+    }
+  ],
+  "states": [
+    {
+      "id": "s0-start",
+      "label": "Start",
+      "overrides": [
+        {
+          "primitive": "instruction",
+          "property": "text",
+          "value": "Initial array. Arrow marks pivot 5."
+        }
+      ]
+    },
+    {
+      "id": "s1-pivot",
+      "label": "Pivot chosen",
+      "overrides": [
+        {
+          "primitive": "instruction",
+          "property": "text",
+          "value": "Pivot = 5. Scan from left to right."
+        }
+      ]
+    },
+    {
+      "id": "s2-scan",
+      "label": "Scanning",
+      "overrides": [
+        {
+          "primitive": "instruction",
+          "property": "text",
+          "value": "3, 1, 2 are smaller than 5; 8 is larger. Smaller values go left."
+        }
+      ]
+    },
+    {
+      "id": "s3-partitioned",
+      "label": "Partitioned",
+      "overrides": [
+        {
+          "primitive": "bar5",
+          "property": "x",
+          "value": 430
+        },
+        {
+          "primitive": "bar3",
+          "property": "x",
+          "value": 130
+        },
+        {
+          "primitive": "bar8",
+          "property": "x",
+          "value": 530
+        },
+        {
+          "primitive": "bar1",
+          "property": "x",
+          "value": 230
+        },
+        {
+          "primitive": "bar2",
+          "property": "x",
+          "value": 330
+        },
+        {
+          "primitive": "label5",
+          "property": "x",
+          "value": 452
+        },
+        {
+          "primitive": "label3",
+          "property": "x",
+          "value": 152
+        },
+        {
+          "primitive": "label8",
+          "property": "x",
+          "value": 552
+        },
+        {
+          "primitive": "label1",
+          "property": "x",
+          "value": 252
+        },
+        {
+          "primitive": "label2",
+          "property": "x",
+          "value": 352
+        },
+        {
+          "primitive": "pivotArrow",
+          "property": "x1",
+          "value": 460
+        },
+        {
+          "primitive": "pivotArrow",
+          "property": "x2",
+          "value": 460
+        },
+        {
+          "primitive": "instruction",
+          "property": "text",
+          "value": "Partition complete: [3, 1, 2] | 5 | [8]."
+        },
+        {
+          "primitive": "leftPart",
+          "property": "text",
+          "value": "left: 3, 1, 2"
+        },
+        {
+          "primitive": "rightPart",
+          "property": "text",
+          "value": "right: 8"
+        }
+      ]
+    },
+    {
+      "id": "s4-recurse",
+      "label": "Recursive parts",
+      "overrides": [
+        {
+          "primitive": "bar5",
+          "property": "x",
+          "value": 430
+        },
+        {
+          "primitive": "bar3",
+          "property": "x",
+          "value": 130
+        },
+        {
+          "primitive": "bar8",
+          "property": "x",
+          "value": 530
+        },
+        {
+          "primitive": "bar1",
+          "property": "x",
+          "value": 230
+        },
+        {
+          "primitive": "bar2",
+          "property": "x",
+          "value": 330
+        },
+        {
+          "primitive": "label5",
+          "property": "x",
+          "value": 452
+        },
+        {
+          "primitive": "label3",
+          "property": "x",
+          "value": 152
+        },
+        {
+          "primitive": "label8",
+          "property": "x",
+          "value": 552
+        },
+        {
+          "primitive": "label1",
+          "property": "x",
+          "value": 252
+        },
+        {
+          "primitive": "label2",
+          "property": "x",
+          "value": 352
+        },
+        {
+          "primitive": "pivotArrow",
+          "property": "x1",
+          "value": 460
+        },
+        {
+          "primitive": "pivotArrow",
+          "property": "x2",
+          "value": 460
+        },
+        {
+          "primitive": "instruction",
+          "property": "text",
+          "value": "Recurse on [3, 1, 2] and [8]. Pivot 5 is excluded."
+        },
+        {
+          "primitive": "leftPart",
+          "property": "text",
+          "value": "sort [3, 1, 2]"
+        },
+        {
+          "primitive": "rightPart",
+          "property": "text",
+          "value": "sort [8]"
+        }
+      ]
+    }
+  ],
+  "stateTimeline": [
+    {
+      "at": 0,
+      "state": "s0-start"
+    },
+    {
+      "at": 2,
+      "state": "s1-pivot"
+    },
+    {
+      "at": 4,
+      "state": "s2-scan"
+    },
+    {
+      "at": 6,
+      "state": "s3-partitioned"
+    },
+    {
+      "at": 8,
+      "state": "s4-recurse"
+    }
+  ],
+  "fallback": {
+    "text": "The array [5, 3, 8, 1, 2] is partitioned around pivot 5. Values 3, 1 and 2 move left; 8 moves right. The result is [3, 1, 2, 5, 8], with the pivot at its final index. The left part [3, 1, 2] and right part [8] still need recursive sorting, and the split is 3 | 1, not half."
+  },
+  "accessibility": {
+    "alt": "Five bars labeled 5, 3, 8, 1, 2 with a pivot arrow at 5. The bars reorder to 3, 1, 2, 5, 8; labels mark left part 3, 1, 2 and right part 8.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

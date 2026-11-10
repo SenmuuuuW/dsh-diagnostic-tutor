@@ -1,0 +1,228 @@
+{
+  "version": "0.1",
+  "viewport": {"width": 760, "height": 420, "background": "#f8fafc"},
+  "metadata": {
+    "title": "Bubble Sort: Adjacent Swaps",
+    "subject": "Computer Science",
+    "objective": "Show adjacent comparisons, swaps, and the growing sorted suffix.",
+    "learner": "Can read a loop.",
+    "misconceptions": ["One pass always sorts the whole array", "Bubble sort starts from the middle"],
+    "expectedUnderstanding": [
+      "Each comparison checks only an adjacent pair; a swap removes that local inversion.",
+      "The largest remaining value reaches the right end after each full pass.",
+      "The sorted suffix grows from the right, so later passes need fewer comparisons."
+    ]
+  },
+  "properties": [],
+  "primitives": [
+    {"id": "cell1", "type": "rect", "x": 140, "y": 160, "width": 80, "height": 70, "fill": "#ffffff", "stroke": "#475569", "strokeWidth": 2},
+    {"id": "cell2", "type": "rect", "x": 230, "y": 160, "width": 80, "height": 70, "fill": "#ffffff", "stroke": "#475569", "strokeWidth": 2},
+    {"id": "cell3", "type": "rect", "x": 320, "y": 160, "width": 80, "height": 70, "fill": "#ffffff", "stroke": "#475569", "strokeWidth": 2},
+    {"id": "cell4", "type": "rect", "x": 410, "y": 160, "width": 80, "height": 70, "fill": "#ffffff", "stroke": "#475569", "strokeWidth": 2},
+    {"id": "cell5", "type": "rect", "x": 500, "y": 160, "width": 80, "height": 70, "fill": "#ffffff", "stroke": "#475569", "strokeWidth": 2},
+    {"id": "t1", "type": "text", "x": 172, "y": 205, "text": "5", "fontSize": 26, "fill": "#0f172a"},
+    {"id": "t2", "type": "text", "x": 262, "y": 205, "text": "1", "fontSize": 26, "fill": "#0f172a"},
+    {"id": "t3", "type": "text", "x": 352, "y": 205, "text": "4", "fontSize": 26, "fill": "#0f172a"},
+    {"id": "t4", "type": "text", "x": 442, "y": 205, "text": "2", "fontSize": 26, "fill": "#0f172a"},
+    {"id": "t5", "type": "text", "x": 532, "y": 205, "text": "8", "fontSize": 26, "fill": "#0f172a"},
+    {"id": "pairBox", "type": "rect", "x": 132, "y": 152, "width": 96, "height": 86, "fill": "none", "stroke": "#b45309", "strokeWidth": 4},
+    {"id": "suffix", "type": "rect", "x": 492, "y": 242, "width": 96, "height": 10, "fill": "#0f766e", "opacity": 0},
+    {"id": "status", "type": "text", "x": 80, "y": 92, "text": "Compare slots 1 and 2: 5 > 1, so swap.", "fontSize": 16, "fill": "#0f172a"},
+    {"id": "passLabel", "type": "text", "x": 80, "y": 300, "text": "Pass 1, comparison 1 of 4. Sorted suffix: none.", "fontSize": 14, "fill": "#334155"},
+    {"id": "note", "type": "text", "x": 80, "y": 345, "text": "Adjacent compare; swap only when the left value is greater.", "fontSize": 13, "fill": "#475569"}
+  ],
+  "timeline": {
+    "duration": 18,
+    "tracks": [
+      {
+        "target": {"primitive": "pairBox", "property": "strokeWidth"},
+        "keyframes": [
+          {"at": 0, "value": 4},
+          {"at": 2, "value": 7},
+          {"at": 4, "value": 4},
+          {"at": 6, "value": 7},
+          {"at": 8, "value": 4},
+          {"at": 10, "value": 7},
+          {"at": 12, "value": 4},
+          {"at": 14, "value": 7},
+          {"at": 16, "value": 4},
+          {"at": 18, "value": 4}
+        ]
+      }
+    ]
+  },
+  "controls": [],
+  "checkpoints": [
+    {"id": "cp0", "at": 1.5, "title": "Adjacent inversion", "body": "The pair box moves one gap at a time. 5 and 1 are out of order, so only those two swap; the rest of the array is untouched.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp1", "at": 7.5, "title": "Pass 1 fixes the largest", "body": "After four comparisons the largest remaining value, 8, is at the far right. The suffix strip marks the part in final position; the prefix is not yet sorted.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp2", "at": 13.5, "title": "The suffix grows", "body": "Pass 2 starts again at the left. 1 and 4 stay; 4 and 2 swap; then 4 and 5 stay. The sorted suffix grows to 5 and 8.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp3", "at": 17, "title": "Two passes were enough here", "body": "The array is 1, 2, 4, 5, 8. Bubble sort guarantees one fixed largest value per pass, not that one pass sorts everything; a full pass with no swaps is the early-stop test.", "pause": true, "learnerAction": "continue"}
+  ],
+  "narration": [
+    {"at": 0, "text": "Bubble sort compares adjacent values, starting at the left end."},
+    {"at": 4, "text": "Each swap removes a local inversion and moves the larger value right."},
+    {"at": 8, "text": "After pass 1, 8 is fixed at the right; the sorted suffix grows."},
+    {"at": 16, "text": "After pass 2, 5 and 8 are fixed; here the whole array is sorted."}
+  ],
+  "states": [
+    {
+      "id": "s0",
+      "label": "Initial array",
+      "overrides": [
+        {"primitive": "pairBox", "property": "x", "value": 132},
+        {"primitive": "suffix", "property": "opacity", "value": 0},
+        {"primitive": "status", "property": "text", "value": "Compare slots 1 and 2: 5 > 1, so swap."},
+        {"primitive": "passLabel", "property": "text", "value": "Pass 1, comparison 1 of 4. Sorted suffix: none."}
+      ]
+    },
+    {
+      "id": "s1",
+      "label": "Swap 5 and 1",
+      "overrides": [
+        {"primitive": "t1", "property": "text", "value": "1"},
+        {"primitive": "t2", "property": "text", "value": "5"},
+        {"primitive": "t3", "property": "text", "value": "4"},
+        {"primitive": "t4", "property": "text", "value": "2"},
+        {"primitive": "t5", "property": "text", "value": "8"},
+        {"primitive": "pairBox", "property": "x", "value": 222},
+        {"primitive": "suffix", "property": "opacity", "value": 0},
+        {"primitive": "status", "property": "text", "value": "5 > 4, so swap."},
+        {"primitive": "passLabel", "property": "text", "value": "Pass 1, comparison 2 of 4. Sorted suffix: none."}
+      ]
+    },
+    {
+      "id": "s2",
+      "label": "Swap 5 and 4",
+      "overrides": [
+        {"primitive": "t1", "property": "text", "value": "1"},
+        {"primitive": "t2", "property": "text", "value": "4"},
+        {"primitive": "t3", "property": "text", "value": "5"},
+        {"primitive": "t4", "property": "text", "value": "2"},
+        {"primitive": "t5", "property": "text", "value": "8"},
+        {"primitive": "pairBox", "property": "x", "value": 312},
+        {"primitive": "suffix", "property": "opacity", "value": 0},
+        {"primitive": "status", "property": "text", "value": "5 > 2, so swap."},
+        {"primitive": "passLabel", "property": "text", "value": "Pass 1, comparison 3 of 4. Sorted suffix: none."}
+      ]
+    },
+    {
+      "id": "s3",
+      "label": "Pass 1 ends",
+      "overrides": [
+        {"primitive": "t1", "property": "text", "value": "1"},
+        {"primitive": "t2", "property": "text", "value": "4"},
+        {"primitive": "t3", "property": "text", "value": "2"},
+        {"primitive": "t4", "property": "text", "value": "5"},
+        {"primitive": "t5", "property": "text", "value": "8"},
+        {"primitive": "pairBox", "property": "x", "value": 402},
+        {"primitive": "suffix", "property": "opacity", "value": 0},
+        {"primitive": "status", "property": "text", "value": "5 < 8: no swap. Pass 1 ends."},
+        {"primitive": "passLabel", "property": "text", "value": "Pass 1, comparison 4 of 4. Sorted suffix: 8."}
+      ]
+    },
+    {
+      "id": "s4",
+      "label": "Pass 2 starts",
+      "overrides": [
+        {"primitive": "t1", "property": "text", "value": "1"},
+        {"primitive": "t2", "property": "text", "value": "4"},
+        {"primitive": "t3", "property": "text", "value": "2"},
+        {"primitive": "t4", "property": "text", "value": "5"},
+        {"primitive": "t5", "property": "text", "value": "8"},
+        {"primitive": "pairBox", "property": "x", "value": 132},
+        {"primitive": "suffix", "property": "x", "value": 492},
+        {"primitive": "suffix", "property": "width", "value": 96},
+        {"primitive": "suffix", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "Pass 2: compare 1 and 4; 1 < 4, no swap."},
+        {"primitive": "passLabel", "property": "text", "value": "Pass 2, comparison 1 of 4. Sorted suffix: 8."}
+      ]
+    },
+    {
+      "id": "s5",
+      "label": "Swap 4 and 2",
+      "overrides": [
+        {"primitive": "t1", "property": "text", "value": "1"},
+        {"primitive": "t2", "property": "text", "value": "4"},
+        {"primitive": "t3", "property": "text", "value": "2"},
+        {"primitive": "t4", "property": "text", "value": "5"},
+        {"primitive": "t5", "property": "text", "value": "8"},
+        {"primitive": "pairBox", "property": "x", "value": 222},
+        {"primitive": "suffix", "property": "x", "value": 492},
+        {"primitive": "suffix", "property": "width", "value": 96},
+        {"primitive": "suffix", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "4 > 2, so swap."},
+        {"primitive": "passLabel", "property": "text", "value": "Pass 2, comparison 2 of 4. Sorted suffix: 8."}
+      ]
+    },
+    {
+      "id": "s6",
+      "label": "Compare 4 and 5",
+      "overrides": [
+        {"primitive": "t1", "property": "text", "value": "1"},
+        {"primitive": "t2", "property": "text", "value": "2"},
+        {"primitive": "t3", "property": "text", "value": "4"},
+        {"primitive": "t4", "property": "text", "value": "5"},
+        {"primitive": "t5", "property": "text", "value": "8"},
+        {"primitive": "pairBox", "property": "x", "value": 312},
+        {"primitive": "suffix", "property": "x", "value": 492},
+        {"primitive": "suffix", "property": "width", "value": 96},
+        {"primitive": "suffix", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "4 < 5: no swap."},
+        {"primitive": "passLabel", "property": "text", "value": "Pass 2, comparison 3 of 4. Sorted suffix: 8."}
+      ]
+    },
+    {
+      "id": "s7",
+      "label": "Suffix 5 and 8",
+      "overrides": [
+        {"primitive": "t1", "property": "text", "value": "1"},
+        {"primitive": "t2", "property": "text", "value": "2"},
+        {"primitive": "t3", "property": "text", "value": "4"},
+        {"primitive": "t4", "property": "text", "value": "5"},
+        {"primitive": "t5", "property": "text", "value": "8"},
+        {"primitive": "pairBox", "property": "x", "value": 402},
+        {"primitive": "suffix", "property": "x", "value": 402},
+        {"primitive": "suffix", "property": "width", "value": 186},
+        {"primitive": "suffix", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "5 < 8: no swap. Pass 2 ends."},
+        {"primitive": "passLabel", "property": "text", "value": "Pass 2, comparison 4 of 4. Sorted suffix: 5, 8."}
+      ]
+    },
+    {
+      "id": "s8",
+      "label": "Sorted for this input",
+      "overrides": [
+        {"primitive": "t1", "property": "text", "value": "1"},
+        {"primitive": "t2", "property": "text", "value": "2"},
+        {"primitive": "t3", "property": "text", "value": "4"},
+        {"primitive": "t4", "property": "text", "value": "5"},
+        {"primitive": "t5", "property": "text", "value": "8"},
+        {"primitive": "pairBox", "property": "opacity", "value": 0},
+        {"primitive": "suffix", "property": "x", "value": 132},
+        {"primitive": "suffix", "property": "width", "value": 456},
+        {"primitive": "suffix", "property": "opacity", "value": 1},
+        {"primitive": "status", "property": "text", "value": "Sorted: 1, 2, 4, 5, 8. For this input, two passes sufficed."},
+        {"primitive": "passLabel", "property": "text", "value": "A full no-swap pass confirms order; here the suffix is the whole array."}
+      ]
+    }
+  ],
+  "stateTimeline": [
+    {"at": 0, "state": "s0"},
+    {"at": 2, "state": "s1"},
+    {"at": 4, "state": "s2"},
+    {"at": 6, "state": "s3"},
+    {"at": 8, "state": "s4"},
+    {"at": 10, "state": "s5"},
+    {"at": 12, "state": "s6"},
+    {"at": 14, "state": "s7"},
+    {"at": 16, "state": "s8"}
+  ],
+  "fallback": {
+    "text": "Bubble sort scans left to right, comparing each adjacent pair. If the left value is larger, the two swap; otherwise nothing moves. After one full pass the largest value is at the right end. The next pass repeats only over the unsorted prefix, so the sorted suffix grows by one cell per pass. One pass does not generally sort everything: only the largest remaining value is guaranteed to be fixed. The scan always starts at the leftmost pair, never in the middle. If a full pass makes no swaps, the array is already sorted and the algorithm can stop."
+  },
+  "accessibility": {
+    "alt": "Array of five cells holding 5,1,4,2,8. A moving box compares adjacent cells and swaps out-of-order values; an underline marks the sorted suffix as it grows to 1,2,4,5,8.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

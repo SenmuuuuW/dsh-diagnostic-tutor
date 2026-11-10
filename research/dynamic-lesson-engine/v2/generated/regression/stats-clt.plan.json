@@ -1,0 +1,9 @@
+{
+  "representation": "A fixed four-bar skewed raw population histogram above a seven-bar histogram of sample means whose heights depend on n through a 1/sqrt(n) spread, centered on a dashed population mean.",
+  "entities": ["raw population histogram", "fixed skew note", "sample-mean histogram", "population mean line", "sample-size slider"],
+  "motion": "As n grows, the middle sample-mean bars rise and the outer bars fall, so the sampling distribution narrows into a bell; the raw histogram never changes.",
+  "controls": ["slider for sample size n from 1 to 36"],
+  "checkpoints": ["raw data can be non-normal", "bottom bars are means, not raw data", "n changes the sampling shape", "raw data does not become normal", "spread shrinks with n around the population mean"],
+  "misconceptionTest": "The raw bars remain fixed and skewed as n changes, so the original data does not become normal. The CLT is about the distribution of sample means, which centers near the population mean and narrows as n grows.",
+  "accessibility": "Alt text, keyboard slider, separated top and bottom histograms, and a textual summary distinguishing raw data from the sampling distribution."
+}

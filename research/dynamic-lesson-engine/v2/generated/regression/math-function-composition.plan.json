@@ -1,0 +1,23 @@
+{
+  "representation": "A two-stage machine pipeline: input token -> box g -> box f -> output, with two value bars below showing the intermediate g(x) and the final f(g(x)) on a shared zero baseline.",
+  "entities": [
+    "box g labelled g(x) = x^2 - 1",
+    "box f labelled f(u) = u/2 + 1",
+    "arrows for input -> g and g -> f",
+    "token that travels through the stages in order",
+    "zero baseline with a bar for g(x) and a bar for f(g(x))"
+  ],
+  "motion": "The token's x-position is keyframed 90 -> 335 (inside g) -> 585 (inside f) -> 760 (output) over 8 s; stopping inside a box at a checkpoint makes the stage ordering explicit.",
+  "controls": [
+    "slider 'xp' -2..2, step 0.1, default 1.5, changes the input and both bar heights"
+  ],
+  "checkpoints": [
+    "0.2 s: token is the input x, g runs first",
+    "1.6 s: intermediate value g(x) only",
+    "4.1 s: f receives g(x), not x",
+    "6.1 s: order matters, f(g(2)) != g(f(2)), and it is not multiplication",
+    "7.8 s: x = 0 gives a negative intermediate that f still accepts"
+  ],
+  "misconceptionTest": "Checkpoint 4 uses the same x = 2 in both orders: f(g(2)) = 2.5 but g(f(2)) = 3, so order is not interchangeable; the two boxes apply different rules, so the outer f is applied to g's output rather than multiplying outputs. Checkpoint 5 shows a negative intermediate that f still maps to 0.5.",
+  "accessibility": "Alt text names both stages, the token order and the two bars; slider keyboard operable; every value is also described in checkpoint text; reducedMotion no-autoplay."
+}

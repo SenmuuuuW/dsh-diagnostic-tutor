@@ -1,0 +1,339 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 720,
+    "height": 450,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Hypothesis Test: Null Distribution, p-Tail and Alpha",
+    "subject": "Statistics",
+    "objective": "Show a null distribution, an observed statistic and a p-value tail without conflating it with the probability the null is true.",
+    "learner": "Knows sampling distributions.",
+    "misconceptions": [
+      "p is the probability the null is true",
+      "A small p proves the alternative"
+    ],
+    "expectedUnderstanding": [
+      "The null distribution describes outcomes if the null model holds",
+      "p is the tail area at least as extreme as the observed statistic",
+      "Alpha is a decision threshold chosen in advance",
+      "A small p is evidence against the null, not proof of the alternative"
+    ]
+  },
+  "properties": [
+    {
+      "id": "zObs",
+      "label": "Observed z statistic",
+      "min": -2.5,
+      "max": 2.5,
+      "step": 0.1,
+      "default": 1.8
+    },
+    {
+      "id": "alpha",
+      "label": "Alpha level",
+      "min": 0.01,
+      "max": 0.1,
+      "step": 0.01,
+      "default": 0.05
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 42,
+      "text": "Null distribution: observed z, tail p, and alpha",
+      "fontSize": 22,
+      "fill": "#111827"
+    },
+    {
+      "id": "axis",
+      "type": "line",
+      "x1": 100,
+      "y1": 330,
+      "x2": 660,
+      "y2": 330,
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5
+    },
+    {
+      "id": "bar1",
+      "type": "rect",
+      "x": 128,
+      "y": 320.5,
+      "width": 44,
+      "height": 9.5,
+      "fill": "#0f766e",
+      "stroke": "#115e59",
+      "strokeWidth": 1.5,
+      "opacity": {
+        "expr": "0.18 + 0.82 * max(0, min(1, (-2.4 - zObs + 0.3) / 0.6))"
+      }
+    },
+    {
+      "id": "bar2",
+      "type": "rect",
+      "x": 188,
+      "y": 296.4,
+      "width": 44,
+      "height": 33.6,
+      "fill": "#0f766e",
+      "stroke": "#115e59",
+      "strokeWidth": 1.5,
+      "opacity": {
+        "expr": "0.18 + 0.82 * max(0, min(1, (-1.8 - zObs + 0.3) / 0.6))"
+      }
+    },
+    {
+      "id": "bar3",
+      "type": "rect",
+      "x": 248,
+      "y": 247.2,
+      "width": 44,
+      "height": 82.8,
+      "fill": "#0f766e",
+      "stroke": "#115e59",
+      "strokeWidth": 1.5,
+      "opacity": {
+        "expr": "0.18 + 0.82 * max(0, min(1, (-1.2 - zObs + 0.3) / 0.6))"
+      }
+    },
+    {
+      "id": "bar4",
+      "type": "rect",
+      "x": 308,
+      "y": 188,
+      "width": 44,
+      "height": 142,
+      "fill": "#0f766e",
+      "stroke": "#115e59",
+      "strokeWidth": 1.5,
+      "opacity": {
+        "expr": "0.18 + 0.82 * max(0, min(1, (-0.6 - zObs + 0.3) / 0.6))"
+      }
+    },
+    {
+      "id": "bar5",
+      "type": "rect",
+      "x": 368,
+      "y": 160,
+      "width": 44,
+      "height": 170,
+      "fill": "#0f766e",
+      "stroke": "#115e59",
+      "strokeWidth": 1.5,
+      "opacity": {
+        "expr": "0.18 + 0.82 * max(0, min(1, (0 - zObs + 0.3) / 0.6))"
+      }
+    },
+    {
+      "id": "bar6",
+      "type": "rect",
+      "x": 428,
+      "y": 188,
+      "width": 44,
+      "height": 142,
+      "fill": "#0f766e",
+      "stroke": "#115e59",
+      "strokeWidth": 1.5,
+      "opacity": {
+        "expr": "0.18 + 0.82 * max(0, min(1, (0.6 - zObs + 0.3) / 0.6))"
+      }
+    },
+    {
+      "id": "bar7",
+      "type": "rect",
+      "x": 488,
+      "y": 247.2,
+      "width": 44,
+      "height": 82.8,
+      "fill": "#0f766e",
+      "stroke": "#115e59",
+      "strokeWidth": 1.5,
+      "opacity": {
+        "expr": "0.18 + 0.82 * max(0, min(1, (1.2 - zObs + 0.3) / 0.6))"
+      }
+    },
+    {
+      "id": "bar8",
+      "type": "rect",
+      "x": 548,
+      "y": 296.4,
+      "width": 44,
+      "height": 33.6,
+      "fill": "#0f766e",
+      "stroke": "#115e59",
+      "strokeWidth": 1.5,
+      "opacity": {
+        "expr": "0.18 + 0.82 * max(0, min(1, (1.8 - zObs + 0.3) / 0.6))"
+      }
+    },
+    {
+      "id": "bar9",
+      "type": "rect",
+      "x": 608,
+      "y": 320.5,
+      "width": 44,
+      "height": 9.5,
+      "fill": "#0f766e",
+      "stroke": "#115e59",
+      "strokeWidth": 1.5,
+      "opacity": {
+        "expr": "0.18 + 0.82 * max(0, min(1, (2.4 - zObs + 0.3) / 0.6))"
+      }
+    },
+    {
+      "id": "observedLine",
+      "type": "line",
+      "x1": {
+        "expr": "390 + 100 * zObs"
+      },
+      "y1": 80,
+      "x2": {
+        "expr": "390 + 100 * zObs"
+      },
+      "y2": 338,
+      "stroke": "#dc2626",
+      "strokeWidth": 3
+    },
+    {
+      "id": "alphaLine",
+      "type": "line",
+      "x1": {
+        "expr": "390 + 100 * (2.326 - 21.365 * (alpha - 0.01) + 108.5 * (alpha - 0.01)^2)"
+      },
+      "y1": 80,
+      "x2": {
+        "expr": "390 + 100 * (2.326 - 21.365 * (alpha - 0.01) + 108.5 * (alpha - 0.01)^2)"
+      },
+      "y2": 338,
+      "stroke": "#111827",
+      "strokeWidth": 2,
+      "dash": "6 5"
+    },
+    {
+      "id": "observedLabel",
+      "type": "text",
+      "x": {
+        "expr": "390 + 100 * zObs + 8"
+      },
+      "y": 72,
+      "text": "observed z",
+      "fontSize": 13,
+      "fill": "#b91c1c"
+    },
+    {
+      "id": "alphaLabel",
+      "type": "text",
+      "x": {
+        "expr": "390 + 100 * (2.326 - 21.365 * (alpha - 0.01) + 108.5 * (alpha - 0.01)^2) + 8"
+      },
+      "y": 98,
+      "text": "alpha line",
+      "fontSize": 13,
+      "fill": "#111827"
+    },
+    {
+      "id": "note",
+      "type": "text",
+      "x": 40,
+      "y": 380,
+      "text": "Shaded right-tail = p. Alpha is a decision rule, not P(null true); small p is not proof.",
+      "fontSize": 13,
+      "fill": "#374151"
+    }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "observedLine",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 3,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4,
+            "value": 4.5,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 8,
+            "value": 3,
+            "easing": "ease-in-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "zControl",
+      "kind": "slider",
+      "propertyId": "zObs",
+      "label": "Move the observed statistic"
+    },
+    {
+      "id": "alphaControl",
+      "kind": "slider",
+      "propertyId": "alpha",
+      "label": "Change the alpha decision level"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-null",
+      "at": 1,
+      "title": "Null first",
+      "body": "The bars are the null distribution of z: centered at 0 with thin tails. The red line is the observed statistic, movable with the slider. The observed statistic is not the p-value.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-tail",
+      "at": 3.5,
+      "title": "The tail is p",
+      "body": "The shaded bars to the right of the observed z are outcomes at least as extreme. Move z right and less area is shaded, so p is smaller. Move z left and more area is shaded, so p is larger.",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-alpha",
+      "at": 6,
+      "title": "Alpha is a rule, not a posterior",
+      "body": "The dashed line is alpha, a decision threshold chosen before seeing the data. It is not the probability the null is true, and neither is p. A small p is evidence against the null, not proof of the alternative.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The bars show the null distribution of z; the red line is the observed statistic."
+    },
+    {
+      "at": 3,
+      "text": "The shaded right tail is the p-value: outcomes at least as extreme as the observation."
+    },
+    {
+      "at": 6,
+      "text": "Alpha is a separate decision line, not the probability that the null is true."
+    }
+  ],
+  "fallback": {
+    "text": "A null distribution of z is shown with nine bars centered at 0 and thin tails. The observed statistic is a red vertical line controlled by the z slider, and the bars to its right are shaded: that right-tail area represents p. Moving the observed statistic changes the shaded area, so p depends on the data, not on alpha. The dashed alpha line is a decision threshold chosen in advance; changing alpha moves that line but does not change the observed statistic or the p-value. Neither p nor alpha is the probability that the null hypothesis is true. A small p is evidence against the null model, not proof that the alternative is true, and the scene makes no causal claim."
+  },
+  "accessibility": {
+    "alt": "Nine bars form a null z distribution. A red line marks observed z; bars to its right are shaded as the p tail. A dashed alpha line moves with the alpha slider but does not change the observed statistic or tail.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 900, "height": 560 },
+  "metadata": {
+    "title": "Wave Interference: Two Waves and Their Sum",
+    "subject": "Physics",
+    "objective": "Show constructive and destructive interference as two waves combine.",
+    "learner": "Knows wave peaks and troughs.",
+    "misconceptions": [
+      "Waves cancel by destroying energy",
+      "Interference means the waves stop existing"
+    ],
+    "expectedUnderstanding": [
+      "At each position the sum is the algebraic sum of the two source displacements.",
+      "In-phase waves add to a larger displacement; opposite-phase waves give a near-zero sum.",
+      "The source waves keep traveling even where their sum cancels.",
+      "Cancellation redistributes energy in a full interference pattern; it does not destroy the waves or their energy."
+    ]
+  },
+  "properties": [
+    { "id": "phase", "label": "phase shift of wave 2", "min": 0, "max": 6.283, "step": 0.05, "default": 0, "unit": "rad" }
+  ],
+  "primitives": [
+    { "id": "wave1a", "type": "line", "x1": 120, "y1": { "expr": "130 + 32*sin(1.2566 - 2*t)" }, "x2": 270, "y2": { "expr": "130 + 32*sin(2.8274 - 2*t)" }, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "wave1b", "type": "line", "x1": 270, "y1": { "expr": "130 + 32*sin(2.8274 - 2*t)" }, "x2": 420, "y2": { "expr": "130 + 32*sin(4.3982 - 2*t)" }, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "wave1c", "type": "line", "x1": 420, "y1": { "expr": "130 + 32*sin(4.3982 - 2*t)" }, "x2": 570, "y2": { "expr": "130 + 32*sin(5.9690 - 2*t)" }, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "wave1d", "type": "line", "x1": 570, "y1": { "expr": "130 + 32*sin(5.9690 - 2*t)" }, "x2": 720, "y2": { "expr": "130 + 32*sin(7.5398 - 2*t)" }, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "wave2a", "type": "line", "x1": 120, "y1": { "expr": "300 + 32*sin(1.2566 - 2*t + phase)" }, "x2": 270, "y2": { "expr": "300 + 32*sin(2.8274 - 2*t + phase)" }, "stroke": "#b45309", "strokeWidth": 3, "dash": "7 4" },
+    { "id": "wave2b", "type": "line", "x1": 270, "y1": { "expr": "300 + 32*sin(2.8274 - 2*t + phase)" }, "x2": 420, "y2": { "expr": "300 + 32*sin(4.3982 - 2*t + phase)" }, "stroke": "#b45309", "strokeWidth": 3, "dash": "7 4" },
+    { "id": "wave2c", "type": "line", "x1": 420, "y1": { "expr": "300 + 32*sin(4.3982 - 2*t + phase)" }, "x2": 570, "y2": { "expr": "300 + 32*sin(5.9690 - 2*t + phase)" }, "stroke": "#b45309", "strokeWidth": 3, "dash": "7 4" },
+    { "id": "wave2d", "type": "line", "x1": 570, "y1": { "expr": "300 + 32*sin(5.9690 - 2*t + phase)" }, "x2": 720, "y2": { "expr": "300 + 32*sin(7.5398 - 2*t + phase)" }, "stroke": "#b45309", "strokeWidth": 3, "dash": "7 4" },
+    { "id": "sum1a", "type": "line", "x1": 120, "y1": { "expr": "460 + 32*sin(1.2566 - 2*t) + 32*sin(1.2566 - 2*t + phase)" }, "x2": 270, "y2": { "expr": "460 + 32*sin(2.8274 - 2*t) + 32*sin(2.8274 - 2*t + phase)" }, "stroke": "#0f766e", "strokeWidth": 4 },
+    { "id": "sum1b", "type": "line", "x1": 270, "y1": { "expr": "460 + 32*sin(2.8274 - 2*t) + 32*sin(2.8274 - 2*t + phase)" }, "x2": 420, "y2": { "expr": "460 + 32*sin(4.3982 - 2*t) + 32*sin(4.3982 - 2*t + phase)" }, "stroke": "#0f766e", "strokeWidth": 4 },
+    { "id": "sum1c", "type": "line", "x1": 420, "y1": { "expr": "460 + 32*sin(4.3982 - 2*t) + 32*sin(4.3982 - 2*t + phase)" }, "x2": 570, "y2": { "expr": "460 + 32*sin(5.9690 - 2*t) + 32*sin(5.9690 - 2*t + phase)" }, "stroke": "#0f766e", "strokeWidth": 4 },
+    { "id": "sum1d", "type": "line", "x1": 570, "y1": { "expr": "460 + 32*sin(5.9690 - 2*t) + 32*sin(5.9690 - 2*t + phase)" }, "x2": 720, "y2": { "expr": "460 + 32*sin(7.5398 - 2*t) + 32*sin(7.5398 - 2*t + phase)" }, "stroke": "#0f766e", "strokeWidth": 4 },
+    { "id": "label1", "type": "text", "x": 735, "y": 135, "text": "source 1", "fontSize": 14, "fill": "#1d4ed8" },
+    { "id": "label2", "type": "text", "x": 735, "y": 305, "text": "source 2: phase phi", "fontSize": 14, "fill": "#b45309" },
+    { "id": "label3", "type": "text", "x": 735, "y": 465, "text": "sum 1 + 2", "fontSize": 14, "fill": "#0f766e" },
+    { "id": "phaseNote", "type": "text", "x": 80, "y": 548, "text": "phase 0 = add; about 3.14 = cancel at every sample", "fontSize": 13, "fill": "#111827" }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": []
+  },
+  "controls": [
+    { "id": "phaseSlider", "kind": "slider", "propertyId": "phase", "label": "phase shift of wave 2" }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp1",
+      "at": 0.2,
+      "title": "In phase: displacements add",
+      "body": "Set phase to 0. At every sample the two source heights are equal, so the sum is twice either source height. Peaks meet peaks and troughs meet troughs: this is constructive interference.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp2",
+      "at": 2.4,
+      "title": "Opposite phase: a flat sum",
+      "body": "Move the phase close to 3.14. Wave 2 is now the mirror opposite of wave 1 at each sample, so their sum sits on the middle baseline. Notice that both source rows are still moving; the waves have not stopped existing.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp3",
+      "at": 4.6,
+      "title": "Phase decides where the sum is large",
+      "body": "Slide the phase between 0 and 3.14. The sum changes continuously between a doubled wave and a flattened one. Constructive and destructive interference are two ends of the same addition rule, not different kinds of wave.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp4",
+      "at": 6.8,
+      "title": "Energy is redistributed, not destroyed",
+      "body": "At a cancellation point the displacement is zero, but each source wave still carries its own motion. In a full two-source interference pattern the energy is redirected toward the places where the waves add. Saying the waves destroy energy is incorrect.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    { "at": 0, "text": "Two traveling waves are stacked above their point-by-point sum." },
+    { "at": 2.5, "text": "With zero phase shift the peaks align, so the sum doubles." },
+    { "at": 4.7, "text": "Near a phase shift of pi the displacements are opposite and the sum flattens, while both source waves keep moving." },
+    { "at": 6.9, "text": "Cancellation redistributes energy in the full pattern; it does not destroy the waves." }
+  ],
+  "fallback": {
+    "text": "Three rows show two traveling waves and their sum. Each row is sampled at five positions. With phase 0 the source waves rise and fall together, so the sum has twice their displacement. With phase near pi the second wave is the opposite of the first at each position, so the sum is nearly flat even though both source waves continue to move. The phase slider changes the offset between the sources. Interference is point-by-point addition; in a full two-source pattern the energy is redistributed rather than destroyed."
+  },
+  "accessibility": {
+    "alt": "Three rows of sampled wave lines: source 1, source 2 with an adjustable phase, and their sum. At phase 0 the sum doubles; near 3.14 it flattens while both source rows keep moving.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

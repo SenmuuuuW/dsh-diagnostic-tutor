@@ -1,0 +1,26 @@
+{
+  "representation": "A moving source inside expanding circular wavefronts, with fixed left and right observers, a velocity arrow and a spacing note.",
+  "entities": [
+    "four wavefront circles",
+    "source labeled f0",
+    "left and right observers",
+    "source velocity arrow",
+    "observed-frequency relationship and rest-frequency note"
+  ],
+  "motion": [
+    "changing speed shifts older wavefront centers farther from the source",
+    "changing direction swaps the compressed side",
+    "the source marker pulses"
+  ],
+  "controls": [
+    "speed slider from 0 to 0.5 c",
+    "direction slider from left to right"
+  ],
+  "checkpoints": [
+    "emission stays at the rest frequency",
+    "compression ahead of motion",
+    "direction reverses the high-frequency side"
+  ],
+  "misconceptionTest": "The wavefront spacing changes on the two sides while the source label remains f0, so compression comes from motion through the medium, not from a changed emitter frequency; loudness alone cannot explain the spacing change.",
+  "accessibility": "Wavefront spacing is reinforced by text, both observers and the source are labeled, the direction slider is keyboard accessible, alt text describes the compression, and reduced motion stops the pulse."
+}

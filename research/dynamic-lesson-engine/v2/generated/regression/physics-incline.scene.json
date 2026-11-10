@@ -1,0 +1,106 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 900, "height": 560 },
+  "metadata": {
+    "title": "Gravity Components on an Incline",
+    "subject": "Physics",
+    "objective": "Show how gravity components change with incline angle.",
+    "learner": "Knows forces as pushes and pulls.",
+    "misconceptions": [
+      "Normal force equals weight at every angle",
+      "Friction is always equal to weight"
+    ],
+    "expectedUnderstanding": [
+      "The weight vector stays vertical and splits into mg sin theta along the plane and mg cos theta perpendicular to it.",
+      "The along-plane component grows as the incline steepens.",
+      "The normal force is perpendicular to the plane and scales with cos theta, so it is less than mg when tilted.",
+      "Friction would be a separate force along the plane, not a copy of the weight."
+    ]
+  },
+  "properties": [
+    { "id": "angle", "label": "incline angle", "min": 10, "max": 35, "step": 1, "default": 25, "unit": "deg" }
+  ],
+  "primitives": [
+    { "id": "base", "type": "line", "x1": 100, "y1": 450, "x2": 700, "y2": 450, "stroke": "#334155", "strokeWidth": 2 },
+    { "id": "slope", "type": "line", "x1": 150, "y1": 450, "x2": 650, "y2": { "expr": "450 - 500*tan(0.0174533*angle)" }, "stroke": "#334155", "strokeWidth": 4 },
+    { "id": "rise", "type": "line", "x1": 650, "y1": 450, "x2": 650, "y2": { "expr": "450 - 500*tan(0.0174533*angle)" }, "stroke": "#64748b", "strokeWidth": 2 },
+    { "id": "block", "type": "circle", "cx": { "expr": "425 - 24*sin(0.0174533*angle)" }, "cy": { "expr": "450 - 275*tan(0.0174533*angle) - 24*cos(0.0174533*angle)" }, "r": 24, "fill": "#dbeafe", "stroke": "#1d4ed8", "strokeWidth": 2 },
+    { "id": "massLabel", "type": "text", "x": { "expr": "425 - 24*sin(0.0174533*angle)" }, "y": { "expr": "455 - 275*tan(0.0174533*angle) - 24*cos(0.0174533*angle)" }, "text": "m", "fontSize": 14, "fill": "#1e3a8a" },
+    { "id": "weight", "type": "arrow", "x1": { "expr": "425 - 24*sin(0.0174533*angle)" }, "y1": { "expr": "450 - 275*tan(0.0174533*angle) - 24*cos(0.0174533*angle)" }, "x2": { "expr": "425 - 24*sin(0.0174533*angle)" }, "y2": { "expr": "570 - 275*tan(0.0174533*angle) - 24*cos(0.0174533*angle)" }, "stroke": "#b91c1c", "strokeWidth": 4 },
+    { "id": "along", "type": "arrow", "x1": { "expr": "425 - 24*sin(0.0174533*angle)" }, "y1": { "expr": "450 - 275*tan(0.0174533*angle) - 24*cos(0.0174533*angle)" }, "x2": { "expr": "425 - 24*sin(0.0174533*angle) - 120*sin(0.0174533*angle)*cos(0.0174533*angle)" }, "y2": { "expr": "450 - 275*tan(0.0174533*angle) - 24*cos(0.0174533*angle) + 120*sin(0.0174533*angle)*sin(0.0174533*angle)" }, "stroke": "#ea580c", "strokeWidth": 4 },
+    { "id": "normal", "type": "arrow", "x1": { "expr": "425 - 24*sin(0.0174533*angle)" }, "y1": { "expr": "450 - 275*tan(0.0174533*angle) - 24*cos(0.0174533*angle)" }, "x2": { "expr": "425 - 24*sin(0.0174533*angle) - 120*cos(0.0174533*angle)*sin(0.0174533*angle)" }, "y2": { "expr": "450 - 275*tan(0.0174533*angle) - 24*cos(0.0174533*angle) - 120*cos(0.0174533*angle)*cos(0.0174533*angle)" }, "stroke": "#0f766e", "strokeWidth": 4 },
+    { "id": "weightLabel", "type": "text", "x": { "expr": "433 - 24*sin(0.0174533*angle)" }, "y": { "expr": "578 - 275*tan(0.0174533*angle) - 24*cos(0.0174533*angle)" }, "text": "mg", "fontSize": 14, "fill": "#b91c1c" },
+    { "id": "alongLabel", "type": "text", "x": { "expr": "405 - 24*sin(0.0174533*angle) - 100*sin(0.0174533*angle)*cos(0.0174533*angle)" }, "y": { "expr": "470 - 275*tan(0.0174533*angle) - 24*cos(0.0174533*angle) + 100*sin(0.0174533*angle)*sin(0.0174533*angle)" }, "text": "mg sin theta", "fontSize": 14, "fill": "#c2410c" },
+    { "id": "normalLabel", "type": "text", "x": { "expr": "387 - 24*sin(0.0174533*angle) - 100*cos(0.0174533*angle)*sin(0.0174533*angle)" }, "y": { "expr": "438 - 275*tan(0.0174533*angle) - 24*cos(0.0174533*angle) - 100*cos(0.0174533*angle)*cos(0.0174533*angle)" }, "text": "N = mg cos theta", "fontSize": 14, "fill": "#0f766e" },
+    { "id": "thetaLabel", "type": "text", "x": 165, "y": 438, "text": "theta", "fontSize": 14, "fill": "#0f766e" },
+    { "id": "thetaPulse", "type": "circle", "cx": 150, "cy": 450, "r": 6, "fill": "none", "stroke": "#0f766e", "strokeWidth": 2 },
+    { "id": "noteNormal", "type": "text", "x": 80, "y": 95, "text": "N is perpendicular to the plane", "fontSize": 15, "fill": "#111827" },
+    { "id": "noteFriction", "type": "text", "x": 80, "y": 530, "text": "No friction shown: friction is not equal to weight", "fontSize": 14, "fill": "#111827" }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": { "primitive": "thetaPulse", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 6 },
+          { "at": 2, "value": 10 },
+          { "at": 4, "value": 6 },
+          { "at": 6, "value": 10 },
+          { "at": 8, "value": 6 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "angleSlider", "kind": "slider", "propertyId": "angle", "label": "incline angle" }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp1",
+      "at": 0.2,
+      "title": "Weight is vertical; components are not",
+      "body": "The long downward arrow is the weight mg. It has two perpendicular components: mg sin theta down the plane and mg cos theta into the plane. The normal force points in the opposite direction to the perpendicular component.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp2",
+      "at": 2.2,
+      "title": "Along-plane component grows with angle",
+      "body": "At 10 degrees sin theta is small, so the down-slope arrow is short. At 35 degrees it is much longer. Ignoring friction, a steeper plane gives a larger acceleration down the slope.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp3",
+      "at": 4.2,
+      "title": "Normal force shrinks as the tilt grows",
+      "body": "The normal arrow is perpendicular to the surface and has length proportional to cos theta. On level ground cos 0 = 1 and N = mg. On a tilt cos theta is less than 1, so N is less than mg. N equals the weight only at zero degrees.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp4",
+      "at": 6.2,
+      "title": "Friction is a separate force",
+      "body": "No friction arrow is shown because this scene isolates gravity and the normal force. If friction were present it would lie along the plane and depend on the surfaces and on N, not equal the weight. Also check the directions: weight down, normal outward, component down the slope.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    { "at": 0, "text": "A block rests on an incline; its weight stays vertical while the plane tilts." },
+    { "at": 2.3, "text": "The down-slope component mg sin theta grows as the angle increases." },
+    { "at": 4.3, "text": "The normal force is perpendicular to the plane and scales with mg cos theta." },
+    { "at": 6.3, "text": "Friction is not the weight; it would be a separate force along the surface." }
+  ],
+  "fallback": {
+    "text": "A block on an incline is acted on by a vertical weight mg, shown with two perpendicular components. The component along the plane is mg sin theta and points down the slope; the component perpendicular to the plane is mg cos theta and points into the surface. The normal force points outward, opposite the perpendicular component, and has magnitude mg cos theta on a frictionless incline. Thus N equals mg only when the angle is zero. No friction is drawn; friction would be a separate force along the plane and is not generally equal to weight."
+  },
+  "accessibility": {
+    "alt": "A block on an incline with a vertical weight arrow, a shorter arrow down the plane labelled mg sin theta, and an outward normal arrow labelled N = mg cos theta. The angle slider changes the plane and both components.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "representation": "A vertical three-slot stack on the left and a horizontal three-slot queue on the right, filled with the same values 1, 2, 3 and then emptied from opposite ends.",
+  "entities": ["stack cells", "stack item labels", "queue cells", "queue item labels", "stack title", "queue title", "input-order line", "status line"],
+  "motion": "Items appear at the stack top and queue rear in the same order; removal hides the stack top first and the queue front first, making the opposite removal orders visible.",
+  "controls": ["state timeline with pause/continue checkpoints; no numeric slider"],
+  "checkpoints": ["same insertion order", "first removal differs", "second and third removals", "final order comparison"],
+  "misconceptionTest": "Both structures receive 1, then 2, then 3. The stack removes 3,2,1 while the queue removes 1,2,3, so they are not interchangeable, and the first inserted item is not always first out.",
+  "accessibility": "Alt text; keyboard play/pause and checkpoints; all items and ends are labeled in text, and the two removal orders are written out in the final status."
+}

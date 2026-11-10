@@ -1,0 +1,22 @@
+{
+  "representation": "Parabola f(x) = x^2 with a point at the current x and a horizontal arrow showing one descent step, x -> x - eta * f'(x), along the axis of the graph.",
+  "entities": [
+    "eight line segments approximating the parabola on -3..3",
+    "x-axis and y-axis",
+    "current point on the curve",
+    "horizontal step arrow from the current x to the next x"
+  ],
+  "motion": "Four keyframed descent positions at t = 0, 2, 4, 6 with expressions in eta: x_k = 2.4*(1-2eta)^k, y_k = 400 - 25*x_k^2. The arrow tail and head keyframe with the same expressions, so arrow length is exactly |step| = 2*eta*|x_k|.",
+  "controls": [
+    "slider 'lr' (learning rate eta) 0.05..0.9, step 0.05, default 0.3"
+  ],
+  "checkpoints": [
+    "0.05 s: start at x = 2.4, slope +4.8, arrow points left",
+    "2 s: step scaled by eta, x lands near 0.96 at eta = 0.3",
+    "4 s: steps shrink because the slope shrinks",
+    "6 s: eta 0.9 overshoots across the valley and zigzags",
+    "8.4 s: gradient points uphill, so the update subtracts it"
+  ],
+  "misconceptionTest": "At eta near 0.9 the first step jumps from x = 2.4 to about -1.92, showing that a larger rate overshoots rather than always converging faster. The arrow always points opposite the sign of 2x, never downhill-as-gradient.",
+  "accessibility": "Alt text describes the parabola, point and arrow; the learning-rate slider is keyboard operable; no numeric claim depends on colour; reducedMotion no-autoplay."
+}

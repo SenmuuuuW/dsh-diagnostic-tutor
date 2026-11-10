@@ -1,0 +1,9 @@
+{
+  "representation": "Price-quantity graph with fixed supply and demand lines, a movable horizontal ceiling line below equilibrium, blue and green quantity dots at the ceiling, and a red shortage arrow between them.",
+  "entities": ["price axis", "quantity axis", "demand curve", "supply curve", "equilibrium dot", "ceiling line", "Qd dot", "Qs dot", "shortage arrow and label"],
+  "motion": "The ceiling line, Qd dot, Qs dot and shortage arrow all move together as the ceiling-price slider changes; their horizontal gap is the shortage.",
+  "controls": ["slider for the ceiling price from $30 to $54"],
+  "checkpoints": ["binding ceiling below equilibrium", "Qd and Qs separate at the ceiling", "ceiling is nonbinding at or above equilibrium", "shortage is a gap, not zero supply", "welfare caution about total surplus"],
+  "misconceptionTest": "The ceiling is below equilibrium, so it binds; if it were at or above equilibrium it would not bind. At a binding ceiling, supply is positive but less than demand, so shortage = Qd - Qs is not zero supply. The scene never claims that a price ceiling raises total surplus.",
+  "accessibility": "Alt text, labeled axes and curves, keyboard slider, color-matched Qd and Qs dots, and a text description of the shortage gap."
+}

@@ -1,0 +1,9 @@
+{
+  "representation": "Unit square and basis arrows at the origin, with transformed copies driven by matrix entries a and b.",
+  "entities": ["axes", "original unit square", "original basis arrows", "transformed square", "transformed basis arrows", "corner probe"],
+  "motion": "Sliders a and b move the transformed basis arrows, all four transformed corners, and the highlighted corner.",
+  "controls": ["a slider for horizontal scale", "b slider for shear"],
+  "checkpoints": ["columns equal transformed basis vectors", "b = 0 gives a rectangle", "a = 2 doubles area because det = a"],
+  "misconceptionTest": "The matrix acts on every point consistently; it is not elementwise multiplication, and the transformed grid is not unchanged.",
+  "accessibility": "Alt text, two keyboard-operable sliders, arrows and labels supplement shape and position."
+}

@@ -1,0 +1,9 @@
+{
+  "representation": "A current pendulum with adjustable length and release angle beside a fixed 1.0 m reference pendulum, so the two periods can be watched together.",
+  "entities": ["ceiling support", "pivot", "rest line", "current rod and dot bob", "reference rod and ring bob", "labels for length, angle, mass and period"],
+  "motion": "Both bobs oscillate continuously; the current bob's period uses g and the nonlinear amplitude correction, while the fixed reference gives a direct timing comparison.",
+  "controls": ["length slider", "release-angle slider"],
+  "checkpoints": ["longer length means longer period", "the reference makes the period difference visible", "large amplitude lengthens the period slightly", "mass is not a period control in the ideal model"],
+  "misconceptionTest": "No mass control exists; an explicit checkpoint says the ideal period is independent of mass. The motion includes a standard large-angle correction, and text states that the small-angle formula is not exact.",
+  "accessibility": "Alt text; keyboard sliders; the current bob is a dot and the reference bob is a ring, with labels, so the comparison is not color-only; reduced motion available."
+}

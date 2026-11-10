@@ -1,0 +1,76 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 640, "height": 360 },
+  "metadata": {
+    "title": "Matrix Maps Basis and Shape",
+    "subject": "Mathematics",
+    "objective": "Show how a matrix maps basis vectors and a shape in the plane.",
+    "learner": "Has seen vectors but not matrix geometry.",
+    "misconceptions": [
+      "Matrix multiplication is just elementwise multiplication",
+      "The transformed grid is unchanged"
+    ],
+    "expectedUnderstanding": [
+      "The matrix columns are the images of the basis vectors",
+      "Every vertex of the shape transforms by the same rule",
+      "The determinant a gives the area scale for this matrix"
+    ]
+  },
+  "properties": [
+    { "id": "a", "label": "Matrix entry a", "min": 0.6, "max": 2, "step": 0.1, "default": 1.4 },
+    { "id": "b", "label": "Matrix entry b", "min": -1, "max": 1, "step": 0.1, "default": 0.6 }
+  ],
+  "primitives": [
+    { "id": "xAxis", "type": "line", "x1": 40, "y1": 280, "x2": 600, "y2": 280 },
+    { "id": "yAxis", "type": "line", "x1": 220, "y1": 40, "x2": 220, "y2": 330 },
+    { "id": "originalSquare", "type": "rect", "x": 220, "y": 190, "width": 90, "height": 90 },
+    { "id": "bottomEdge", "type": "line", "x1": 220, "y1": 280, "x2": { "expr": "220+90*a" }, "y2": 280 },
+    { "id": "rightEdge", "type": "line", "x1": { "expr": "220+90*a" }, "y1": 280, "x2": { "expr": "220+90*a+90*b" }, "y2": 190 },
+    { "id": "topEdge", "type": "line", "x1": { "expr": "220+90*a+90*b" }, "y1": 190, "x2": { "expr": "220+90*b" }, "y2": 190 },
+    { "id": "leftEdge", "type": "line", "x1": { "expr": "220+90*b" }, "y1": 190, "x2": 220, "y2": 280 },
+    { "id": "origE1", "type": "arrow", "x1": 220, "y1": 280, "x2": 310, "y2": 280 },
+    { "id": "origE2", "type": "arrow", "x1": 220, "y1": 280, "x2": 220, "y2": 190 },
+    { "id": "transE1", "type": "arrow", "x1": 220, "y1": 280, "x2": { "expr": "220+90*a" }, "y2": 280 },
+    { "id": "transE2", "type": "arrow", "x1": 220, "y1": 280, "x2": { "expr": "220+90*b" }, "y2": 190 },
+    { "id": "cornerProbe", "type": "circle", "cx": { "expr": "220+90*a+90*b" }, "cy": 190, "r": 7 },
+    { "id": "title", "type": "text", "x": 30, "y": 25, "text": "Matrix maps basis and square", "fontSize": 17 },
+    { "id": "shearLabel", "type": "text", "x": 40, "y": 55, "text": "shear b slides e2 sideways", "fontSize": 12 },
+    { "id": "columnsLabel", "type": "text", "x": 330, "y": 45, "text": "columns = images of e1, e2", "fontSize": 12 },
+    { "id": "detLabel", "type": "text", "x": 410, "y": 320, "text": "det = a; area scales by |a|", "fontSize": 12 }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": { "primitive": "cornerProbe", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 6 },
+          { "at": 4, "value": 9 },
+          { "at": 8, "value": 6 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "aControl", "kind": "slider", "propertyId": "a", "label": "Matrix entry a" },
+    { "id": "bControl", "kind": "slider", "propertyId": "b", "label": "Matrix entry b" }
+  ],
+  "checkpoints": [
+    { "id": "mt-columns", "at": 0.5, "title": "Columns are basis images", "body": "Set a to 1.4 and b to 0.6. The transformed e1 arrow ends at the first column (1.4, 0); the transformed e2 arrow ends at the second column (0.6, 1).", "pause": true, "learnerAction": "Set a to 1.4 and b to 0.6." },
+    { "id": "mt-shear", "at": 4, "title": "Shear moves e2", "body": "Set b to 0. The shear vanishes and the transformed shape becomes a rectangle, but its area scale is still a.", "pause": true, "learnerAction": "Set b to 0." },
+    { "id": "mt-area", "at": 7.5, "title": "Area scales by a", "body": "Set a to 2 and b to 0. The square is twice as wide, and det = 2, so its area doubles. Every corner still comes from the same matrix rule.", "pause": true, "learnerAction": "Set a to 2 and b to 0." }
+  ],
+  "narration": [
+    { "at": 0, "text": "The faint unit square and basis arrows show the original grid; the moving arrows are the matrix columns." },
+    { "at": 4, "text": "Changing b shears the second basis vector sideways, and every transformed corner follows." },
+    { "at": 7.5, "text": "Changing a stretches the first basis vector; the determinant tracks the area scale." }
+  ],
+  "fallback": {
+    "text": "The unit square and basis arrows are transformed by the matrix with columns (a, 0) and (b, 1). The transformed basis arrows end at those columns, and every corner follows the same map; determinant a gives the area scale."
+  },
+  "accessibility": {
+    "alt": "A unit square and two basis arrows at the origin, plus their transformed images under a shear-and-scale matrix. Sliders change entries a and b; transformed corners and basis arrows move together.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

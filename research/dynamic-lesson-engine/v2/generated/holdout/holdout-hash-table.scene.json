@@ -1,0 +1,282 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 720,
+    "height": 480,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Hash Table Collisions: Chaining in One Bucket",
+    "subject": "Computer Science",
+    "objective": "Show keys hashing to buckets and a collision being resolved.",
+    "learner": "Knows arrays and simple maps.",
+    "misconceptions": [
+      "A hash function never collides",
+      "Hash tables preserve insertion order"
+    ],
+    "expectedUnderstanding": [
+      "A fixed table size gives each key one bucket index",
+      "Different keys can share a bucket",
+      "Chaining resolves a collision without sorting the table"
+    ]
+  },
+  "properties": [
+    {
+      "id": "key",
+      "label": "Key to insert",
+      "min": 10,
+      "max": 30,
+      "step": 1,
+      "default": 18
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 42,
+      "text": "Hash table with 4 buckets: h(k) = k mod 4",
+      "fontSize": 22,
+      "fill": "#111827"
+    },
+    {
+      "id": "formula",
+      "type": "text",
+      "x": 40,
+      "y": 78,
+      "text": "Bucket index = k mod 4; an incoming key moves to its bucket.",
+      "fontSize": 15,
+      "fill": "#374151"
+    },
+    {
+      "id": "b0",
+      "type": "rect",
+      "x": 70,
+      "y": 180,
+      "width": 120,
+      "height": 95,
+      "fill": "#f8fafc",
+      "stroke": "#64748b",
+      "strokeWidth": 2
+    },
+    {
+      "id": "b1",
+      "type": "rect",
+      "x": 200,
+      "y": 180,
+      "width": 120,
+      "height": 95,
+      "fill": "#f8fafc",
+      "stroke": "#64748b",
+      "strokeWidth": 2
+    },
+    {
+      "id": "b2",
+      "type": "rect",
+      "x": 330,
+      "y": 180,
+      "width": 120,
+      "height": 95,
+      "fill": "#eff6ff",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "b3",
+      "type": "rect",
+      "x": 460,
+      "y": 180,
+      "width": 120,
+      "height": 95,
+      "fill": "#f8fafc",
+      "stroke": "#64748b",
+      "strokeWidth": 2
+    },
+    {
+      "id": "label0",
+      "type": "text",
+      "x": 114,
+      "y": 165,
+      "text": "b0",
+      "fontSize": 14,
+      "fill": "#475569"
+    },
+    {
+      "id": "label1",
+      "type": "text",
+      "x": 244,
+      "y": 165,
+      "text": "b1",
+      "fontSize": 14,
+      "fill": "#475569"
+    },
+    {
+      "id": "label2",
+      "type": "text",
+      "x": 374,
+      "y": 165,
+      "text": "b2",
+      "fontSize": 14,
+      "fill": "#1d4ed8"
+    },
+    {
+      "id": "label3",
+      "type": "text",
+      "x": 504,
+      "y": 165,
+      "text": "b3",
+      "fontSize": 14,
+      "fill": "#475569"
+    },
+    {
+      "id": "chain",
+      "type": "text",
+      "x": 352,
+      "y": 230,
+      "text": "10 -> 22",
+      "fontSize": 15,
+      "fill": "#92400e"
+    },
+    {
+      "id": "candidate",
+      "type": "circle",
+      "cx": {
+        "expr": "70 + (key - 4 * floor(key / 4)) * 130 + 60"
+      },
+      "cy": 320,
+      "r": 16,
+      "fill": "#fef3c7",
+      "stroke": "#b45309",
+      "strokeWidth": 2
+    },
+    {
+      "id": "candidateK",
+      "type": "text",
+      "x": {
+        "expr": "70 + (key - 4 * floor(key / 4)) * 130 + 60"
+      },
+      "y": 325,
+      "text": "k",
+      "fontSize": 13,
+      "anchor": "middle",
+      "fill": "#92400e"
+    },
+    {
+      "id": "insertArrow",
+      "type": "arrow",
+      "x1": {
+        "expr": "70 + (key - 4 * floor(key / 4)) * 130 + 60"
+      },
+      "y1": 302,
+      "x2": {
+        "expr": "70 + (key - 4 * floor(key / 4)) * 130 + 60"
+      },
+      "y2": 280,
+      "stroke": "#b45309",
+      "strokeWidth": 2
+    },
+    {
+      "id": "collisionNote",
+      "type": "text",
+      "x": 40,
+      "y": 392,
+      "text": "10 and 22 both hash to b2; an incoming key with h(k)=2 joins their chain.",
+      "fontSize": 14,
+      "fill": "#374151"
+    },
+    {
+      "id": "orderNote",
+      "type": "text",
+      "x": 40,
+      "y": 424,
+      "text": "Collisions are normal. Bucket order is not insertion order or sorted order.",
+      "fontSize": 14,
+      "fill": "#b91c1c"
+    }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "candidate",
+          "property": "r"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 16,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4,
+            "value": 19,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 8,
+            "value": 16,
+            "easing": "ease-in-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "keyControl",
+      "kind": "slider",
+      "propertyId": "key",
+      "label": "Drag the incoming key"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-hash",
+      "at": 1,
+      "title": "One key, one index",
+      "body": "For this four-bucket table, bucket index = k mod 4. Key 10 hashes to b2 and key 22 also hashes to b2. A fixed table size keeps the same key in the same bucket.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-collision",
+      "at": 3,
+      "title": "A collision is visible",
+      "body": "Keys 10 and 22 are different, but both land in b2. They are stored together as a chain. Drag the key slider: any incoming key with h(k)=2 joins the same chain.",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-order",
+      "at": 5,
+      "title": "Resolution is not sorting",
+      "body": "Chaining resolves the collision by keeping multiple entries in b2. The table is not sorted, and bucket order is not insertion order. Move k to 21 and watch the incoming token go to b1 instead.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "A four-bucket table uses h(k) = k mod 4."
+    },
+    {
+      "at": 3,
+      "text": "Keys 10 and 22 both land in bucket 2; that is a collision."
+    },
+    {
+      "at": 6,
+      "text": "Chaining keeps both in b2, while bucket order remains index order."
+    }
+  ],
+  "fallback": {
+    "text": "A hash table with four buckets assigns a key k to bucket k mod 4. Key 10 and key 22 both hash to bucket 2, so they collide. The collision is resolved by chaining: both distinct keys are stored together in bucket 2. The incoming key slider shows a third key moving to its bucket; when its residue is 2 it joins the chain. Chaining does not sort the table, and bucket order does not preserve insertion order. A collision is normal and does not mean the hash function failed."
+  },
+  "accessibility": {
+    "alt": "A four-bucket hash table with keys 10 and 22 chained in bucket 2. A slider moves an incoming key token labeled k to bucket k mod 4; when the residue is 2 it joins bucket 2.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

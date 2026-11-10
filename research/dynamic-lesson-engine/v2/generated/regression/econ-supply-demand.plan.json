@@ -1,0 +1,9 @@
+{
+  "representation": "Price-quantity axes with a fixed downward-sloping demand line and an upward-sloping supply line whose horizontal position is controlled by a slider. A dashed ghost supply line marks the original position.",
+  "entities": ["price axis", "quantity axis", "demand curve", "current supply curve", "original supply ghost", "equilibrium dot and dashed guides", "shift-versus-movement note"],
+  "motion": "Moving the supply slider shifts the green supply line; the equilibrium dot slides along the fixed demand line, and the dashed guides follow it.",
+  "controls": ["slider for supply shift from -2 to +2 units"],
+  "checkpoints": ["initial equilibrium", "supply shift leaves demand fixed", "curve shift versus movement along a curve", "equilibrium as a quantity balance", "read the new price-quantity pair"],
+  "misconceptionTest": "The demand curve stays fixed when supply shifts, so a price change is not what shifted demand. The moving equilibrium shows a change in quantity demanded, not a demand shift. Equilibrium is a balance of plans, not a promise that everyone can buy at any price.",
+  "accessibility": "Alt text, labeled axes and curves, keyboard slider, high-contrast equilibrium dot, and dashed guides that are also described in text."
+}

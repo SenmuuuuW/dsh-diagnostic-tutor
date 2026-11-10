@@ -1,0 +1,292 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 720,
+    "height": 560,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Doppler Effect: Motion Compresses Wavefronts",
+    "subject": "Physics",
+    "objective": "Show why observed frequency changes when a source moves relative to an observer.",
+    "learner": "Knows wave frequency and wavelength qualitatively.",
+    "misconceptions": [
+      "The source emits a different frequency when moving",
+      "Only loudness changes"
+    ],
+    "expectedUnderstanding": [
+      "The source keeps its rest frequency",
+      "Wavefronts are closer on the side the source approaches",
+      "The observer on the compressed side measures a higher frequency"
+    ]
+  },
+  "properties": [
+    {
+      "id": "speed",
+      "label": "Source speed",
+      "min": 0,
+      "max": 0.5,
+      "step": 0.05,
+      "default": 0.4,
+      "unit": "c"
+    },
+    {
+      "id": "direction",
+      "label": "Direction (right is positive)",
+      "min": -1,
+      "max": 1,
+      "step": 1,
+      "default": 1
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 42,
+      "text": "Doppler effect: the source frequency does not change",
+      "fontSize": 22,
+      "fill": "#111827"
+    },
+    {
+      "id": "formula",
+      "type": "text",
+      "x": 40,
+      "y": 74,
+      "text": "Approaching: f_obs > f0; receding: f_obs < f0",
+      "fontSize": 15,
+      "fill": "#374151"
+    },
+    {
+      "id": "wave1",
+      "type": "circle",
+      "cx": {
+        "expr": "320 - direction * speed * 40"
+      },
+      "cy": 240,
+      "r": 40,
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 2
+    },
+    {
+      "id": "wave2",
+      "type": "circle",
+      "cx": {
+        "expr": "320 - direction * speed * 80"
+      },
+      "cy": 240,
+      "r": 80,
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 2
+    },
+    {
+      "id": "wave3",
+      "type": "circle",
+      "cx": {
+        "expr": "320 - direction * speed * 120"
+      },
+      "cy": 240,
+      "r": 120,
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 2
+    },
+    {
+      "id": "wave4",
+      "type": "circle",
+      "cx": {
+        "expr": "320 - direction * speed * 160"
+      },
+      "cy": 240,
+      "r": 160,
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 2
+    },
+    {
+      "id": "source",
+      "type": "circle",
+      "cx": 320,
+      "cy": 240,
+      "r": 8,
+      "fill": "#111827",
+      "stroke": "#ffffff",
+      "strokeWidth": 2
+    },
+    {
+      "id": "sourceLabel",
+      "type": "text",
+      "x": 282,
+      "y": 274,
+      "text": "source, f0",
+      "fontSize": 14,
+      "fill": "#111827"
+    },
+    {
+      "id": "observerR",
+      "type": "circle",
+      "cx": 400,
+      "cy": 240,
+      "r": 7,
+      "fill": "#be123c"
+    },
+    {
+      "id": "observerRLabel",
+      "type": "text",
+      "x": 372,
+      "y": 286,
+      "text": "Observer R",
+      "fontSize": 13,
+      "fill": "#be123c"
+    },
+    {
+      "id": "observerL",
+      "type": "circle",
+      "cx": 240,
+      "cy": 240,
+      "r": 7,
+      "fill": "#be123c"
+    },
+    {
+      "id": "observerLLabel",
+      "type": "text",
+      "x": 210,
+      "y": 286,
+      "text": "Observer L",
+      "fontSize": 13,
+      "fill": "#be123c"
+    },
+    {
+      "id": "motionArrow",
+      "type": "arrow",
+      "x1": 320,
+      "y1": 440,
+      "x2": {
+        "expr": "320 + direction * speed * 160"
+      },
+      "y2": 440,
+      "stroke": "#111827",
+      "strokeWidth": 3
+    },
+    {
+      "id": "motionLabel",
+      "type": "text",
+      "x": 280,
+      "y": 470,
+      "text": "source velocity",
+      "fontSize": 14,
+      "fill": "#111827"
+    },
+    {
+      "id": "spacingNote",
+      "type": "text",
+      "x": 40,
+      "y": 505,
+      "text": "Wavefronts bunch on the side of motion, raising observed frequency there.",
+      "fontSize": 14,
+      "fill": "#374151"
+    },
+    {
+      "id": "restNote",
+      "type": "text",
+      "x": 40,
+      "y": 532,
+      "text": "The source emits at its rest frequency f0; only the observed frequency changes.",
+      "fontSize": 14,
+      "fill": "#374151"
+    }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "source",
+          "property": "r"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 8,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4,
+            "value": 11,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 8,
+            "value": 8,
+            "easing": "ease-in-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "speedControl",
+      "kind": "slider",
+      "propertyId": "speed",
+      "label": "Speed as a fraction of wave speed"
+    },
+    {
+      "id": "directionControl",
+      "kind": "slider",
+      "propertyId": "direction",
+      "label": "Move left or right"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-emission",
+      "at": 1,
+      "title": "Emission stays at f0",
+      "body": "The source emits crests at its rest frequency f0. Moving through the medium does not change the emission rate.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-compression",
+      "at": 3,
+      "title": "Compression ahead",
+      "body": "The circles are closer together on the side the source moves toward. An observer there receives crests more often, so f_obs is higher.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-direction",
+      "at": 5,
+      "title": "Direction matters",
+      "body": "Reverse the direction. The compressed side swaps, so the observer hearing the higher frequency swaps too. The source still emits f0.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The source moves through the medium while emitting circular wavefronts."
+    },
+    {
+      "at": 3,
+      "text": "Wavefronts bunch on the side of motion and spread on the other side."
+    },
+    {
+      "at": 6,
+      "text": "The observer on the compressed side measures a higher frequency, but the source still emits f0."
+    }
+  ],
+  "fallback": {
+    "text": "A source emits circular wavefronts at a fixed rest frequency f0. As it moves, older wavefront centers fall behind the source, so circles are compressed on the side of motion and stretched on the opposite side. The observer on the compressed side receives more crests per second and measures a higher frequency; reversing direction swaps which observer hears the higher frequency."
+  },
+  "accessibility": {
+    "alt": "A moving source labeled f0 inside four wavefront circles, with left and right observers. Circles bunch on the side of motion. Sliders change speed and direction.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

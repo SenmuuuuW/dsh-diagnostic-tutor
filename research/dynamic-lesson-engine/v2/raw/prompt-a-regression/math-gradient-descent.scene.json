@@ -1,0 +1,74 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 640, "height": 360 },
+  "metadata": {
+    "title": "Gradient Descent Step",
+    "subject": "Mathematics",
+    "objective": "Let a learner who knows algebra but not calculus see why a step goes opposite the gradient.",
+    "learner": "Basic algebra; no calculus.",
+    "misconceptions": [
+      "A larger learning rate is always better",
+      "The gradient points downhill"
+    ],
+    "expectedUnderstanding": [
+      "The step direction opposes the local gradient",
+      "The step length is scaled by the learning rate",
+      "A larger step can overshoot and increase the cost"
+    ]
+  },
+  "properties": [
+    { "id": "rate", "label": "Learning rate", "min": 0.05, "max": 1.2, "step": 0.05, "default": 0.25 }
+  ],
+  "primitives": [
+    { "id": "xAxis", "type": "line", "x1": 80, "y1": 260, "x2": 540, "y2": 260 },
+    { "id": "yAxis", "type": "line", "x1": 300, "y1": 40, "x2": 300, "y2": 330 },
+    { "id": "parabola", "type": "path", "d": "M 156 30 L 180 100 L 204 158 L 228 202 L 252 234 L 276 254 L 300 260 L 324 254 L 348 234 L 372 202 L 396 158 L 420 100 L 444 30" },
+    { "id": "currentPoint", "type": "circle", "cx": 396, "cy": 157.6, "r": 7 },
+    { "id": "tangent", "type": "line", "x1": 360, "y1": 234, "x2": 444, "y2": 55 },
+    { "id": "stepArrow", "type": "arrow", "x1": 396, "y1": 157.6, "x2": { "expr": "300+60*(1.6-3.2*rate)" }, "y2": 157.6 },
+    { "id": "dropLine", "type": "line", "x1": { "expr": "300+60*(1.6-3.2*rate)" }, "y1": 157.6, "x2": { "expr": "300+60*(1.6-3.2*rate)" }, "y2": { "expr": "260-40*(1.6-3.2*rate)*(1.6-3.2*rate)" } },
+    { "id": "nextPoint", "type": "circle", "cx": { "expr": "300+60*(1.6-3.2*rate)" }, "cy": { "expr": "260-40*(1.6-3.2*rate)*(1.6-3.2*rate)" }, "r": 7 },
+    { "id": "title", "type": "text", "x": 30, "y": 25, "text": "Gradient descent: step opposite the slope", "fontSize": 17 },
+    { "id": "slopeLabel", "type": "text", "x": 448, "y": 118, "text": "slope = +3.2", "fontSize": 12 },
+    { "id": "stepLabel", "type": "text", "x": 210, "y": 335, "text": "step = rate x 3.2, leftward", "fontSize": 12 },
+    { "id": "currentLabel", "type": "text", "x": 405, "y": 145, "text": "current point", "fontSize": 12 },
+    { "id": "minimumLabel", "type": "text", "x": 286, "y": 280, "text": "minimum", "fontSize": 12 },
+    { "id": "xLabel", "type": "text", "x": 525, "y": 278, "text": "x", "fontSize": 12 },
+    { "id": "functionLabel", "type": "text", "x": 306, "y": 45, "text": "f(x)", "fontSize": 12 },
+    { "id": "overshootLabel", "type": "text", "x": 352, "y": 335, "text": "larger rate can overshoot", "fontSize": 12 }
+  ],
+  "timeline": {
+    "duration": 10,
+    "tracks": [
+      {
+        "target": { "primitive": "nextPoint", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 7 },
+          { "at": 5, "value": 9 },
+          { "at": 10, "value": 7 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "rateControl", "kind": "slider", "propertyId": "rate", "label": "Learning rate" }
+  ],
+  "checkpoints": [
+    { "id": "gd-small", "at": 0.5, "title": "Small step", "body": "Set the rate to 0.15. The arrow is short and the next point is still to the right of the minimum.", "pause": true, "learnerAction": "Set learning rate to 0.15." },
+    { "id": "gd-exact", "at": 5, "title": "Landing on the minimum", "body": "Set the rate to 0.5. The step is 1.6 - 0.5 x 3.2 = 0, so the next point lands at the minimum.", "pause": true, "learnerAction": "Set learning rate to 0.5." },
+    { "id": "gd-over", "at": 9.5, "title": "Overshoot", "body": "Set the rate to 1.2. The step overshoots to negative x, and the next point is higher than the starting point: a bigger step is not always better.", "pause": true, "learnerAction": "Set learning rate to 1.2." }
+  ],
+  "narration": [
+    { "at": 0, "text": "The tangent has positive slope, so the gradient points uphill to the right. The step arrow points left." },
+    { "at": 5, "text": "At rate 0.5 the step lands exactly at the minimum." },
+    { "at": 9.5, "text": "At a large rate the step overshoots; the new point climbs the other side of the parabola." }
+  ],
+  "fallback": {
+    "text": "At the marked point the slope is positive, so the gradient points uphill to the right. A gradient-descent step moves left, scaled by the learning rate. Rate 0.5 lands at the minimum; a larger rate overshoots and can raise the cost."
+  },
+  "accessibility": {
+    "alt": "A parabola with a marked point on its right branch, a positive tangent, and a leftward step arrow whose length grows with the learning-rate slider; a vertical line projects the updated point onto the curve.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

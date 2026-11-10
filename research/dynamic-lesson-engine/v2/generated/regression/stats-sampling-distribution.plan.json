@@ -1,0 +1,9 @@
+{
+  "representation": "A fixed row of population observations around a dashed population mean, plus a shaded band and three orange sample means around the same center. Band width and sample-mean spacing scale as 1/sqrt(n).",
+  "entities": ["population observation dots", "population mean line", "three sample means", "shaded spread band", "sample-size slider"],
+  "motion": "Increasing n narrows the shaded band and pulls the three sample means toward the population mean; the individual observation dots do not move.",
+  "controls": ["slider for sample size n from 1 to 36"],
+  "checkpoints": ["population versus sample means", "larger n narrows the spread", "individual observations are not pulled in", "sample means center near the population mean", "sampling distribution differs from population distribution"],
+  "misconceptionTest": "The top population dots stay fixed at every n, so a larger sample does not make each observation closer to the mean. The bottom objects are sample means, not individual observations, and their clustering is the sampling distribution rather than the population distribution.",
+  "accessibility": "Alt text, keyboard slider, distinct shapes and colors for observations versus sample means, and a textual summary of centering and spread."
+}

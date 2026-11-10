@@ -1,0 +1,110 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 900, "height": 560 },
+  "metadata": {
+    "title": "Electric Field of Two Point Charges",
+    "subject": "Physics",
+    "objective": "Show the electric field of one or two point charges as direction and magnitude.",
+    "learner": "Knows positive and negative charge attracts/repels.",
+    "misconceptions": [
+      "Field is the same as force on every test charge",
+      "Field lines cross"
+    ],
+    "expectedUnderstanding": [
+      "Electric field points away from a positive charge and toward a negative charge.",
+      "The field magnitude from a point charge decreases with distance squared.",
+      "The net field is the vector sum of the contributions from both charges.",
+      "Field is force per unit charge; a negative test charge feels force opposite the field.",
+      "Distinct electric field lines never cross."
+    ]
+  },
+  "properties": [
+    { "id": "testy", "label": "test point height", "min": 100, "max": 500, "step": 5, "default": 440, "unit": "px" }
+  ],
+  "primitives": [
+    { "id": "chargePlus", "type": "circle", "cx": 300, "cy": 280, "r": 26, "fill": "#dbeafe", "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "chargeMinus", "type": "circle", "cx": 600, "cy": 280, "r": 26, "fill": "#ffedd5", "stroke": "#b45309", "strokeWidth": 3 },
+    { "id": "centreLine", "type": "line", "x1": 450, "y1": 90, "x2": 450, "y2": 510, "stroke": "#94a3b8", "strokeWidth": 2, "dash": "5 5" },
+    { "id": "testPoint", "type": "circle", "cx": 450, "cy": { "expr": "testy" }, "r": 8, "fill": "#ffffff", "stroke": "#0f172a", "strokeWidth": 2 },
+    { "id": "testField", "type": "arrow", "x1": 450, "y1": { "expr": "testy" }, "x2": { "expr": "450 + 2025000/(22500 + (testy-280)*(testy-280))" }, "y2": { "expr": "testy" }, "stroke": "#b91c1c", "strokeWidth": 3 },
+    { "id": "posUp", "type": "arrow", "x1": 300, "y1": 210, "x2": 300, "y2": 145, "stroke": "#1d4ed8", "strokeWidth": 2 },
+    { "id": "posLeft", "type": "arrow", "x1": 238, "y1": 280, "x2": 168, "y2": 280, "stroke": "#1d4ed8", "strokeWidth": 2 },
+    { "id": "posDown", "type": "arrow", "x1": 300, "y1": 350, "x2": 300, "y2": 415, "stroke": "#1d4ed8", "strokeWidth": 2 },
+    { "id": "negUp", "type": "arrow", "x1": 600, "y1": 145, "x2": 600, "y2": 240, "stroke": "#b45309", "strokeWidth": 2 },
+    { "id": "negRight", "type": "arrow", "x1": 675, "y1": 280, "x2": 635, "y2": 280, "stroke": "#b45309", "strokeWidth": 2 },
+    { "id": "negDown", "type": "arrow", "x1": 600, "y1": 415, "x2": 600, "y2": 320, "stroke": "#b45309", "strokeWidth": 2 },
+    { "id": "plusLabel", "type": "text", "x": 292, "y": 291, "text": "+", "fontSize": 26, "fill": "#1e3a8a" },
+    { "id": "minusLabel", "type": "text", "x": 593, "y": 291, "text": "-", "fontSize": 26, "fill": "#9a3412" },
+    { "id": "eLabel", "type": "text", "x": { "expr": "458 + 2025000/(22500 + (testy-280)*(testy-280))" }, "y": { "expr": "testy - 16" }, "text": "E", "fontSize": 16, "fill": "#b91c1c" },
+    { "id": "definition", "type": "text", "x": 80, "y": 530, "text": "E is force per unit positive test charge", "fontSize": 14, "fill": "#111827" },
+    { "id": "note", "type": "text", "x": 80, "y": 55, "text": "arrows near each charge show its contribution; E is the net field on the centre line", "fontSize": 13, "fill": "#111827" }
+  ],
+  "timeline": {
+    "duration": 9,
+    "tracks": [
+      {
+        "target": { "primitive": "testPoint", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 8 },
+          { "at": 1, "value": 11 },
+          { "at": 2, "value": 8 },
+          { "at": 6, "value": 8 },
+          { "at": 7, "value": 11 },
+          { "at": 8, "value": 8 },
+          { "at": 9, "value": 8 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "testSlider", "kind": "slider", "propertyId": "testy", "label": "test point height" }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp1",
+      "at": 0.2,
+      "title": "The arrow is E, not a force",
+      "body": "The dot on the vertical centre line can move. The arrow starting there is the electric field E, the force per unit positive test charge. A negative test charge would feel a force opposite E; the field itself would stay the same.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp2",
+      "at": 2.4,
+      "title": "Field strength falls with distance",
+      "body": "Move the dot toward the charges and the E arrow grows; move it far above or below and the arrow shrinks. For point charges the field magnitude decreases with the square of distance.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp3",
+      "at": 4.8,
+      "title": "Two contributions add as vectors",
+      "body": "The positive charge pushes field arrows away; the negative charge pulls them in. At the centre-line dot the horizontal components add while the vertical components cancel by symmetry, so the net arrow points right.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp4",
+      "at": 7,
+      "title": "Sample vectors, not crossing field lines",
+      "body": "The short arrows mark the field at separate sample points; they are not continuous field lines. Distinct field lines cannot cross, because that would make the field point in two directions at one location.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    { "at": 0, "text": "A positive and a negative charge create a field; short arrows show its local direction." },
+    { "at": 2.5, "text": "On the centre line the net field points from the positive charge toward the negative charge." },
+    { "at": 5, "text": "The test dot moves along the centre line, and its field arrow shortens as distance increases." },
+    { "at": 7.2, "text": "The field is force per unit charge; field lines themselves never cross." }
+  ],
+  "fallback": {
+    "text": "A positive charge sits on the left and a negative charge on the right. Short arrows point away from the positive charge and toward the negative charge. A test dot moves up and down the perpendicular centre line. At every point on that line the horizontal field contributions add and the vertical contributions cancel, so the net field arrow points to the right. Its length is largest near the charges and shrinks with distance squared. E is force per unit positive test charge; a negative test charge would feel force opposite E. The sample arrows are not continuous field lines, and distinct field lines cannot cross."
+  },
+  "accessibility": {
+    "alt": "A positive and a negative charge with arrows pointing away from the positive and toward the negative charge. A test dot on the centre line moves vertically; its net field arrow points right and shortens with distance.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

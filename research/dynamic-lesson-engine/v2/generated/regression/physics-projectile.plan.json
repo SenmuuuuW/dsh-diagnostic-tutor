@@ -1,0 +1,9 @@
+{
+  "representation": "A level launch point with a dot trajectory at the slider angle and a ring trajectory at the complementary angle, plotted on shared height and range axes.",
+  "entities": ["ground", "height axis", "launch point", "angle-theta arc", "complementary arc", "apex dot", "apex ring", "range and height labels"],
+  "motion": "Both arcs recompute continuously as the angle slider moves; replay pulses the angle arc's apex marker.",
+  "controls": ["launch-angle slider"],
+  "checkpoints": ["complementary angles share a range", "45 degrees is farthest only for level launch and landing", "maximum height and range trade off", "horizontal speed does not change downward acceleration"],
+  "misconceptionTest": "The complementary arc keeps the same landing range while its height differs, and a label plus checkpoint states that 45 degrees is the maximum only when launch and landing heights match; gravity is described as the same downward g for every angle.",
+  "accessibility": "Alt text; keyboard-operable slider; dot and ring markers plus text labels identify the arcs without relying on color."
+}

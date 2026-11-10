@@ -1,0 +1,9 @@
+{
+  "representation": "A vertical five-slot call stack labeled f(4) down to f(0); frames appear on the way down and disappear on the way back, with return values written into the surviving frames.",
+  "entities": ["five stack frame slots", "frame labels f(4) to f(0)", "top marker", "status line", "return value line", "code reminder"],
+  "motion": "A frame appears below the current top on each call, the top marker moves down; on each return the bottom frame disappears and the new top frame's label records its return value.",
+  "controls": ["state timeline with pause/continue checkpoints; no numeric slider"],
+  "checkpoints": ["descent is sequential, not simultaneous", "base case f(0) is reached last in the descent", "returns unwind in LIFO order", "final value is 24"],
+  "misconceptionTest": "The frames are pushed one at a time and only one top frame is active; the status says callers wait. The base case appears after all four recursive calls, not first. Pop order is f(0), f(1), f(2), f(3), f(4).",
+  "accessibility": "Alt text; keyboard play/pause and checkpoints; each frame is labeled with its call and return value in text, and LIFO order is written in the note."
+}

@@ -1,0 +1,28 @@
+{
+  "representation": "A population bar for 1,000 people, a positive-test bar split into true-positive and false-positive shares, and a posterior bar with a 50% reference marker.",
+  "entities": [
+    "population bar",
+    "diseased segment",
+    "true-positive segment",
+    "false-positive segment",
+    "posterior bar",
+    "50% reference marker",
+    "formula and rate notes"
+  ],
+  "motion": [
+    "prevalence changes the diseased and false-positive widths",
+    "sensitivity changes the true-positive share and posterior",
+    "the 50% marker pulses as a fixed reference"
+  ],
+  "controls": [
+    "prevalence slider from 1% to 20%",
+    "sensitivity slider from 50% to 100%"
+  ],
+  "checkpoints": [
+    "count true and false positives",
+    "base rate changes the posterior",
+    "read the posterior rather than sensitivity"
+  ],
+  "misconceptionTest": "At low prevalence the posterior stays far below 50% and below sensitivity, even at 90% sensitivity, because many false positives enter the positive-test bar. This tests both 'positive means very likely' and 'base rate does not matter'.",
+  "accessibility": "Rows are named with text, TP and FP are identified by position and text, the 50% marker is labeled, sliders are keyboard accessible, and alt text summarizes the count relationship."
+}

@@ -1,0 +1,27 @@
+{
+  "representation": "A five-element array drawn as labeled vertical bars, with a pivot arrow and discrete partition states that reorder the bars and reveal the left and right recursive parts.",
+  "entities": [
+    "five value bars labeled 5, 3, 8, 1, 2",
+    "pivot arrow",
+    "instruction line",
+    "left-part and right-part labels",
+    "split-shape note"
+  ],
+  "motion": [
+    "state timeline selects pivot, scan, partition and recurse steps",
+    "bars move to new index positions between states",
+    "pivot arrow follows the pivot bar"
+  ],
+  "controls": [
+    "step through checkpoints with continue"
+  ],
+  "checkpoints": [
+    "pivot chosen",
+    "scan comparison",
+    "partition complete",
+    "recurse on unequal parts",
+    "partition is not a full sort"
+  ],
+  "misconceptionTest": "The final left part has three elements and the right part has one, so the split is not half; the array [3,1,2,5,8] is still not sorted, so partitioning did not sort everything.",
+  "accessibility": "Array values are text labels, the pivot is marked by an arrow and instruction text, parts are named in text, state changes are also described in checkpoints, and no color-only cue is required."
+}

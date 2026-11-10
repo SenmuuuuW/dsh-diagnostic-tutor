@@ -1,0 +1,71 @@
+{
+  "version": "0.1",
+  "viewport": {"width": 760, "height": 430, "background": "#f8fafc"},
+  "metadata": {
+    "title": "Supply, Demand and Equilibrium",
+    "subject": "Economics",
+    "objective": "Show equilibrium where supply and demand intersect and how a supply shift moves it.",
+    "learner": "Can read a simple x-y graph.",
+    "misconceptions": [
+      "A price change shifts the demand curve",
+      "Equilibrium means everyone can buy at any price"
+    ],
+    "expectedUnderstanding": [
+      "Demand slopes down and supply slopes up in the simple model.",
+      "The intersection is the equilibrium price-quantity pair.",
+      "A supply shift moves equilibrium along the fixed demand curve.",
+      "A shift of a curve is different from movement along a curve."
+    ]
+  },
+  "properties": [
+    {"id": "s", "label": "Supply shift", "min": -2, "max": 2, "step": 0.5, "default": 1, "unit": "units"}
+  ],
+  "primitives": [
+    {"id": "axisX", "type": "line", "x1": 90, "y1": 350, "x2": 690, "y2": 350, "stroke": "#94a3b8", "strokeWidth": 1.5},
+    {"id": "axisY", "type": "line", "x1": 90, "y1": 70, "x2": 90, "y2": 350, "stroke": "#94a3b8", "strokeWidth": 1.5},
+    {"id": "demand", "type": "line", "x1": 150, "y1": 80, "x2": 500, "y2": 340, "stroke": "#2563eb", "strokeWidth": 3},
+    {"id": "supplyOld", "type": "line", "x1": 180, "y1": 340, "x2": 520, "y2": 80, "stroke": "#94a3b8", "strokeWidth": 2, "dash": "6 5"},
+    {"id": "supplyNew", "type": "line", "x1": {"expr": "180 + 30*s"}, "y1": 340, "x2": {"expr": "520 + 30*s"}, "y2": 80, "stroke": "#059669", "strokeWidth": 3},
+    {"id": "eqGuideX", "type": "line", "x1": {"expr": "337.68 + 15.217*s"}, "y1": {"expr": "219.42 + 11.30*s"}, "x2": {"expr": "337.68 + 15.217*s"}, "y2": 350, "stroke": "#94a3b8", "strokeWidth": 1.5, "dash": "5 4"},
+    {"id": "eqGuideY", "type": "line", "x1": 90, "y1": {"expr": "219.42 + 11.30*s"}, "x2": {"expr": "337.68 + 15.217*s"}, "y2": {"expr": "219.42 + 11.30*s"}, "stroke": "#94a3b8", "strokeWidth": 1.5, "dash": "5 4"},
+    {"id": "eqDot", "type": "circle", "cx": {"expr": "337.68 + 15.217*s"}, "cy": {"expr": "219.42 + 11.30*s"}, "r": 7, "fill": "#f59e0b", "stroke": "#ffffff", "strokeWidth": 2},
+    {"id": "eqLabel", "type": "text", "x": {"expr": "349.68 + 15.217*s"}, "y": {"expr": "207.42 + 11.30*s"}, "text": "E = equilibrium", "fontSize": 14, "fill": "#92400e"},
+    {"id": "moveArrow", "type": "arrow", "x1": 337.68, "y1": 219.42, "x2": {"expr": "337.68 + 15.217*s"}, "y2": {"expr": "219.42 + 11.30*s"}, "stroke": "#f59e0b", "strokeWidth": 2.5},
+    {"id": "demandLabel", "type": "text", "x": 455, "y": 322, "text": "Demand D", "fontSize": 14, "fill": "#1d4ed8"},
+    {"id": "supplyLabel", "type": "text", "x": {"expr": "520 + 30*s"}, "y": 68, "text": "Supply S", "fontSize": 14, "fill": "#047857"},
+    {"id": "priceLabel", "type": "text", "x": 40, "y": 78, "text": "Price", "fontSize": 14, "fill": "#475569"},
+    {"id": "quantityLabel", "type": "text", "x": 580, "y": 380, "text": "Quantity", "fontSize": 14, "fill": "#475569"},
+    {"id": "shiftNote", "type": "text", "x": 380, "y": 42, "text": "Dashed S = old supply; E slides along D", "fontSize": 13, "fill": "#475569"},
+    {"id": "movementNote", "type": "text", "x": 100, "y": 405, "text": "A price change moves along D; shifting S moves the whole curve.", "fontSize": 13, "fill": "#7f1d1d"}
+  ],
+  "timeline": {
+    "duration": 14,
+    "tracks": [
+      {"target": {"primitive": "eqDot", "property": "r"}, "keyframes": [{"at": 0, "value": 7}, {"at": 3, "value": 9, "easing": "easeInOut"}, {"at": 7, "value": 7}, {"at": 10, "value": 9, "easing": "easeInOut"}, {"at": 14, "value": 7}]}
+    ]
+  },
+  "controls": [
+    {"id": "supplyShift", "kind": "slider", "propertyId": "s", "label": "Shift supply and watch equilibrium"}
+  ],
+  "checkpoints": [
+    {"id": "cp0", "at": 1, "title": "Start at equilibrium", "body": "Demand slopes down and supply slopes up. Their intersection E is the only price-quantity pair at which the quantity buyers plan to buy equals the quantity sellers plan to sell.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp1", "at": 4, "title": "Shift supply, not demand", "body": "Move the supply slider. The green supply curve shifts while the blue demand curve stays fixed. A shift of supply is a change in selling plans at every price, not a reaction to a price change.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp2", "at": 7, "title": "Shift versus movement", "body": "As supply shifts, E slides along the fixed demand curve. That slide is movement along demand caused by the new price. Demand itself does not shift merely because price changed.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp3", "at": 10, "title": "Equilibrium is a balance", "body": "At E, quantities supplied and demanded agree. This does not mean everyone can buy at any price: at a higher price, buyers would demand less even though sellers would offer more.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp4", "at": 13, "title": "Read the new pair", "body": "A rightward supply shift lowers the equilibrium price and raises the equilibrium quantity. Follow the dashed guides to the axes: price on the vertical axis, quantity on the horizontal axis.", "pause": true, "learnerAction": "continue"}
+  ],
+  "narration": [
+    {"at": 0, "text": "Demand slopes down and supply slopes up; their crossing is equilibrium."},
+    {"at": 3.5, "text": "Shift supply and watch the equilibrium dot slide along the fixed demand curve."},
+    {"at": 7, "text": "A shift moves the whole curve; a price change moves you along a curve."},
+    {"at": 10.5, "text": "Equilibrium balances planned buying and selling, but it is not universal affordability."}
+  ],
+  "fallback": {
+    "text": "A price-quantity graph shows demand sloping down and supply sloping up. Their intersection E is equilibrium: the price at which quantity demanded equals quantity supplied. The slider shifts supply horizontally while demand stays fixed. A rightward supply shift moves E down along demand to a lower price and higher quantity; a leftward shift moves E up along demand. A change in price alone moves along a curve, but a change in a non-price determinant shifts the whole curve. Equilibrium is a balance of plans, not a guarantee that every buyer can buy at any price."
+  },
+  "accessibility": {
+    "alt": "A price-quantity graph: demand slopes down and supply slopes up. A slider shifts supply, leaving a dashed original supply. The equilibrium dot and dashed guides slide down along demand as supply shifts right.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

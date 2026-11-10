@@ -1,0 +1,9 @@
+{
+  "representation": "A sorted five-cell array with low, mid and high tags, plus fading of discarded cells after each comparison.",
+  "entities": ["five sorted cells and values", "low tag", "mid tag", "high tag", "target label", "status line", "sorted-array note"],
+  "motion": "Tags jump to the new bounds after each comparison; discarded cells and their labels fade, while the target label stays fixed.",
+  "controls": ["state timeline with pause/continue checkpoints; no numeric slider"],
+  "checkpoints": ["sorted-array requirement", "left half discarded", "midpoint 9 and 14 are not the target", "termination at low equals high"],
+  "misconceptionTest": "The first midpoint is 9 and the second is 14, not the target 23, so midpoint does not imply answer. A checkpoint explains that fading a half is valid only because the array is sorted.",
+  "accessibility": "Alt text; keyboard play/pause and checkpoints; excluded cells fade but are also named in the status line, and low, mid and high are text labels rather than colors alone."
+}

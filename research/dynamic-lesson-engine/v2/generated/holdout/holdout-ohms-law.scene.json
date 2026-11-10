@@ -1,0 +1,282 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 720,
+    "height": 560,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Ohm's Law in a Series Circuit",
+    "subject": "Physics",
+    "objective": "Show the relationship among voltage, resistance and current in a simple series circuit.",
+    "learner": "Knows basic multiplication.",
+    "misconceptions": [
+      "Current is used up by a resistor",
+      "Voltage and current are the same quantity"
+    ],
+    "expectedUnderstanding": [
+      "Current is voltage divided by resistance",
+      "At fixed resistance, current is proportional to voltage",
+      "At fixed voltage, current is inversely proportional to resistance"
+    ]
+  },
+  "properties": [
+    {
+      "id": "voltage",
+      "label": "Voltage",
+      "min": 1,
+      "max": 12,
+      "step": 0.5,
+      "default": 6,
+      "unit": "V"
+    },
+    {
+      "id": "resistance",
+      "label": "Resistance",
+      "min": 1,
+      "max": 10,
+      "step": 0.5,
+      "default": 3,
+      "unit": "ohm"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 42,
+      "text": "Ohm's law: V = I R",
+      "fontSize": 22,
+      "fill": "#111827"
+    },
+    {
+      "id": "source",
+      "type": "rect",
+      "x": 100,
+      "y": 210,
+      "width": 60,
+      "height": 80,
+      "fill": "#f3f4f6",
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "sourceLabel",
+      "type": "text",
+      "x": 84,
+      "y": 306,
+      "text": "V (volts)",
+      "fontSize": 14,
+      "fill": "#111827"
+    },
+    {
+      "id": "resistor",
+      "type": "rect",
+      "x": 310,
+      "y": 130,
+      "width": 110,
+      "height": 40,
+      "fill": "#fef3c7",
+      "stroke": "#92400e",
+      "strokeWidth": 2
+    },
+    {
+      "id": "resistorLabel",
+      "type": "text",
+      "x": 300,
+      "y": 116,
+      "text": "R (ohms)",
+      "fontSize": 14,
+      "fill": "#92400e"
+    },
+    {
+      "id": "topWire",
+      "type": "line",
+      "x1": 140,
+      "y1": 150,
+      "x2": 560,
+      "y2": 150,
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "rightWire",
+      "type": "line",
+      "x1": 560,
+      "y1": 150,
+      "x2": 560,
+      "y2": 350,
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "bottomWire",
+      "type": "line",
+      "x1": 560,
+      "y1": 350,
+      "x2": 140,
+      "y2": 350,
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "leftUpperWire",
+      "type": "line",
+      "x1": 140,
+      "y1": 150,
+      "x2": 140,
+      "y2": 210,
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "leftLowerWire",
+      "type": "line",
+      "x1": 140,
+      "y1": 290,
+      "x2": 140,
+      "y2": 350,
+      "stroke": "#111827",
+      "strokeWidth": 2
+    },
+    {
+      "id": "currentArrow",
+      "type": "arrow",
+      "x1": 520,
+      "y1": 390,
+      "x2": {
+        "expr": "510 - 25 * voltage / resistance"
+      },
+      "y2": 390,
+      "stroke": "#1d4ed8",
+      "strokeWidth": 3
+    },
+    {
+      "id": "currentLabel",
+      "type": "text",
+      "x": 250,
+      "y": 420,
+      "text": "I (amps): arrow length",
+      "fontSize": 14,
+      "fill": "#1d4ed8"
+    },
+    {
+      "id": "formula",
+      "type": "text",
+      "x": 40,
+      "y": 455,
+      "text": "I = V / R, so V = I R",
+      "fontSize": 16,
+      "fill": "#111827"
+    },
+    {
+      "id": "proportionNote",
+      "type": "text",
+      "x": 40,
+      "y": 487,
+      "text": "At fixed R, I is proportional to V; at fixed V, I is inversely proportional to R.",
+      "fontSize": 14,
+      "fill": "#374151"
+    },
+    {
+      "id": "seriesNote",
+      "type": "text",
+      "x": 40,
+      "y": 519,
+      "text": "Series current is the same everywhere; a resistor does not use it up.",
+      "fontSize": 14,
+      "fill": "#374151"
+    }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "source",
+          "property": "strokeWidth"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 2,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 4,
+            "value": 4,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 8,
+            "value": 2,
+            "easing": "ease-in-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "voltageControl",
+      "kind": "slider",
+      "propertyId": "voltage",
+      "label": "Source voltage"
+    },
+    {
+      "id": "resistanceControl",
+      "kind": "slider",
+      "propertyId": "resistance",
+      "label": "Resistance"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-circuit",
+      "at": 1,
+      "title": "Read the circuit",
+      "body": "The source sets the voltage V and the resistor has resistance R. The arrow length shows the current I, in amps.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-voltage",
+      "at": 3,
+      "title": "Change the voltage",
+      "body": "Keep R fixed and double V. The current doubles, so the arrow becomes twice as long: I is proportional to V.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-resistance",
+      "at": 5,
+      "title": "Change the resistance",
+      "body": "Keep V fixed and double R. The current halves, so the arrow becomes half as long: I is inversely proportional to R. Voltage is the push; current is the flow.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "A source and a resistor form a simple series circuit."
+    },
+    {
+      "at": 3,
+      "text": "The current arrow length follows I equals V divided by R."
+    },
+    {
+      "at": 6,
+      "text": "Voltage and current carry different units and are not the same quantity."
+    }
+  ],
+  "fallback": {
+    "text": "A series circuit contains a voltage source and one resistor. The current is I = V/R. Increasing voltage lengthens the current arrow proportionally; increasing resistance shortens it inversely. The current is the same at every point in the series loop, and voltage and current are distinct quantities with different units."
+  },
+  "accessibility": {
+    "alt": "Series circuit with a voltage source in volts, a resistor in ohms, and a current arrow in amps whose length is V divided by R. Two sliders change voltage and resistance.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

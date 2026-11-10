@@ -1,0 +1,116 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 900, "height": 560 },
+  "metadata": {
+    "title": "Projectile Motion at a Fixed Speed",
+    "subject": "Physics",
+    "objective": "Show how launch angle changes the trajectory at a fixed speed.",
+    "learner": "Knows speed and vectors informally.",
+    "misconceptions": [
+      "45 degrees always gives the maximum range regardless of launch height",
+      "Horizontal speed changes the vertical acceleration"
+    ],
+    "expectedUnderstanding": [
+      "At a fixed speed, range and maximum height both depend on launch angle.",
+      "For equal launch and landing heights, theta and 90 - theta give the same range with different heights.",
+      "45 degrees gives the maximum range only when launch and landing heights are equal.",
+      "The downward acceleration is the same regardless of the horizontal component of velocity."
+    ]
+  },
+  "properties": [
+    { "id": "angle", "label": "launch angle", "min": 15, "max": 75, "step": 1, "default": 30, "unit": "deg" }
+  ],
+  "primitives": [
+    { "id": "ground", "type": "line", "x1": 90, "y1": 430, "x2": 760, "y2": 430, "stroke": "#334155", "strokeWidth": 2 },
+    { "id": "heightAxis", "type": "line", "x1": 130, "y1": 120, "x2": 130, "y2": 450, "stroke": "#334155", "strokeWidth": 2 },
+    { "id": "launch", "type": "circle", "cx": 130, "cy": 430, "r": 8, "fill": "#0f172a" },
+    { "id": "theta1", "type": "line", "x1": 130, "y1": 430, "x2": { "expr": "130 + 140*sin(0.0349066*angle)" }, "y2": { "expr": "430 - 105*sin(0.0349066*angle)*tan(0.0174533*angle)" }, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "theta2", "type": "line", "x1": { "expr": "130 + 140*sin(0.0349066*angle)" }, "y1": { "expr": "430 - 105*sin(0.0349066*angle)*tan(0.0174533*angle)" }, "x2": { "expr": "130 + 280*sin(0.0349066*angle)" }, "y2": { "expr": "430 - 140*sin(0.0349066*angle)*tan(0.0174533*angle)" }, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "theta3", "type": "line", "x1": { "expr": "130 + 280*sin(0.0349066*angle)" }, "y1": { "expr": "430 - 140*sin(0.0349066*angle)*tan(0.0174533*angle)" }, "x2": { "expr": "130 + 420*sin(0.0349066*angle)" }, "y2": { "expr": "430 - 105*sin(0.0349066*angle)*tan(0.0174533*angle)" }, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "theta4", "type": "line", "x1": { "expr": "130 + 420*sin(0.0349066*angle)" }, "y1": { "expr": "430 - 105*sin(0.0349066*angle)*tan(0.0174533*angle)" }, "x2": { "expr": "130 + 560*sin(0.0349066*angle)" }, "y2": 430, "stroke": "#1d4ed8", "strokeWidth": 3 },
+    { "id": "complement1", "type": "line", "x1": 130, "y1": 430, "x2": { "expr": "130 + 140*sin(0.0349066*angle)" }, "y2": { "expr": "430 - 105*sin(0.0349066*angle)*tan(1.5707963 - 0.0174533*angle)" }, "stroke": "#b45309", "strokeWidth": 2, "dash": "7 4" },
+    { "id": "complement2", "type": "line", "x1": { "expr": "130 + 140*sin(0.0349066*angle)" }, "y1": { "expr": "430 - 105*sin(0.0349066*angle)*tan(1.5707963 - 0.0174533*angle)" }, "x2": { "expr": "130 + 280*sin(0.0349066*angle)" }, "y2": { "expr": "430 - 140*sin(0.0349066*angle)*tan(1.5707963 - 0.0174533*angle)" }, "stroke": "#b45309", "strokeWidth": 2, "dash": "7 4" },
+    { "id": "complement3", "type": "line", "x1": { "expr": "130 + 280*sin(0.0349066*angle)" }, "y1": { "expr": "430 - 140*sin(0.0349066*angle)*tan(1.5707963 - 0.0174533*angle)" }, "x2": { "expr": "130 + 420*sin(0.0349066*angle)" }, "y2": { "expr": "430 - 105*sin(0.0349066*angle)*tan(1.5707963 - 0.0174533*angle)" }, "stroke": "#b45309", "strokeWidth": 2, "dash": "7 4" },
+    { "id": "complement4", "type": "line", "x1": { "expr": "130 + 420*sin(0.0349066*angle)" }, "y1": { "expr": "430 - 105*sin(0.0349066*angle)*tan(1.5707963 - 0.0174533*angle)" }, "x2": { "expr": "130 + 560*sin(0.0349066*angle)" }, "y2": 430, "stroke": "#b45309", "strokeWidth": 2, "dash": "7 4" },
+    { "id": "apexDot", "type": "circle", "cx": { "expr": "130 + 280*sin(0.0349066*angle)" }, "cy": { "expr": "430 - 140*sin(0.0349066*angle)*tan(0.0174533*angle)" }, "r": 7, "fill": "#1d4ed8" },
+    { "id": "apexRing", "type": "circle", "cx": { "expr": "130 + 280*sin(0.0349066*angle)" }, "cy": { "expr": "430 - 140*sin(0.0349066*angle)*tan(1.5707963 - 0.0174533*angle)" }, "r": 12, "fill": "none", "stroke": "#b45309", "strokeWidth": 3, "dash": "4 3" },
+    { "id": "legend", "type": "text", "x": 520, "y": 100, "text": "dot: angle theta / dashed ring: 90 - theta", "fontSize": 14, "fill": "#111827" },
+    { "id": "heightLabel", "type": "text", "x": 94, "y": 112, "text": "height", "fontSize": 13, "fill": "#334155" },
+    { "id": "groundLabel", "type": "text", "x": 300, "y": 512, "text": "level launch and landing: 45 degrees reaches farthest", "fontSize": 14, "fill": "#334155" }
+  ],
+  "timeline": {
+    "duration": 10,
+    "tracks": [
+      {
+        "target": { "primitive": "apexDot", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 7 },
+          { "at": 2, "value": 10 },
+          { "at": 4, "value": 7 },
+          { "at": 6, "value": 10 },
+          { "at": 8, "value": 7 },
+          { "at": 10, "value": 7 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "angleSlider", "kind": "slider", "propertyId": "angle", "label": "launch angle" }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp1",
+      "at": 0.2,
+      "title": "Two arcs, one launch speed",
+      "body": "The slider sets the launch angle theta at a fixed speed. The solid arc uses theta; the dashed arc uses 90 - theta. Both start and land at the same height, so their ranges can be compared directly. Press replay after moving the slider.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp2",
+      "at": 2.8,
+      "title": "Complementary angles share a range",
+      "body": "At theta = 30 the solid arc is flatter and the dashed arc at 60 is steeper, yet both land at the same range. In general theta and 90 - theta have equal ranges when launch and landing heights match.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp3",
+      "at": 5.2,
+      "title": "45 degrees on level ground",
+      "body": "Slide to 45: the two arcs merge and the landing point is farthest right. That maximum is specific to equal launch and landing heights. Launch from above the landing level and the best angle is lower than 45.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp4",
+      "at": 7.4,
+      "title": "Horizontal speed does not set g",
+      "body": "The horizontal and vertical motions share the same flight time. Gravity pulls down with the same g throughout; changing the horizontal component changes how far the projectile travels, not the downward acceleration.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp5",
+      "at": 9.2,
+      "title": "Height and range trade off",
+      "body": "The highest arc is not the farthest arc. At theta near 75 the solid arc is tall but lands at the same range as 15. Range depends on sin 2theta while maximum height depends on sin squared theta.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    { "at": 0, "text": "Two projectile arcs share a level launch and landing; the solid arc is the slider angle, and the dashed arc is its complement." },
+    { "at": 2.8, "text": "At 30 and 60 degrees the arcs differ in height but land at the same range." },
+    { "at": 5.2, "text": "At 45 degrees the arcs coincide and reach the farthest point on level ground." },
+    { "at": 7.5, "text": "Gravity stays downward with the same acceleration; horizontal speed does not change it." }
+  ],
+  "fallback": {
+    "text": "A projectile is launched at a fixed speed from a level ground line. The solid arc uses the slider angle theta and the dashed arc uses 90 - theta. Both land at the same range, but the steeper arc reaches a greater height. On level ground, 45 degrees gives the maximum range; theta and 90 - theta are the paired angles with equal range. Gravity acts downward with the same acceleration at every angle, so changing the horizontal speed does not change the vertical acceleration."
+  },
+  "accessibility": {
+    "alt": "Two projectile arcs from one launch point: a dot marks the slider angle and a dashed ring marks the complementary angle. They land together but peak at different heights, and labels state that 45 degrees is farthest on level ground.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

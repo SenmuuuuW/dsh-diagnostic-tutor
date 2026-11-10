@@ -1,0 +1,442 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 760,
+    "height": 500,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Dijkstra: Finalizing the Shortest Tentative Distance",
+    "subject": "Computer Science",
+    "objective": "Show the frontier and tentative distances as a shortest-path search proceeds.",
+    "learner": "Knows graphs and nonnegative weights.",
+    "misconceptions": [
+      "Dijkstra works with negative weights",
+      "The first path found is always shortest"
+    ],
+    "expectedUnderstanding": [
+      "The frontier contains discovered but unfinalized nodes",
+      "A node is finalized at its smallest tentative distance",
+      "Relaxation replaces a distance only when the new route is smaller",
+      "Negative weights break the greedy finalization step"
+    ]
+  },
+  "properties": [],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 42,
+      "text": "Dijkstra from A: finalize the smallest tentative distance",
+      "fontSize": 22,
+      "fill": "#111827"
+    },
+    {
+      "id": "edgeAB",
+      "type": "line",
+      "x1": 138,
+      "y1": 160,
+      "x2": 342,
+      "y2": 108,
+      "stroke": "#94a3b8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "edgeAC",
+      "type": "line",
+      "x1": 134,
+      "y1": 187,
+      "x2": 208,
+      "y2": 315,
+      "stroke": "#94a3b8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "edgeCB",
+      "type": "line",
+      "x1": 238,
+      "y1": 318,
+      "x2": 348,
+      "y2": 114,
+      "stroke": "#94a3b8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "edgeBD",
+      "type": "line",
+      "x1": 378,
+      "y1": 108,
+      "x2": 506,
+      "y2": 246,
+      "stroke": "#94a3b8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "nodeA",
+      "type": "circle",
+      "cx": 120,
+      "cy": 170,
+      "r": 24,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "nodeB",
+      "type": "circle",
+      "cx": 360,
+      "cy": 100,
+      "r": 24,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "nodeC",
+      "type": "circle",
+      "cx": 220,
+      "cy": 330,
+      "r": 24,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "nodeD",
+      "type": "circle",
+      "cx": 520,
+      "cy": 260,
+      "r": 24,
+      "fill": "#dbeafe",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 2
+    },
+    {
+      "id": "labelA",
+      "type": "text",
+      "x": 113,
+      "y": 176,
+      "text": "A",
+      "fontSize": 16,
+      "fill": "#111827"
+    },
+    {
+      "id": "labelB",
+      "type": "text",
+      "x": 353,
+      "y": 106,
+      "text": "B",
+      "fontSize": 16,
+      "fill": "#111827"
+    },
+    {
+      "id": "labelC",
+      "type": "text",
+      "x": 213,
+      "y": 336,
+      "text": "C",
+      "fontSize": 16,
+      "fill": "#111827"
+    },
+    {
+      "id": "labelD",
+      "type": "text",
+      "x": 513,
+      "y": 266,
+      "text": "D",
+      "fontSize": 16,
+      "fill": "#111827"
+    },
+    {
+      "id": "dist",
+      "type": "text",
+      "x": 40,
+      "y": 404,
+      "text": "Start: A=0, B=4, C=1, D=inf. Frontier: B,C. Visited: A.",
+      "fontSize": 13,
+      "fill": "#111827"
+    },
+    {
+      "id": "weights",
+      "type": "text",
+      "x": 40,
+      "y": 374,
+      "text": "edges: A-B 4, A-C 1, C-B 2, B-D 1 (all weights nonnegative)",
+      "fontSize": 13,
+      "fill": "#475569"
+    },
+    {
+      "id": "legend",
+      "type": "text",
+      "x": 40,
+      "y": 438,
+      "text": "Medium ring = frontier; thick ring = visited; thick edge = tree.",
+      "fontSize": 13,
+      "fill": "#b91c1c"
+    }
+  ],
+  "timeline": {
+    "duration": 10,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "nodeD",
+          "property": "r"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 24,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 5,
+            "value": 27,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 10,
+            "value": 24,
+            "easing": "ease-in-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [],
+  "checkpoints": [
+    {
+      "id": "cp-start",
+      "at": 1,
+      "title": "Initialize the frontier",
+      "body": "A starts at distance 0. B is reachable directly at 4 and C at 1, so both are in the frontier: discovered but not finalized. D is not yet discovered.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-c",
+      "at": 3.5,
+      "title": "Finalize C at 1",
+      "body": "C has the smallest tentative distance, 1, so it is finalized. Relaxing C-B gives 1+2=3, which is smaller than B's 4, so B's tentative distance updates to 3.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-b",
+      "at": 6,
+      "title": "Finalize B at 3",
+      "body": "B is finalized at 3. Relaxing B-D gives 3+1=4, smaller than D's 6. The first route found, A-B-D at 5, is not the shortest; the later update wins.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-d",
+      "at": 8.5,
+      "title": "Finalize D at 4",
+      "body": "D is finalized at 4. The shortest path is A-C-B-D, costing 1+2+1=4. All weights are nonnegative; with a negative edge, finalizing the smallest tentative distance would not be safe.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "Start at A. B and C enter the frontier with tentative distances 4 and 1."
+    },
+    {
+      "at": 3,
+      "text": "Finalize C at 1, then relax C to B: B improves from 4 to 3."
+    },
+    {
+      "at": 6,
+      "text": "Finalize B at 3, then relax B to D: D improves from 6 to 4."
+    },
+    {
+      "at": 9,
+      "text": "The shortest path is A-C-B-D. The first path found was not the shortest."
+    }
+  ],
+  "states": [
+    {
+      "id": "s0-start",
+      "label": "Start",
+      "overrides": [
+        {
+          "primitive": "dist",
+          "property": "text",
+          "value": "Start: A=0, B=4, C=1, D=inf. Frontier: B,C. Visited: A."
+        },
+        {
+          "primitive": "nodeA",
+          "property": "strokeWidth",
+          "value": 6
+        },
+        {
+          "primitive": "nodeB",
+          "property": "strokeWidth",
+          "value": 3
+        },
+        {
+          "primitive": "nodeC",
+          "property": "strokeWidth",
+          "value": 3
+        },
+        {
+          "primitive": "nodeD",
+          "property": "strokeWidth",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "s1-c",
+      "label": "C finalized",
+      "overrides": [
+        {
+          "primitive": "dist",
+          "property": "text",
+          "value": "C finalized at 1. C-B gives 1+2=3, beating B=4. D becomes 6."
+        },
+        {
+          "primitive": "nodeA",
+          "property": "strokeWidth",
+          "value": 6
+        },
+        {
+          "primitive": "nodeC",
+          "property": "strokeWidth",
+          "value": 6
+        },
+        {
+          "primitive": "nodeB",
+          "property": "strokeWidth",
+          "value": 3
+        },
+        {
+          "primitive": "nodeD",
+          "property": "strokeWidth",
+          "value": 3
+        },
+        {
+          "primitive": "edgeAC",
+          "property": "strokeWidth",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "s2-b",
+      "label": "B finalized",
+      "overrides": [
+        {
+          "primitive": "dist",
+          "property": "text",
+          "value": "B finalized at 3. B-D becomes 3+1=4, beating 6. Tree: A-C, C-B."
+        },
+        {
+          "primitive": "nodeA",
+          "property": "strokeWidth",
+          "value": 6
+        },
+        {
+          "primitive": "nodeB",
+          "property": "strokeWidth",
+          "value": 6
+        },
+        {
+          "primitive": "nodeC",
+          "property": "strokeWidth",
+          "value": 6
+        },
+        {
+          "primitive": "nodeD",
+          "property": "strokeWidth",
+          "value": 3
+        },
+        {
+          "primitive": "edgeAC",
+          "property": "strokeWidth",
+          "value": 5
+        },
+        {
+          "primitive": "edgeCB",
+          "property": "strokeWidth",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "id": "s3-d",
+      "label": "D finalized",
+      "overrides": [
+        {
+          "primitive": "dist",
+          "property": "text",
+          "value": "D finalized at 4. Path A-C-B-D = 4; A-B-D = 5. The first path found was not shortest."
+        },
+        {
+          "primitive": "nodeA",
+          "property": "strokeWidth",
+          "value": 6
+        },
+        {
+          "primitive": "nodeB",
+          "property": "strokeWidth",
+          "value": 6
+        },
+        {
+          "primitive": "nodeC",
+          "property": "strokeWidth",
+          "value": 6
+        },
+        {
+          "primitive": "nodeD",
+          "property": "strokeWidth",
+          "value": 6
+        },
+        {
+          "primitive": "edgeAC",
+          "property": "strokeWidth",
+          "value": 5
+        },
+        {
+          "primitive": "edgeCB",
+          "property": "strokeWidth",
+          "value": 5
+        },
+        {
+          "primitive": "edgeBD",
+          "property": "strokeWidth",
+          "value": 5
+        }
+      ]
+    }
+  ],
+  "stateTimeline": [
+    {
+      "at": 0,
+      "state": "s0-start"
+    },
+    {
+      "at": 2.5,
+      "state": "s1-c"
+    },
+    {
+      "at": 5,
+      "state": "s2-b"
+    },
+    {
+      "at": 7.5,
+      "state": "s3-d"
+    }
+  ],
+  "fallback": {
+    "text": "A weighted graph has A-B 4, A-C 1, C-B 2 and B-D 1, all nonnegative. Dijkstra starts at A with B at 4 and C at 1 in the frontier. C is finalized at 1; relaxing C-B lowers B to 3. B is finalized at 3; relaxing B-D lowers D from 6 to 4. D is finalized at 4, giving the shortest path A-C-B-D with cost 1+2+1=4. The first route found, A-B-D at 5, is not shortest. A node is finalized only at its smallest tentative distance, and relaxation updates a distance only when the new route is smaller. Negative weights would invalidate that greedy finalization."
+  },
+  "accessibility": {
+    "alt": "Graph A-B 4, A-C 1, C-B 2, B-D 1. Dijkstra from A finalizes C, then B, then D. Thick rings mark visited, medium rings frontier, thick edges the shortest-path tree. B improves from 4 to 3 via C; D from 6 to 4 via B.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

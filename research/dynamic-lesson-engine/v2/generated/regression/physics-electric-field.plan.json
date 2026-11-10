@@ -1,0 +1,9 @@
+{
+  "representation": "A positive and a negative point charge with local field arrows around each, plus a movable test dot on their perpendicular bisector whose single arrow shows the net field.",
+  "entities": ["positive charge", "negative charge", "local field arrows", "centre-line guide", "test point", "net field arrow", "charge and field labels"],
+  "motion": "The test dot slides vertically along the centre line; the net-field arrow stays horizontal by symmetry and changes length with inverse-square distance.",
+  "controls": ["test-point height slider"],
+  "checkpoints": ["field points away from positive and toward negative charge", "net field arrow shortens with distance", "the two contributions add as vectors", "field is not force on a particular test charge", "sample vectors are not crossing field lines"],
+  "misconceptionTest": "The moving net-field arrow is labelled E and described as force per unit positive test charge, with a note that a negative test charge would feel the opposite force. Separate sample arrows are used instead of continuous field lines, and a checkpoint explains why distinct field lines cannot cross.",
+  "accessibility": "Alt text; keyboard slider; arrows have text labels; charge signs are written as plus and minus, not color-only."
+}

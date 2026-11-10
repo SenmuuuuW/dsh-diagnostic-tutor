@@ -1,0 +1,23 @@
+{
+  "representation": "Graph of f(x) = x^3/3 - x with a movable point, a tangent line through it, and a pulsing ring marking the point where the slope is read.",
+  "entities": [
+    "eight line segments approximating the cubic on -2.4..2.4",
+    "x-axis and y-axis",
+    "point at (450 + 90x, 300 - 55f(x))",
+    "tangent line through the point with screen slope -(55/90) f'(x)",
+    "ring centred on the point"
+  ],
+  "motion": "Point and tangent are expression-driven by the xp slider so they move together; the ring radius pulses 16 -> 22 -> 16 on the timeline as a non-essential emphasis.",
+  "controls": [
+    "slider 'xp' -2..2, step 0.05, default 1.5 (keyboard operable)"
+  ],
+  "checkpoints": [
+    "0.2 s: height and slope are different numbers",
+    "2 s: at x near 1 the tangent is flat but f is about -0.67",
+    "3.6 s: at x = 1.5 the curve rises while f is negative",
+    "5.2 s: at x = -0.5 the curve falls while f is positive",
+    "6.8 s: slope zero at x = -1 and x = 1, curve smooth everywhere shown"
+  ],
+  "misconceptionTest": "Checkpoint 2 shows f'(1) = 0 with f(1) != 0, attacking 'derivative is the value'. Checkpoint 3 shows f'(1.5) = 1.25 > 0 with f(1.5) = -0.375 < 0, attacking 'positive derivative means positive function'. The sign is also stated in words, not by colour.",
+  "accessibility": "Alt text describes curve, point and tangent; slider is keyboard operable; slope sign is stated in checkpoint text as well as shown by tilt; reducedMotion static."
+}

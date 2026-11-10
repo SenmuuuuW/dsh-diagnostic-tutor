@@ -1,0 +1,9 @@
+{
+  "representation": "Three stacked rows show source wave 1, a phase-shifted source wave 2, and their point-by-point sum at five sampled positions along the wave.",
+  "entities": ["source 1 polyline", "source 2 polyline", "sum polyline", "row labels", "phase instruction"],
+  "motion": "Both source waveforms travel continuously through the sampled positions using t; the sum recomputes from the two displaced heights as phase changes.",
+  "controls": ["phase-shift slider"],
+  "checkpoints": ["phase 0 gives constructive addition", "phase near pi gives a flat sum at every sample", "the two source waves keep moving when the sum cancels", "energy is redistributed, not destroyed"],
+  "misconceptionTest": "At phase near pi the sum row is flat while both source rows continue to oscillate, directly showing that interference does not make the waves stop existing. Text says cancellation is addition of opposite displacements and that energy is redistributed rather than destroyed.",
+  "accessibility": "Alt text; keyboard phase slider; the three rows are identified by position and text labels, not color; reduced motion available."
+}

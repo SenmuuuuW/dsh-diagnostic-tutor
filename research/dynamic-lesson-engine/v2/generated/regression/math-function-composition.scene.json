@@ -1,0 +1,111 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 900, "height": 560 },
+  "metadata": {
+    "title": "Function Composition: g then f",
+    "subject": "Mathematics",
+    "objective": "Show g(x) then f(g(x)) as a two-stage machine.",
+    "learner": "Knows function notation.",
+    "misconceptions": [
+      "f(g(x)) always equals g(f(x))",
+      "Composition is multiplication of outputs"
+    ],
+    "expectedUnderstanding": [
+      "the intermediate value is g(x) and the final value is f(g(x))",
+      "stage order changes the result for these functions",
+      "f is applied to g's output, not multiplied by it"
+    ]
+  },
+  "properties": [
+    { "id": "xp", "label": "input x", "min": -2, "max": 2, "step": 0.1, "default": 1.5 }
+  ],
+  "primitives": [
+    { "id": "gBox", "type": "rect", "x": 250, "y": 160, "width": 170, "height": 90 },
+    { "id": "fBox", "type": "rect", "x": 500, "y": 160, "width": 170, "height": 90 },
+    { "id": "arrowIn", "type": "arrow", "x1": 120, "y1": 205, "x2": 250, "y2": 205 },
+    { "id": "arrowMid", "type": "arrow", "x1": 420, "y1": 205, "x2": 500, "y2": 205 },
+    { "id": "token", "type": "circle", "cx": 90, "cy": 205, "r": 11 },
+    { "id": "labelInput", "type": "text", "x": 70, "y": 252, "text": "input x", "fontSize": 15 },
+    { "id": "labelG", "type": "text", "x": 262, "y": 212, "text": "g(x) = x^2 - 1", "fontSize": 15 },
+    { "id": "labelF", "type": "text", "x": 512, "y": 212, "text": "f(u) = u/2 + 1", "fontSize": 15 },
+    { "id": "labelOut", "type": "text", "x": 690, "y": 252, "text": "output f(g(x))", "fontSize": 15 },
+    { "id": "baseline", "type": "line", "x1": 120, "y1": 460, "x2": 700, "y2": 460 },
+    { "id": "barG", "type": "line", "x1": 230, "y1": 460, "x2": 230, "y2": { "expr": "500 - 40*xp*xp" } },
+    { "id": "barF", "type": "line", "x1": 390, "y1": 460, "x2": 390, "y2": { "expr": "440 - 20*xp*xp" } },
+    { "id": "labelBarG", "type": "text", "x": 205, "y": 532, "text": "g(x)", "fontSize": 15 },
+    { "id": "labelBarF", "type": "text", "x": 350, "y": 532, "text": "f(g(x))", "fontSize": 15 }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": { "primitive": "token", "property": "cx" },
+        "keyframes": [
+          { "at": 0, "value": 90 },
+          { "at": 1.5, "value": 335 },
+          { "at": 4, "value": 585 },
+          { "at": 6, "value": 760 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "xpSlider", "kind": "slider", "propertyId": "xp", "label": "input x" }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp1",
+      "at": 0.2,
+      "title": "The input enters stage g",
+      "body": "The token is the input x, set with the slider. It reaches g first, so g is evaluated before f is applied. A composition runs right to left: the function nearest x acts first.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp2",
+      "at": 1.6,
+      "title": "Inside g: the intermediate value",
+      "body": "At this moment only g has been applied. The left bar is g(x) = x^2 - 1, which is not the final answer. With x = 1.5 it is 1.25; with x = 0 it is -1.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp3",
+      "at": 4.1,
+      "title": "Inside f: g's output is the input",
+      "body": "f receives g(x), not x. The rule is f(u) = u/2 + 1 with u = g(x), so at x = 1.5 the right bar is f(1.25) = 1.625. The right bar is shorter than the left because f halves its input.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp4",
+      "at": 6.1,
+      "title": "Order matters",
+      "body": "Use x = 2 in both orders: f(g(2)) = f(3) = 2.5, but g(f(2)) = g(2) = 3. The two results differ, so swapping the stages changes the answer. Composition is also not multiplication: f(3) is 2.5, not 1.5 times 3.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp5",
+      "at": 7.8,
+      "title": "A negative intermediate is fine",
+      "body": "Set x = 0: g(0) = -1, so the left bar points below the baseline, and f(-1) = 0.5 still has a value. The intermediate output does not have to be positive for the composition to work.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    { "at": 0, "text": "The token is the input x; it flows through g first, then f." },
+    { "at": 1.7, "text": "Inside g the value is the intermediate g(x), not the answer." },
+    { "at": 4.2, "text": "f is applied to g's output, so the right bar is f(g(x))." },
+    { "at": 6.2, "text": "Swapping the two stages changes the result." }
+  ],
+  "fallback": {
+    "text": "A token passes through stage g (square the input, subtract 1) and then stage f (halve, add 1). The lower bars show the intermediate g(x) and the final f(g(x)) on a shared zero line. For example x = 1.5 gives g = 1.25 then f = 1.625, while x = 0 gives g = -1 then f = 0.5."
+  },
+  "accessibility": {
+    "alt": "A token passing through two labelled boxes, g then f, with two vertical bars below showing the intermediate value g(x) and the final value f(g(x)) on a shared baseline.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

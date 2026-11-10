@@ -1,0 +1,46 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 820, "height": 380, "background": "#ffffff" },
+  "metadata": {
+    "title": "Bubble sort as named states",
+    "subject": "Computer science / algorithms",
+    "objective": "See adjacent swaps as a bounded sequence of named snapshots.",
+    "learner": "Can read a loop",
+    "misconceptions": ["One pass always sorts the array"],
+    "expectedUnderstanding": ["Each pass fixes the largest remaining value at the right"]
+  },
+  "properties": [],
+  "primitives": [
+    { "id": "b0", "type": "rect", "x": 100, "y": 120, "width": 70, "height": 120, "fill": "#93c5fd", "rx": 5 },
+    { "id": "b1", "type": "rect", "x": 190, "y": 200, "width": 70, "height": 40, "fill": "#93c5fd", "rx": 5 },
+    { "id": "b2", "type": "rect", "x": 280, "y": 80, "width": 70, "height": 160, "fill": "#93c5fd", "rx": 5 },
+    { "id": "b3", "type": "rect", "x": 370, "y": 150, "width": 70, "height": 90, "fill": "#93c5fd", "rx": 5 },
+    { "id": "label", "type": "text", "x": 100, "y": 45, "text": "named snapshots, not arbitrary code", "fontSize": 14, "fill": "#111827" }
+  ],
+  "timeline": { "duration": 8, "tracks": [] },
+  "states": [
+    { "id": "start", "label": "start: [3, 2, 4, 1]", "overrides": [] },
+    { "id": "pass1", "label": "pass 1: [2, 3, 1, 4]", "overrides": [
+      { "primitive": "b0", "property": "height", "value": 40 }, { "primitive": "b0", "property": "y", "value": 200 },
+      { "primitive": "b1", "property": "height", "value": 120 }, { "primitive": "b1", "property": "y", "value": 120 },
+      { "primitive": "b2", "property": "height", "value": 90 }, { "primitive": "b2", "property": "y", "value": 150 },
+      { "primitive": "b3", "property": "height", "value": 160 }, { "primitive": "b3", "property": "y", "value": 80 }
+    ] },
+    { "id": "pass2", "label": "pass 2: [2, 1, 3, 4] → [1, 2, 3, 4]", "overrides": [
+      { "primitive": "b0", "property": "height", "value": 40 }, { "primitive": "b0", "property": "y", "value": 200 },
+      { "primitive": "b1", "property": "height", "value": 90 }, { "primitive": "b1", "property": "y", "value": 150 },
+      { "primitive": "b2", "property": "height", "value": 120 }, { "primitive": "b2", "property": "y", "value": 120 },
+      { "primitive": "b3", "property": "height", "value": 160 }, { "primitive": "b3", "property": "y", "value": 80 }
+    ] }
+  ],
+  "stateTimeline": [
+    { "at": 0, "state": "start" },
+    { "at": 3, "state": "pass1" },
+    { "at": 6, "state": "pass2" }
+  ],
+  "checkpoints": [{ "id": "cp-pass", "at": 4.5, "title": "Predict the next swap", "body": "Which adjacent pair moves in the next pass?", "pause": true, "learnerAction": "answer" }],
+  "narration": [{ "at": 0, "text": "Start from the unsorted state." }, { "at": 3, "text": "One pass has moved the largest remaining value right." }, { "at": 6, "text": "The next pass finishes the order." }],
+  "fallback": { "text": "Four bars and three named snapshots of bubble sort: the largest value moves right after each pass." },
+  "accessibility": { "alt": "Four bars showing named bubble-sort states", "reducedMotion": "static", "keyboard": true },
+  "sourceRefs": []
+}

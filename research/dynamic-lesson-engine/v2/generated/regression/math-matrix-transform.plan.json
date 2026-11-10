@@ -1,0 +1,24 @@
+{
+  "representation": "A unit reference square at the origin, its image under the matrix A = [[a,b],[0,1]] drawn as the parallelogram whose two sides are the matrix columns, with arrows for the images of e1 and e2.",
+  "entities": [
+    "x-axis and y-axis through the origin at (330,360)",
+    "reference unit square, fixed",
+    "arrow e1 from origin to column 1 (a, 0)",
+    "arrow e2 from origin to column 2 (b, 1)",
+    "two remaining parallelogram edges (top and right)",
+    "ring at the origin"
+  ],
+  "motion": "A blend parameter s = t/6 morphs every image vertex from the identity position (1-s)v + s*Mv, so the square visibly becomes the parallelogram in 6 s; sliders a and b change the target matrix and the morph restarts from identity on reload.",
+  "controls": [
+    "slider 'a' (column 1 x-entry) 0.4..2, default 1.6",
+    "slider 'b' (column 2 x-entry / shear) -1..1, default 0.6"
+  ],
+  "checkpoints": [
+    "0.1 s: identity -> matrix, reference square stated",
+    "2 s: the two arrow tips are the columns",
+    "4 s: what a and b each do, rows not elementwise",
+    "5.9 s: area = |det A| = |a|, shear keeps area, a = 0 would collapse"
+  ],
+  "misconceptionTest": "Checkpoint 3 states the output is x' = a x + b y with y' = y, so entries mix coordinates rather than multiplying matching ones; and the parallelogram visibly moves, refuting 'the transformed grid is unchanged'. Area claim is only made where det = a is exactly true.",
+  "accessibility": "Alt text distinguishes reference square from image parallelogram; both sliders keyboard operable; every claim is also in text (columns, rows, area), not colour; reducedMotion no-autoplay."
+}

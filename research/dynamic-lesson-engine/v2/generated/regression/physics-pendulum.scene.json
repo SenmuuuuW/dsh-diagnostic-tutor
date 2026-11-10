@@ -1,0 +1,120 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 900, "height": 560 },
+  "metadata": {
+    "title": "Pendulum Period: Length and Release Angle",
+    "subject": "Physics",
+    "objective": "Show how length and initial release angle affect the period of a pendulum.",
+    "learner": "Knows energy informally.",
+    "misconceptions": [
+      "Pendulum period depends strongly on mass",
+      "The small-angle approximation is exact at all angles"
+    ],
+    "expectedUnderstanding": [
+      "A longer pendulum has a longer period, approximately proportional to the square root of length.",
+      "A larger release angle makes the period slightly longer than the small-angle prediction.",
+      "Mass does not set the period of an ideal pendulum.",
+      "A fixed reference pendulum makes the timing comparison visible."
+    ]
+  },
+  "properties": [
+    { "id": "len", "label": "pendulum length", "min": 0.5, "max": 2.5, "step": 0.1, "default": 2, "unit": "m" },
+    { "id": "amp", "label": "release angle", "min": 8, "max": 60, "step": 1, "default": 35, "unit": "deg" }
+  ],
+  "primitives": [
+    { "id": "support", "type": "line", "x1": 280, "y1": 80, "x2": 620, "y2": 80, "stroke": "#334155", "strokeWidth": 4 },
+    { "id": "pivot", "type": "circle", "cx": 450, "cy": 80, "r": 6, "fill": "#0f172a" },
+    { "id": "restLine", "type": "line", "x1": 450, "y1": 80, "x2": 450, "y2": { "expr": "180 + 100*len" }, "stroke": "#94a3b8", "strokeWidth": 2, "dash": "5 5" },
+    { "id": "rodCur", "type": "line", "x1": 450, "y1": 80, "x2": { "expr": "450 + (100+100*len)*sin(0.0174533*amp*cos(t/(sqrt(len/9.81)*(1+0.0174533*amp*0.0174533*amp/16))))" }, "y2": { "expr": "80 + (100+100*len)*cos(0.0174533*amp*cos(t/(sqrt(len/9.81)*(1+0.0174533*amp*0.0174533*amp/16))))" }, "stroke": "#1d4ed8", "strokeWidth": 4 },
+    { "id": "bobCur", "type": "circle", "cx": { "expr": "450 + (100+100*len)*sin(0.0174533*amp*cos(t/(sqrt(len/9.81)*(1+0.0174533*amp*0.0174533*amp/16))))" }, "cy": { "expr": "80 + (100+100*len)*cos(0.0174533*amp*cos(t/(sqrt(len/9.81)*(1+0.0174533*amp*0.0174533*amp/16))))" }, "r": 16, "fill": "#1d4ed8", "stroke": "#1e3a8a", "strokeWidth": 2 },
+    { "id": "rodRef", "type": "line", "x1": 450, "y1": 80, "x2": { "expr": "450 + 200*sin(0.0174533*amp*cos(t/(sqrt(1/9.81)*(1+0.0174533*amp*0.0174533*amp/16))))" }, "y2": { "expr": "80 + 200*cos(0.0174533*amp*cos(t/(sqrt(1/9.81)*(1+0.0174533*amp*0.0174533*amp/16))))" }, "stroke": "#b45309", "strokeWidth": 3, "dash": "6 4" },
+    { "id": "bobRef", "type": "circle", "cx": { "expr": "450 + 200*sin(0.0174533*amp*cos(t/(sqrt(1/9.81)*(1+0.0174533*amp*0.0174533*amp/16))))" }, "cy": { "expr": "80 + 200*cos(0.0174533*amp*cos(t/(sqrt(1/9.81)*(1+0.0174533*amp*0.0174533*amp/16))))" }, "r": 21, "fill": "none", "stroke": "#b45309", "strokeWidth": 3 },
+    { "id": "labelCur", "type": "text", "x": 80, "y": 125, "text": "dot: current length L (slider)", "fontSize": 14, "fill": "#1d4ed8" },
+    { "id": "labelRef", "type": "text", "x": 80, "y": 150, "text": "ring: reference length 1.0 m", "fontSize": 14, "fill": "#b45309" },
+    { "id": "labelAngle", "type": "text", "x": 80, "y": 175, "text": "release angle A (slider)", "fontSize": 14, "fill": "#111827" },
+    { "id": "labelRest", "type": "text", "x": 520, "y": 455, "text": "vertical rest line", "fontSize": 13, "fill": "#64748b" },
+    { "id": "labelPeriod", "type": "text", "x": 80, "y": 475, "text": "longer L gives a longer period", "fontSize": 14, "fill": "#111827" },
+    { "id": "labelMass", "type": "text", "x": 80, "y": 500, "text": "mass does not set the period", "fontSize": 14, "fill": "#111827" },
+    { "id": "labelApprox", "type": "text", "x": 80, "y": 525, "text": "large A: period exceeds the small-angle formula", "fontSize": 13, "fill": "#111827" }
+  ],
+  "timeline": {
+    "duration": 12,
+    "tracks": [
+      {
+        "target": { "primitive": "bobRef", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 21 },
+          { "at": 0.4, "value": 25 },
+          { "at": 0.8, "value": 21 },
+          { "at": 4, "value": 21 },
+          { "at": 4.4, "value": 25 },
+          { "at": 4.8, "value": 21 },
+          { "at": 8, "value": 21 },
+          { "at": 8.4, "value": 25 },
+          { "at": 8.8, "value": 21 },
+          { "at": 12, "value": 21 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "lenSlider", "kind": "slider", "propertyId": "len", "label": "pendulum length" },
+    { "id": "ampSlider", "kind": "slider", "propertyId": "amp", "label": "release angle" }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp1",
+      "at": 0.2,
+      "title": "Two pendulums, one clock",
+      "body": "The filled dot is the adjustable pendulum; the ring is a 1.0 m reference released from the same angle. Both start together. The length slider sets L, and replay restarts the comparison.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp2",
+      "at": 2.6,
+      "title": "Length sets the period",
+      "body": "Increase L and the dot takes longer to complete a full swing than the ring. The ideal period grows like the square root of length: doubling L makes the period about 1.41 times longer, not twice as long.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp3",
+      "at": 5,
+      "title": "The small-angle formula is not exact",
+      "body": "At large release angles the real period is slightly longer than T = 2 pi sqrt(L/g). The model includes a standard first-order amplitude correction. Use a small angle and a large angle to compare the same length.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp4",
+      "at": 7.4,
+      "title": "Mass is not the driver",
+      "body": "There is no mass control because the ideal pendulum period is independent of mass. A heavier bob has more inertia, but gravity also produces a proportionally larger restoring force, leaving the period unchanged.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp5",
+      "at": 9.8,
+      "title": "Compare two lengths",
+      "body": "At L = 0.5 the dot completes more swings than the ring in the same time. At L = 2.5 it falls far behind. The release angle changes the amplitude and only slightly shifts the period.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    { "at": 0, "text": "A filled pendulum at the slider length swings beside a fixed 1.0 metre reference ring." },
+    { "at": 3, "text": "A longer length makes each full swing take more time, roughly as the square root of length." },
+    { "at": 6, "text": "At large release angles the period is slightly longer than the small-angle formula predicts." },
+    { "at": 9, "text": "Mass does not set the period of an ideal pendulum; length and gravity do." }
+  ],
+  "fallback": {
+    "text": "Two pendulums hang from the same pivot. The filled bob has the slider length L and the ring bob is a fixed 1.0 metre reference; both are released from the slider angle. The period grows approximately as the square root of length, so L = 2.5 swings more slowly than L = 1.0. A larger release angle makes the period slightly longer than the small-angle formula T = 2 pi sqrt(L/g). The ideal period does not depend on mass."
+  },
+  "accessibility": {
+    "alt": "Two pendulums from one pivot: a filled dot at the adjustable length and a ring at a fixed 1.0 metre reference, both released at the slider angle. The dot swings more slowly when its length is longer.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

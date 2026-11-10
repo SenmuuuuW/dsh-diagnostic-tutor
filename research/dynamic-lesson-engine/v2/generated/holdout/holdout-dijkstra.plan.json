@@ -1,0 +1,27 @@
+{
+  "representation": "A four-node weighted graph with A as source, a highlighted frontier and visited set, tentative-distance readout, and shortest-path tree edges.",
+  "entities": [
+    "nodes A, B, C, D",
+    "weighted edges A-B 4, A-C 1, C-B 2, B-D 1",
+    "frontier and visited node rings",
+    "tentative-distance readout",
+    "shortest-path tree edges"
+  ],
+  "motion": [
+    "C, then B, then D are finalized",
+    "B improves from 4 to 3 via C",
+    "D improves from 6 to 4 via B",
+    "tree edges thicken as nodes are finalized"
+  ],
+  "controls": [
+    "step through four paused checkpoints; the source stays fixed at A"
+  ],
+  "checkpoints": [
+    "initialize A with the frontier B and C",
+    "finalize C and relax C-B",
+    "finalize B and relax B-D",
+    "finalize D and read the shortest path"
+  ],
+  "misconceptionTest": "The first route found to D is A-B-D at 5, but after C is finalized B improves to 3 and D improves to 4 by A-C-B-D. This shows the first path found need not be shortest. Every weight is nonnegative, and the scene states that a negative edge would break finalizing the smallest tentative distance.",
+  "accessibility": "Node letters and edge weights are text, ring thickness encodes visited and frontier, the step checkpoints are keyboard operable, and alt text gives the graph and update sequence."
+}

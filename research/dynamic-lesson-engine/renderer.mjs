@@ -55,6 +55,24 @@ function arrowHead(x1, y1, x2, y2, width) {
   return `${x2},${y2} ${x2 + Math.cos(left) * size},${y2 + Math.sin(left) * size} ${x2 + Math.cos(right) * size},${y2 + Math.sin(right) * size}`
 }
 
+function stateAt(spec, time) {
+  const entries = spec.stateTimeline ?? []
+  let chosen = null
+  for (const entry of entries) if (entry.at <= time + 1e-6) chosen = entry.state
+  return chosen === null ? null : (spec.states ?? []).find((state) => state.id === chosen) ?? null
+}
+
+function effectivePrimitive(primitive, state) {
+  if (!state) return primitive
+  let next = primitive
+  for (const override of state.overrides ?? []) {
+    if (override.primitive !== primitive.id) continue
+    if (next === primitive) next = { ...primitive }
+    next[override.property] = override.value
+  }
+  return next
+}
+
 export class SceneRenderer {
   constructor(container, rawSpec, options = {}) {
     this.container = container
@@ -159,8 +177,10 @@ export class SceneRenderer {
     const time = Math.max(0, Math.min(this.spec.timeline.duration, rawTime))
     this.time = time
     const previous = this.lastRenderedTime ?? -1
+    const state = stateAt(this.spec, time)
+    this.options.onState?.(state?.label ?? null)
     for (const primitive of this.spec.primitives) {
-      try { this.updatePrimitive(primitive, time) } catch (error) { this.fail(error); return }
+      try { this.updatePrimitive(primitive, time, state) } catch (error) { this.fail(error); return }
     }
     this.updateNarration(time)
     this.updateCheckpoints(previous, time)
@@ -169,33 +189,34 @@ export class SceneRenderer {
     this.options.onFrame?.({ time, duration: this.spec.timeline.duration, playing: this.playing, nodes: this.nodes, renderMs: this.lastFrameMs })
   }
 
-  updatePrimitive(primitive, time) {
-    const entry = this.elements.get(primitive.id)
+  updatePrimitive(primitive, time, state) {
+    const effective = effectivePrimitive(primitive, state)
+    const entry = this.elements.get(effective.id)
     if (!entry) return
-    if (primitive.type === 'arrow') {
-      const x1 = this.valueFor(primitive, 'x1', time)
-      const y1 = this.valueFor(primitive, 'y1', time)
-      const x2 = this.valueFor(primitive, 'x2', time)
-      const y2 = this.valueFor(primitive, 'y2', time)
-      const width = this.valueFor(primitive, 'strokeWidth', time)
-      addAttrs(entry.line, { x1, y1, x2, y2, stroke: primitive.stroke ?? '#2563eb', 'stroke-width': width, opacity: this.valueFor(primitive, 'opacity', time) })
-      addAttrs(entry.head, { points: arrowHead(x1, y1, x2, y2, width), fill: primitive.stroke ?? '#2563eb', opacity: this.valueFor(primitive, 'opacity', time) })
+    if (effective.type === 'arrow') {
+      const x1 = this.valueFor(effective, 'x1', time)
+      const y1 = this.valueFor(effective, 'y1', time)
+      const x2 = this.valueFor(effective, 'x2', time)
+      const y2 = this.valueFor(effective, 'y2', time)
+      const width = this.valueFor(effective, 'strokeWidth', time)
+      addAttrs(entry.line, { x1, y1, x2, y2, stroke: effective.stroke ?? '#2563eb', 'stroke-width': width, opacity: this.valueFor(effective, 'opacity', time) })
+      addAttrs(entry.head, { points: arrowHead(x1, y1, x2, y2, width), fill: effective.stroke ?? '#2563eb', opacity: this.valueFor(effective, 'opacity', time) })
       return
     }
-    if (primitive.type === 'text') {
+    if (effective.type === 'text') {
       addAttrs(entry, {
-        x: this.valueFor(primitive, 'x', time), y: this.valueFor(primitive, 'y', time),
-        'font-size': this.valueFor(primitive, 'fontSize', time), fill: primitive.fill ?? '#111827',
-        'text-anchor': primitive.anchor ?? 'start', opacity: this.valueFor(primitive, 'opacity', time),
-        'font-weight': primitive.fontWeight ?? 400,
+        x: this.valueFor(effective, 'x', time), y: this.valueFor(effective, 'y', time),
+        'font-size': this.valueFor(effective, 'fontSize', time), fill: effective.fill ?? '#111827',
+        'text-anchor': effective.anchor ?? 'start', opacity: this.valueFor(effective, 'opacity', time),
+        'font-weight': effective.fontWeight ?? 400,
       })
-      setText(entry, primitive.text)
+      setText(entry, effective.text)
       return
     }
     const attrs = {}
-    for (const key of NUMERIC_PROPS[primitive.type]) attrs[key === 'strokeWidth' ? 'stroke-width' : key] = this.valueFor(primitive, key, time)
+    for (const key of NUMERIC_PROPS[effective.type]) attrs[key === 'strokeWidth' ? 'stroke-width' : key] = this.valueFor(effective, key, time)
     addAttrs(entry, attrs)
-    if (primitive.type === 'path') entry.setAttribute('d', primitive.d)
+    if (effective.type === 'path') entry.setAttribute('d', effective.d)
   }
 
   updateNarration(time) {

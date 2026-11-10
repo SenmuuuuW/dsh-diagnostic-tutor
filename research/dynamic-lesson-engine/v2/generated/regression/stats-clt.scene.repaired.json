@@ -1,0 +1,71 @@
+{
+  "version": "0.1",
+  "viewport": {"width": 760, "height": 450, "background": "#f8fafc"},
+  "metadata": {
+    "title": "Central Limit Theorem: Means Become Bell-Shaped",
+    "subject": "Statistics",
+    "objective": "Show a fixed non-normal population and a sampling distribution of means that narrows into a bell shape as n grows.",
+    "learner": "Knows histograms.",
+    "misconceptions": [
+      "The original data becomes normal",
+      "The central limit theorem needs normal data to start"
+    ],
+    "expectedUnderstanding": [
+      "The raw population can be skewed and non-normal.",
+      "The distribution of sample means centers near the population mean.",
+      "Its spread narrows as n grows.",
+      "The raw data does not itself become normal."
+    ]
+  },
+  "properties": [
+    {"id": "n", "label": "Sample size n", "min": 1, "max": 36, "step": 1, "default": 4, "unit": "obs"}
+  ],
+  "primitives": [
+    {"id": "rawAxis", "type": "line", "x1": 80, "y1": 170, "x2": 680, "y2": 170, "stroke": "#94a3b8", "strokeWidth": 1.5},
+    {"id": "rawLabel", "type": "text", "x": 60, "y": 48, "text": "Raw population: skewed, not normal (stays fixed)", "fontSize": 15, "fill": "#0f172a"},
+    {"id": "rawBar1", "type": "rect", "x": 100, "y": 140, "width": 50, "height": 30, "fill": "#64748b", "stroke": "#334155", "strokeWidth": 1},
+    {"id": "rawBar2", "type": "rect", "x": 160, "y": 90, "width": 50, "height": 80, "fill": "#64748b", "stroke": "#334155", "strokeWidth": 1},
+    {"id": "rawBar3", "type": "rect", "x": 220, "y": 50, "width": 50, "height": 120, "fill": "#64748b", "stroke": "#334155", "strokeWidth": 1},
+    {"id": "rawBar4", "type": "rect", "x": 280, "y": 110, "width": 50, "height": 60, "fill": "#64748b", "stroke": "#334155", "strokeWidth": 1},
+    {"id": "sampleLabel", "type": "text", "x": 60, "y": 225, "text": "Distribution of sample means for sample size n", "fontSize": 15, "fill": "#0f172a"},
+    {"id": "samplingBar1", "type": "rect", "x": 252, "y": {"expr": "390 - (26 + 12*sqrt(n))/(1 + 0.311634*n)"}, "width": 34, "height": {"expr": "(26 + 12*sqrt(n))/(1 + 0.311634*n)"}, "fill": "#2563eb", "stroke": "#1d4ed8", "strokeWidth": 1},
+    {"id": "samplingBar2", "type": "rect", "x": 302, "y": {"expr": "390 - (26 + 12*sqrt(n))/(1 + 0.138504*n)"}, "width": 34, "height": {"expr": "(26 + 12*sqrt(n))/(1 + 0.138504*n)"}, "fill": "#2563eb", "stroke": "#1d4ed8", "strokeWidth": 1},
+    {"id": "samplingBar3", "type": "rect", "x": 352, "y": {"expr": "390 - (26 + 12*sqrt(n))/(1 + 0.034626*n)"}, "width": 34, "height": {"expr": "(26 + 12*sqrt(n))/(1 + 0.034626*n)"}, "fill": "#2563eb", "stroke": "#1d4ed8", "strokeWidth": 1},
+    {"id": "samplingBar4", "type": "rect", "x": 402, "y": {"expr": "390 - (26 + 12*sqrt(n))"}, "width": 34, "height": {"expr": "26 + 12*sqrt(n)"}, "fill": "#1d4ed8", "stroke": "#1e40af", "strokeWidth": 1},
+    {"id": "samplingBar5", "type": "rect", "x": 452, "y": {"expr": "390 - (26 + 12*sqrt(n))/(1 + 0.034626*n)"}, "width": 34, "height": {"expr": "(26 + 12*sqrt(n))/(1 + 0.034626*n)"}, "fill": "#2563eb", "stroke": "#1d4ed8", "strokeWidth": 1},
+    {"id": "samplingBar6", "type": "rect", "x": 502, "y": {"expr": "390 - (26 + 12*sqrt(n))/(1 + 0.138504*n)"}, "width": 34, "height": {"expr": "(26 + 12*sqrt(n))/(1 + 0.138504*n)"}, "fill": "#2563eb", "stroke": "#1d4ed8", "strokeWidth": 1},
+    {"id": "samplingBar7", "type": "rect", "x": 552, "y": {"expr": "390 - (26 + 12*sqrt(n))/(1 + 0.311634*n)"}, "width": 34, "height": {"expr": "(26 + 12*sqrt(n))/(1 + 0.311634*n)"}, "fill": "#2563eb", "stroke": "#1d4ed8", "strokeWidth": 1},
+    {"id": "meanLine", "type": "line", "x1": 402, "y1": 238, "x2": 402, "y2": 390, "stroke": "#dc2626", "strokeWidth": 2, "dash": "5 4"},
+    {"id": "note", "type": "text", "x": 60, "y": 430, "text": "Dashed line = population mean. Larger n narrows the sample-mean distribution toward a bell; raw data stays skewed.", "fontSize": 13, "fill": "#475569"}
+  ],
+  "timeline": {
+    "duration": 12,
+    "tracks": [
+      {"target": {"primitive": "meanLine", "property": "strokeWidth"}, "keyframes": [{"at": 0, "value": 2}, {"at": 3, "value": 3.5, "easing": "easeInOut"}, {"at": 6, "value": 2}, {"at": 9, "value": 3.5, "easing": "easeInOut"}, {"at": 12, "value": 2}]}
+    ]
+  },
+  "controls": [
+    {"id": "sampleSize", "kind": "slider", "propertyId": "n", "label": "Change the sample size"}
+  ],
+  "checkpoints": [
+    {"id": "cp0", "at": 1, "title": "The raw data can be non-normal", "body": "The top histogram is skewed: most mass sits on the left, with a longer right tail. The central limit theorem does not require the raw population to be normal.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp1", "at": 3.5, "title": "Averages, not raw observations", "body": "The bottom bars are sample means. Each mean averages n independent draws from the skewed population. The top histogram and the bottom histogram describe different things.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp2", "at": 6, "title": "Increase n and watch the shape", "body": "Drag n upward. The middle bars grow and the outer bars shrink, so the sampling distribution becomes taller in the center and narrower in the tails: it approaches a bell shape.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp3", "at": 8.5, "title": "The raw data stays skewed", "body": "The top bars never change. Averaging reduces the variability of the mean, but it does not turn individual observations into a normal distribution.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp4", "at": 10.5, "title": "Center and spread", "body": "The dashed line marks the population mean, and the sampling distribution stays centered there. Its spread shrinks roughly with 1/sqrt(n) as n grows.", "pause": true, "learnerAction": "continue"}
+  ],
+  "narration": [
+    {"at": 0, "text": "The raw population is skewed; the central limit theorem does not need normal data."},
+    {"at": 3, "text": "The bottom histogram shows sample means, one bar per value of the mean."},
+    {"at": 6.5, "text": "As n grows, the sample-mean distribution narrows and becomes bell-shaped."},
+    {"at": 9.5, "text": "The raw data does not become normal; only the distribution of means changes shape."}
+  ],
+  "fallback": {
+    "text": "The top histogram shows a skewed, non-normal population that stays fixed. The bottom histogram shows the distribution of sample means, each computed from n draws. When n is small, the sample-mean distribution is broad and still reflects the skew. As n grows, the middle bars rise and the outer bars fall, so the sampling distribution becomes narrower and approaches a bell shape centered near the population mean. The spread shrinks roughly as 1/sqrt(n). The raw population does not become normal: averaging changes the distribution of the mean, not the individual observations. The central limit theorem therefore does not require normal raw data."
+  },
+  "accessibility": {
+    "alt": "Top histogram: four fixed skewed raw-data bars. Bottom: seven sample-mean bars around a dashed mean line. Increasing n makes the lower bars peak in the middle and shrink at the sides, forming a bell while the top stays fixed.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

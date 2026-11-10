@@ -1,0 +1,9 @@
+{
+  "representation": "Two producer rows with proportional brown coffee and blue cloth bars, text opportunity costs, a before-and-after specialization total, and a horizontal terms-of-trade band with a movable price marker.",
+  "entities": ["Alpha coffee and cloth bars", "Beta coffee and cloth bars", "opportunity-cost labels", "self-sufficient and specialized totals", "terms-of-trade band", "price marker"],
+  "motion": "The marker slides along the terms-of-trade band between Beta's 0.5-coffee cost and Alpha's 2-coffee cost as the cloth-price slider changes.",
+  "controls": ["slider for the cloth price in coffee per cloth, 0.5 to 2.0"],
+  "checkpoints": ["opportunity cost from the production tradeoff", "absolute advantage is not the test", "specialization raises total output", "terms of trade lie between opportunity costs", "both can gain without equal gains"],
+  "misconceptionTest": "Alpha produces more coffee and Beta more cloth, but the specialization decision follows lower opportunity cost, not absolute output alone. A cloth price strictly between 0.5 and 2 coffee makes both better off, so one country need not lose, but the scene does not claim the gains are equal.",
+  "accessibility": "Alt text, explicit producer and opportunity-cost text acting as a table alternative, keyboard slider, and a text statement of the band endpoints."
+}

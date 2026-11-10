@@ -1,0 +1,271 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 720,
+    "height": 600,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Taylor Series: A Local Fit",
+    "subject": "Mathematics",
+    "objective": "Show why a truncated Taylor polynomial matches a function near a point and diverges away from it.",
+    "learner": "Knows derivatives and polynomial graphs.",
+    "misconceptions": [
+      "More terms always help everywhere",
+      "The Taylor polynomial equals the function globally"
+    ],
+    "expectedUnderstanding": [
+      "Taylor polynomials match the function and its derivatives at the center",
+      "Adding terms widens the interval of good agreement",
+      "A Taylor polynomial is generally not equal to the function everywhere"
+    ]
+  },
+  "properties": [
+    {
+      "id": "order",
+      "label": "Taylor terms shown (0-3)",
+      "min": 0,
+      "max": 3,
+      "step": 1,
+      "default": 3
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 42,
+      "text": "Taylor series: the fit is local, not global",
+      "fontSize": 22,
+      "fill": "#111827"
+    },
+    {
+      "id": "xAxis",
+      "type": "line",
+      "x1": 100,
+      "y1": 240,
+      "x2": 620,
+      "y2": 240,
+      "stroke": "#9ca3af",
+      "strokeWidth": 1
+    },
+    {
+      "id": "yAxis",
+      "type": "line",
+      "x1": 360,
+      "y1": 110,
+      "x2": 360,
+      "y2": 460,
+      "stroke": "#9ca3af",
+      "strokeWidth": 1
+    },
+    {
+      "id": "cosCurve",
+      "type": "path",
+      "d": "M 100 298.8 L 132.5 324.3 L 165 329.1 L 197.5 312.1 L 230 277.4 L 262.5 233.6 L 295 191.4 L 327.5 161 L 360 150 L 392.5 161 L 425 191.4 L 457.5 233.6 L 490 277.4 L 522.5 312.1 L 555 329.1 L 587.5 324.3 L 620 298.8",
+      "fill": "none",
+      "stroke": "#111827",
+      "strokeWidth": 3
+    },
+    {
+      "id": "p2Curve",
+      "type": "path",
+      "d": "M 100 600 L 132.5 600 L 165 555 L 197.5 431.3 L 230 330 L 262.5 251.3 L 295 195 L 327.5 161.3 L 360 150 L 392.5 161.3 L 425 195 L 457.5 251.3 L 490 330 L 522.5 431.3 L 555 555 L 587.5 600 L 620 600",
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 2,
+      "opacity": {
+        "expr": "(1 + (order - 0.5) / sqrt((order - 0.5) * (order - 0.5) + 0.01)) / 2"
+      }
+    },
+    {
+      "id": "p4Curve",
+      "type": "path",
+      "d": "M 100 0 L 132.5 138.5 L 165 251.3 L 197.5 284.8 L 230 270 L 262.5 232.3 L 295 191.3 L 327.5 161 L 360 150 L 392.5 161 L 425 191.3 L 457.5 232.3 L 490 270 L 522.5 284.8 L 555 251.3 L 587.5 138.5 L 620 0",
+      "fill": "none",
+      "stroke": "#059669",
+      "strokeWidth": 2,
+      "opacity": {
+        "expr": "(1 + (order - 1.5) / sqrt((order - 1.5) * (order - 1.5) + 0.01)) / 2"
+      }
+    },
+    {
+      "id": "p6Curve",
+      "type": "path",
+      "d": "M 100 422 L 132.5 368.3 L 165 342.4 L 197.5 315.3 L 230 278 L 262.5 233.7 L 295 191.4 L 327.5 161 L 360 150 L 392.5 161 L 425 191.4 L 457.5 233.7 L 490 278 L 522.5 315.3 L 555 342.4 L 587.5 368.3 L 620 422",
+      "fill": "none",
+      "stroke": "#7c3aed",
+      "strokeWidth": 2,
+      "opacity": {
+        "expr": "(1 + (order - 2.5) / sqrt((order - 2.5) * (order - 2.5) + 0.01)) / 2"
+      }
+    },
+    {
+      "id": "centerMark",
+      "type": "circle",
+      "cx": 360,
+      "cy": 150,
+      "r": 6,
+      "fill": "#f59e0b",
+      "stroke": "#92400e",
+      "strokeWidth": 1
+    },
+    {
+      "id": "centerLabel",
+      "type": "text",
+      "x": 305,
+      "y": 128,
+      "text": "center x = 0",
+      "fontSize": 13,
+      "fill": "#92400e"
+    },
+    {
+      "id": "legendCos",
+      "type": "text",
+      "x": 60,
+      "y": 500,
+      "text": "f(x) = cos x",
+      "fontSize": 14,
+      "fill": "#111827"
+    },
+    {
+      "id": "legendP2",
+      "type": "text",
+      "x": 60,
+      "y": 522,
+      "text": "P2 = 1 - x^2/2",
+      "fontSize": 14,
+      "fill": "#dc2626"
+    },
+    {
+      "id": "legendP4",
+      "type": "text",
+      "x": 60,
+      "y": 544,
+      "text": "P4 = P2 + x^4/24",
+      "fontSize": 14,
+      "fill": "#059669"
+    },
+    {
+      "id": "legendP6",
+      "type": "text",
+      "x": 60,
+      "y": 566,
+      "text": "P6 = P4 - x^6/720",
+      "fontSize": 14,
+      "fill": "#7c3aed"
+    },
+    {
+      "id": "localNote",
+      "type": "text",
+      "x": 360,
+      "y": 530,
+      "text": "Local fit, not global equality.",
+      "fontSize": 14,
+      "fill": "#374151"
+    },
+    {
+      "id": "xLabel",
+      "type": "text",
+      "x": 625,
+      "y": 258,
+      "text": "x",
+      "fontSize": 14,
+      "fill": "#4b5563"
+    },
+    {
+      "id": "yLabel",
+      "type": "text",
+      "x": 340,
+      "y": 104,
+      "text": "f(x)",
+      "fontSize": 14,
+      "fill": "#4b5563"
+    }
+  ],
+  "timeline": {
+    "duration": 10,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "centerMark",
+          "property": "r"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 6,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 5,
+            "value": 9,
+            "easing": "ease-in-out"
+          },
+          {
+            "at": 10,
+            "value": 6,
+            "easing": "ease-in-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "orderControl",
+      "kind": "slider",
+      "propertyId": "order",
+      "label": "Number of Taylor terms"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-center",
+      "at": 1,
+      "title": "At the center",
+      "body": "At x = 0, cos(0) = 1 and every Taylor polynomial also equals 1. The curves overlap at the center.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-away",
+      "at": 4,
+      "title": "Away from the center",
+      "body": "Move away from x = 0: P2 separates first, then P4, then P6. A higher-order polynomial stays close over a wider interval.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp-local",
+      "at": 7,
+      "title": "More terms are still local",
+      "body": "Even P6 departs near the edges. More terms improve the local fit but do not make the polynomial equal to cos x globally.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The thick curve is cos x; the others are Taylor polynomials centered at 0."
+    },
+    {
+      "at": 3,
+      "text": "Near the center the approximations overlap."
+    },
+    {
+      "at": 6,
+      "text": "Away from the center they separate; the fit is local."
+    }
+  ],
+  "fallback": {
+    "text": "A cosine curve is compared with Taylor polynomials P2, P4 and P6 around x = 0. Near the center the curves nearly overlap; away from the center they separate, and adding terms only extends the useful interval. The polynomial never equals the function globally."
+  },
+  "accessibility": {
+    "alt": "Graph of cos x and Taylor polynomials P2, P4, P6 around x=0. Curves overlap near the center and separate toward the edges; a slider changes how many terms are shown.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

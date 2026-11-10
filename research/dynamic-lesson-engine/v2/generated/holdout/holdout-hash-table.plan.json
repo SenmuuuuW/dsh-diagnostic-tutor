@@ -1,0 +1,25 @@
+{
+  "representation": "A four-bucket hash table with h(k) = k mod 4, two stored keys chained in bucket 2, and a movable incoming-key token.",
+  "entities": [
+    "four bucket cells with index labels",
+    "stored keys 10 and 22 as a chain in bucket 2",
+    "incoming key token k",
+    "arrow into the target bucket",
+    "key slider"
+  ],
+  "motion": [
+    "the incoming token moves horizontally to bucket h(k)",
+    "the token pulses to show insertion",
+    "the arrow points into the target bucket"
+  ],
+  "controls": [
+    "incoming key slider from 10 to 30"
+  ],
+  "checkpoints": [
+    "read the fixed hash rule",
+    "see 10 and 22 collide in bucket 2",
+    "move the key and see chaining rather than sorting"
+  ],
+  "misconceptionTest": "Keys 10 and 22 are distinct yet share bucket 2, so the scene shows that collisions happen and are resolved by chaining. Bucket order is index order; the scene never claims insertion or sorted order. An incoming key with a different residue visibly leaves bucket 2.",
+  "accessibility": "Bucket indices and key values are text, the incoming token is labeled k and has an arrow, the slider is keyboard accessible, and alt text summarizes the collision and chain."
+}

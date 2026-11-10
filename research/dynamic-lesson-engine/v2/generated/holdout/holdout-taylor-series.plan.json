@@ -1,0 +1,26 @@
+{
+  "representation": "A 2D graph of f(x) = cos x with Taylor polynomials P2, P4 and P6 around x = 0, sharing axes, a center marker and a text legend.",
+  "entities": [
+    "x and y axes",
+    "cos x base curve",
+    "P2 curve",
+    "P4 curve",
+    "P6 curve",
+    "center marker at x = 0",
+    "curve labels and local-fit note"
+  ],
+  "motion": [
+    "the terms slider reveals P2, P4 and P6 in sequence",
+    "the center marker pulses gently"
+  ],
+  "controls": [
+    "order slider from 0 to 3"
+  ],
+  "checkpoints": [
+    "at the center all approximations agree",
+    "away from the center the curves separate",
+    "more terms improve a local fit, not global equality"
+  ],
+  "misconceptionTest": "At x = 0 every curve agrees, while near the edges even P6 separates from cos x. This directly contradicts global equality and the claim that more terms always help everywhere.",
+  "accessibility": "Every curve has a text label, the legend does not rely on color, the slider is keyboard accessible, alt text describes the graph, and reduced motion stops the marker pulse."
+}

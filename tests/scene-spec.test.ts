@@ -58,6 +58,30 @@ describe('SceneSpec v0 validation', () => {
   })
 })
 
+describe('research state snapshots', () => {
+  it('accepts named states and rejects unknown state references', async () => {
+    const spec = await example('bubble-sort-states')
+    expect(validateSceneSpec(spec)).toMatchObject({ ok: true })
+    const invalid = structuredClone(spec) as Record<string, any>
+    invalid.stateTimeline[1].state = 'missing'
+    expect(validateSceneSpec(invalid).ok).toBe(false)
+  })
+
+  it('applies a bounded named-state override deterministically', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const renderer = new SceneRenderer(container, await example('bubble-sort-states'))
+    expect(renderer.ok).toBe(true)
+    const bar = () => container.querySelector('[data-primitive="b0"]') as SVGRectElement | null
+    renderer.seek(0)
+    const startHeight = bar()?.getAttribute('height')
+    renderer.seek(4)
+    const passHeight = bar()?.getAttribute('height')
+    expect(startHeight).not.toBe(passHeight)
+    renderer.destroy(); container.remove()
+  })
+})
+
 describe('SceneRenderer v0 prototype', () => {
   it('renders SVG primitives and updates at a deterministic time', async () => {
     const container = document.createElement('div')

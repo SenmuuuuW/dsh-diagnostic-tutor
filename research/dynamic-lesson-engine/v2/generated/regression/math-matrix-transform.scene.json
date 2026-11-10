@@ -1,0 +1,106 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 900, "height": 560 },
+  "metadata": {
+    "title": "Matrix as a Mapping of the Plane",
+    "subject": "Mathematics",
+    "objective": "Show how a matrix maps basis vectors and a shape in the plane.",
+    "learner": "Has seen vectors but not matrix geometry.",
+    "misconceptions": [
+      "Matrix multiplication is just elementwise multiplication",
+      "The transformed grid is unchanged"
+    ],
+    "expectedUnderstanding": [
+      "column 1 is the image of e1 and column 2 is the image of e2",
+      "every point of the square maps to the matching point of the parallelogram",
+      "det A = a here, so area scales by |a| and b is a shear that keeps area"
+    ]
+  },
+  "properties": [
+    { "id": "a", "label": "entry a (column 1, x)", "min": 0.4, "max": 2, "step": 0.05, "default": 1.6 },
+    { "id": "b", "label": "entry b (column 2, x)", "min": -1, "max": 1, "step": 0.05, "default": 0.6 }
+  ],
+  "primitives": [
+    { "id": "xAxis", "type": "line", "x1": 140, "y1": 360, "x2": 660, "y2": 360 },
+    { "id": "yAxis", "type": "line", "x1": 330, "y1": 140, "x2": 330, "y2": 470 },
+    { "id": "e1Arrow", "type": "arrow", "x1": 330, "y1": 360, "x2": { "expr": "330 + 110*((1 - t/6) + (t/6)*a)" }, "y2": 360 },
+    { "id": "e2Arrow", "type": "arrow", "x1": 330, "y1": 360, "x2": { "expr": "330 + 110*(t/6)*b" }, "y2": 250 },
+    { "id": "edgeTop", "type": "line", "x1": { "expr": "330 + 110*((1 - t/6) + (t/6)*a)" }, "y1": 360, "x2": { "expr": "330 + 110*((1 - t/6) + (t/6)*(a + b))" }, "y2": 250 },
+    { "id": "edgeRight", "type": "line", "x1": { "expr": "330 + 110*((1 - t/6) + (t/6)*(a + b))" }, "y1": 250, "x2": { "expr": "330 + 110*(t/6)*b" }, "y2": 250 },
+    { "id": "ghostBottom", "type": "line", "x1": 330, "y1": 360, "x2": 440, "y2": 360 },
+    { "id": "ghostRight", "type": "line", "x1": 440, "y1": 360, "x2": 440, "y2": 250 },
+    { "id": "ghostTop", "type": "line", "x1": 440, "y1": 250, "x2": 330, "y2": 250 },
+    { "id": "ghostLeft", "type": "line", "x1": 330, "y1": 250, "x2": 330, "y2": 360 },
+    { "id": "originRing", "type": "circle", "cx": 330, "cy": 360, "r": 12 },
+    { "id": "labelRef", "type": "text", "x": 120, "y": 232, "text": "reference unit square", "fontSize": 14 },
+    { "id": "labelCol1", "type": "text", "x": 430, "y": 394, "text": "column 1 = image of e1", "fontSize": 14 },
+    { "id": "labelCol2", "type": "text", "x": 400, "y": 236, "text": "column 2 = image of e2", "fontSize": 14 },
+    { "id": "labelArea", "type": "text", "x": 120, "y": 520, "text": "area factor = |det A| = a", "fontSize": 15 }
+  ],
+  "timeline": {
+    "duration": 6,
+    "tracks": [
+      {
+        "target": { "primitive": "originRing", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 12 },
+          { "at": 1.5, "value": 18 },
+          { "at": 3, "value": 12 },
+          { "at": 4.5, "value": 18 },
+          { "at": 6, "value": 12 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "aSlider", "kind": "slider", "propertyId": "a", "label": "entry a" },
+    { "id": "bSlider", "kind": "slider", "propertyId": "b", "label": "entry b" }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp1",
+      "at": 0.1,
+      "title": "Start from the identity",
+      "body": "The small square is the reference, with corners (0,0), (1,0), (0,1) and (1,1). The animation shows where each corner goes under the matrix. Press continue to run it.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp2",
+      "at": 2,
+      "title": "The columns are the basis images",
+      "body": "Column 1 is (a, 0): the image of e1 = (1,0). Column 2 is (b, 1): the image of e2 = (0,1). The two arrows from the origin are exactly those columns, and they are two sides of the parallelogram.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp3",
+      "at": 4,
+      "title": "Entries mix coordinates",
+      "body": "The matrix sends (x, y) to (a x + b y, y). Each output coordinate combines both inputs, which is why entry b moves points whose y is not zero. That is not elementwise multiplication of entries and coordinates.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp4",
+      "at": 5.9,
+      "title": "Area and collapse",
+      "body": "The parallelogram's area is |det A| = |a|: moving a stretches it, moving b shears it sideways and leaves the area unchanged. If a reached 0 the square would flatten onto a line and the map would lose information, so this scene keeps a at least 0.4.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    { "at": 0, "text": "The reference unit square is mapped to the parallelogram spanned by the matrix columns." },
+    { "at": 2.1, "text": "The arrow tips are the columns: the images of the two basis vectors." },
+    { "at": 4.1, "text": "Changing a stretches; changing b shears without changing area." }
+  ],
+  "fallback": {
+    "text": "A unit square at the origin is mapped by the matrix with columns (a, 0) and (b, 1). The image is the parallelogram spanned by those columns: increasing a stretches it horizontally, increasing b slides the top edge sideways, and the area equals |a|. The two arrows show where the basis vectors land."
+  },
+  "accessibility": {
+    "alt": "A reference unit square at the origin becoming a parallelogram under a matrix; two arrows show the images of the basis vectors, labelled as column 1 and column 2.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

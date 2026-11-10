@@ -1,0 +1,74 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 640, "height": 360 },
+  "metadata": {
+    "title": "Function Composition: Two Orders",
+    "subject": "Mathematics",
+    "objective": "Show g(x) then f(g(x)) as a two-stage machine or graph mapping.",
+    "learner": "Knows function notation.",
+    "misconceptions": [
+      "f(g(x)) always equals g(f(x))",
+      "Composition is multiplication of outputs"
+    ],
+    "expectedUnderstanding": [
+      "The intermediate value is g(x) or f(x)",
+      "The final value is f(g(x)) or g(f(x))",
+      "Changing the order changes the result for these functions"
+    ]
+  },
+  "properties": [
+    { "id": "x", "label": "Input x", "min": -0.3, "max": 1.5, "step": 0.1, "default": 0.5 }
+  ],
+  "primitives": [
+    { "id": "inputDot", "type": "circle", "cx": 70, "cy": { "expr": "320-20*x" }, "r": 6 },
+    { "id": "gStage", "type": "circle", "cx": 210, "cy": { "expr": "320-20*(0.5*x+2)" }, "r": 6 },
+    { "id": "fgFinal", "type": "circle", "cx": 390, "cy": { "expr": "320-20*(x+3)" }, "r": 6 },
+    { "id": "fStage", "type": "rect", "x": { "expr": "204" }, "y": { "expr": "320-20*(2*x-1)-6" }, "width": 12, "height": 12 },
+    { "id": "gfFinal", "type": "rect", "x": { "expr": "384" }, "y": { "expr": "320-20*(x+1.5)-6" }, "width": 12, "height": 12 },
+    { "id": "inToG", "type": "arrow", "x1": 76, "y1": { "expr": "320-20*x" }, "x2": 204, "y2": { "expr": "320-20*(0.5*x+2)" } },
+    { "id": "gToFG", "type": "arrow", "x1": 216, "y1": { "expr": "320-20*(0.5*x+2)" }, "x2": 384, "y2": { "expr": "320-20*(x+3)" } },
+    { "id": "inToF", "type": "arrow", "x1": 76, "y1": { "expr": "320-20*x" }, "x2": 204, "y2": { "expr": "320-20*(2*x-1)" } },
+    { "id": "fToGF", "type": "arrow", "x1": 216, "y1": { "expr": "320-20*(2*x-1)" }, "x2": 384, "y2": { "expr": "320-20*(x+1.5)" } },
+    { "id": "title", "type": "text", "x": 30, "y": 25, "text": "Function composition: two orders", "fontSize": 17 },
+    { "id": "formula", "type": "text", "x": 30, "y": 45, "text": "g(x)=0.5x+2; f(u)=2u-1", "fontSize": 12 },
+    { "id": "gLabel", "type": "text", "x": 185, "y": 70, "text": "g(x)", "fontSize": 12 },
+    { "id": "fgLabel", "type": "text", "x": 360, "y": 70, "text": "f(g(x))", "fontSize": 12 },
+    { "id": "xLabel", "type": "text", "x": 55, "y": 335, "text": "x", "fontSize": 12 },
+    { "id": "fLabel", "type": "text", "x": 185, "y": 335, "text": "f(x)", "fontSize": 12 },
+    { "id": "gfLabel", "type": "text", "x": 360, "y": 335, "text": "g(f(x))", "fontSize": 12 }
+  ],
+  "timeline": {
+    "duration": 10,
+    "tracks": [
+      {
+        "target": { "primitive": "inputDot", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 6 },
+          { "at": 5, "value": 8 },
+          { "at": 10, "value": 6 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "xControl", "kind": "slider", "propertyId": "x", "label": "Input x" }
+  ],
+  "checkpoints": [
+    { "id": "fc-zero", "at": 0.5, "title": "Trace both lanes", "body": "Set x to 0. The top intermediate is g(0) = 2 and the top final is f(2) = 3. The bottom intermediate is f(0) = -1 and the bottom final is g(-1) = 1.5.", "pause": true, "learnerAction": "Set x to 0." },
+    { "id": "fc-compare", "at": 5, "title": "Same input, different output", "body": "Set x to 1. Top: g(1) = 2.5, then f(2.5) = 4. Bottom: f(1) = 1, then g(1) = 2.5. The two final markers are at different heights.", "pause": true, "learnerAction": "Set x to 1." },
+    { "id": "fc-order", "at": 9.5, "title": "Order matters here", "body": "Set x to 1.5. Top final f(g(1.5)) = 4.5; bottom final g(f(1.5)) = 3. Composition is substitution, not multiplication, and these orders do not commute.", "pause": true, "learnerAction": "Set x to 1.5." }
+  ],
+  "narration": [
+    { "at": 0, "text": "One input feeds two lanes. The top applies g then f; the bottom applies f then g." },
+    { "at": 5, "text": "The middle marker is the intermediate value; the right marker is the composed output." },
+    { "at": 9.5, "text": "The two final markers separate, so swapping the order changes the result for these functions." }
+  ],
+  "fallback": {
+    "text": "An input x feeds two orders: top applies g then f, bottom applies f then g. The middle dot is g(x) or f(x); the right marker is the composed output. With g(x)=0.5x+2 and f(u)=2u-1, the orders give x+3 and x+1.5, so they differ."
+  },
+  "accessibility": {
+    "alt": "Two composition lanes from one input: the top applies g then f, the bottom f then g. Circles mark the top lane and squares the bottom; a slider changes x, and the final markers sit at different heights.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

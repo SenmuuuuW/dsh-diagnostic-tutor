@@ -1,0 +1,9 @@
+{
+  "representation": "A fixed five-node graph A-B, A-C, B-D, C-D, D-E whose node sizes encode unvisited, frontier, current and visited states, with a status line naming the queue or stack at each step.",
+  "entities": ["nodes A to E", "five edges", "node labels", "frontier nodes", "visited nodes", "queue or stack status line"],
+  "motion": "The frontier nodes enlarge, the current node enlarges further, and visited nodes settle at a middle size as BFS runs first and DFS runs second from the same start.",
+  "controls": ["state timeline with pause/continue checkpoints; no numeric slider"],
+  "checkpoints": ["BFS frontier as a queue", "BFS shortest distances", "DFS uses a stack and reaches E before C", "visited set prevents repeats and the orders differ"],
+  "misconceptionTest": "DFS reaches E along A-B-D-E before visiting C, so its order is not shortest-path order; the BFS phase shows D=2 and E=3. At C, neighbor D is skipped because it is already visited, so nodes are not revisited forever.",
+  "accessibility": "Alt text; keyboard play/pause and checkpoints; every node has a letter label, and the status line names the queue or stack, frontier and visited set in words."
+}

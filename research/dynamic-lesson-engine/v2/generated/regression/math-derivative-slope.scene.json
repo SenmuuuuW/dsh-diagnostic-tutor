@@ -1,0 +1,113 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 900, "height": 560 },
+  "metadata": {
+    "title": "Derivative as Slope",
+    "subject": "Mathematics",
+    "objective": "Show a tangent line whose slope matches the derivative at a movable point.",
+    "learner": "Can read coordinates on a graph.",
+    "misconceptions": [
+      "The derivative is the value of the function",
+      "A positive derivative means the function is positive"
+    ],
+    "expectedUnderstanding": [
+      "the tangent's steepness at x equals f'(x)",
+      "the sign of the slope matches whether the curve is rising",
+      "f'(x) = 0 means a flat tangent, not a zero value"
+    ]
+  },
+  "properties": [
+    { "id": "xp", "label": "position x", "min": -2, "max": 2, "step": 0.05, "default": 1.5 }
+  ],
+  "primitives": [
+    { "id": "c1", "type": "line", "x1": 234, "y1": 421.4, "x2": 288, "y2": 307.9 },
+    { "id": "c2", "type": "line", "x1": 288, "y1": 307.9, "x2": 342, "y2": 265.7 },
+    { "id": "c3", "type": "line", "x1": 342, "y1": 265.7, "x2": 396, "y2": 271 },
+    { "id": "c4", "type": "line", "x1": 396, "y1": 271, "x2": 450, "y2": 300 },
+    { "id": "c5", "type": "line", "x1": 450, "y1": 300, "x2": 504, "y2": 329 },
+    { "id": "c6", "type": "line", "x1": 504, "y1": 329, "x2": 558, "y2": 334.3 },
+    { "id": "c7", "type": "line", "x1": 558, "y1": 334.3, "x2": 612, "y2": 292.1 },
+    { "id": "c8", "type": "line", "x1": 612, "y1": 292.1, "x2": 666, "y2": 178.6 },
+    { "id": "xAxis", "type": "line", "x1": 200, "y1": 300, "x2": 700, "y2": 300 },
+    { "id": "yAxis", "type": "line", "x1": 450, "y1": 140, "x2": 450, "y2": 470 },
+    { "id": "dot", "type": "circle", "cx": { "expr": "450 + 90*xp" }, "cy": { "expr": "300 - 55*(xp*xp*xp/3 - xp)" }, "r": 9 },
+    { "id": "tangent", "type": "line", "x1": { "expr": "380 + 90*xp" }, "y1": { "expr": "300 - 55*(xp*xp*xp/3 - xp) + 42.8*(xp*xp - 1)" }, "x2": { "expr": "520 + 90*xp" }, "y2": { "expr": "300 - 55*(xp*xp*xp/3 - xp) - 42.8*(xp*xp - 1)" } },
+    { "id": "ring", "type": "circle", "cx": { "expr": "450 + 90*xp" }, "cy": { "expr": "300 - 55*(xp*xp*xp/3 - xp)" }, "r": 16 },
+    { "id": "labelFn", "type": "text", "x": 250, "y": 150, "text": "f(x) = x^3/3 - x", "fontSize": 15 },
+    { "id": "labelTangent", "type": "text", "x": 250, "y": 522, "text": "tangent slope at the point = f'(x)", "fontSize": 15 }
+  ],
+  "timeline": {
+    "duration": 8,
+    "tracks": [
+      {
+        "target": { "primitive": "ring", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 16 },
+          { "at": 2, "value": 22 },
+          { "at": 4, "value": 16 },
+          { "at": 6, "value": 22 },
+          { "at": 8, "value": 16 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "xpSlider", "kind": "slider", "propertyId": "xp", "label": "position x" }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp1",
+      "at": 0.2,
+      "title": "Height and slope are different numbers",
+      "body": "The marked point is at (x, f(x)). The straight line through it is the tangent, and its steepness is the derivative f'(x). Drag the position slider to move the point along the curve and watch the tangent tilt.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp2",
+      "at": 2,
+      "title": "Flat tangent, nonzero height",
+      "body": "Move to x = 1: the tangent is horizontal, so f'(1) = 0. But the point is at y about -0.67, not at 0. A zero derivative tells you the curve is momentarily flat; it says nothing about the height of the curve.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp3",
+      "at": 3.6,
+      "title": "Rising while the value is negative",
+      "body": "At x = 1.5 the curve is clearly rising, so f'(1.5) = 1.25 is positive, yet f(1.5) = -0.375 sits below the axis. The derivative reports direction of change, not the sign of the value.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp4",
+      "at": 5.2,
+      "title": "Falling while the value is positive",
+      "body": "Move to x = -0.5: the tangent now slopes down (f' = -0.75) while the point is above the axis at y about 0.46. Rising and positive are independent facts about the function.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp5",
+      "at": 6.8,
+      "title": "Where the slope is zero",
+      "body": "At x = -1 and x = 1 the tangent is horizontal and the sign of the slope flips on either side: these are the turning points. The curve is smooth at every x shown, so the derivative exists everywhere in this scene.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    { "at": 0, "text": "A point slides along the cubic and the tangent line follows it." },
+    { "at": 2.1, "text": "Where the tangent is flat the derivative is zero, but the height can be anything." },
+    { "at": 3.7, "text": "The curve can rise while the point itself is below the axis." },
+    { "at": 5.3, "text": "And it can fall while the point is above the axis." }
+  ],
+  "fallback": {
+    "text": "A cubic curve y = x^3/3 - x with a movable point and the tangent at that point. The tangent's slope equals f'(x): negative between x = -1 and x = 1, positive outside, zero at x = -1 and x = 1. Moving the point shows that the slope's sign and the function's sign are independent."
+  },
+  "accessibility": {
+    "alt": "A cubic curve with a marked point and a straight tangent line through it; the tangent tilts as the point moves, and a pulsing ring marks the point whose slope is being read.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

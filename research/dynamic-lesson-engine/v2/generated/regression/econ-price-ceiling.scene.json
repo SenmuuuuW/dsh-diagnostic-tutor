@@ -1,0 +1,71 @@
+{
+  "version": "0.1",
+  "viewport": {"width": 760, "height": 420, "background": "#f8fafc"},
+  "metadata": {
+    "title": "Binding Price Ceiling and Shortage",
+    "subject": "Economics",
+    "objective": "Show a binding price ceiling producing a shortage between quantity demanded and quantity supplied.",
+    "learner": "Knows supply and demand basics.",
+    "misconceptions": [
+      "A ceiling always helps buyers",
+      "Shortage equals zero supply"
+    ],
+    "expectedUnderstanding": [
+      "A ceiling binds only when it is below the equilibrium price.",
+      "At a binding ceiling, quantity demanded exceeds quantity supplied.",
+      "Shortage is the gap Qd - Qs, not the absence of supply.",
+      "A price ceiling does not raise total surplus."
+    ]
+  },
+  "properties": [
+    {"id": "ceilingPrice", "label": "Ceiling price", "min": 30, "max": 54, "step": 1, "default": 38, "unit": "$"}
+  ],
+  "primitives": [
+    {"id": "axisX", "type": "line", "x1": 80, "y1": 350, "x2": 690, "y2": 350, "stroke": "#94a3b8", "strokeWidth": 1.5},
+    {"id": "axisY", "type": "line", "x1": 80, "y1": 50, "x2": 80, "y2": 350, "stroke": "#94a3b8", "strokeWidth": 1.5},
+    {"id": "demand", "type": "line", "x1": 100, "y1": 50, "x2": 520, "y2": 260, "stroke": "#2563eb", "strokeWidth": 3},
+    {"id": "supply", "type": "line", "x1": 100, "y1": 320, "x2": 520, "y2": 110, "stroke": "#059669", "strokeWidth": 3},
+    {"id": "ceiling", "type": "line", "x1": 80, "y1": {"expr": "350 - 3*ceilingPrice"}, "x2": 650, "y2": {"expr": "350 - 3*ceilingPrice"}, "stroke": "#dc2626", "strokeWidth": 2.5, "dash": "7 4"},
+    {"id": "eqDot", "type": "circle", "cx": 370, "cy": 185, "r": 6, "fill": "#f59e0b", "stroke": "#ffffff", "strokeWidth": 2},
+    {"id": "eqLabel", "type": "text", "x": 382, "y": 208, "text": "E = equilibrium", "fontSize": 13, "fill": "#92400e"},
+    {"id": "qdDot", "type": "circle", "cx": {"expr": "700 - 6*ceilingPrice"}, "cy": {"expr": "350 - 3*ceilingPrice"}, "r": 6, "fill": "#2563eb", "stroke": "#ffffff", "strokeWidth": 1.5},
+    {"id": "qsDot", "type": "circle", "cx": {"expr": "40 + 6*ceilingPrice"}, "cy": {"expr": "350 - 3*ceilingPrice"}, "r": 6, "fill": "#059669", "stroke": "#ffffff", "strokeWidth": 1.5},
+    {"id": "shortageArrow", "type": "arrow", "x1": {"expr": "40 + 6*ceilingPrice"}, "y1": {"expr": "350 - 3*ceilingPrice"}, "x2": {"expr": "700 - 6*ceilingPrice"}, "y2": {"expr": "350 - 3*ceilingPrice"}, "stroke": "#dc2626", "strokeWidth": 2.5},
+    {"id": "shortageLabel", "type": "text", "x": 370, "y": {"expr": "334 - 3*ceilingPrice"}, "text": "shortage = Qd - Qs", "fontSize": 12, "fill": "#b91c1c"},
+    {"id": "ceilingLabel", "type": "text", "x": 655, "y": {"expr": "354 - 3*ceilingPrice"}, "text": "ceiling", "fontSize": 12, "fill": "#b91c1c"},
+    {"id": "demandLabel", "type": "text", "x": 455, "y": 218, "text": "Demand (Qd blue)", "fontSize": 12, "fill": "#1d4ed8"},
+    {"id": "supplyLabel", "type": "text", "x": 455, "y": 128, "text": "Supply (Qs green)", "fontSize": 12, "fill": "#047857"},
+    {"id": "priceLabel", "type": "text", "x": 30, "y": 58, "text": "Price", "fontSize": 14, "fill": "#475569"},
+    {"id": "quantityLabel", "type": "text", "x": 585, "y": 380, "text": "Quantity", "fontSize": 14, "fill": "#475569"}
+  ],
+  "timeline": {
+    "duration": 14,
+    "tracks": [
+      {"target": {"primitive": "shortageLabel", "property": "fontSize"}, "keyframes": [{"at": 0, "value": 12}, {"at": 4, "value": 15, "easing": "ease-in-out"}, {"at": 8, "value": 12}, {"at": 12, "value": 15, "easing": "ease-in-out"}, {"at": 14, "value": 12}]}
+    ]
+  },
+  "controls": [
+    {"id": "ceilingSlider", "kind": "slider", "propertyId": "ceilingPrice", "label": "Move the ceiling price"}
+  ],
+  "checkpoints": [
+    {"id": "cp0", "at": 1, "title": "A binding ceiling", "body": "The red ceiling is below the equilibrium price. It legally prevents the price from rising to E, so it binds. The equilibrium dot still marks where the two curves would meet without the ceiling.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp1", "at": 4, "title": "Two quantities at one price", "body": "At the ceiling price, the blue dot on demand is Qd and the green dot on supply is Qs. Buyers want more than sellers offer, so the red arrow marks the shortage between them.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp2", "at": 7, "title": "Binding only below equilibrium", "body": "If the ceiling were set at or above the equilibrium price, it would not bind: the market would simply trade at E. A ceiling only creates a shortage when it is below equilibrium.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp3", "at": 10, "title": "Shortage is not zero supply", "body": "At the ceiling, sellers still supply Qs, which is positive. The problem is that Qs is less than Qd. Shortage is the gap Qd - Qs, not the disappearance of supply.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp4", "at": 13, "title": "No free surplus", "body": "The ceiling lowers the price for buyers who can actually buy, but it reduces the quantity traded. It does not raise total surplus; it transfers surplus and destroys some of it, and can create queues or black markets.", "pause": true, "learnerAction": "continue"}
+  ],
+  "narration": [
+    {"at": 0, "text": "A price ceiling is a legal maximum price."},
+    {"at": 3, "text": "Below equilibrium it binds, so quantity demanded exceeds quantity supplied."},
+    {"at": 6.5, "text": "The shortage is the gap between Qd and Qs, not zero supply."},
+    {"at": 10, "text": "At or above equilibrium, a ceiling would not bind at all."}
+  ],
+  "fallback": {
+    "text": "A price-quantity graph shows demand sloping down and supply sloping up, meeting at equilibrium. A red horizontal ceiling below equilibrium is binding: at that lower price, the quantity demanded Qd is larger than the quantity supplied Qs. The shortage is Qd minus Qs, marked by a red arrow. Sellers still supply a positive Qs; shortage is not zero supply. If the ceiling were at or above the equilibrium price, it would not bind and the market would trade at equilibrium. A ceiling lowers the price for some buyers but reduces the quantity traded, so it does not raise total surplus."
+  },
+  "accessibility": {
+    "alt": "Price-quantity graph with demand sloping down and supply sloping up, meeting at equilibrium. A red ceiling line below equilibrium meets demand at Qd and supply at Qs, with a red arrow labeled shortage.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

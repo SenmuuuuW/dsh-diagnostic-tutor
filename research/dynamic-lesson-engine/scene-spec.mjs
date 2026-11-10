@@ -16,6 +16,8 @@ export const LIMITS = Object.freeze({
   keyframes: 800,
   checkpoints: 12,
   narration: 20,
+  states: 12,
+  stateOverrides: 120,
   sourceRefs: 6,
   expressionChars: 240,
   pathChars: 4000,
@@ -326,7 +328,7 @@ function validateTrackTarget(target, primitiveById, errors, path) {
 export function validateSceneSpec(raw) {
   const errors = []
   if (!isRecord(raw)) return { ok: false, errors: [fail('$', 'object', 'SceneSpec must be an object')] }
-  checkKeys(raw, ['version', 'viewport', 'metadata', 'properties', 'primitives', 'timeline', 'controls', 'checkpoints', 'narration', 'fallback', 'accessibility', 'sourceRefs'], '$', errors)
+  checkKeys(raw, ['version', 'viewport', 'metadata', 'properties', 'primitives', 'timeline', 'controls', 'checkpoints', 'narration', 'states', 'stateTimeline', 'fallback', 'accessibility', 'sourceRefs'], '$', errors)
   if (raw.version !== SCENE_SPEC_VERSION) errors.push(fail('version', 'version', `must be ${SCENE_SPEC_VERSION}`))
 
   // Viewport
@@ -414,6 +416,57 @@ export function validateSceneSpec(raw) {
         if (target !== undefined && track.keyframes.length > 0) target // semantic target validated
       })
       if (keyframeCount > LIMITS.keyframes) errors.push(fail('timeline.tracks', 'budget', `at most ${LIMITS.keyframes} keyframes total`))
+    }
+  }
+
+  // Named state snapshots (research extension for algorithm scenes). A state
+  // is a bounded list of property overrides, not executable control flow.
+  if (raw.states !== undefined) {
+    if (!Array.isArray(raw.states) || raw.states.length > LIMITS.states) errors.push(fail('states', 'array', `up to ${LIMITS.states} named states`))
+    else {
+      const stateIds = new Set()
+      raw.states.forEach((state, index) => {
+        const path = `states[${index}]`
+        if (!isRecord(state)) { errors.push(fail(path, 'object', 'must be an object')); return }
+        checkKeys(state, ['id', 'label', 'overrides'], path, errors)
+        if (!stringField(state.id, 64) || !ID_RE.test(state.id)) errors.push(fail(`${path}.id`, 'id', 'invalid id'))
+        else if (stateIds.has(state.id)) errors.push(fail(`${path}.id`, 'duplicate', 'duplicate state id'))
+        else stateIds.add(state.id)
+        if (!stringField(state.label, 80)) errors.push(fail(`${path}.label`, 'string', 'required label'))
+        if (!Array.isArray(state.overrides) || state.overrides.length > LIMITS.stateOverrides) errors.push(fail(`${path}.overrides`, 'array', 'snapshot overrides required'))
+        else state.overrides.forEach((override, overrideIndex) => {
+          const overridePath = `${path}.overrides[${overrideIndex}]`
+          if (!isRecord(override)) { errors.push(fail(overridePath, 'object', 'must be an object')); return }
+          checkKeys(override, ['primitive', 'property', 'value'], overridePath, errors)
+          if (typeof override.primitive !== 'string' || !primitiveById.has(override.primitive)) errors.push(fail(`${overridePath}.primitive`, 'reference', 'unknown primitive'))
+          const primitive = primitiveById.get(override.primitive)
+          if (typeof override.property !== 'string') errors.push(fail(`${overridePath}.property`, 'string', 'required property'))
+          else if (override.property === 'text') {
+            if (primitive?.type !== 'text') errors.push(fail(`${overridePath}.property`, 'target', 'text override requires a text primitive'))
+            if (!stringField(override.value, LIMITS.textChars)) errors.push(fail(`${overridePath}.value`, 'text', 'short text required'))
+          } else {
+            if (primitive !== undefined && !NUMERIC_PROPS[primitive.type]?.includes(override.property)) errors.push(fail(`${overridePath}.property`, 'target', 'unknown numeric property'))
+            validateNumeric(override.value, `${overridePath}.value`, [...propertyIds, 't', 'duration'], errors)
+          }
+        })
+      })
+    }
+  }
+  if (raw.stateTimeline !== undefined) {
+    if (!Array.isArray(raw.stateTimeline) || raw.stateTimeline.length > LIMITS.states * 4) errors.push(fail('stateTimeline', 'array', 'bounded state timeline required'))
+    else {
+      const stateIds = new Set((raw.states ?? []).filter((state) => isRecord(state) && typeof state.id === 'string').map((state) => state.id))
+      let lastAt = -1
+      raw.stateTimeline.forEach((entry, index) => {
+        const path = `stateTimeline[${index}]`
+        if (!isRecord(entry)) { errors.push(fail(path, 'object', 'must be an object')); return }
+        checkKeys(entry, ['at', 'state'], path, errors)
+        if (!finite(entry.at) || entry.at < 0 || entry.at > (raw.timeline?.duration ?? 0)) errors.push(fail(`${path}.at`, 'range', 'within timeline'))
+        else if (entry.at < lastAt) errors.push(fail(`${path}.at`, 'order', 'state timeline must be nondecreasing'))
+        else lastAt = entry.at
+        if (typeof entry.state !== 'string' || !stateIds.has(entry.state)) errors.push(fail(`${path}.state`, 'reference', 'unknown named state'))
+      })
+      if (stateIds.size === 0) errors.push(fail('stateTimeline', 'reference', 'stateTimeline requires named states'))
     }
   }
 

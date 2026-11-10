@@ -1,0 +1,9 @@
+{
+  "representation": "Unit circle linked by a horizontal guide to a sine curve; vertical drops show the shared height.",
+  "entities": ["unit circle", "radius", "angle point", "height drop", "sine curve", "sine point"],
+  "motion": "An angle slider moves the circle point; the sine point tracks the same height on the curve.",
+  "controls": ["angle slider from 0 to 360 degrees"],
+  "checkpoints": ["0 degrees: height 0", "90 degrees: height 1", "180 degrees: height 0"],
+  "misconceptionTest": "The sine value is the y-coordinate, not the x-coordinate; circular height extends the triangle ratio.",
+  "accessibility": "Alt text, keyboard-operable slider, numeric angle labels, no color-only meaning."
+}

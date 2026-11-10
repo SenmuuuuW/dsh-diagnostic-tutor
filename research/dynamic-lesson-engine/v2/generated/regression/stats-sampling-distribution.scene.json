@@ -1,0 +1,71 @@
+{
+  "version": "0.1",
+  "viewport": {"width": 760, "height": 420, "background": "#f8fafc"},
+  "metadata": {
+    "title": "Sampling Distribution of the Mean",
+    "subject": "Statistics",
+    "objective": "Show sample means varying around a population mean and their spread shrinking as n grows.",
+    "learner": "Knows mean and standard deviation.",
+    "misconceptions": [
+      "A larger sample makes each observation closer to the mean",
+      "The sampling distribution is the population distribution"
+    ],
+    "expectedUnderstanding": [
+      "Sample means center near the population mean.",
+      "The spread of sample means shrinks as n grows.",
+      "Individual observations are not the same as sample means.",
+      "The population distribution and the sampling distribution are different."
+    ]
+  },
+  "properties": [
+    {"id": "n", "label": "Sample size n", "min": 1, "max": 36, "step": 1, "default": 9, "unit": "obs"}
+  ],
+  "primitives": [
+    {"id": "popAxis", "type": "line", "x1": 100, "y1": 150, "x2": 660, "y2": 150, "stroke": "#94a3b8", "strokeWidth": 1.5},
+    {"id": "popLabel", "type": "text", "x": 60, "y": 50, "text": "Population of individual observations (fixed spread)", "fontSize": 15, "fill": "#0f172a"},
+    {"id": "popMeanLine", "type": "line", "x1": 380, "y1": 65, "x2": 380, "y2": 195, "stroke": "#64748b", "strokeWidth": 1.5, "dash": "6 4"},
+    {"id": "obs1", "type": "circle", "cx": 240, "cy": 120, "r": 5, "fill": "#2563eb", "stroke": "#ffffff", "strokeWidth": 1},
+    {"id": "obs2", "type": "circle", "cx": 300, "cy": 95, "r": 5, "fill": "#2563eb", "stroke": "#ffffff", "strokeWidth": 1},
+    {"id": "obs3", "type": "circle", "cx": 335, "cy": 132, "r": 5, "fill": "#2563eb", "stroke": "#ffffff", "strokeWidth": 1},
+    {"id": "obs4", "type": "circle", "cx": 380, "cy": 105, "r": 5, "fill": "#2563eb", "stroke": "#ffffff", "strokeWidth": 1},
+    {"id": "obs5", "type": "circle", "cx": 425, "cy": 128, "r": 5, "fill": "#2563eb", "stroke": "#ffffff", "strokeWidth": 1},
+    {"id": "obs6", "type": "circle", "cx": 470, "cy": 92, "r": 5, "fill": "#2563eb", "stroke": "#ffffff", "strokeWidth": 1},
+    {"id": "obs7", "type": "circle", "cx": 525, "cy": 116, "r": 5, "fill": "#2563eb", "stroke": "#ffffff", "strokeWidth": 1},
+    {"id": "sampleLabel", "type": "text", "x": 60, "y": 212, "text": "Dashed line = population mean. Orange dots = sample means; band = spread.", "fontSize": 14, "fill": "#0f172a"},
+    {"id": "spreadBand", "type": "rect", "x": {"expr": "380 - 150/sqrt(n)"}, "y": 248, "width": {"expr": "300/sqrt(n)"}, "height": 64, "fill": "#fde68a", "stroke": "#f59e0b", "strokeWidth": 1.5},
+    {"id": "sampleMeanLine", "type": "line", "x1": 380, "y1": 238, "x2": 380, "y2": 320, "stroke": "#64748b", "strokeWidth": 1.5, "dash": "6 4"},
+    {"id": "mean1", "type": "circle", "cx": {"expr": "380 - 70/sqrt(n)"}, "cy": 280, "r": 7, "fill": "#ea580c", "stroke": "#ffffff", "strokeWidth": 2},
+    {"id": "mean2", "type": "circle", "cx": 380, "cy": 280, "r": 7, "fill": "#ea580c", "stroke": "#ffffff", "strokeWidth": 2},
+    {"id": "mean3", "type": "circle", "cx": {"expr": "380 + 55/sqrt(n)"}, "cy": 280, "r": 7, "fill": "#ea580c", "stroke": "#ffffff", "strokeWidth": 2}
+  ],
+  "timeline": {
+    "duration": 12,
+    "tracks": [
+      {"target": {"primitive": "mean2", "property": "r"}, "keyframes": [{"at": 0, "value": 7}, {"at": 3, "value": 9, "easing": "ease-in-out"}, {"at": 6, "value": 7}, {"at": 9, "value": 9, "easing": "ease-in-out"}, {"at": 12, "value": 7}]}
+    ]
+  },
+  "controls": [
+    {"id": "sampleSize", "kind": "slider", "propertyId": "n", "label": "Change the sample size"}
+  ],
+  "checkpoints": [
+    {"id": "cp0", "at": 1, "title": "Two different distributions", "body": "The blue dots at the top are individual observations. The orange dots below are sample means, each computed from n observations. A sample mean is an average, not one observation.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp1", "at": 3.5, "title": "Larger n narrows the spread", "body": "Drag the sample-size slider upward. The shaded band gets narrower and the three sample means move closer together around the population mean. Their spread shrinks roughly with 1/sqrt(n).", "pause": true, "learnerAction": "continue"},
+    {"id": "cp2", "at": 6, "title": "Observations do not move", "body": "The blue population dots stay exactly where they are at every n. A larger sample makes the average more precise; it does not pull each individual observation closer to the mean.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp3", "at": 8.5, "title": "Centering and separation", "body": "Sample means center near the population mean, but their distribution is not the population distribution. The sampling distribution describes means; the population distribution describes individual observations.", "pause": true, "learnerAction": "continue"},
+    {"id": "cp4", "at": 10.5, "title": "The n = 1 case", "body": "At n = 1, each sample mean is just one observation, so the sample-mean spread matches the population spread. As n grows, the sample means cluster and the band narrows.", "pause": true, "learnerAction": "continue"}
+  ],
+  "narration": [
+    {"at": 0, "text": "Blue dots are individual observations; orange dots are sample means."},
+    {"at": 3, "text": "Larger n makes the sample means cluster more tightly around the population mean."},
+    {"at": 6, "text": "The individual observations do not move closer to the mean when n grows."},
+    {"at": 9, "text": "The sampling distribution of means is not the population distribution."}
+  ],
+  "fallback": {
+    "text": "The top row shows individual observations with a fixed spread around a dashed population mean. The bottom row shows three sample means, each the average of n observations, surrounding the same population mean. When n increases, the shaded spread band narrows and the three sample means move closer together. Their spread shrinks roughly as 1/sqrt(n). The individual observations do not move, so a larger sample does not make each observation closer to the mean. The sampling distribution is the distribution of sample means, not the population distribution, although its center is near the population mean."
+  },
+  "accessibility": {
+    "alt": "Seven spread population observations sit around a dashed mean line. Below, a shaded band and three orange sample means center on one line. Increasing n narrows the band and pulls the orange means together; the top dots stay fixed.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

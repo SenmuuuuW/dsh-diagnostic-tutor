@@ -1,0 +1,119 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 900, "height": 560 },
+  "metadata": {
+    "title": "Unit Circle to Sine",
+    "subject": "Mathematics",
+    "objective": "Connect a point on the unit circle to the height of the sine curve.",
+    "learner": "Knows right-triangle ratios; has not connected circular motion to sine.",
+    "misconceptions": [
+      "Sine is only a triangle ratio",
+      "The sine value is the x-coordinate"
+    ],
+    "expectedUnderstanding": [
+      "sin theta is the y-coordinate (signed height) of the unit-circle point",
+      "the height is 0 at 0 and pi, 1 at pi/2, -1 at 3pi/2",
+      "sine repeats with period 2pi"
+    ]
+  },
+  "properties": [
+    { "id": "angle", "label": "angle theta", "min": 0, "max": 6.2, "step": 0.05, "default": 0, "unit": "rad" }
+  ],
+  "primitives": [
+    { "id": "circle", "type": "circle", "cx": 230, "cy": 300, "r": 140 },
+    { "id": "axisH", "type": "line", "x1": 90, "y1": 300, "x2": 370, "y2": 300 },
+    { "id": "axisV", "type": "line", "x1": 230, "y1": 160, "x2": 230, "y2": 440 },
+    { "id": "radius", "type": "line", "x1": 230, "y1": 300, "x2": { "expr": "230 + 140*cos(angle + 0.5236*t)" }, "y2": { "expr": "300 - 140*sin(angle + 0.5236*t)" } },
+    { "id": "dot", "type": "circle", "cx": { "expr": "230 + 140*cos(angle + 0.5236*t)" }, "cy": { "expr": "300 - 140*sin(angle + 0.5236*t)" }, "r": 9 },
+    { "id": "connector", "type": "line", "x1": { "expr": "230 + 140*cos(angle + 0.5236*t)" }, "y1": { "expr": "300 - 140*sin(angle + 0.5236*t)" }, "x2": 600, "y2": { "expr": "300 - 140*sin(angle + 0.5236*t)" } },
+    { "id": "sineAxis", "type": "line", "x1": 600, "y1": 160, "x2": 600, "y2": 440 },
+    { "id": "sineBar", "type": "line", "x1": 600, "y1": 300, "x2": 600, "y2": { "expr": "300 - 140*sin(angle + 0.5236*t)" } },
+    { "id": "sineDot", "type": "circle", "cx": 600, "cy": { "expr": "300 - 140*sin(angle + 0.5236*t)" }, "r": 8 },
+    { "id": "tickPlus1", "type": "line", "x1": 588, "y1": 160, "x2": 612, "y2": 160 },
+    { "id": "tickMinus1", "type": "line", "x1": 588, "y1": 440, "x2": 612, "y2": 440 },
+    { "id": "labelCircle", "type": "text", "x": 120, "y": 492, "text": "unit circle, radius 1", "fontSize": 15 },
+    { "id": "labelSine", "type": "text", "x": 460, "y": 492, "text": "height of the point = sin theta", "fontSize": 15 },
+    { "id": "labelY", "type": "text", "x": 242, "y": 174, "text": "y", "fontSize": 15 },
+    { "id": "labelX", "type": "text", "x": 378, "y": 316, "text": "x", "fontSize": 15 }
+  ],
+  "timeline": {
+    "duration": 12,
+    "tracks": [
+      {
+        "target": { "primitive": "dot", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 9 },
+          { "at": 2.8, "value": 9 },
+          { "at": 3, "value": 13 },
+          { "at": 3.2, "value": 9 },
+          { "at": 5.8, "value": 9 },
+          { "at": 6, "value": 13 },
+          { "at": 6.2, "value": 9 },
+          { "at": 8.8, "value": 9 },
+          { "at": 9, "value": 13 },
+          { "at": 9.2, "value": 9 },
+          { "at": 12, "value": 9 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "angleSlider", "kind": "slider", "propertyId": "angle", "label": "angle theta" }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp1",
+      "at": 0.1,
+      "title": "Angle 0: height 0",
+      "body": "The radius lies along the positive x-axis, so the point sits at y = 0 and the connector meets the sine axis at the baseline: sin 0 = 0. Drag the theta slider to set the angle; the sweep continues from the angle you choose.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp2",
+      "at": 3,
+      "title": "Quarter turn: sin theta = 1",
+      "body": "After a quarter turn the point is at the top of the circle. Its y-coordinate is 1, the connector has risen to the upper tick, and sine reads 1. Note that x is 0 here: sine takes the vertical coordinate, not the horizontal one.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp3",
+      "at": 6,
+      "title": "Half turn: height 0 again",
+      "body": "At theta = pi the point is at the far left with x = -1, but its height is back to 0. So sin pi = 0 even though the point is far from the origin. Sine reports signed height, not distance.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp4",
+      "at": 9,
+      "title": "Below the axis: negative sine",
+      "body": "Now the point is at the bottom, y = -1. The connector lies below the horizontal axis and the sine dot sits at the lower tick, so sin theta = -1. The sign of the height is part of the value.",
+      "pause": true,
+      "learnerAction": "continue"
+    },
+    {
+      "id": "cp5",
+      "at": 11.9,
+      "title": "One full turn",
+      "body": "A full revolution brings theta back to 2pi, which lands on the same point as theta = 0, so sin 2pi = 0. Sine repeats with period 2pi. Drag the slider to any angle and check that the connector length always equals the size of the height.",
+      "pause": true,
+      "learnerAction": "continue"
+    }
+  ],
+  "narration": [
+    { "at": 0, "text": "A radius sweeps around the unit circle; a connector carries the point's height across to the sine axis." },
+    { "at": 3.05, "text": "A quarter turn puts the point at the top: the height, and therefore sine, is 1." },
+    { "at": 6.1, "text": "At a half turn the height returns to 0 even though the point is at x = -1." },
+    { "at": 9.1, "text": "Below the axis the height is negative, so sine is negative." }
+  ],
+  "fallback": {
+    "text": "A radius sweeps once around a unit circle from theta = 0 to 2pi in 12 seconds. A horizontal connector carries the point's height to a vertical axis on the right, where a dot marks the sine value. The height is 0 at theta = 0 and theta = pi, 1 at theta = pi/2, and -1 at theta = 3pi/2; the slider sets the starting angle."
+  },
+  "accessibility": {
+    "alt": "Unit circle with a moving radius and point; a horizontal connector carries the point's height to a vertical axis where a dot marks sine, with ticks at plus one and minus one and labels for x and y.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

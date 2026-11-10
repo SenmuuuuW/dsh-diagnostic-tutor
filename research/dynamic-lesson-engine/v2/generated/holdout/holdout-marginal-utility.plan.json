@@ -1,0 +1,25 @@
+{
+  "representation": "A two-panel utility graph: a total-utility line above and marginal-utility bars below, sharing a movable consumption marker and a marginal-utility threshold line.",
+  "entities": [
+    "total-utility line for q = 1..6",
+    "six marginal-utility bars",
+    "movable consumption marker",
+    "MU = 2 decision threshold",
+    "formula and misconception notes"
+  ],
+  "motion": [
+    "the consumption marker slides across both panels",
+    "the marker pulses",
+    "the total line stays above while the marginal bars shrink"
+  ],
+  "controls": [
+    "consumption slider q from 1 to 6 units"
+  ],
+  "checkpoints": [
+    "distinguish total from marginal",
+    "watch marginal fall while total rises",
+    "read the decision threshold without claiming total must fall"
+  ],
+  "misconceptionTest": "The bars are explicitly defined as MU(q) = U(q) - U(q-1), not as total utility. As q increases, the bars shrink from 8.4 to 0.4 while the total line keeps rising and flattens; this shows diminishing marginal utility without total utility falling. The MU = 2 line is framed as a stopping rule, not a law.",
+  "accessibility": "Both panels have text labels, the marker and threshold are labeled in the surrounding copy, the slider is keyboard accessible, and alt text gives the direction of both series."
+}

@@ -1,0 +1,25 @@
+{
+  "representation": "Unit circle of radius 1 on the left with a horizontal height-connector carrying the point's y-coordinate to a vertical sine axis on the right; the sine value is shown as a signed height, not as a curve trace.",
+  "entities": [
+    "circle (radius 1, centre 230,300)",
+    "radius line from centre to the moving point",
+    "point on the circle",
+    "horizontal connector from the point to the sine axis",
+    "vertical sine axis with +1 and -1 ticks",
+    "sine bar from the axis baseline to the sine dot",
+    "sine dot at (600, 300 - 140 sin theta)"
+  ],
+  "motion": "theta = angle + 0.5236*t, so one full revolution per 12 s; the point, radius, connector, bar and sine dot are all driven by the same theta expression. A small radius pulse on the moving point marks each quarter turn.",
+  "controls": [
+    "slider 'angle' 0..6.2 rad sets the starting angle of the sweep (keyboard operable)"
+  ],
+  "checkpoints": [
+    "0.1 s: theta = 0, height 0, connector at the baseline",
+    "3 s: quarter turn, height = 1 at the upper tick, x = 0",
+    "6 s: half turn, height 0 while x = -1",
+    "9 s: bottom, height = -1 (signed height)",
+    "11.9 s: full turn, sin 2pi = sin 0, period 2pi"
+  ],
+  "misconceptionTest": "Checkpoint 3 shows the point at x = -1 with height 0 (sine is not the x-coordinate). Checkpoint 2 states height = 1 while x = 0, and the connector length always equals |sin theta|, so sine is shown as a circular-motion height, not only a triangle ratio.",
+  "accessibility": "Alt text names every element and the height relationship; slider is keyboard operable; heights are labelled with ticks and text, not colour; reducedMotion no-autoplay."
+}

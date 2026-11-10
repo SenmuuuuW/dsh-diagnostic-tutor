@@ -1,0 +1,74 @@
+{
+  "version": "0.1",
+  "viewport": { "width": 640, "height": 360 },
+  "metadata": {
+    "title": "Derivative as Local Slope",
+    "subject": "Mathematics",
+    "objective": "Show a tangent line whose slope matches the derivative at a movable point.",
+    "learner": "Can read coordinates on a graph.",
+    "misconceptions": [
+      "Derivative is the value of the function",
+      "A positive derivative means the function is positive"
+    ],
+    "expectedUnderstanding": [
+      "The tangent slope equals the function's local slope",
+      "The sign of the rise matches the sign of the derivative",
+      "The derivative is separate from the function value"
+    ]
+  },
+  "properties": [
+    { "id": "x", "label": "Point position", "min": -3, "max": 3, "step": 0.1, "default": 1.5 }
+  ],
+  "primitives": [
+    { "id": "xAxis", "type": "line", "x1": 60, "y1": 220, "x2": 540, "y2": 220 },
+    { "id": "yAxis", "type": "line", "x1": 300, "y1": 40, "x2": 300, "y2": 320 },
+    { "id": "curve", "type": "path", "d": "M 90 96 L 120 145 L 180 220 L 240 265 L 300 280 L 360 265 L 420 220 L 480 145 L 510 96" },
+    { "id": "tangent", "type": "line", "x1": { "expr": "250+60*x" }, "y1": { "expr": "280-15*x*x+25*x" }, "x2": { "expr": "350+60*x" }, "y2": { "expr": "280-15*x*x-25*x" } },
+    { "id": "point", "type": "circle", "cx": { "expr": "300+60*x" }, "cy": { "expr": "280-15*x*x" }, "r": 7 },
+    { "id": "run", "type": "line", "x1": { "expr": "300+60*x" }, "y1": { "expr": "280-15*x*x" }, "x2": { "expr": "350+60*x" }, "y2": { "expr": "280-15*x*x" } },
+    { "id": "rise", "type": "line", "x1": { "expr": "350+60*x" }, "y1": { "expr": "280-15*x*x" }, "x2": { "expr": "350+60*x" }, "y2": { "expr": "280-15*x*x-25*x" } },
+    { "id": "valueDrop", "type": "line", "x1": { "expr": "300+60*x" }, "y1": { "expr": "280-15*x*x" }, "x2": { "expr": "300+60*x" }, "y2": 220 },
+    { "id": "title", "type": "text", "x": 30, "y": 25, "text": "Derivative as local slope", "fontSize": 17 },
+    { "id": "slopeLabel", "type": "text", "x": 350, "y": 60, "text": "slope = rise / run", "fontSize": 12 },
+    { "id": "signLabel", "type": "text", "x": 60, "y": 60, "text": "rise sign = slope sign", "fontSize": 12 },
+    { "id": "functionLabel", "type": "text", "x": 60, "y": 330, "text": "f(x) = 0.25x^2 - 1", "fontSize": 12 },
+    { "id": "derivativeLabel", "type": "text", "x": 430, "y": 330, "text": "f'(x) = 0.5x", "fontSize": 12 },
+    { "id": "xLabel", "type": "text", "x": 525, "y": 235, "text": "x", "fontSize": 12 },
+    { "id": "yLabel", "type": "text", "x": 310, "y": 45, "text": "y", "fontSize": 12 },
+    { "id": "valueLabel", "type": "text", "x": 405, "y": 300, "text": "value f(x)", "fontSize": 12 }
+  ],
+  "timeline": {
+    "duration": 12,
+    "tracks": [
+      {
+        "target": { "primitive": "point", "property": "r" },
+        "keyframes": [
+          { "at": 0, "value": 7 },
+          { "at": 6, "value": 9 },
+          { "at": 12, "value": 7 }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    { "id": "xControl", "kind": "slider", "propertyId": "x", "label": "Move the point" }
+  ],
+  "checkpoints": [
+    { "id": "ds-negative", "at": 0.5, "title": "Negative slope", "body": "Set x to -2. The tangent falls to the right and the rise segment points downward, so the derivative is negative.", "pause": true, "learnerAction": "Set x to -2." },
+    { "id": "ds-zero", "at": 6, "title": "Zero slope", "body": "Set x to 0. The tangent is horizontal, the rise is zero, and f'(0) = 0 even though f(0) = -1.", "pause": true, "learnerAction": "Set x to 0." },
+    { "id": "ds-positive", "at": 9.5, "title": "Positive slope, negative value", "body": "Set x to 1.5. The tangent rises, so f'(1.5) = 0.75 is positive, while f(1.5) = -0.4375 is negative. The derivative is a slope, not a value.", "pause": true, "learnerAction": "Set x to 1.5." }
+  ],
+  "narration": [
+    { "at": 0, "text": "Move the point. The tangent and the small run-rise triangle share the same slope." },
+    { "at": 6, "text": "At the vertex the tangent is flat, so the derivative is zero." },
+    { "at": 9.5, "text": "On the right branch the tangent rises: positive slope, even though the function value is still negative." }
+  ],
+  "fallback": {
+    "text": "The tangent at the moving point has slope f'(x) = 0.5x. The small rise-run triangle shows the same slope: when the rise is upward the derivative is positive, even if f(x) itself is negative."
+  },
+  "accessibility": {
+    "alt": "A parabola with a movable point, a tangent line, and a small run-and-rise triangle. A vertical drop shows the function value; a slider moves the point from x = -3 to x = 3.",
+    "reducedMotion": "no-autoplay",
+    "keyboard": true
+  }
+}

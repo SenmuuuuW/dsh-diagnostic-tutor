@@ -1,0 +1,9 @@
+{
+  "representation": "A parabola with a movable point, its tangent, and a run-rise triangle at the point.",
+  "entities": ["parabola", "movable point", "tangent line", "run segment", "rise segment", "function-value drop"],
+  "motion": "The x slider moves the point; the tangent and run-rise triangle update from the local slope.",
+  "controls": ["x slider from -3 to 3"],
+  "checkpoints": ["negative x gives a negative rise", "x = 0 gives a horizontal tangent", "positive slope can coexist with a negative function value"],
+  "misconceptionTest": "The derivative is a slope, not the function value; a positive derivative does not imply f(x) is positive.",
+  "accessibility": "Figure alt text, keyboard-operable slider, rise direction and labels avoid color-only sign."
+}

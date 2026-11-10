@@ -1,0 +1,28 @@
+{
+  "representation": "A nine-bar null distribution of z, with a movable observed-statistic line, shaded right-tail bars for p, and a separately movable alpha decision line.",
+  "entities": [
+    "null distribution bars",
+    "observed z line",
+    "shaded right-tail region",
+    "alpha decision line",
+    "z and alpha sliders",
+    "textual p and alpha summary"
+  ],
+  "motion": [
+    "the observed line moves with z",
+    "bar opacity changes so the tail follows the observed statistic",
+    "the alpha line moves independently with alpha",
+    "the observed line pulses"
+  ],
+  "controls": [
+    "observed z slider from -2.5 to 2.5",
+    "alpha slider from 0.01 to 0.10"
+  ],
+  "checkpoints": [
+    "read the null distribution and observed statistic",
+    "see that the shaded tail is p",
+    "separate the alpha decision rule from p and from the probability the null is true"
+  ],
+  "misconceptionTest": "Alpha moves the dashed decision line but does not move the tail or the observed statistic; this separates a decision rule from p. The text says p is a tail area, not P(null true), and that a small p is not proof of the alternative. No causal claim is made.",
+  "accessibility": "The z axis, observed line and alpha line are named in text, the tail is described as shaded bars, both sliders are keyboard accessible, and alt text gives the direction of the tail."
+}
