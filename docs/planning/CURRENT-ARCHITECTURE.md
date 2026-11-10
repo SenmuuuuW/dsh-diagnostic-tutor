@@ -1,6 +1,6 @@
 # UDT 当前框架总览（以代码为准）
 
-状态：现行架构说明，已并入 v0.5.0 Study 持久化与 v0.6.0 增量写入 / PDF / 图片资产改动（2026-11-06）。
+状态：现行架构说明，已并入 v0.8.0 生产 Scene 播放、批准边界与 Presentation-only 场景进度（2026-11-09）。
 这份文档只描述代码里真实存在的东西；每节都标注了对应文件，便于核对。
 产品设计背景见 [`LEARNING-PATH-ARCHITECTURE.md`](./LEARNING-PATH-ARCHITECTURE.md)。
 
@@ -15,7 +15,7 @@
 DSH Runtime
 ├── Host 插件  src/index.ts
 │   ├── storage domain "udt"     src/state.ts（13 张表 + 学习者单例）
-│   ├── 模型工具（18 个）         src/tools.ts（7）+ src/path-tools.ts（3）+ src/source-tools.ts（3）+ src/plan-tools.ts（2）+ src/review-tools.ts（3）
+│   ├── 模型工具（21 个）         src/tools.ts（7）+ src/path-tools.ts（3）+ src/source-tools.ts（3）+ src/plan-tools.ts（2）+ src/review-tools.ts（3）
 │   ├── 唤醒模型                 src/prompt.ts（旧循环焦点）
 │   │                            src/path-runtime.ts（初诊 / 路线 / 开课提示词）
 │   └── HTTP API                 src/api.ts + src/path-api.ts（27 条路由）
@@ -84,6 +84,8 @@ DSH Runtime
 注意：当前存在两套教学落盘方式——旧循环写 `lessons`；路线循环写 `course_runs.attempts[].units`。导出同时包含两者。
 
 ## 6. 模型工具（21 个）
+
+The v0.8 `scene` block is renderable production content but is **not a model generation feature**. Scene writes are rejected unless the default-off feature flag is enabled and the exact `{spec, fallback}` matches the code-reviewed approved registry; AI generation remains under `research/dynamic-lesson-engine/v2/`.
 
 | 组 | 工具 | 作用 |
 | --- | --- | --- |

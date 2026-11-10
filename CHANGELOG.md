@@ -1,3 +1,46 @@
+# Changelog
+
+## [0.8.0] — 2026-11-09
+
+Development release. Not published or tagged.
+
+### Added — Production Scene Engine v1
+
+- Additive `scene` lesson block with `sceneVersion: "1"`, a bounded SceneSpec, a
+  mandatory static fallback, and strict runtime validation.
+- Production Study player: SVG primitives, finite timeline/keyframes/easing,
+  play/pause/replay/seek/step, numeric parameter controls, checkpoints,
+  narration, keyboard controls, reduced-motion behavior and static fallback.
+- Default-off `DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES=1` feature flag; the browser
+  reads `/diagnostic-tutor/api/scene-config`. AI generation has no production
+  flag.
+- Code-reviewed `APPROVED_SCENES` registry; tool writes and the renderer require
+  an exact approved `{spec, fallback}` digest. Content mutation invalidates
+  approval. The current catalog contains one reviewed hand-authored scene.
+- Presentation-only scene progress in `CourseAttempt.study.scenes`: time,
+  params, playing, checkpoint, reached states; spec-fingerprint invalidation;
+  restored playback is always paused. No evidence, mastery, route advance,
+  tutor call or lesson completion.
+- Real isolated DSH E2E: approved scene full-screen, checkpoint/parameter/play,
+  refresh restore paused, manual Continue, no evidence change; flag-off static
+  fallback. See docs/planning/V0.8.0-E2E.md.
+
+### Added — AI Generation v2 (research only)
+
+- Plan-then-SceneSpec prompt pipeline, exact contract, bounded repair, 20-case
+  regression + 10-case holdout, retained raw attempts and browser renders.
+- Research named-state/state-timeline extension for algorithm scenes.
+- Results: regression first-pass 14/20 (70%), one repair 20/20; holdout first-pass
+  10/10; browser render 30/30; four regression math scenes visually not
+  reviewable. AI auto-generation remains **No-Go** for production.
+
+### Verification
+
+- 731 tests / 65 files (Node 22.19 / Node 24.16), typecheck, build, 31 browser
+  cases; isolated DSH smoke test.
+- v0.6.0 release gate remains Pass with documented limitations; no remote Git or
+  npm publication was performed.
+
 ## [0.6.0] — 2026-11-06
 
 Development release candidate. Not published.

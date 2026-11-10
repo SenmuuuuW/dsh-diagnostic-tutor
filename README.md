@@ -48,6 +48,19 @@ this plugin only validates, stores, renders and records. A real-model E2E report
 is in [`docs/planning/V0.5.0-E2E.md`](docs/planning/V0.5.0-E2E.md); the pending
 release checklist is in [`docs/planning/RELEASE-0.5.0.md`](docs/planning/RELEASE-0.5.0.md).
 
+
+`v0.8.0` (development, **not published**) adds the first conservative production
+Dynamic Lesson playback surface: an additive `scene` block, a bounded
+approved-scene player inside existing Study, presentation-only scene progress, and
+a default-off feature flag. Only scenes in the code-reviewed approved registry
+can render; AI-generated scenes are **not** approved and the generation pipeline
+remains research-only. See
+[`docs/planning/V0.8.0-SCENE-ENGINE.md`](docs/planning/V0.8.0-SCENE-ENGINE.md).
+
+Enable playback explicitly:
+`DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES=1`. It defaults to off; when off an existing
+scene block shows its static fallback and the model cannot write new scene blocks.
+
 `v0.6.0` (development, not published) adds one-block incremental lesson writes,
 local PDF text extraction with page citations, local PNG/JPEG/WebP course image
 assets, an `image` lesson block, and a clarified interaction/evidence contract.
@@ -948,3 +961,6 @@ Planning and architecture research for this project live in
 [`docs/planning/RELEASE-0.4.1.md`](docs/planning/RELEASE-0.4.1.md)；历史记录见
 [`docs/planning/RELEASE-0.4.0.md`](docs/planning/RELEASE-0.4.0.md) 和
 [`docs/planning/RELEASE-0.3.0.md`](docs/planning/RELEASE-0.3.0.md).
+
+
+The v0.8 scene player is playback of reviewed content, not AI generation: no automatic scene generation is enabled, there is no typed Tutor-to-scene synchronization, and only the approved catalog can render.
