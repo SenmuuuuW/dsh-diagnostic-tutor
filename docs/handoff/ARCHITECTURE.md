@@ -77,3 +77,14 @@ local registry approval and an active attempt.
 `pickActiveLessonUnit(units, attempt.study)`: the unit containing the stored
 block id, else the latest unit. Appending teaching for another node therefore
 does not hide the current scene, while explicit replacement still falls back.
+
+## v1.0 import and doctor
+
+`UdState.importState` validates the whole export against `UdExportSchema`, checks
+IDs/references, then clears and rewrites all tables; a failed write restores the
+previous snapshot. `POST /import` is the API; `scripts/import-state.mjs` is the
+local CLI; asset bytes remain separate.
+
+The Doctor reports Node support, Skill presence, storage writability/first-write,
+feature flags and project health. Missing Skill is a warning with an install
+instruction, not a crash.

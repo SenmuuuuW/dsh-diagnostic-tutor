@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.0.0] — 2026-11-11
+
+Stable core Tutor release.
+
+### Added
+
+- Full learner state import (`POST /import`, `scripts/import-state.mjs`) with
+  schema validation, reference checks, backup snapshot and restore-on-failure.
+- Installation Doctor checks: Node support, Skill presence, storage writability,
+  feature-flag state and first-write guidance; packaged as
+  `dsh-diagnostic-tutor-doctor`.
+- First-run, user-journey, testing, known-limitations and release-history
+  handoff documentation.
+
+### Stable scope
+
+- Goal / diagnosis / course / study / check / evidence / review / persistence.
+- Dynamic Scenes remain experimental, default-off and human-approved only.
+- Automatic scene generation remains a local development bridge, not a public
+  product feature.
+
 ## [0.13.0] — 2026-11-11
 
 Published 2026-11-11 as npm `0.13.0` (latest).

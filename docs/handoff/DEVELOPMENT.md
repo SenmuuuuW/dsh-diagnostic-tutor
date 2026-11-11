@@ -70,3 +70,14 @@ DSH_DIAGNOSTIC_TUTOR_SCENE_REGISTRY=$DSH_HOME/storages/approved.json \
 - Release: npm `dsh-diagnostic-tutor@0.13.0` latest; tag `v0.13.0`; main CI
   verifies Node 22.19/24.x.
 - Dynamic scenes remain default-off and human-approved only.
+
+## v1.0 installation/import
+
+```bash
+npx dsh-diagnostic-tutor-doctor
+POST /diagnostic-tutor/api/import
+npx dsh-diagnostic-tutor-import --root <storages> --file <export.json>
+```
+
+State import validates before clearing and restores the previous snapshot on
+failure. Asset bytes are exported separately.

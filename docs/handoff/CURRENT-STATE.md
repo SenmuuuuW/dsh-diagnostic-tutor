@@ -1,6 +1,6 @@
 # Current State
 
-Snapshot: **v0.13.0 published** on npm (`latest`) and GitHub tag/release `v0.13.0`.
+Snapshot: **v1.0.0 core stabilization candidate**, 767 tests, first-run E2E, import/doctor and legacy upgrade/rollback verified; public release pending final gate.
 
 ## Capabilities
 
@@ -13,9 +13,10 @@ controlled Tutor → Scene Candidate → local review → attach bridge.
 
 ## Verified
 
-- **764 tests / 73 files** at v0.13.0.
+- **767 tests / 73 files** at v1.0.0; final candidate package `f892dda5...`.
 - Study keeps the unit containing the stored `study.blockId` when the Tutor appends a lesson for another node; scene block id stays stable across appends.
 - Candidate bridge: real Tutor request -> controlled research scene -> local CLI approval -> Tutor attach -> Study -> scripted check -> explicit check evidence -> Tutor next decision.
+- Full state import with schema/reference validation and restore-on-failure; installation Doctor checks Node, Skill, storage and flags.
 - Node 22.19 / Node 24.16.
 - Browser path-check 31/31.
 - v4 sealed: strict 0/11; deterministic repaired 11/11; browser 11/11.

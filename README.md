@@ -11,9 +11,9 @@ learn interactively, and move to the next best step.
 
 ## Status
 
-`v0.4.1` is the current npm release. `v0.5.0` is prepared locally in this
-repository and is **not published yet**; publication is a separate, explicitly
-confirmed step. The learning surface is three screens:
+`v1.0.0` is the current public npm release (dist-tag `latest`). It is a stable
+Core Tutor release; Dynamic Scenes and auto-generation remain experimental and
+default-off. The learning surface is three screens:
 **Today → Course → Study**, with Review, Knowledge & evidence and Insights as
 secondary views.
 
@@ -98,8 +98,20 @@ PDF extraction is text-only: scanned pages are not OCRed, and the model does not
 receive image pixels through the image block.
 
 Install it with
-`dsh plugin --profile web add dsh-diagnostic-tutor@0.4.1` — no clone, no
-`pnpm install`, no build step. A checkout can be installed instead (see
+`dsh plugin --profile web add dsh-diagnostic-tutor@1.0.0` — no clone, no
+`pnpm install`, no build step.
+
+Also install the teaching Skill in the workspace where you use DSH:
+
+```bash
+mkdir -p .agents/skills
+git clone https://github.com/SenmuuuuW/universal-diagnostic-tutor-skill /tmp/udt-skill
+cp -R /tmp/udt-skill/skills/universal-diagnostic-tutor .agents/skills/
+```
+
+Check the installation with `npx dsh-diagnostic-tutor-doctor` or
+`pnpm doctor` in a checkout. A missing Skill is reported explicitly; the
+runtime still loads but the Tutor cannot write lessons. A checkout can be installed instead (see
 [Installing a checkout](#installing-a-checkout-instead-of-the-package)).
 
 It is still early. The [limitations](#known-limitations) are listed rather than
