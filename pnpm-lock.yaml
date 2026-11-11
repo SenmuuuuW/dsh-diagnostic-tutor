@@ -12,8 +12,8 @@ importers:
   .:
     dependencies:
       katex:
-        specifier: ^0.18.11
-        version: 0.18.11
+        specifier: ^0.19.1
+        version: 0.19.1
       pdfjs-dist:
         specifier: 5.4.624
         version: 5.4.624
@@ -1287,9 +1287,8 @@ packages:
       canvas:
         optional: true
 
-  katex@0.18.11:
-    resolution: {integrity: sha512-yvyz/2VMKqoho/35Hat5w37wIEdWJ5ElVMidTAlWrxr5uW4aBGsEpveTmKh18/zw08v/7lGswCPon4OhqmqrTA==}
-    deprecated: Accidentally published with breaking changes. Use 0.19.0 instead.
+  katex@0.19.1:
+    resolution: {integrity: sha512-jG8uKntjSEcm2EpQOh0XturpPuuC9r3Sq5HLHdsFdWZT27E672SF19QEi+of0/YeOy15lDgRhKvr5614uRrEfA==}
     hasBin: true
 
   loose-envify@1.4.0:
@@ -2595,7 +2594,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  katex@0.18.11:
+  katex@0.19.1:
     dependencies:
       commander: 15.1.0
 

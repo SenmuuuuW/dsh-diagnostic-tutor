@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.2] — 2026-11-11
+
+Dependency quality patch.
+
+### Fixed
+
+- KaTeX moved from the deprecated `0.18.11` accidental release to `0.19.1`.
+- Keeps Zod `4.6.7`; `pnpm audit --prod` reports no known vulnerabilities.
+- No Core Tutor behavior changes.
+
 ## [1.0.1] — 2026-11-11
 
 Security patch for 1.0.0.

@@ -1,4 +1,4 @@
-# Installation (v1.0.1)
+# Installation (v1.0.2)
 
 ## Requirements
 
@@ -11,7 +11,7 @@
 ## Runtime
 
 ```bash
-npx -y @deepseek-ai/dsh@0.2.2-rc.1 plugin --profile web add dsh-diagnostic-tutor@1.0.1
+npx -y @deepseek-ai/dsh@0.2.2-rc.1 plugin --profile web add dsh-diagnostic-tutor@1.0.2
 ```
 
 ## Teaching Skill
@@ -30,7 +30,7 @@ instead; the runtime may detect it through the DSH Skill catalog.
 ## Verify
 
 ```bash
-npx -y -p dsh-diagnostic-tutor@1.0.1 dsh-diagnostic-tutor-doctor
+npx -y -p dsh-diagnostic-tutor@1.0.2 dsh-diagnostic-tutor-doctor
 # or, in a checkout:
 pnpm doctor
 ```
