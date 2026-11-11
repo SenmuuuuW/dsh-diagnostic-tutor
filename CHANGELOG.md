@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.1] — 2026-11-11
+
+Security patch for 1.0.0.
+
+### Fixed
+
+- Upgraded Zod to >=4.6.7 (GHSA-mrhx-c7xc-m3w5 memory exhaustion).
+- Upgraded KaTeX to >=0.18.2 (prototype-pollution bypass advisory).
+- `pnpm audit --prod` now reports no known vulnerabilities.
+
+No Core Tutor behavior changes. Upgrade required for 1.0.0 users.
+
 ## [1.0.0] — 2026-11-11
 
 Stable core Tutor release. Published 2026-11-11 as npm `1.0.0` (latest).

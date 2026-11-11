@@ -1,6 +1,6 @@
 {
   "name": "dsh-diagnostic-tutor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Diagnosis-first learning runtime for DeepSeek Harness \u2014 a live learning map, structured lessons, and persistent learner state, driven by the Universal Diagnostic Tutor skill.",
   "repository": {
     "type": "git",
@@ -105,9 +105,9 @@
     "doctor": "node scripts/doctor.mjs"
   },
   "dependencies": {
-    "katex": "^0.16.47",
+    "katex": "^0.18.11",
     "pdfjs-dist": "5.4.624",
-    "zod": "4.4.3"
+    "zod": "4.6.7"
   },
   "bin": {
     "dsh-diagnostic-tutor-doctor": "scripts/doctor.mjs",

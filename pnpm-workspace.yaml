@@ -11,6 +11,9 @@
 # published package.
 allowBuilds:
   esbuild: true
+overrides:
+  zod: 4.6.7
+
 minimumReleaseAgeExclude:
   # DSH RC packages are official @deepseek-ai releases and are often newer than
   # the 24h minimumReleaseAge window. Exclude only that scope; all other
