@@ -55,6 +55,7 @@ import { syncLessonFlashcards } from './review-sync.js'
 import { activeAttempt } from './path.js'
 import { appendCourseTeachingBlock, requireAttempt, writeCourseTeaching } from './path-runtime.js'
 import { assertSceneWriteAllowed } from './scene/approval.js'
+import { attachCandidateRecord, createCandidateRequest, listCandidates, readCandidate, sceneCandidateGenerationEnabled } from './scene/candidates.js'
 
 /**
  * The slice of `ctx` this module needs.
@@ -1789,6 +1790,134 @@ function udtDecideNextTool(state: UdState): ToolDefinition {
  * @returns how many tools were registered, so the loader log cannot drift from
  *   the registry itself (it used to say "4" while nine were registered).
  */
+
+/* -------------------------------------------------------------------------- */
+/* Experimental Scene Candidate lifecycle (v0.12)                             */
+/* -------------------------------------------------------------------------- */
+
+function candidateView(candidate: Awaited<ReturnType<typeof readCandidate>>): Record<string, unknown> {
+  if (!candidate) return { found: false }
+  return {
+    candidateId: candidate.id,
+    status: candidate.status,
+    courseId: candidate.request.courseId,
+    lessonId: candidate.request.lessonId,
+    knowledgeNodeId: candidate.request.knowledgeNodeId,
+    teachingObjective: candidate.request.teachingObjective,
+    revision: candidate.revision,
+    createdAt: candidate.createdAt,
+    updatedAt: candidate.updatedAt,
+    expiresAt: candidate.expiresAt,
+    digest: candidate.validation?.digest,
+    validation: candidate.validation ? { strictSchema: candidate.validation.strictSchema, normalizedSchema: candidate.validation.normalizedSchema, visualOk: candidate.validation.visual?.ok ?? false, semantic: candidate.validation.semantic?.status ?? 'not-applicable' } : null,
+    review: candidate.review ?? null,
+    attached: candidate.attached ?? null,
+    failure: candidate.failure ?? null,
+  }
+}
+
+function candidateCreateTool(state: UdState): ToolDefinition {
+  return defineTool({
+    name: 'udt_scene_candidate_create',
+    description:
+      'Request an experimental AI-generated teaching Scene Candidate for the CURRENT project and an existing diagnosis node. ' +
+      'This records a review request only: it does not generate, approve, attach or render anything, and it never creates evidence. ' +
+      'Use only when a visual explanation is genuinely the best teaching medium. The request must belong to the current session project; ' +
+      'the candidate then waits for an isolated generation worker and the local human review CLI. ' +
+      'Do not call this for every topic, and never claim a scene exists until review reports it approved.',
+    parameters: {
+      courseId: { type: 'string', required: true, description: 'Current project courseId.' },
+      lessonId: { type: 'string', description: 'Existing lesson id that should receive the scene, when known.' },
+      knowledgeNodeId: { type: 'string', required: true, description: 'Existing diagnosis node id in this course.' },
+      teachingObjective: { type: 'string', required: true, description: 'Concrete teaching objective for the visualization.' },
+      learnerDifficulty: { type: 'string', required: true, description: 'Observed learner gap in plain language.' },
+      visualizationIntent: { type: 'string', required: true, description: 'What the interaction should make visible.' },
+      sourceRefs: {
+        type: 'array',
+        description: 'Optional existing source references; max 6.',
+        items: { type: 'object', additionalProperties: false, properties: { sourceId: { type: 'string', required: true }, locator: { type: 'string' } } },
+      },
+    },
+    output: { schema: { type: 'object', additionalProperties: true } as const, render: (_args, value) => [{ type: 'text' as const, text: JSON.stringify(value) }] },
+    execute: async (args, exec) => {
+      const input = args as { courseId?: string; lessonId?: string; knowledgeNodeId?: string; teachingObjective?: string; learnerDifficulty?: string; visualizationIntent?: string; sourceRefs?: unknown }
+      const sessionId = sessionOf(exec); if (!sessionId) throw new Error('candidate-requires-a-conversation')
+      if (!sceneCandidateGenerationEnabled()) throw new Error('scene-candidates-disabled: this experimental bridge is off by default')
+      const project = state.resolveProject(sessionId)
+      if (project.course === undefined) throw new Error('no-selected-project: open a project first')
+      if (input.courseId !== project.course.id) throw new Error('candidate-project-mismatch: use the current project courseId')
+      if (!input.knowledgeNodeId) throw new Error('candidate-node-required')
+      const node = state.readNode(input.knowledgeNodeId); if (!node || node.courseId !== project.course.id) throw new Error('candidate-node-not-in-project')
+      if (input.lessonId !== undefined && input.lessonId !== null) {
+        const lesson = state.listLessons().find((entry) => entry.id === input.lessonId)
+        if (!lesson || lesson.courseId !== project.course.id) throw new Error('candidate-lesson-not-in-project')
+      }
+      const refs = Array.isArray(input.sourceRefs) ? input.sourceRefs as { sourceId?: unknown; locator?: unknown }[] : []
+      for (const ref of refs) {
+        if (typeof ref.sourceId !== 'string' || !state.readSource(ref.sourceId)) throw new Error('candidate-unknown-source')
+      }
+      const candidate = await createCandidateRequest({
+        courseId: project.course.id, sessionId, lessonId: input.lessonId ?? null, knowledgeNodeId: input.knowledgeNodeId,
+        teachingObjective: String(input.teachingObjective ?? ''), learnerDifficulty: String(input.learnerDifficulty ?? ''),
+        visualizationIntent: String(input.visualizationIntent ?? ''),
+        sourceRefs: refs.map((ref) => ({ sourceId: String(ref.sourceId), ...(typeof ref.locator === 'string' ? { locator: ref.locator } : {}) })),
+      })
+      return JSON.parse(JSON.stringify(candidateView(candidate.candidate))) as Record<string, never>
+    },
+  })
+}
+
+function candidateStatusTool(state: UdState): ToolDefinition {
+  return defineTool({
+    name: 'udt_scene_candidate_status',
+    description: 'Read experimental Scene Candidate state. Read-only; it never approves or attaches. Candidate contents are not returned here.',
+    parameters: { candidateId: { type: 'string', description: 'Specific candidate; omit to list this conversation\'s candidates.' } },
+    output: { schema: { type: 'object', additionalProperties: true } as const, render: (_args, value) => [{ type: 'text' as const, text: JSON.stringify(value) }] },
+    execute: async (args, exec) => {
+      const sessionId = sessionOf(exec); if (!sessionId) throw new Error('candidate-requires-a-conversation')
+      if (typeof args.candidateId === 'string') { const candidate = await readCandidate(args.candidateId); return JSON.parse(JSON.stringify(candidateView(candidate))) as Record<string, never> }
+      const all = await listCandidates(); return JSON.parse(JSON.stringify({ candidates: all.filter((entry) => entry.request.sessionId === sessionId).map(candidateView) })) as Record<string, never>
+    },
+  })
+}
+
+function candidateAttachTool(state: UdState): ToolDefinition {
+  return defineTool({
+    name: 'udt_scene_candidate_attach',
+    description:
+      'Attach an EXPERIMENTAL, human-approved Scene Candidate to the active lesson. ' +
+      'Refuses unless the candidate is approved, its digest matches, it belongs to this conversation/project/node, the feature flag is on, and the exact scene is in the local approved registry. ' +
+      'This does not approve a candidate, does not generate one and never writes evidence. Duplicate attachment is idempotent.',
+    parameters: {
+      candidateId: { type: 'string', required: true },
+      attemptId: { type: 'string', required: true, description: 'Active attemptId from udt_path_get.' },
+    },
+    output: { schema: { type: 'object', additionalProperties: true } as const, render: (_args, value) => [{ type: 'text' as const, text: JSON.stringify(value) }] },
+    execute: async (args, exec) => {
+      const input = args as { candidateId?: string; attemptId?: string }
+      const sessionId = sessionOf(exec); if (!sessionId) throw new Error('candidate-requires-a-conversation')
+      if (!input.candidateId || !input.attemptId) throw new Error('candidateId and attemptId are required')
+      const candidate = await readCandidate(input.candidateId)
+      if (!candidate) throw new Error('unknown-candidate')
+      if (candidate.request.sessionId !== sessionId) throw new Error('candidate-session-mismatch')
+      if (candidate.status !== 'approved') throw new Error(`candidate-not-approved: ${candidate.status}`)
+      if (!candidate.generation || !candidate.validation || !candidate.review) throw new Error('candidate-content-missing')
+      if (candidate.validation.digest !== candidate.review.digest) throw new Error('candidate-digest-mismatch')
+      const project = state.resolveProject(sessionId); if (!project.course || candidate.request.courseId !== project.course.id) throw new Error('candidate-project-mismatch')
+      const attempt = requireAttempt(state, candidate.request.courseId, sessionId, input.attemptId)
+      if (attempt.nodeId !== candidate.request.knowledgeNodeId) throw new Error('candidate-node-mismatch')
+      const latestLesson = [...attempt.units].reverse()[0]?.lesson
+      if (candidate.request.lessonId !== null && latestLesson?.id !== candidate.request.lessonId) throw new Error('candidate-lesson-mismatch')
+      const content = { sceneVersion: '1' as const, spec: candidate.generation.spec, fallback: candidate.generation.fallback }
+      assertSceneWriteAllowed(content)
+      const block = { id: `scene-${candidate.id}`, type: 'scene' as const, content, sourceRefs: [] as [] }
+      const result = await appendCourseTeachingBlock(state, candidate.request.courseId, sessionId, input.attemptId, candidate.request.knowledgeNodeId, block)
+      await attachCandidateRecord(candidate.id, { lessonId: result.lesson.id, blockId: block.id, attemptId: input.attemptId, attachedAt: new Date().toISOString() })
+      return JSON.parse(JSON.stringify({ candidateId: candidate.id, lessonId: result.lesson.id, blockId: block.id, added: result.added, idempotent: result.idempotent })) as Record<string, never>
+    },
+  })
+}
+
 export function registerTools(host: ToolsHost, state: UdState, options: { assetStore?: AssetStore | undefined } = {}): number {
   const core = [
     udtStatusTool(state),
@@ -1805,6 +1934,7 @@ export function registerTools(host: ToolsHost, state: UdState, options: { assetS
   const assets = assetTools(state, options.assetStore)
   const plan = planTools(state)
   const review = reviewTools(state)
-  for (const tool of [...core, ...planning, ...sources, ...assets, ...plan, ...review]) host.tools.register(tool)
-  return core.length + planning.length + sources.length + assets.length + plan.length + review.length
+  const candidates = [candidateCreateTool(state), candidateStatusTool(state), candidateAttachTool(state)]
+  for (const tool of [...core, ...planning, ...sources, ...assets, ...plan, ...review, ...candidates]) host.tools.register(tool)
+  return core.length + planning.length + sources.length + assets.length + plan.length + review.length + candidates.length
 }
