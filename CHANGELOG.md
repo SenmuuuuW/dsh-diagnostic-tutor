@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.11.0] — 2026-11-10
+
+Development release. Not published, tagged or pushed.
+
+### Added — Generation Reliability Research
+
+- Canonical contract now includes the safe math function/constant list
+  (`sin/cos/tan/asin/acos/atan/sqrt/...`, `pi/e`) and forbids `Math.*`.
+- Production/research expression evaluators expose `asin`, `acos`, `atan`.
+- Three-stage generation pilot (decision/outer contract, primitives, timeline)
+  with deterministic assembly; real model strict first-pass 1/5, visual 4/4
+  after deterministic repair, browser 5/5. Staging alone did not solve strict
+  adherence.
+- Handoff documentation foundation (`docs/handoff/`) and explicit contract /
+  evidence / semantic audit reports.
+
+### Added — Semantic v2
+
+- `line-slope` constraint in addition to `point-on-circle`.
+- Pass/fail/unverified are distinct; unverified is never counted as pass.
+
+### Added — Evidence audit
+
+- Confirmed quiz practice evidence is appended to the attempt's **node**, while
+  `attempt.evidence` stays empty by design; added an explicit regression test.
+
+### Verification
+
+- **758 tests / 71 files**; Node 22.19 / Node 24.16; typecheck, build, browser
+  path-check, final package E2E pending final report.
+
 ## [0.10.0] — 2026-11-10
 
 Development release. Not published, tagged or pushed.

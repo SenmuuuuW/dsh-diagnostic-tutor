@@ -51,6 +51,12 @@ release checklist is in [`docs/planning/RELEASE-0.5.0.md`](docs/planning/RELEASE
 
 
 
+
+`v0.11.0` (development, not published) adds staged generation research,
+semantic v2, evidence-flow audit, release/upgrade preparation and the initial
+Claude handoff documentation. AI generation remains research-only; production
+scene rendering stays default-off and locally approved.
+
 `v0.10.0` (development, not published) focuses on contract alignment, bounded
 structured repair and limited semantic verification. It does not enable
 AI auto-generation; the latest sealed benchmark still shows strict contract

@@ -1,6 +1,6 @@
 # UDT 当前框架总览（以代码为准）
 
-状态：现行架构说明，已并入 v0.10.0 Canonical Contract、结构化 Repair、有限语义验证与 Generation v4 研究（2026-11-10）。
+状态：现行架构说明，已并入 v0.11.0 Staged Generation、语义 v2、证据审计、升级验证与 Handoff 基础（2026-11-10）。
 这份文档只描述代码里真实存在的东西；每节都标注了对应文件，便于核对。
 产品设计背景见 [`LEARNING-PATH-ARCHITECTURE.md`](./LEARNING-PATH-ARCHITECTURE.md)。
 
