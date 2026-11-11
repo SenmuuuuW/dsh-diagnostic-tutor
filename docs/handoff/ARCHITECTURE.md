@@ -88,3 +88,10 @@ local CLI; asset bytes remain separate.
 The Doctor reports Node support, Skill presence, storage writability/first-write,
 feature flags and project health. Missing Skill is a warning with an install
 instruction, not a crash.
+
+## Multimodal materials (v1.1)
+
+Images remain local raster assets. `udt_material_visual` returns the exact
+content-addressed path with a caveat; the host agent must actually read it. PDF
+sources preserve native text and page numbers; pages with no native text are
+reported, not OCRed. Upload/display/visual access never write evidence.

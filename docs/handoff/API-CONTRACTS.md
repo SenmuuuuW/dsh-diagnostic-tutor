@@ -13,6 +13,7 @@ local state. There is no approval route for generated scenes.
 - `GET /sources`, `GET /assets`, `GET /assets/export`
 - `GET /review`, `GET /insights`, `GET /plan/ics`
 - `GET /scene-config` (read-only approved scenes; no approval mutation)
+- `udt_material_visual` tool returns a local image path; no HTTP image-analysis route
 
 ## Write
 

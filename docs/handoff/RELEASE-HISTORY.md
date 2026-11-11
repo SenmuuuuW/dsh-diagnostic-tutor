@@ -2,6 +2,7 @@
 
 | Version | Date | Scope |
 |---|---|---|
+| 1.1.0 | 2026-11-11 | Multimodal materials, rc.2 compatibility, final handoff |
 | 1.0.2 | 2026-11-11 | Dependency patch: KaTeX 0.19.1 |
 | 1.0.1 | 2026-11-11 | Security patch: Zod 4.6.7, KaTeX 0.18.11 |
 | 1.0.0 | 2026-11-11 | Stable Core Tutor; import/doctor/onboarding docs; Study continuity |

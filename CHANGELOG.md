@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.1.0] — 2026-11-11
+
+Multimodal materials, DSH rc.2 compatibility and final handoff.
+
+### Added
+
+- `udt_material_visual`: tool-mediated access to a stored image's exact local
+  content-addressed path, with an explicit "path is not understanding" caveat and
+  no OCR/third-party call.
+- PDF native-text provenance in responses: page numbers, derived empty pages and
+  an explicit no-OCR warning for scanned pages.
+- DSH 0.2.2-rc.2 compatibility audit and real image-input E2E.
+- Formal handoff package: START-HERE, installation, user journey, UI inventory,
+  API contracts, testing, limitations, release history, next roadmap and
+  reproducibility test.
+
+### Verified
+
+- Actual image attachment read by DSH rc.2/DeepSeek: graph answer x=0, slope=2;
+  geometry/angle inconsistency and chart trend answers also checked.
+- PDF native text + page citations; scanned PDF reports an empty text layer and
+  does **not** invent OCR text.
+- Core Tutor 1.0.2 data remains readable; no persisted schema changes for
+  visual/PDF metadata (derived only).
+
+### Not implemented
+
+- OCR for scanned PDFs.
+- General PDF figure/chart visual understanding.
+- Full multimodal course/route/check E2E.
+- Native guaranteed vision claim; visual access is tool-mediated and host-dependent.
+
 ## [1.0.2] — 2026-11-11
 
 Dependency quality patch.

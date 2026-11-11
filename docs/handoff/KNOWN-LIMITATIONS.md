@@ -17,3 +17,11 @@
   full historical lesson/asset/review data cannot be fabricated.
 - DSH layout/rightbar/fullscreen APIs are host-specific and may change.
 - No official support claim for DSH versions other than 0.2.2-rc.1.
+
+## v1.1 multimodal additions
+
+- No OCR bundled; scanned PDFs are reported as empty text layers.
+- No PDF figure/table visual understanding; only native text.
+- `udt_material_visual` is host-tool-mediated; a path is not a vision guarantee.
+- Only graph, geometry and chart image cases were executed; handwriting and
+  low-quality cases were prepared but not validated.

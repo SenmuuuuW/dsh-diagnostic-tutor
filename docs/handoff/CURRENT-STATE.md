@@ -1,6 +1,6 @@
 # Current State
 
-Snapshot: **v1.0.2 core stabilization candidate**, 767 tests, first-run E2E, import/doctor and legacy upgrade/rollback verified; public release pending final gate.
+Snapshot: **v1.1.0 core stabilization candidate**, 767 tests, first-run E2E, import/doctor and legacy upgrade/rollback verified; public release pending final gate.
 
 ## Capabilities
 
@@ -13,7 +13,7 @@ controlled Tutor → Scene Candidate → local review → attach bridge.
 
 ## Verified
 
-- **767 tests / 73 files** at v1.0.2; final published package 1.0.2 `aa925f2f...`.
+- **769 tests / 73 files** at v1.1.0; final published package 1.1.0 `aa925f2f...`.
 - Study keeps the unit containing the stored `study.blockId` when the Tutor appends a lesson for another node; scene block id stays stable across appends.
 - Candidate bridge: real Tutor request -> controlled research scene -> local CLI approval -> Tutor attach -> Study -> scripted check -> explicit check evidence -> Tutor next decision.
 - Full state import with schema/reference validation and restore-on-failure; installation Doctor checks Node, Skill, storage and flags.
@@ -38,3 +38,11 @@ controlled Tutor → Scene Candidate → local review → attach bridge.
 
 Runtime: `feat/v0.11.0-generative-teaching`.
 Skill: `feat/dsh-lesson-block-contract` (unchanged in v0.10/v0.11 unless noted).
+
+## v1.1 multimodal status
+
+- DSH rc.2 is the primary tested host (bundled desktop runtime; not public npm).
+- DSH rc.2 image input was tested with actual graph/geometry/chart images; the model read image content and answered ground-truth questions using tool-mediated pixel access.
+- Scanned PDFs report no native text layer; OCR is not implemented.
+- `udt_material_visual` provides a stored image path for the host agent; this is not a native-vision guarantee.
+- Formal handoff entry: `START-HERE.md`.
