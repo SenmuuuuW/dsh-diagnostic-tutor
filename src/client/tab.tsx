@@ -7,6 +7,7 @@
  * narrow and only renders the lesson itself.
  */
 
+import { pickActiveLessonUnit } from './lesson-units.js'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { CourseAttempt, Curriculum, CurriculumItem } from '../path.js'
@@ -108,7 +109,7 @@ export function LearningTab({
     for (const unit of attempt?.units ?? []) latest.set(unit.lesson.nodeId, unit)
     return [...latest.values()]
   }, [attempt])
-  const activeUnit = units.at(-1)
+  const activeUnit = pickActiveLessonUnit(units, attempt?.study)
   const hasStudy = activeUnit !== undefined && activeUnit.lesson.blocks.length > 0
   const done = view === null ? 0 : new Set((view.run?.attempts ?? []).filter((entry) => entry.status === 'completed' && entry.version === (attempt?.version ?? view.path.acceptedVersion)).map((entry) => entry.itemId)).size
   const pathClient = (client ?? defaultClient).pathClient
