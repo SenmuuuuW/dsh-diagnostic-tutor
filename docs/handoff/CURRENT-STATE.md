@@ -1,6 +1,6 @@
 # Current State
 
-Snapshot: **v1.1.0 core stabilization candidate**, 767 tests, first-run E2E, import/doctor and legacy upgrade/rollback verified; public release pending final gate.
+Snapshot: **v1.1.0 multimodal candidate**, 767 tests, first-run E2E, import/doctor and legacy upgrade/rollback verified; public release pending final gate.
 
 ## Capabilities
 

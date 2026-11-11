@@ -18,8 +18,8 @@ Status: candidate. Publish only after actual gates.
 | Candidate/Scene flags off | existing gate |
 | Approval isolation | existing tests |
 | 1.0.2 → 1.1 data compatibility | pass (course/nodes/lesson/asset preserved) |
-| 0.4.1 legacy compatibility | pending final |
-| Final tarball rc.2 E2E | pass (plugin 1.1.0, material bridge, browser no exceptions) |
+| 0.4.1 legacy compatibility | pass; 0.4.1 → 1.1.0 and backup rollback both verified |
+| Final tarball rc.2 E2E | pass (plugin 1.1.0, image material bridge, browser no exceptions); course accepted, Study start not fully captured |
 | Handoff reproducibility | pass: fresh worktree install/typecheck/769 tests/build/browser, rc.2 install plugin 1.1.0 |
 | Real learner participants | **0** |
 | Independent education review | **0** |
@@ -44,3 +44,14 @@ part of v1.1.
 - PDF native text/citations pass; scanned PDF reports empty text layer; **no OCR**.
 - PDF charts/figures: **not understood** from native text.
 - Real learner participants: **0**; independent review: **0**.
+
+## Final publication status
+
+- npm `dsh-diagnostic-tutor@1.1.0` (latest after publish)
+- tag/release `v1.1.0`
+- Main CI run pending immediately after push
+- package: 204 files, packed 682,149 bytes, shasum `c5b2f21cb04ace9a54fa0c3767a6fd93c00141c8`
+- rc.1 compatibility: plugin 1.1.0 booted
+- rc.2: plugin 1.1.0, actual image tool bridge, learning map, no browser exceptions
+- Handoff fresh worktree: install/typecheck/769 tests/build/31 browser cases pass; isolated rc.2 install plugin 1.1.0
+- real learner: 0, independent review: 0
