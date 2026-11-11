@@ -13,7 +13,7 @@ controlled Tutor → Scene Candidate → local review → attach bridge.
 
 ## Verified
 
-- **767 tests / 73 files** at v1.0.2; final candidate package `f892dda5...`.
+- **767 tests / 73 files** at v1.0.2; final published package 1.0.2 `aa925f2f...`.
 - Study keeps the unit containing the stored `study.blockId` when the Tutor appends a lesson for another node; scene block id stays stable across appends.
 - Candidate bridge: real Tutor request -> controlled research scene -> local CLI approval -> Tutor attach -> Study -> scripted check -> explicit check evidence -> Tutor next decision.
 - Full state import with schema/reference validation and restore-on-failure; installation Doctor checks Node, Skill, storage and flags.

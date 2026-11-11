@@ -30,11 +30,11 @@ experimental, default-off, human-approved only.
 
 ## Publication result (2026-11-11)
 
-- npm `dsh-diagnostic-tutor@1.0.0`, dist-tag `latest`
-- tag/release `v1.0.0` on GitHub
-- public main commit `1e6b280b99bf8a4327f395af889e867fde47a240`
+- npm `dsh-diagnostic-tutor@1.0.0` initially; 1.0.0/1.0.1 deprecated for dependency security; **1.0.2 is latest**
+- tags/releases `v1.0.0`, `v1.0.1`, `v1.0.2` on GitHub
+- public main commit at release `1c5a4df0cf01447d6549c727fe6c7194263e6aea`; docs follow-up may advance Main
 - Main CI success on Node 22.19 and 24.x
 - public Registry install smoke passed
-- package 204 files, shasum `f892dda5f500d372c40752dac06c6a0ba5fdc2bf`
+- package 204 files, shasum `aa925f2f6011941cfe979494cef40a0414c624a2`, SHA-256 `836c1f632bf4d1197fab82a1c3c1037d7d11a5219c5d8fcc953c76ad2f7983f5`
 - Dynamic Scenes and auto-generation remain experimental/default-off
 - real learners 0; independent review 0; no learning-gain claim
