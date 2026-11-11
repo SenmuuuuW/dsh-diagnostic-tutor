@@ -36,3 +36,14 @@ committed. Without a model, unit/browser fixture tests still run; real Tutor E2E
 is blocked and must be reported as blocked.
 
 Record: commands, host version, model, Skill commit, screenshots, failures.
+
+## Actual run (2026-11-11)
+
+- Fresh detached worktree at the v1.1 release commit.
+- `pnpm install --frozen-lockfile`: pass.
+- `pnpm typecheck`: pass.
+- `pnpm test`: 769 / 73 pass.
+- `pnpm build`: pass.
+- `pnpm preview` + `scripts/path-check.mjs`: 31/31.
+- Isolated DSH rc.2 install of the worktree tarball: plugin 1.1.0 booted, 0 learner state, no private credentials used in the installed profile.
+- Package hash differences between builds are expected when source-map paths differ; runtime behavior was the same.

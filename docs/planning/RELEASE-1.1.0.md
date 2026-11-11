@@ -20,7 +20,7 @@ Status: candidate. Publish only after actual gates.
 | 1.0.2 → 1.1 data compatibility | pass (course/nodes/lesson/asset preserved) |
 | 0.4.1 legacy compatibility | pending final |
 | Final tarball rc.2 E2E | pass (plugin 1.1.0, material bridge, browser no exceptions) |
-| Handoff reproducibility | pending final command run |
+| Handoff reproducibility | pass: fresh worktree install/typecheck/769 tests/build/browser, rc.2 install plugin 1.1.0 |
 | Real learner participants | **0** |
 | Independent education review | **0** |
 
