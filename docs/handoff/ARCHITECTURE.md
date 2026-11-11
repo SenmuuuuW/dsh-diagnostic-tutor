@@ -70,3 +70,10 @@ request and attach; only the local human CLI may approve. Candidate files are
 local review artifacts under the DSH storage root, separate from `udt` evidence.
 Attachment recomputes the canonical digest and requires the dynamic-scene flag,
 local registry approval and an active attempt.
+
+## Study continuity (v0.13)
+
+`writeCourseTeaching` still records attempt units. The Study client now selects
+`pickActiveLessonUnit(units, attempt.study)`: the unit containing the stored
+block id, else the latest unit. Appending teaching for another node therefore
+does not hide the current scene, while explicit replacement still falls back.

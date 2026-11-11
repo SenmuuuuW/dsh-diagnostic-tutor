@@ -1,6 +1,6 @@
 # Current State
 
-Snapshot: v0.12.0 development, local only; npm public version remains 0.4.1.
+Snapshot: **v0.13.0 published** on npm (`latest`) and GitHub tag/release `v0.13.0`.
 
 ## Capabilities
 
@@ -13,7 +13,8 @@ controlled Tutor → Scene Candidate → local review → attach bridge.
 
 ## Verified
 
-- **762 tests / 72 files** at v0.12.0.
+- **764 tests / 73 files** at v0.13.0.
+- Study keeps the unit containing the stored `study.blockId` when the Tutor appends a lesson for another node; scene block id stays stable across appends.
 - Candidate bridge: real Tutor request -> controlled research scene -> local CLI approval -> Tutor attach -> Study -> scripted check -> explicit check evidence -> Tutor next decision.
 - Node 22.19 / Node 24.16.
 - Browser path-check 31/31.

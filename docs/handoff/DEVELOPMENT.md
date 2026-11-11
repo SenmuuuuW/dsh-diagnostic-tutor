@@ -60,3 +60,13 @@ DSH_DIAGNOSTIC_TUTOR_SCENE_REGISTRY=$DSH_HOME/storages/approved.json \
 - Real E2E notes: `docs/planning/V0.12.0-TEACHING-E2E.md`.
 - The worker is a controlled development bridge, not a production generation
   service.
+
+## v0.13 release/state notes
+
+- Study unit selection: `src/client/lesson-units.ts` picks the unit containing
+  the stored Study block; appended units for other nodes do not steal the scene.
+- Candidate worker daemon: `scripts/scene-candidate-worker-daemon.mjs` (local
+  development bridge; external generator command; no approval/attach/evidence).
+- Release: npm `dsh-diagnostic-tutor@0.13.0` latest; tag `v0.13.0`; main CI
+  verifies Node 22.19/24.x.
+- Dynamic scenes remain default-off and human-approved only.
