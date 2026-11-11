@@ -2,7 +2,7 @@
 
 ## [1.1.0] — 2026-11-11
 
-Multimodal materials, DSH rc.2 compatibility and final handoff.
+Multimodal materials, DSH rc.2 compatibility and final handoff. Published 2026-11-11 as npm `1.1.0` (latest).
 
 ### Added
 

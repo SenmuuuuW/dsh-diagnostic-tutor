@@ -55,3 +55,13 @@ part of v1.1.
 - rc.2: plugin 1.1.0, actual image tool bridge, learning map, no browser exceptions
 - Handoff fresh worktree: install/typecheck/769 tests/build/31 browser cases pass; isolated rc.2 install plugin 1.1.0
 - real learner: 0, independent review: 0
+
+## Publication result (2026-11-11)
+
+- npm `dsh-diagnostic-tutor@1.1.0`, dist-tag `latest`
+- tag/release `v1.1.0` at `8f641c0`
+- Main CI success at `8f641c0` (Node 22.19 + 24.x)
+- public Registry install on DSH rc.2: plugin 1.1.0, Doctor 1.1.0, no issues
+- package c5b2f21c / 682,149 bytes / 204 files
+- rc.1 compatibility: plugin 1.1.0 booted
+- real learner participants 0; independent education review 0
