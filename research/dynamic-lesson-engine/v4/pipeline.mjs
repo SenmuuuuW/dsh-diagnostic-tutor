@@ -78,8 +78,9 @@ export function repairContractDrift(raw) {
   const rewriteExpressions = (value, path) => {
     if (value === null || typeof value !== 'object') return
     if (Array.isArray(value)) { value.forEach((entry, index) => rewriteExpressions(entry, `${path}[${index}]`)); return }
-    if (typeof value.expr === 'string' && value.expr.includes('**')) {
-      value.expr = value.expr.replace(/\*\*/g, '^'); changes.push({ path: `${path}.expr`, action: 'canonicalize-power-operator' })
+    if (typeof value.expr === 'string' && (value.expr.includes('**') || value.expr.includes('Math.'))) {
+      value.expr = value.expr.replace(/\*\*/g, '^').replace(/Math\.PI/g, 'pi').replace(/Math\.(sin|cos|tan|asin|acos|atan|sqrt|abs|exp|log|ln|floor|ceil|round|pow|min|max)\b/g, '$1')
+      changes.push({ path: `${path}.expr`, action: 'canonicalize-math-syntax' })
     }
     for (const [key, entry] of Object.entries(value)) if (key !== 'expr') rewriteExpressions(entry, `${path}.${key}`)
   }

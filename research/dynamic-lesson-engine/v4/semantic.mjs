@@ -96,8 +96,43 @@ export function verifyPointOnCircle(scene, reference) {
   return { status: 'fail', checks, reason: 'no point primitive maintained the circle radius at sampled parameters' }
 }
 
+
+/**
+ * Verify the sign of a line/arrow slope against a trusted reference.
+ * Reference: {kind:"line-slope", direction:"positive"|"negative", tolerance?}
+ * Vertical/degenerate segments are not counted as evidence.
+ */
+export function verifyLineSlope(scene, reference) {
+  const direction = reference.direction
+  const tolerance = Number(reference.tolerance ?? 1e-6)
+  const lines = (scene.primitives ?? []).filter((primitive) => primitive.type === 'line' || primitive.type === 'arrow')
+  if (lines.length === 0) return { status: 'unverified', constraintId: 'line-slope', reason: 'no line/arrow primitive', checks: [] }
+  const defaults = Object.fromEntries((scene.properties ?? []).map((property) => [property.id, property.default]))
+  const rows = [{ ...defaults, t: 0, duration: scene.timeline.duration }, { ...defaults, t: scene.timeline.duration / 2, duration: scene.timeline.duration }, { ...defaults, t: scene.timeline.duration, duration: scene.timeline.duration }]
+  for (const property of scene.properties ?? []) { rows.push({ ...defaults, [property.id]: property.min, t: 0, duration: scene.timeline.duration }); rows.push({ ...defaults, [property.id]: property.max, t: 0, duration: scene.timeline.duration }) }
+  const checks = []
+  for (const line of lines) {
+    let usable = 0
+    for (const vars of rows) {
+      const x1 = resolveNumeric(line, 'x1', scene, vars); const y1 = resolveNumeric(line, 'y1', scene, vars)
+      const x2 = resolveNumeric(line, 'x2', scene, vars); const y2 = resolveNumeric(line, 'y2', scene, vars)
+      if (x1 === null || y1 === null || x2 === null || y2 === null) continue
+      const dx = x2 - x1; const dy = y2 - y1
+      if (Math.abs(dx) < tolerance) continue
+      usable += 1
+      const slope = dy / dx
+      const ok = direction === 'positive' ? slope > tolerance : slope < -tolerance
+      checks.push({ constraintId: 'line-slope', primitiveId: line.id, vars, expected: { direction }, actual: { dx, dy, slope }, ok })
+      if (!ok) return { status: 'fail', constraintId: 'line-slope', checks, reason: 'line slope has the opposite sign' }
+    }
+    if (usable > 0 && checks.every((check) => check.ok)) return { status: 'pass', constraintId: 'line-slope', primitiveId: line.id, checks }
+  }
+  return { status: 'unverified', constraintId: 'line-slope', reason: 'no non-degenerate line samples', checks }
+}
+
 export function verifySceneSemantics(scene, reference) {
   if (!reference) return { status: 'not-applicable', checks: [] }
+  if (reference.kind === 'line-slope') return verifyLineSlope(scene, reference)
   if (reference.kind === 'point-on-circle') return verifyPointOnCircle(scene, reference)
   if (reference.kind === 'sampled-point') return verifySampledPoint(scene, reference)
   return { status: 'unverified', reason: `unsupported semantic reference kind: ${reference.kind}`, checks: [] }

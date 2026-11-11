@@ -1,0 +1,593 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "From Score to Probability: Logistic Regression",
+    "subject": "AI/ML",
+    "topic": "Logistic Regression",
+    "objective": "Show a decision boundary and how predicted probability changes with a feature.",
+    "learner": "Knows linear functions and probability.",
+    "misconceptions": [
+      "Logistic regression outputs a hard class directly from a straight line.",
+      "A predicted probability can exceed 1 when the linear score is large."
+    ],
+    "expectedUnderstanding": [
+      "A linear score z = w*x + b is passed through the sigmoid to produce a probability.",
+      "The sigmoid output is always between 0 and 1, approaching but never reaching the endpoints.",
+      "The decision boundary is where the score is 0 and the predicted probability is 0.5.",
+      "Changing a weight changes predicted odds; it is not by itself evidence of a causal effect."
+    ]
+  },
+  "properties": [
+    {
+      "id": "weight",
+      "label": "Weight w",
+      "min": -4,
+      "max": 4,
+      "step": 0.1,
+      "default": 2
+    },
+    {
+      "id": "bias",
+      "label": "Bias b",
+      "min": -4,
+      "max": 4,
+      "step": 0.1,
+      "default": 0
+    },
+    {
+      "id": "feature",
+      "label": "Feature value x",
+      "min": -3,
+      "max": 3,
+      "step": 0.1,
+      "default": 1
+    }
+  ],
+  "primitives": [
+    {
+      "id": "x-axis",
+      "type": "line",
+      "x1": 110,
+      "y1": 430,
+      "x2": 830,
+      "y2": 430,
+      "fill": "none",
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "y-axis",
+      "type": "line",
+      "x1": 110,
+      "y1": 100,
+      "x2": 110,
+      "y2": 430,
+      "fill": "none",
+      "stroke": "#334155",
+      "strokeWidth": 2
+    },
+    {
+      "id": "half-probability-line",
+      "type": "line",
+      "x1": 110,
+      "y1": 265,
+      "x2": 830,
+      "y2": 265,
+      "fill": "none",
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5,
+      "dash": "6 6"
+    },
+    {
+      "id": "decision-boundary",
+      "type": "line",
+      "x1": {
+        "expr": "110 + ((Math.max(-3, Math.min(3, -bias/(weight + 0.000001))) + 3)/6)*720"
+      },
+      "y1": 100,
+      "x2": {
+        "expr": "110 + ((Math.max(-3, Math.min(3, -bias/(weight + 0.000001))) + 3)/6)*720"
+      },
+      "y2": 430,
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 2.5,
+      "dash": "7 5"
+    },
+    {
+      "id": "curve-1",
+      "type": "line",
+      "x1": 110,
+      "y1": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*(-3) + bias)))"
+      },
+      "x2": 200,
+      "y2": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*(-2.25) + bias)))"
+      },
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 3.5
+    },
+    {
+      "id": "curve-2",
+      "type": "line",
+      "x1": 200,
+      "y1": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*(-2.25) + bias)))"
+      },
+      "x2": 290,
+      "y2": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*(-1.5) + bias)))"
+      },
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 3.5
+    },
+    {
+      "id": "curve-3",
+      "type": "line",
+      "x1": 290,
+      "y1": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*(-1.5) + bias)))"
+      },
+      "x2": 380,
+      "y2": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*(-0.75) + bias)))"
+      },
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 3.5
+    },
+    {
+      "id": "curve-4",
+      "type": "line",
+      "x1": 380,
+      "y1": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*(-0.75) + bias)))"
+      },
+      "x2": 470,
+      "y2": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*0 + bias)))"
+      },
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 3.5
+    },
+    {
+      "id": "curve-5",
+      "type": "line",
+      "x1": 470,
+      "y1": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*0 + bias)))"
+      },
+      "x2": 560,
+      "y2": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*0.75 + bias)))"
+      },
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 3.5
+    },
+    {
+      "id": "curve-6",
+      "type": "line",
+      "x1": 560,
+      "y1": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*0.75 + bias)))"
+      },
+      "x2": 650,
+      "y2": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*1.5 + bias)))"
+      },
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 3.5
+    },
+    {
+      "id": "curve-7",
+      "type": "line",
+      "x1": 650,
+      "y1": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*1.5 + bias)))"
+      },
+      "x2": 740,
+      "y2": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*2.25 + bias)))"
+      },
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 3.5
+    },
+    {
+      "id": "curve-8",
+      "type": "line",
+      "x1": 740,
+      "y1": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*2.25 + bias)))"
+      },
+      "x2": 830,
+      "y2": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*3 + bias)))"
+      },
+      "fill": "none",
+      "stroke": "#2563eb",
+      "strokeWidth": 3.5
+    },
+    {
+      "id": "selected-point",
+      "type": "circle",
+      "cx": {
+        "expr": "110 + ((feature + 3)/6)*720"
+      },
+      "cy": {
+        "expr": "430 - 330/(1 + Math.exp(-(weight*feature + bias)))"
+      },
+      "r": 7,
+      "fill": "#f59e0b",
+      "stroke": "#b45309",
+      "strokeWidth": 2
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 44,
+      "fontSize": 21,
+      "fill": "#0f172a",
+      "stroke": "none",
+      "text": "Logistic regression: S-curve and p = 0.5 boundary",
+      "anchor": "start",
+      "fontWeight": 600
+    },
+    {
+      "id": "feature-label",
+      "type": "text",
+      "x": 830,
+      "y": 462,
+      "fontSize": 15,
+      "fill": "#334155",
+      "stroke": "none",
+      "text": "feature x",
+      "anchor": "end"
+    },
+    {
+      "id": "probability-label",
+      "type": "text",
+      "x": 96,
+      "y": 106,
+      "fontSize": 16,
+      "fill": "#334155",
+      "stroke": "none",
+      "text": "p",
+      "anchor": "end",
+      "fontWeight": 600
+    }
+  ],
+  "timeline": {
+    "duration": 7,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "curve-1",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.6,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "curve-2",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.15,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "curve-3",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.3,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.9,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "curve-4",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.45,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.05,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "curve-5",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.6,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.2,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "curve-6",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.75,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.35,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "curve-7",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.9,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.5,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "curve-8",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.05,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.65,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "half-probability-line",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.6,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "decision-boundary",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 3,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 3.8,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "selected-point",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4.6,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "weight-control",
+      "kind": "slider",
+      "propertyId": "weight",
+      "label": "Weight w"
+    },
+    {
+      "id": "bias-control",
+      "kind": "slider",
+      "propertyId": "bias",
+      "label": "Bias b"
+    },
+    {
+      "id": "feature-control",
+      "kind": "slider",
+      "propertyId": "feature",
+      "label": "Feature x"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-read-plot",
+      "at": 3.6,
+      "title": "Read the plot",
+      "body": "At the orange point, is the probability above or below 0.5? Which control would move the boundary left?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-range",
+      "at": 6.2,
+      "title": "Guard the range",
+      "body": "For a finite linear score, why can the predicted probability never equal exactly 0 or 1?",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The model starts with a linear score, z = w·x + b."
+    },
+    {
+      "at": 1.2,
+      "text": "The sigmoid turns that score into a probability that is always between 0 and 1."
+    },
+    {
+      "at": 2.8,
+      "text": "The curve crosses p = 0.5 where the score is zero; that feature value is the decision boundary."
+    },
+    {
+      "at": 4.8,
+      "text": "Changing the weight changes the steepness and can move the boundary, but it does not establish a causal effect."
+    },
+    {
+      "at": 6.4,
+      "text": "At the orange point, the height of the curve is the predicted probability for that feature value."
+    }
+  ],
+  "fallback": {
+    "text": "Logistic regression first computes a linear score, z = w*x + b, which can be any real number. It then applies the sigmoid function, p = 1 / (1 + exp(-z)), so the predicted probability is always between 0 and 1. The decision boundary is the set of feature values where z = 0, which gives p = 0.5. Increasing the weight makes the S-curve steeper and moves the boundary; changing the bias shifts it. The model describes association in the data, not a causal effect."
+  },
+  "accessibility": {
+    "alt": "A one-dimensional logistic plot shows feature values on the horizontal axis and predicted probability as an S-shaped curve between 0 and 1; a vertical decision boundary sits where probability is 0.5 and shifts as weight, bias, or feature change.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

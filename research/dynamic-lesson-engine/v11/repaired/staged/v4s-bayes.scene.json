@@ -1,0 +1,400 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Updating a Positive Test: Bayes' Rule",
+    "subject": "Statistics",
+    "topic": "Bayes' Rule",
+    "objective": "Show how a positive test depends on base rate and sensitivity, not just test accuracy.",
+    "learner": "Knows conditional probability informally.",
+    "misconceptions": [
+      "A 99% sensitive test means a 99% chance of disease after a positive result.",
+      "The base rate can be ignored because test accuracy dominates."
+    ],
+    "expectedUnderstanding": [
+      "The posterior probability combines the prior (base rate) with the test likelihood.",
+      "A high sensitivity can still produce a modest posterior when the condition is rare and false positives are common.",
+      "The denominator must include everyone who tests positive, both true positives and false positives."
+    ]
+  },
+  "properties": [
+    {
+      "id": "prevalence",
+      "label": "Prevalence (prior probability)",
+      "min": 0.001,
+      "max": 0.5,
+      "step": 0.001,
+      "default": 0.01
+    },
+    {
+      "id": "sensitivity",
+      "label": "Sensitivity",
+      "min": 0.5,
+      "max": 1,
+      "step": 0.01,
+      "default": 0.99
+    },
+    {
+      "id": "falsePositiveRate",
+      "label": "False-positive rate",
+      "min": 0,
+      "max": 0.2,
+      "step": 0.01,
+      "default": 0.05
+    }
+  ],
+  "primitives": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 42,
+      "fontSize": 21,
+      "fill": "#0f172a",
+      "stroke": "none",
+      "text": "A positive test is not automatically a diagnosis",
+      "anchor": "start",
+      "fontWeight": 600
+    },
+    {
+      "id": "subtitle",
+      "type": "text",
+      "x": 40,
+      "y": 68,
+      "fontSize": 14,
+      "fill": "#475569",
+      "stroke": "none",
+      "text": "Compare true positives with everyone who tests positive as the base rate changes.",
+      "anchor": "start"
+    },
+    {
+      "id": "legend-red",
+      "type": "text",
+      "x": 590,
+      "y": 86,
+      "fontSize": 13,
+      "fill": "#991b1b",
+      "stroke": "none",
+      "text": "red = disease present",
+      "anchor": "start"
+    },
+    {
+      "id": "legend-amber",
+      "type": "text",
+      "x": 590,
+      "y": 104,
+      "fontSize": 13,
+      "fill": "#b45309",
+      "stroke": "none",
+      "text": "amber = healthy but positive",
+      "anchor": "start"
+    },
+    {
+      "id": "population-label",
+      "type": "text",
+      "x": 80,
+      "y": 122,
+      "fontSize": 15,
+      "fill": "#334155",
+      "stroke": "none",
+      "text": "All 10,000 people · base rate",
+      "anchor": "start",
+      "fontWeight": 600
+    },
+    {
+      "id": "true-positive-block",
+      "type": "rect",
+      "x": 80,
+      "y": 134,
+      "width": {
+        "expr": "700*prevalence*sensitivity"
+      },
+      "height": 58,
+      "rx": 3,
+      "fill": "#dc2626",
+      "stroke": "#991b1b",
+      "strokeWidth": 1
+    },
+    {
+      "id": "false-negative-block",
+      "type": "rect",
+      "x": {
+        "expr": "80 + 700*prevalence*sensitivity"
+      },
+      "y": 134,
+      "width": {
+        "expr": "700*prevalence*(1-sensitivity)"
+      },
+      "height": 58,
+      "rx": 3,
+      "fill": "#fca5a5",
+      "stroke": "#ef4444",
+      "strokeWidth": 1
+    },
+    {
+      "id": "false-positive-block",
+      "type": "rect",
+      "x": {
+        "expr": "80 + 700*prevalence"
+      },
+      "y": 134,
+      "width": {
+        "expr": "700*(1-prevalence)*falsePositiveRate"
+      },
+      "height": 58,
+      "rx": 3,
+      "fill": "#f59e0b",
+      "stroke": "#b45309",
+      "strokeWidth": 1
+    },
+    {
+      "id": "true-negative-block",
+      "type": "rect",
+      "x": {
+        "expr": "80 + 700*prevalence + 700*(1-prevalence)*falsePositiveRate"
+      },
+      "y": 134,
+      "width": {
+        "expr": "700*(1-prevalence)*(1-falsePositiveRate)"
+      },
+      "height": 58,
+      "rx": 3,
+      "fill": "#e2e8f0",
+      "stroke": "#94a3b8",
+      "strokeWidth": 1
+    },
+    {
+      "id": "positive-tests-label",
+      "type": "text",
+      "x": 80,
+      "y": 280,
+      "fontSize": 15,
+      "fill": "#334155",
+      "stroke": "none",
+      "text": "Everyone who tests positive",
+      "anchor": "start",
+      "fontWeight": 600
+    },
+    {
+      "id": "posterior-true-positive-block",
+      "type": "rect",
+      "x": 80,
+      "y": 292,
+      "width": {
+        "expr": "700*((prevalence*sensitivity)/(prevalence*sensitivity + (1-prevalence)*falsePositiveRate))"
+      },
+      "height": 64,
+      "rx": 3,
+      "fill": "#dc2626",
+      "stroke": "#991b1b",
+      "strokeWidth": 1
+    },
+    {
+      "id": "posterior-false-positive-block",
+      "type": "rect",
+      "x": {
+        "expr": "80 + 700*((prevalence*sensitivity)/(prevalence*sensitivity + (1-prevalence)*falsePositiveRate))"
+      },
+      "y": 292,
+      "width": {
+        "expr": "700*(1 - (prevalence*sensitivity)/(prevalence*sensitivity + (1-prevalence)*falsePositiveRate))"
+      },
+      "height": 64,
+      "rx": 3,
+      "fill": "#f59e0b",
+      "stroke": "#b45309",
+      "strokeWidth": 1
+    },
+    {
+      "id": "posterior-caption",
+      "type": "text",
+      "x": 80,
+      "y": 382,
+      "fontSize": 14,
+      "fill": "#475569",
+      "stroke": "none",
+      "text": "Posterior = true positives ÷ everyone who tests positive",
+      "anchor": "start"
+    },
+    {
+      "id": "caption",
+      "type": "text",
+      "x": 32,
+      "y": 516,
+      "fontSize": 14,
+      "fill": "#475569",
+      "stroke": "none",
+      "text": "High sensitivity can still yield a low posterior when the condition is rare; false positives fill the bar.",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 7.5,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "positive-tests-label",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.8,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "posterior-true-positive-block",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.6,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 3.4,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "posterior-false-positive-block",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.8,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 3.8,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "posterior-caption",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 3.6,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 4.2,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "prevalence-control",
+      "kind": "slider",
+      "propertyId": "prevalence",
+      "label": "Prevalence"
+    },
+    {
+      "id": "sensitivity-control",
+      "kind": "slider",
+      "propertyId": "sensitivity",
+      "label": "Sensitivity"
+    },
+    {
+      "id": "fpr-control",
+      "kind": "slider",
+      "propertyId": "falsePositiveRate",
+      "label": "False-positive rate"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-posterior",
+      "at": 4.6,
+      "title": "Estimate the posterior",
+      "body": "At 1% prevalence, 99% sensitivity, and a 5% false-positive rate, roughly what share of positive tests are true positives: about 17%, 50%, or 99%?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-base-rate",
+      "at": 6.2,
+      "title": "Raise the base rate",
+      "body": "Before moving prevalence, predict how the red share of the lower bar changes when the condition becomes common.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The top bar shows all 10,000 people, split by disease status and test result."
+    },
+    {
+      "at": 2,
+      "text": "Most people are healthy, so even a small false-positive rate creates many false positives."
+    },
+    {
+      "at": 3.8,
+      "text": "The lower bar keeps only positive tests; the red share is the posterior probability of disease."
+    },
+    {
+      "at": 5.2,
+      "text": "At the default numbers, the posterior is about 17%, not 99%, because true positives are compared with all positives."
+    },
+    {
+      "at": 6.8,
+      "text": "Raising the base rate increases the posterior; this is a probability model, not an individual diagnosis."
+    }
+  ],
+  "fallback": {
+    "text": "Start with a population of 10,000 people and a prevalence of 1%, so about 100 people have the condition. With 99% sensitivity, about 99 of them test positive. Of the 9,900 people without the condition, a 5% false-positive rate produces about 495 positive tests. The posterior probability is therefore 99 divided by 99 plus 495, which is about 16.7%. A positive result is evidence, but the large healthy group can generate many false positives; the base rate matters."
+  },
+  "accessibility": {
+    "alt": "A 10,000-person grid shows a small diseased group and a large healthy group; positive-test blocks are highlighted, making the many false positives from the large healthy group comparable to the true positives as prevalence changes.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

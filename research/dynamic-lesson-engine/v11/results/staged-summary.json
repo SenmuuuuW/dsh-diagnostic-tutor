@@ -1,0 +1,54 @@
+{
+  "rows": [
+    {
+      "id": "v4s-bayes",
+      "rawStrict": true,
+      "rawNormalized": true,
+      "rawVisual": false,
+      "drift": 0,
+      "finalStrict": true,
+      "finalVisual": false,
+      "semantic": "not-applicable"
+    },
+    {
+      "id": "v4s-logistic",
+      "rawStrict": false,
+      "rawNormalized": false,
+      "rawVisual": false,
+      "drift": 19,
+      "finalStrict": true,
+      "finalVisual": true,
+      "semantic": "not-applicable"
+    },
+    {
+      "id": "v4s-mergesort",
+      "rawStrict": false,
+      "rawNormalized": false,
+      "rawVisual": false,
+      "drift": 8,
+      "finalStrict": true,
+      "finalVisual": true,
+      "semantic": "not-applicable"
+    },
+    {
+      "id": "v4s-refraction",
+      "rawStrict": false,
+      "rawNormalized": false,
+      "rawVisual": false,
+      "drift": 8,
+      "finalStrict": true,
+      "finalVisual": true,
+      "semantic": "not-applicable"
+    },
+    {
+      "id": "v4s-unit-circle-tangent",
+      "rawStrict": false,
+      "rawNormalized": false,
+      "rawVisual": false,
+      "drift": 18,
+      "finalStrict": true,
+      "finalVisual": true,
+      "semantic": "pass"
+    }
+  ]
+}

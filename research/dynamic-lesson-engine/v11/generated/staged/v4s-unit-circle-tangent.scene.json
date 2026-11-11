@@ -1,0 +1,311 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Tangent Meets Radius: A Right Angle on the Unit Circle",
+    "subject": "Mathematics",
+    "topic": "Unit Circle and Tangency",
+    "objective": "Show why the tangent at a point on a unit circle is perpendicular to the radius.",
+    "learner": "Knows circle geometry and basic sine/cosine.",
+    "misconceptions": [
+      "A tangent is the same thing as a radius.",
+      "The right angle between the tangent and the radius is accidental rather than forced by the circle's geometry."
+    ],
+    "expectedUnderstanding": [
+      "The tangent touches the circle at exactly one point: the chosen point.",
+      "The tangent direction is perpendicular to the radius at that point for every angle.",
+      "Rotating the point moves both the radius and the tangent while preserving the right angle."
+    ]
+  },
+  "properties": [
+    {
+      "id": "angle",
+      "label": "Point angle",
+      "min": 0,
+      "max": 6.283,
+      "step": 0.01,
+      "default": 0.8,
+      "unit": "rad"
+    }
+  ],
+  "primitives": [
+    {
+      "id": "unit-circle",
+      "type": "circle",
+      "cx": 480,
+      "cy": 270,
+      "r": 160,
+      "fill": "none",
+      "stroke": "#1d4ed8",
+      "strokeWidth": 3
+    },
+    {
+      "id": "center",
+      "type": "circle",
+      "cx": 480,
+      "cy": 270,
+      "r": 4,
+      "fill": "#0f172a",
+      "stroke": "#0f172a",
+      "strokeWidth": 1
+    },
+    {
+      "id": "point",
+      "type": "circle",
+      "cx": {
+        "expr": "480 + 160*Math.cos(angle)"
+      },
+      "cy": {
+        "expr": "270 - 160*Math.sin(angle)"
+      },
+      "r": 7,
+      "fill": "#dc2626",
+      "stroke": "#991b1b",
+      "strokeWidth": 2
+    },
+    {
+      "id": "radius",
+      "type": "line",
+      "x1": 480,
+      "y1": 270,
+      "x2": {
+        "expr": "480 + 160*Math.cos(angle)"
+      },
+      "y2": {
+        "expr": "270 - 160*Math.sin(angle)"
+      },
+      "fill": "none",
+      "stroke": "#dc2626",
+      "strokeWidth": 3
+    },
+    {
+      "id": "tangent",
+      "type": "line",
+      "x1": {
+        "expr": "480 + 160*Math.cos(angle) + 140*Math.sin(angle)"
+      },
+      "y1": {
+        "expr": "270 - 160*Math.sin(angle) + 140*Math.cos(angle)"
+      },
+      "x2": {
+        "expr": "480 + 160*Math.cos(angle) - 140*Math.sin(angle)"
+      },
+      "y2": {
+        "expr": "270 - 160*Math.sin(angle) - 140*Math.cos(angle)"
+      },
+      "fill": "none",
+      "stroke": "#7c3aed",
+      "strokeWidth": 3
+    },
+    {
+      "id": "right-angle-a",
+      "type": "line",
+      "x1": {
+        "expr": "480 + 160*Math.cos(angle) - 18*Math.cos(angle)"
+      },
+      "y1": {
+        "expr": "270 - 160*Math.sin(angle) + 18*Math.sin(angle)"
+      },
+      "x2": {
+        "expr": "480 + 160*Math.cos(angle) - 18*Math.cos(angle) - 18*Math.sin(angle)"
+      },
+      "y2": {
+        "expr": "270 - 160*Math.sin(angle) + 18*Math.sin(angle) - 18*Math.cos(angle)"
+      },
+      "fill": "none",
+      "stroke": "#059669",
+      "strokeWidth": 2.5
+    },
+    {
+      "id": "right-angle-b",
+      "type": "line",
+      "x1": {
+        "expr": "480 + 160*Math.cos(angle) - 18*Math.sin(angle)"
+      },
+      "y1": {
+        "expr": "270 - 160*Math.sin(angle) - 18*Math.cos(angle)"
+      },
+      "x2": {
+        "expr": "480 + 160*Math.cos(angle) - 18*Math.cos(angle) - 18*Math.sin(angle)"
+      },
+      "y2": {
+        "expr": "270 - 160*Math.sin(angle) + 18*Math.sin(angle) - 18*Math.cos(angle)"
+      },
+      "fill": "none",
+      "stroke": "#059669",
+      "strokeWidth": 2.5
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 32,
+      "y": 44,
+      "fontSize": 22,
+      "fill": "#0f172a",
+      "stroke": "none",
+      "text": "Tangent is perpendicular to the radius",
+      "anchor": "start",
+      "fontWeight": 600
+    },
+    {
+      "id": "caption",
+      "type": "text",
+      "x": 32,
+      "y": 512,
+      "fontSize": 15,
+      "fill": "#475569",
+      "stroke": "none",
+      "text": "The tangent touches only at P; as the angle changes, the right angle stays 90°.",
+      "anchor": "start"
+    },
+    {
+      "id": "point-label",
+      "type": "text",
+      "x": {
+        "expr": "480 + 160*Math.cos(angle) + 14"
+      },
+      "y": {
+        "expr": "270 - 160*Math.sin(angle) - 14"
+      },
+      "fontSize": 16,
+      "fill": "#b91c1c",
+      "stroke": "none",
+      "text": "P",
+      "anchor": "start",
+      "fontWeight": 600
+    }
+  ],
+  "timeline": {
+    "duration": 6,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "tangent",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "right-angle-a",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.4,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "right-angle-b",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0.2,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.6,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "point-label",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.7,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "angle-control",
+      "kind": "slider",
+      "propertyId": "angle",
+      "label": "Point angle"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-angle",
+      "at": 2.8,
+      "title": "Predict the angle",
+      "body": "As P moves around the circle, does the angle between the tangent and the radius stay 90°, or only at this starting point?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-why",
+      "at": 5.2,
+      "title": "Explain the invariance",
+      "body": "If the radius rotates by 30°, how much does the tangent rotate? Why?",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "Start with the radius from the center to point P on the unit circle."
+    },
+    {
+      "at": 1.5,
+      "text": "The tangent is the line through P perpendicular to that radius; the green marker records the right angle."
+    },
+    {
+      "at": 3.4,
+      "text": "As the point angle changes, the radius rotates and the tangent rotates with it, so the 90° relation is preserved."
+    },
+    {
+      "at": 5.8,
+      "text": "The tangent touches the circle only at P, which is why the perpendicular direction is forced rather than accidental."
+    }
+  ],
+  "fallback": {
+    "text": "At every point on a unit circle, the radius points from the center to that point. The tangent is the line through that point perpendicular to the radius, so the angle between them is a right angle. As the point moves around the circle, both lines rotate together and the right angle stays 90 degrees. The tangent touches the circle only at the chosen point, not at a second nearby point."
+  },
+  "accessibility": {
+    "alt": "Unit circle with a radius from the center to a movable point and a straight tangent through that point; a right-angle marker stays at their intersection as the angle changes.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

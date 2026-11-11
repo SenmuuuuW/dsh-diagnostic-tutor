@@ -1,0 +1,368 @@
+{
+  "version": "0.1",
+  "viewport": {
+    "width": 960,
+    "height": 540,
+    "background": "#ffffff"
+  },
+  "metadata": {
+    "title": "Bending at the Boundary: Snell's Law",
+    "subject": "Physics",
+    "topic": "Snell's Law",
+    "objective": "Show how a ray bends when entering a denser medium and why the normal is a reference.",
+    "learner": "Knows angles and waves.",
+    "misconceptions": [
+      "Light bends toward the normal at every boundary, regardless of the media.",
+      "The angle of incidence is measured from the surface rather than from the normal."
+    ],
+    "expectedUnderstanding": [
+      "Angles of incidence and refraction are both measured from the normal, not the surface.",
+      "When the second medium has a higher refractive index, the ray bends toward the normal.",
+      "Snell's law relates the two angles through the refractive indices: n1 sin(theta1) = n2 sin(theta2)."
+    ]
+  },
+  "properties": [
+    {
+      "id": "incidenceAngle",
+      "label": "Incidence angle (from normal)",
+      "min": 0,
+      "max": 1.4,
+      "step": 0.01,
+      "default": 0.7,
+      "unit": "rad"
+    },
+    {
+      "id": "n2",
+      "label": "Refractive index of second medium",
+      "min": 1,
+      "max": 2.5,
+      "step": 0.01,
+      "default": 1.5
+    }
+  ],
+  "primitives": [
+    {
+      "id": "boundary",
+      "type": "line",
+      "x1": 80,
+      "y1": 300,
+      "x2": 880,
+      "y2": 300,
+      "fill": "none",
+      "stroke": "#64748b",
+      "strokeWidth": 3
+    },
+    {
+      "id": "normal",
+      "type": "line",
+      "x1": 480,
+      "y1": 80,
+      "x2": 480,
+      "y2": 480,
+      "fill": "none",
+      "stroke": "#94a3b8",
+      "strokeWidth": 1.5,
+      "dash": "7 7"
+    },
+    {
+      "id": "incident-ray",
+      "type": "arrow",
+      "x1": {
+        "expr": "480 - 230*sin(incidenceAngle)"
+      },
+      "y1": {
+        "expr": "300 - 230*cos(incidenceAngle)"
+      },
+      "x2": 480,
+      "y2": 300,
+      "fill": "none",
+      "stroke": "#f59e0b",
+      "strokeWidth": 3
+    },
+    {
+      "id": "refracted-ray",
+      "type": "arrow",
+      "x1": 480,
+      "y1": 300,
+      "x2": {
+        "expr": "480 + 190*sin(asin(sin(incidenceAngle)/n2))"
+      },
+      "y2": {
+        "expr": "300 + 190*cos(asin(sin(incidenceAngle)/n2))"
+      },
+      "fill": "none",
+      "stroke": "#0ea5e9",
+      "strokeWidth": 3
+    },
+    {
+      "id": "entry-point",
+      "type": "circle",
+      "cx": 480,
+      "cy": 300,
+      "r": 5,
+      "fill": "#0f172a",
+      "stroke": "#0f172a",
+      "strokeWidth": 1
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 32,
+      "y": 42,
+      "fontSize": 21,
+      "fill": "#0f172a",
+      "stroke": "none",
+      "text": "Snell's law: measure both angles from the normal",
+      "anchor": "start",
+      "fontWeight": 600
+    },
+    {
+      "id": "medium-one-label",
+      "type": "text",
+      "x": 80,
+      "y": 100,
+      "fontSize": 14,
+      "fill": "#475569",
+      "stroke": "none",
+      "text": "Medium 1 · n₁ = 1.00",
+      "anchor": "start"
+    },
+    {
+      "id": "medium-two-label",
+      "type": "text",
+      "x": 80,
+      "y": 456,
+      "fontSize": 14,
+      "fill": "#475569",
+      "stroke": "none",
+      "text": "Medium 2 · n₂ adjustable",
+      "anchor": "start"
+    },
+    {
+      "id": "normal-label",
+      "type": "text",
+      "x": 494,
+      "y": 96,
+      "fontSize": 13,
+      "fill": "#64748b",
+      "stroke": "none",
+      "text": "normal",
+      "anchor": "start"
+    },
+    {
+      "id": "theta-one-label",
+      "type": "text",
+      "x": {
+        "expr": "480 - 76*sin(incidenceAngle/2)"
+      },
+      "y": {
+        "expr": "300 - 76*cos(incidenceAngle/2)"
+      },
+      "fontSize": 17,
+      "fill": "#b45309",
+      "stroke": "none",
+      "text": "θ₁",
+      "anchor": "middle",
+      "fontWeight": 600
+    },
+    {
+      "id": "theta-two-label",
+      "type": "text",
+      "x": {
+        "expr": "480 + 78*sin(asin(sin(incidenceAngle)/n2)/2)"
+      },
+      "y": {
+        "expr": "300 + 78*cos(asin(sin(incidenceAngle)/n2)/2)"
+      },
+      "fontSize": 17,
+      "fill": "#0369a1",
+      "stroke": "none",
+      "text": "θ₂",
+      "anchor": "middle",
+      "fontWeight": 600
+    },
+    {
+      "id": "caption",
+      "type": "text",
+      "x": 32,
+      "y": 520,
+      "fontSize": 14,
+      "fill": "#475569",
+      "stroke": "none",
+      "text": "The dashed normal is the reference: with n₂ > 1, the refracted ray bends toward it.",
+      "anchor": "start"
+    }
+  ],
+  "timeline": {
+    "duration": 7,
+    "tracks": [
+      {
+        "target": {
+          "primitive": "normal",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.6,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "incident-ray",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.9,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "refracted-ray",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 0.9,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.8,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "theta-one-label",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.4,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      },
+      {
+        "target": {
+          "primitive": "theta-two-label",
+          "property": "opacity"
+        },
+        "keyframes": [
+          {
+            "at": 0,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 1.6,
+            "value": 0,
+            "easing": "linear"
+          },
+          {
+            "at": 2.2,
+            "value": 1,
+            "easing": "ease-out"
+          }
+        ]
+      }
+    ]
+  },
+  "controls": [
+    {
+      "id": "incidence-control",
+      "kind": "slider",
+      "propertyId": "incidenceAngle",
+      "label": "Incidence angle (from normal)"
+    },
+    {
+      "id": "n2-control",
+      "kind": "slider",
+      "propertyId": "n2",
+      "label": "Second refractive index"
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "cp-bend",
+      "at": 3,
+      "title": "Predict the bend",
+      "body": "Hold the incidence angle fixed and increase n₂. Will the refracted ray move toward the normal, away from it, or stay put?",
+      "pause": true,
+      "learnerAction": "answer"
+    },
+    {
+      "id": "cp-reference",
+      "at": 5.6,
+      "title": "Check the reference",
+      "body": "A ray makes a 30° angle with the boundary. Is its angle of incidence 30°? Explain which reference line to use.",
+      "pause": true,
+      "learnerAction": "answer"
+    }
+  ],
+  "narration": [
+    {
+      "at": 0,
+      "text": "The dashed normal is perpendicular to the surface at the entry point."
+    },
+    {
+      "at": 1.7,
+      "text": "Both angles are measured from this normal, not from the surface."
+    },
+    {
+      "at": 3.8,
+      "text": "A larger n₂ means a denser second medium, so the same incidence angle produces a smaller refraction angle."
+    },
+    {
+      "at": 5.2,
+      "text": "Equal indices would leave the ray straight; here the bend is toward the normal."
+    },
+    {
+      "at": 6.4,
+      "text": "A 30° angle to the surface corresponds to 60° measured from the normal."
+    }
+  ],
+  "fallback": {
+    "text": "Draw a normal line perpendicular to the surface at the point where the ray enters. Measure both the incident angle and the refracted angle from that normal. For light going from a less dense medium into a denser one, the second index is larger, so the refracted ray bends toward the normal. If the indices are equal, the ray continues straight. Snell's law, n1 sin(theta1) = n2 sin(theta2), gives the exact relationship; the normal is the reference that makes the comparison meaningful."
+  },
+  "accessibility": {
+    "alt": "A ray strikes a horizontal boundary between air and a denser medium, with a dashed normal perpendicular to the surface; incident and refracted rays lie on opposite sides of the normal, and the refracted ray bends closer to it as the index increases.",
+    "reducedMotion": "static",
+    "keyboard": true
+  }
+}

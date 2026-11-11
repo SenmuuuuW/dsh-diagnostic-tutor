@@ -49,6 +49,7 @@ const COLOR_PROPS = ['fill', 'stroke']
 
 const FUNCTIONS = Object.freeze({
   sin: [1, Math.sin], cos: [1, Math.cos], tan: [1, Math.tan],
+  asin: [1, Math.asin], acos: [1, Math.acos], atan: [1, Math.atan],
   sqrt: [1, Math.sqrt], abs: [1, Math.abs], exp: [1, Math.exp],
   log: [1, Math.log], ln: [1, Math.log], floor: [1, Math.floor],
   ceil: [1, Math.ceil], round: [1, Math.round],
