@@ -46,7 +46,7 @@ Metadata fields: ${METADATA_FIELDS.join(', ')}
 Limit: ${LIMITS.primitives} primitives, ${LIMITS.properties} numeric properties, ${LIMITS.tracks} tracks, ${LIMITS.keyframes} keyframes, ${LIMITS.checkpoints} checkpoints.
 Primitive fields by type:
 ${primitives}
-Numbers may be a number or {"expr":"..."}; expressions use declared property ids + t + duration only.
+Numbers may be a number or {"expr":"..."}; expressions use declared property ids + t + duration and ONLY these functions/constants: sin, cos, tan, asin, acos, atan, sqrt, abs, exp, log, ln, floor, ceil, round, pow, min, max, pi, e. Do NOT use Math.cos / Math.sin / Math.PI.
 Text MUST use anchor (start|middle|end). textAnchor is a deprecated alias accepted only by explicit normalization, never by strict validation.
 properties is optional; omit it or write [] when there are no numeric properties.
 metadata.topic is optional. metadata.misconceptions and metadata.expectedUnderstanding are arrays of strings (not a single string). Accessibility, fallback and viewport are required.

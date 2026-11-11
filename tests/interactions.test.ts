@@ -40,6 +40,9 @@ describe('recording a quiz answer', () => {
       const attempt = view.run?.attempts.find((entry) => entry.id === ATTEMPT)
       expect(attempt?.responses).toHaveLength(1)
       expect(attempt?.responses?.[0]).toMatchObject({ blockId: 'quiz', kind: 'quiz', answers: [{ questionId: 'q1', value: 'A' }] })
+      // Attempt-level evidence is for completion references; the neutral
+      // practice observation belongs to the bound diagnosis node.
+      expect(attempt?.evidence).toEqual([])
       const after = state.readNode(NODE)!
       expect(after.state).toBe(before.state)
       expect(after.evidence.at(-1)).toMatchObject({ kind: 'practice', attemptId: ATTEMPT, sessionId: SESSION })
