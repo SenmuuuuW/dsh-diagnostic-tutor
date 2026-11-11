@@ -206,10 +206,10 @@ describe('self-check: goal → diagnosis → route → first lesson → diagnost
     // Doctor reads the durable file the same way a support run would.
     await new Promise((resolve) => setTimeout(resolve, 50))
     const { stdout } = await execFileAsync(process.execPath, [doctor, '--storage', join(harness.storeRoot, 'udt.json'), '--journal', journalFile, '--json'])
-    const report = JSON.parse(stdout) as { projects: { stage: string; acceptedVersion: number; totalItems: number }[]; issues: unknown[] }
+    const report = JSON.parse(stdout) as { projects: { stage: string; acceptedVersion: number; totalItems: number }[]; issues: { code: string }[] }
     expect(report.projects[0]).toMatchObject({ stage: 'learning', acceptedVersion: 1, totalItems: 3 })
     // The skill check is environment-level; this fixture intentionally has no skill.
-    expect(report.issues.filter((issue: { code: string }) => issue.code !== 'skill-missing')).toEqual([])
+    expect(report.issues.filter((issue) => issue.code !== 'skill-missing')).toEqual([])
 
     const journalText = await readFile(journalFile, 'utf8')
     expect(journalText).toContain('"event":"path.start-lesson"')
