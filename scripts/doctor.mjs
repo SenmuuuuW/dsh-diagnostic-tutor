@@ -14,10 +14,10 @@
  *   node scripts/doctor.mjs --strict        # exit 1 when an error-severity issue exists
  */
 
-import { readFile } from 'node:fs/promises'
+import { access, readFile, stat, writeFile, unlink } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 const require = createRequire(import.meta.url)
 const packageJson = require('../package.json')
@@ -82,12 +82,16 @@ async function tailJournal(file, limit = 20) {
   }
 }
 
-async function visit(storageFile, journalFile) {
+async function visit(storageFile, journalFile, allowMissingStorage = false) {
   let document
   try {
     document = JSON.parse(await readFile(storageFile, 'utf8'))
   } catch (error) {
-    fail(`cannot read storage "${storageFile}": ${error.message}`)
+    if (allowMissingStorage && error?.code === 'ENOENT') {
+      document = { tables: {} }
+    } else {
+      fail(`cannot read storage "${storageFile}": ${error.message}`)
+    }
   }
   const tables = document.tables
   if (tables === null || typeof tables !== 'object') fail('storage has no tables')
@@ -98,6 +102,10 @@ async function visit(storageFile, journalFile) {
   const runs = new Map(Object.values(tables.course_runs ?? {}).map((run) => [run.courseId, run]))
   const issues = []
   const projects = []
+  if (document.tables === undefined) document.tables = {}
+  if (Object.keys(document.tables).length === 0) {
+    issues.push({ code: 'first-run', severity: 'info', message: 'no learner data yet; this is a fresh install' })
+  }
 
   for (const course of [...courses].sort((left, right) => String(left.id).localeCompare(String(right.id)))) {
     const path = paths.get(course.id)
@@ -157,7 +165,66 @@ async function visit(storageFile, journalFile) {
   }
 
   const recent = await tailJournal(journalFile)
+
+  // Installation-facing checks. These do not read lesson or goal content.
+  const nodeVersion = process.versions.node
+  const nodeSupported = /^22\.(?:19|2[0-9]|[3-9][0-9])\./.test(nodeVersion) || /^2[4-9]\./.test(nodeVersion)
+  if (!nodeSupported) {
+    issues.push({ code: 'unsupported-node', severity: 'error', message: `Node ${nodeVersion} is outside the supported range ^22.19.0 || >=24.0.0` })
+  }
+  const storageDir = dirname(storageFile)
+  let storageWritable = false
+  let storageExists = false
+  let probeDir = storageDir
+  try { await access(storageDir); storageExists = true } catch {}
+  if (!storageExists) {
+    let current = dirname(storageDir)
+    while (current !== dirname(current)) {
+      try { await access(current); probeDir = current; break } catch { current = dirname(current) }
+    }
+    probeDir = current
+  }
+  try {
+    await access(probeDir)
+    const probe = join(probeDir, `.diagnostic-tutor-doctor-${process.pid}`)
+    await writeFile(probe, 'ok', { mode: 0o600 })
+    await unlink(probe)
+    storageWritable = true
+  } catch {
+    issues.push({ code: 'storage-not-writable', severity: 'error', message: `storage directory is not writable: ${storageDir}` })
+  }
+  if (storageWritable && !storageExists) {
+    issues.push({ code: 'storage-first-write', severity: 'info', message: `storage will be created on first run: ${storageDir}` })
+  }
+  const candidateRoots = [
+    join(process.env.DSH_HOME ?? join(homedir(), '.dsh'), '.agents', 'skills', 'universal-diagnostic-tutor'),
+    join(process.env.DSH_HOME ?? join(homedir(), '.dsh'), 'skills', 'universal-diagnostic-tutor'),
+    join(process.cwd(), '.agents', 'skills', 'universal-diagnostic-tutor'),
+    join(homedir(), '.agents', 'skills', 'universal-diagnostic-tutor'),
+  ]
+  let skillPath = null
+  for (const candidate of candidateRoots) {
+    try { if ((await stat(join(candidate, 'SKILL.md'))).isFile()) { skillPath = candidate; break } } catch {}
+  }
+  if (skillPath === null) {
+    issues.push({ code: 'skill-missing', severity: 'warn', message: 'Universal Diagnostic Tutor skill not found; install it under .agents/skills/universal-diagnostic-tutor (the tutor cannot teach without it)' })
+  }
+  const environment = {
+    node: nodeVersion,
+    nodeSupported,
+    dshHome: process.env.DSH_HOME ?? join(homedir(), '.dsh'),
+    storageDir,
+    storageWritable,
+    storageExists,
+    skill: { found: skillPath !== null, path: skillPath },
+    flags: {
+      dynamicScenes: process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES === '1' || process.env.DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES === 'true',
+      sceneCandidates: process.env.DSH_DIAGNOSTIC_TUTOR_SCENE_CANDIDATES === '1' || process.env.DSH_DIAGNOSTIC_TUTOR_SCENE_CANDIDATES === 'true',
+    },
+  }
+
   return {
+    environment,
     ok: true,
     generatedAt: iso,
     plugin: { name: packageJson.name, version: packageJson.version },
@@ -185,6 +252,13 @@ function printHuman(report) {
   const lines = []
   lines.push(`diagnostic-tutor ${report.plugin.version} — ${report.generatedAt}`)
   lines.push(`storage: ${report.storage.file}`)
+  const env = report.environment
+  if (env !== undefined) {
+    lines.push(`node: ${env.node} (${env.nodeSupported ? 'supported' : 'UNSUPPORTED'})`)
+    lines.push(`skill: ${env.skill.found ? `found at ${env.skill.path}` : 'MISSING — install universal-diagnostic-tutor under .agents/skills/'}`)
+    lines.push(`storage-writable: ${env.storageWritable ? 'yes' : 'NO'}`)
+    lines.push(`flags: dynamicScenes=${env.flags.dynamicScenes} sceneCandidates=${env.flags.sceneCandidates}`)
+  }
   lines.push(`counts: ${Object.entries(report.counts).map(([key, value]) => `${key}=${value}`).join(' ')}`)
   lines.push('')
   if (report.issues.length === 0) lines.push('issues: none')
@@ -219,7 +293,7 @@ const options = parseArgs(process.argv.slice(2))
 const DSH_HOME = process.env.DSH_HOME ?? join(homedir(), '.dsh')
 const storage = options.storage ?? join(DSH_HOME, 'storages', 'udt.json')
 const journal = options.journal ?? join(DSH_HOME, 'logs', 'diagnostic-tutor-events.jsonl')
-const report = await visit(storage, journal)
+const report = await visit(storage, journal, options.storage === undefined)
 if (options.json) console.log(JSON.stringify(report, null, 2))
 else printHuman(report)
 if (options.strict && report.issues.some((issue) => issue.severity === 'error')) process.exit(1)

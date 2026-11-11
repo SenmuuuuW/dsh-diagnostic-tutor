@@ -718,6 +718,18 @@ export function createApiHandler(deps: ApiDeps) {
     }
     if (method === 'POST' && route === '/project') return await handleSelectProject(state, req, res)
     if (method === 'GET' && route === '/export') return handleExport(state, res)
+    if (method === 'POST' && route === '/import') {
+      const buffer = await readRawBody(req, 32 * 1024 * 1024)
+      if (buffer === undefined) return fail(res, 413, 'import-too-large')
+      let input: unknown
+      try { input = JSON.parse(buffer.toString('utf8')) } catch { return fail(res, 400, 'import-invalid-json') }
+      try {
+        const imported = await state.importState(input, new Date().toISOString())
+        return sendJson(res, 200, { ok: true, imported: { courses: imported.courses.length, nodes: imported.nodes.length, lessons: imported.lessons.length, learningPaths: imported.learningPaths.length, courseRuns: imported.courseRuns.length } })
+      } catch (cause) {
+        return fail(res, 400, 'import-rejected', cause instanceof Error ? cause.message : undefined)
+      }
+    }
     if (method === 'POST' && route === '/reset') return await handleReset(state, res, deps.assetStore)
     if (method === 'POST' && route === '/plan/task') {
       const input = await readJsonBody(req)

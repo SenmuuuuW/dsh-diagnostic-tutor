@@ -415,3 +415,59 @@ describe('the overview always answers with a complete shape', () => {
     }
   })
 })
+
+describe('import', () => {
+  it('restores an exported learner document after deletion', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      const { nodeId } = await seed(state)
+      const wired = wire(harness, state)
+      const exported = JSON.parse((await wired.api('/export')).text)
+      await wired.api('/reset', { method: 'POST' })
+      expect(state.listCourses()).toHaveLength(0)
+
+      const imported = await wired.api('/import', { method: 'POST', body: exported })
+      expect(imported.status).toBe(200)
+      expect(imported.json.imported).toMatchObject({ courses: 1, nodes: 2, lessons: 1 })
+      expect(state.listCourses()).toHaveLength(1)
+      expect(state.readNode(nodeId)?.evidence[0]?.kind).toBe('diagnosis')
+      expect(state.readLearner().activeCourseId).toBe('ml')
+      expect(state.exportState(exported.exportedAt)).toEqual(exported)
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('rejects malformed or referentially broken documents without changing state', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      await seed(state)
+      const wired = wire(harness, state)
+      const before = state.exportState(NOW)
+      const invalid = { ...before, lessons: [{ ...before.lessons[0], nodeId: 'missing-node' }] }
+      const res = await wired.api('/import', { method: 'POST', body: invalid })
+      expect(res.status).toBe(400)
+      expect(state.exportState(NOW)).toEqual(before)
+    } finally {
+      await harness.close()
+    }
+  })
+
+  it('rejects a duplicate node id before clearing anything', async () => {
+    const harness = await createHarness()
+    try {
+      const state = await openUdState(harness.ctx.get('storageDomain')!)
+      await seed(state)
+      const wired = wire(harness, state)
+      const before = state.exportState(NOW)
+      const invalid = { ...before, nodes: [...before.nodes, before.nodes[0]] }
+      const res = await wired.api('/import', { method: 'POST', body: invalid })
+      expect(res.status).toBe(400)
+      expect(state.exportState(NOW)).toEqual(before)
+    } finally {
+      await harness.close()
+    }
+  })
+})

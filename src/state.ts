@@ -305,6 +305,70 @@ export interface UdExport {
   readonly reviewLog: readonly ReviewLog[]
 }
 
+
+/**
+ * Validation contract for a full state import. The export is plain JSON; an
+ * import must validate every record before it clears anything. Assets are
+ * metadata only here — raster bytes are exported separately.
+ */
+export const UdExportSchema = z.object({
+  format: z.literal(EXPORT_FORMAT),
+  version: z.literal(EXPORT_VERSION),
+  exportedAt: z.string(),
+  domain: z.object({ name: z.string(), version: z.number() }),
+  learner: LearnerProfileSchema,
+  courses: z.array(CourseSchema),
+  nodes: z.array(NodeSchema),
+  lessons: z.array(LessonSchema),
+  nextSteps: z.array(NextStepSchema),
+  focus: z.array(FocusSchema),
+  projects: z.array(ProjectSchema),
+  learningPaths: z.array(LearningPathSchema),
+  courseRuns: z.array(CourseRunSchema),
+  sources: z.array(SourceRecordSchema),
+  assets: z.array(AssetRecordSchema),
+  tasks: z.array(TaskSchema),
+  reviewCards: z.array(ReviewCardSchema),
+  reviewLog: z.array(ReviewLogSchema),
+})
+
+function duplicateIds<T extends { id: string }>(rows: readonly T[], label: string): string | undefined {
+  const seen = new Set<string>()
+  for (const row of rows) {
+    if (seen.has(row.id)) return `${label} contains duplicate id "${row.id}"`
+    seen.add(row.id)
+  }
+  return undefined
+}
+
+function validateImportReferences(document: z.infer<typeof UdExportSchema>): void {
+  const problem = duplicateIds(document.courses, 'courses')
+    ?? duplicateIds(document.nodes, 'nodes')
+    ?? duplicateIds(document.lessons, 'lessons')
+    ?? duplicateIds(document.sources, 'sources')
+    ?? duplicateIds(document.assets, 'assets')
+  if (problem !== undefined) throw new Error(`import-invalid: ${problem}`)
+  const courseIds = new Set(document.courses.map((row) => row.id))
+  const nodeIds = new Set(document.nodes.map((row) => row.id))
+  const sourceIds = new Set(document.sources.map((row) => row.id))
+  for (const node of document.nodes) {
+    if (!courseIds.has(node.courseId)) throw new Error(`import-invalid: node "${node.id}" has no course`)
+  }
+  for (const lesson of document.lessons) {
+    if (!courseIds.has(lesson.courseId) || !nodeIds.has(lesson.nodeId)) throw new Error(`import-invalid: lesson "${lesson.id}" has no course/node`)
+    const blockIds = new Set<string>()
+    for (const block of lesson.blocks) {
+      if (blockIds.has(block.id)) throw new Error(`import-invalid: lesson "${lesson.id}" has duplicate block "${block.id}"`)
+      blockIds.add(block.id)
+      for (const ref of block.sourceRefs ?? []) if (!sourceIds.has(ref.sourceId)) throw new Error(`import-invalid: lesson "${lesson.id}" references missing source "${ref.sourceId}"`)
+    }
+  }
+  for (const path of document.learningPaths) if (!courseIds.has(path.courseId)) throw new Error(`import-invalid: learning path "${path.courseId}" has no course`)
+  for (const run of document.courseRuns) if (!courseIds.has(run.courseId)) throw new Error(`import-invalid: course run "${run.courseId}" has no course`)
+  for (const project of document.projects) if (project.courseId !== undefined && !courseIds.has(project.courseId)) throw new Error(`import-invalid: project references missing course "${project.courseId}"`)
+  for (const card of document.reviewCards) if (card.nodeId !== undefined && !nodeIds.has(card.nodeId)) throw new Error(`import-invalid: review card references missing node "${card.nodeId}"`)
+}
+
 export type CourseKey = string
 export type NodeKey = string
 export type SourceKey = string
@@ -598,6 +662,12 @@ export interface UdState {
    * restoring a claim about a model turn that is no longer running.
    */
   exportState(now: string): UdExport
+  /**
+   * Replace the whole learner domain from a validated export. Validation and
+   * reference checks happen before the first write; a failed write attempts to
+   * restore the previous snapshot. Assets are metadata only.
+   */
+  importState(document: unknown, now: string): Promise<UdExport>
   /**
    * Delete everything and return to first-run.
    *
@@ -1014,6 +1084,47 @@ export async function openUdState(facility: DomainFacility): Promise<UdState> {
     listNextSteps: () => [...nextSteps.entries()].map(([, record]) => record),
     listLessons: () => [...lessons.entries()].map(([, record]) => record),
     listFocus: () => [...focus.entries()].map(([, record]) => record),
+
+    async importState(input, now) {
+      const parsed = UdExportSchema.safeParse(input)
+      if (!parsed.success) {
+        const issue = parsed.error.issues[0]
+        throw new Error(`import-invalid: ${issue === undefined ? 'unknown' : `${issue.path.join('.') || '(root)'}: ${issue.message}`}`)
+      }
+      const document = parsed.data
+      validateImportReferences(document)
+      const previous = (this as unknown as UdState).exportState(now)
+      const apply = async (value: UdExport) => {
+        ++planningGeneration
+        await withProjectWrite(async () => {
+          for (const table of [courses, nodes, lessons, focus, nextSteps, handoffs, projects, paths, runs, sources, assets, tasks, reviewCards, reviewLog]) {
+            for (const key of [...table.keys()]) await table.delete(key)
+          }
+          for (const record of value.courses) await courses.put(record.id, record)
+          for (const record of value.nodes) await nodes.put(record.id, record)
+          for (const record of value.lessons) await lessons.put(record.id, record)
+          for (const record of value.focus) await focus.put(record.courseId, record)
+          for (const record of value.nextSteps) await nextSteps.put(record.fromNodeId, record)
+          for (const record of value.projects) await projects.put(record.sessionId, record)
+          for (const record of value.learningPaths) await paths.put(record.courseId, record)
+          for (const record of value.courseRuns) await runs.put(runKey(record.courseId, record.sessionId), record)
+          for (const record of value.sources) await sources.put(record.id, record)
+          for (const record of value.assets) await assets.put(record.id, record)
+          for (const record of value.tasks) await tasks.put(record.id, record)
+          for (const record of value.reviewCards) await reviewCards.put(record.id, record)
+          for (const record of value.reviewLog) await reviewLog.put(record.id, record)
+          await learner.set(value.learner)
+        })
+      }
+      try { await apply(document) }
+      catch (error) {
+        try { await apply(previous) } catch (restoreError) {
+          throw new Error(`import-rollback-failed: ${(error as Error).message}; restore: ${(restoreError as Error).message}`)
+        }
+        throw new Error(`import-failed: ${(error as Error).message}`)
+      }
+      return document
+    },
 
     exportState(now) {
       return {
