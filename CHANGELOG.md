@@ -2,7 +2,7 @@
 
 ## [1.0.0] — 2026-11-11
 
-Stable core Tutor release.
+Stable core Tutor release. Published 2026-11-11 as npm `1.0.0` (latest).
 
 ### Added
 

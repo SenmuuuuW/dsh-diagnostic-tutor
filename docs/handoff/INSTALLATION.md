@@ -30,7 +30,7 @@ instead; the runtime may detect it through the DSH Skill catalog.
 ## Verify
 
 ```bash
-npx dsh-diagnostic-tutor-doctor
+npx -y -p dsh-diagnostic-tutor@1.0.0 dsh-diagnostic-tutor-doctor
 # or, in a checkout:
 pnpm doctor
 ```

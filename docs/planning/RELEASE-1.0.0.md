@@ -27,3 +27,14 @@ Package: 204 files, packed 681,104 bytes, unpacked 3,225,416 bytes, shasum `f892
 
 Release scope: stable Core Tutor. Dynamic Scenes and auto-generation remain
 experimental, default-off, human-approved only.
+
+## Publication result (2026-11-11)
+
+- npm `dsh-diagnostic-tutor@1.0.0`, dist-tag `latest`
+- tag/release `v1.0.0` on GitHub
+- public main commit `1e6b280b99bf8a4327f395af889e867fde47a240`
+- Main CI success on Node 22.19 and 24.x
+- public Registry install smoke passed
+- package 204 files, shasum `f892dda5f500d372c40752dac06c6a0ba5fdc2bf`
+- Dynamic Scenes and auto-generation remain experimental/default-off
+- real learners 0; independent review 0; no learning-gain claim

@@ -109,8 +109,8 @@ git clone https://github.com/SenmuuuuW/universal-diagnostic-tutor-skill /tmp/udt
 cp -R /tmp/udt-skill/skills/universal-diagnostic-tutor .agents/skills/
 ```
 
-Check the installation with `npx dsh-diagnostic-tutor-doctor` or
-`pnpm doctor` in a checkout. A missing Skill is reported explicitly; the
+Check the installation with
+`npx -y -p dsh-diagnostic-tutor@1.0.0 dsh-diagnostic-tutor-doctor` or `pnpm doctor` in a checkout. A missing Skill is reported explicitly; the
 runtime still loads but the Tutor cannot write lessons. A checkout can be installed instead (see
 [Installing a checkout](#installing-a-checkout-instead-of-the-package)).
 
