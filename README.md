@@ -52,6 +52,12 @@ release checklist is in [`docs/planning/RELEASE-0.5.0.md`](docs/planning/RELEASE
 
 
 
+
+`v0.12.0` (development, not published) adds a controlled Tutor → Scene
+Candidate → local human approval → Lesson attach bridge and a real Tutor
+teaching E2E with scripted learner. AI generation remains experimental, default
+off, and locally reviewed.
+
 `v0.11.0` (development, not published) adds staged generation research,
 semantic v2, evidence-flow audit, release/upgrade preparation and the initial
 Claude handoff documentation. AI generation remains research-only; production

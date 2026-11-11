@@ -49,3 +49,24 @@ scene approval endpoint; approval is interactive CLI only.
 - No direct storage mutation from Skill; tools only.
 - No model-generated JS/HTML/CSS/URLs.
 - Approval permits rendering, not correctness or mastery.
+
+## Experimental Candidate Bridge (v0.12)
+
+- Model-facing request/status/attach tools; only attach follows approval.
+- Candidate records are local review artifacts under the DSH storage root, not
+  `udt` evidence.
+- Human CLI approval writes the local scene registry; attach recomputes the
+  canonical digest and requires the dynamic-scene flag + active attempt.
+- Generation itself is an external controlled development worker; no automatic
+  production Tutor→model pipeline.
+- Candidate/scene/attach do not create evidence; the Tutor records check
+  evidence explicitly via `udt_map_update`.
+
+## Candidate lifecycle (v0.12)
+
+`requested -> generating -> generated -> validating -> needs-review -> approved
+-> attached`, plus failed/rejected/revoked/expired/cancelled. The model may
+request and attach; only the local human CLI may approve. Candidate files are
+local review artifacts under the DSH storage root, separate from `udt` evidence.
+Attachment recomputes the canonical digest and requires the dynamic-scene flag,
+local registry approval and an active attempt.

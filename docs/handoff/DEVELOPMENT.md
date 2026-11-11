@@ -39,3 +39,24 @@ Node 22.19+ or Node 24.x. The package is ESM TypeScript.
 - Feature branches; no remote publication without explicit approval.
 - Keep production and research commits separate.
 - DSH/Codex retains integration/E2E; Claude owns future UI/UX branches.
+
+## Candidate bridge (experimental, v0.12)
+
+Enable only in an isolated profile:
+
+```bash
+DSH_DIAGNOSTIC_TUTOR_SCENE_CANDIDATES=1 \
+DSH_DIAGNOSTIC_TUTOR_DYNAMIC_SCENES=1 \
+DSH_DIAGNOSTIC_TUTOR_SCENE_REGISTRY=$DSH_HOME/storages/approved.json \
+  dsh --profile tutor
+```
+
+- Tutor tool: `udt_scene_candidate_create` (request only).
+- External worker: `scripts/scene-candidate-worker.mjs` (validated scene into
+  `needs-review`; no approval).
+- Human CLI: `scripts/scene-candidate-review.mjs` list/show/approve/reject/revoke
+  (TTY + `APPROVE`).
+- Tutor tool: `udt_scene_candidate_attach` (approved + digest + active attempt).
+- Real E2E notes: `docs/planning/V0.12.0-TEACHING-E2E.md`.
+- The worker is a controlled development bridge, not a production generation
+  service.

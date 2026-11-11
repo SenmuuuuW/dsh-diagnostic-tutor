@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.12.0] — 2026-11-11
+
+Development release. Not published, tagged or pushed.
+
+### Added — Tutor → Scene Candidate Bridge
+
+- Experimental `udt_scene_candidate_create` / status / attach tools.
+- Local candidate store with request hash, lifecycle, expiry, revisions,
+  validation and digest.
+- Real Tutor called the request tool after diagnosis; real research scene was
+  processed by a controlled worker, approved by local CLI, attached by the
+  Tutor, rendered in Study, followed by a scripted check, explicit check
+  evidence and a Tutor next-step decision.
+- Separate feature flags for candidate lifecycle and scene rendering.
+- Candidate review CLI and development generation worker.
+
+### Verification
+
+- **762 tests / 72 files**; Node 22.19 / 24.16.
+- 0.4.1 → 0.12 upgrade and rollback both pass with legacy course/node/evidence.
+- Final package 202 files, packed 669,130 bytes.
+
 ## [0.11.0] — 2026-11-10
 
 Development release. Not published, tagged or pushed.
