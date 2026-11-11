@@ -75,9 +75,13 @@ export async function sourceDraftFromPdfBytes(buffer: Uint8Array, filename: stri
   const bytes = buffer.byteLength
   const { pages, content, sha256 } = await extractPdfPages(buffer)
   const title = (basename(filename).trim() || 'PDF document').slice(0, MAX_SOURCE_TITLE_CHARS)
+  const emptyPages = pages.filter((page) => page.text.trim() === '').map((page) => page.page)
   return {
     kind: 'pdf', title, locator: locator.slice(0, 500), content,
     pages, pageCount: pages.length, sha256, bytes,
+    textLayerPages: pages.length - emptyPages.length,
+    emptyPages,
+    extraction: 'pdf-text',
   }
 }
 

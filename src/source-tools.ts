@@ -47,6 +47,7 @@ function pdfExcerpt(record: ReturnType<UdState['readSource']>, requestedPages: n
     truncated,
     selection: requestedPages === undefined || requestedPages.length === 0 ? `first ${pages.length} pages` : 'requested pages',
     ...(pages.every((page) => page.text.trim() === '') ? { note: 'No extractable text on the selected pages; this build does not OCR images.' } : {}),
+    ...(selected.some((page) => page.text.trim() === '') ? { warning: `Pages ${selected.filter((page) => page.text.trim() === '').map((page) => page.page).join(', ')} have no native text layer; scanned pages are not OCRed in v1.1.` } : {}),
   }
 }
 

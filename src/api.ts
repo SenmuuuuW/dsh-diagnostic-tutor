@@ -175,6 +175,7 @@ function sourceMetadata(source: ReturnType<UdState['listSources']>[number]) {
     id: source.id, kind: source.kind, title: source.title, locator: source.locator,
     sha256: source.sha256, bytes: source.bytes, createdAt: source.createdAt, status: source.status,
     ...(source.pageCount === undefined ? {} : { pageCount: source.pageCount }),
+    ...(source.pages === undefined ? {} : { emptyPages: source.pages.filter((page) => page.text.trim() === '').map((page) => page.page), textLayerPages: source.pages.filter((page) => page.text.trim() !== '').length }),
   }
 }
 

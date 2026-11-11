@@ -70,6 +70,7 @@ describe('tool surface', () => {
         'udt_lesson_update',
         'udt_map_get',
         'udt_map_update',
+        'udt_material_visual',
         'udt_path_get',
         'udt_path_update',
         'udt_plan_get',

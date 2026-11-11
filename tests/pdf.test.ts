@@ -99,4 +99,16 @@ describe('PDF sources + bounded page context', () => {
     expect(state.readSource(source.id)).toBeUndefined()
     expect(state.listSources()).toEqual([])
   })
+
+  it('marks pages with no native text layer instead of inventing OCR text', async () => {
+    const raw = await bytes('scanned-1-page.pdf')
+    const draft = await sourceDraftFromPdfBytes(raw, 'scan.pdf', 'upload:scan.pdf')
+    expect(draft).toMatchObject({ pageCount: 1, textLayerPages: 0, emptyPages: [1], extraction: 'pdf-text' })
+    expect(draft.pages?.[0]?.text).toBe('')
+    const { source } = await addSource(state, draft)
+    const tool = harness.ctx.get('tools')!.get('udt_source_get')!
+    const excerpt = await tool.execute({ sourceId: source.id }, {} as never) as Record<string, any>
+    expect(excerpt.pages[0].text).toBe('')
+    expect(excerpt.warning).toContain('no native text layer')
+  })
 })

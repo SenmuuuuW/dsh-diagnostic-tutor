@@ -17,6 +17,9 @@ export interface SourceDraft {
   /** PDF extraction facts; absent for text sources. */
   pages?: SourcePage[]
   pageCount?: number
+  textLayerPages?: number
+  emptyPages?: number[]
+  extraction?: 'pdf-text'
   /** Original-byte identity for a PDF; text sources hash their content instead. */
   sha256?: string
   bytes?: number

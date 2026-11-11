@@ -160,4 +160,15 @@ describe('local image assets', () => {
     expect(written).toMatchObject({ blockId: 'image-block', blockCount: 1, added: true })
     expect(written.markdown).toContain('local asset')
   })
+
+  it('exposes a content-addressed image path without claiming vision success', async () => {
+    const bytes = new Uint8Array(await readFile(join(FIXTURES, 'sample.png')))
+    const { asset } = await addAsset(state, store, bytes, 'sample.png')
+    const visual = harness.ctx.get('tools')!.get('udt_material_visual')!
+    const result = await visual.execute({ assetId: asset.id }, {} as never) as Record<string, any>
+    expect(result.path).toBe(join(root, asset.sha256.slice(0, 2), asset.sha256))
+    expect(result.access).toBe('tool-mediated-host-image')
+    expect(result.caveat).toContain('not visual understanding')
+    await expect(visual.execute({ assetId: 'missing' }, {} as never)).rejects.toThrow(/no-such-asset/)
+  })
 })
