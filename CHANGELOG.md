@@ -2,7 +2,7 @@
 
 ## [0.13.0] — 2026-11-11
 
-Development release. Not published yet.
+Published 2026-11-11 as npm `0.13.0` (latest).
 
 ### Fixed — Study scene continuity
 

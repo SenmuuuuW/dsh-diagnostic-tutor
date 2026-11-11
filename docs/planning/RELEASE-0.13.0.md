@@ -38,3 +38,12 @@ feature. No claim of learning gains.
 
 Git integration → final package → npm publish → dist-tag check → isolated install
 of the registered package → tag / GitHub release.
+
+## Publication result (2026-11-11)
+
+- npm `dsh-diagnostic-tutor@0.13.0`, dist-tag `latest`
+- npm tarball hash matches local final package: `6e4e4f2c2e20c120155ee96aeb0b15937b57dc4a` / `a096c65f...`
+- GitHub main fast-forwarded to `655949d`; CI run `42955562962` success on Node 22.19 and 24.16
+- Git tag/release: `v0.13.0`
+- Fresh isolated install from the public registry reports plugin 0.13.0
+- Experimental Dynamic Scenes and Candidate generation remain default-off; no automatic approval.
