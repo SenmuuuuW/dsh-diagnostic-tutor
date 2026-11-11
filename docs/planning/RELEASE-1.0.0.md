@@ -13,6 +13,8 @@ Status: candidate; publish only after all gates.
 | Tutor goal/diagnosis/route/lesson/check/evidence | pass |
 | Export/import API round trip | pass (1 course/3 nodes/1 lesson) |
 | 0.4.1 → 1.0 upgrade | pass |
+| 0.13.0 → 1.0 upgrade | pass |
+| 1.0 → 0.13 rollback | pass |
 | Rollback | pass |
 | Feature flags off | pass |
 | Candidate/approval isolation | pass (v0.13 tests) |
