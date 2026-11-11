@@ -53,6 +53,11 @@ release checklist is in [`docs/planning/RELEASE-0.5.0.md`](docs/planning/RELEASE
 
 
 
+
+`v0.13.0` (development) adds Study scene continuity across Tutor lesson
+appends and a local candidate worker daemon. Core Tutor is stable; automatic AI
+scene generation remains experimental and disabled by default.
+
 `v0.12.0` (development, not published) adds a controlled Tutor → Scene
 Candidate → local human approval → Lesson attach bridge and a real Tutor
 teaching E2E with scripted learner. AI generation remains experimental, default

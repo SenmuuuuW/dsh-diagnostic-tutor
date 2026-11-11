@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.13.0] — 2026-11-11
+
+Development release. Not published yet.
+
+### Fixed — Study scene continuity
+
+- Active Study unit now follows the stored `study.blockId` instead of always
+  selecting the latest appended unit, so a Tutor appending a new node/lesson no
+  longer hides the scene the learner was using.
+- Fallback to latest unit when the stored block is gone; explicit replace still
+  has predictable fallback.
+
+### Added — Candidate automation foundation
+
+- Local candidate worker daemon with queue claim, timeout, failure state,
+  idempotent request handling and no approval/attach authority.
+- Candidate generation remains an explicitly labeled development bridge because
+  DSH exposes no background model-execution service to plugins.
+- Real Tutor E2E completed through candidate request → external real-model scene
+  → local CLI review → Tutor attach → Study → scripted check → check evidence →
+  next decision.
+
+### Release
+
+- Version prepared for 0.13.0; release gate and public publication to be decided
+  only after final tarball/upgrade/rollback checks.
+
 ## [0.12.0] — 2026-11-11
 
 Development release. Not published, tagged or pushed.
